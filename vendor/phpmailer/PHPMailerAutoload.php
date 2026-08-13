@@ -17,6 +17,11 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// 版本检查：仅允许PHP 5.4及以下版本使用
+if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
+    die('为了安全起见，PHPMailer不支持PHP5.5及以上高版本使用。您当前PHP版本为：' . PHP_VERSION);
+}
+
 /**
  * PHPMailer SPL autoloader.
  * @param string $classname The name of the class to load

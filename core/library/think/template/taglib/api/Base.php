@@ -92,7 +92,7 @@ class Base
         $HupijiaoPay = Db::name('pay_api_config')->where(['pay_mark'=>'Hupijiaopay'])->find();
         if (empty($HupijiaoPay) || empty($hupijiaoInfo)) return true;
         if (empty($HupijiaoPay['pay_info'])) return true;
-        $PayInfo = unserialize($HupijiaoPay['pay_info']);
+        $PayInfo = safe_unserialize($HupijiaoPay['pay_info']);
         if (empty($PayInfo)) return true;
         if (!isset($PayInfo['is_open_pay']) || $PayInfo['is_open_pay'] == 1) return true;
         $type .= '_appid';
@@ -143,26 +143,7 @@ class Base
      */
     public function html_httpimgurl($content = '', $timeVersion = false)
     {
-        if (!empty($content)) {
-            $t = '';
-            if (true === $timeVersion) {
-                $t = '?t='.getTime();
-            }
-
-            // 图片远程化
-            $pregRule = "/<img(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.jpg|\.jpeg|\.png|\.gif|\.bmp|\.ico]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<img ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}'.$t.'" ${7} />', $content);
-
-            // 视频远程化
-            $pregRule = "/<source(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<source ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
-            $pregRule = "/<video(.*?)src(\s*)=(\s*)[\'|\"](\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<video ${1} src="' . self::$request->domain().ROOT_DIR . '${5}${6}" ${7} />', $content);
-
-            $content = str_replace(self::$request->domain().ROOT_DIR.'//', 'http://', $content);
-        }
-
-        return $content;
+        return html_httpimgurl($content, $timeVersion, self::$request->domain());
     }
 
     /**

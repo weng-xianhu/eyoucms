@@ -33,7 +33,7 @@ class AppInitBehavior {
                     return true;
                 session($key, 1);
 
-                if (config('database.type') == 'dm') { // 达梦优化
+                if (in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓优化
                     $system_sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION';
                 } else {
                     $sql_mode = \think\Db::query("SELECT @@global.sql_mode AS sql_mode");

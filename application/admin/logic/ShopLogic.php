@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -139,7 +139,7 @@ class ShopLogic extends Model
                 $dirinfos .= "<br />";
             }
             $title = "本次升级需要在下面文件夹写入更新文件，已检测站点有 <font color='red'>{$n}</font> 处没有写入权限：<br />";
-            $title .= "<font color='red'>问题分析（如有问题，请咨询技术支持）：<br />";
+            $title .= "<font color='red'>问题分析：<br />";
             $title .= "1、检查站点目录的用户组与所有者，禁止是 root ;<br />";
             $title .= "2、检查站点目录的读写权限，一般权限值是 0755 ;<br />";
             $title .= "</font>涉及更新目录列表如下：<br />";
@@ -292,7 +292,7 @@ class ShopLogic extends Model
             /*--end*/
             
             if (!file_exists($this->data_path.'backup'.DS.'theme'.DS.$folderName.DS.'data'.DS.'conf'.DS.'version_themeshop.txt')) {
-                return ['code' => 0, 'msg' => "缺少version_themeshop.txt文件，请联系客服"];
+                return ['code' => 0, 'msg' => "解压失败，请检查所有目录是否有读写权限"];
             }
 
             /*更新的文件列表*/
@@ -467,7 +467,7 @@ class ShopLogic extends Model
         }
 
         if (preg_match('#__HALT_COMPILER()#i', $file)) {
-            return ['code' => 0, 'msg' => '下载包损坏，请联系官方客服！'];
+            return ['code' => 0, 'msg' => '下载包损坏，请检查所有目录是否有读写权限'];
         }
  
         $fp = fopen($saveDir,'w');
@@ -475,7 +475,7 @@ class ShopLogic extends Model
         fclose($fp);
         if(!eyPreventShell($saveDir) || !file_exists($saveDir) || $md5File != md5_file($saveDir))
         {
-            return ['code' => 0, 'msg' => '下载升级包失败，请检查网站目录权限'];
+            return ['code' => 0, 'msg' => '下载升级包失败，请检查所有目录是否有读写权限'];
         }
         return ['code' => 1, 'msg' => '下载成功'];
     }                
@@ -486,7 +486,7 @@ class ShopLogic extends Model
 
         $constsant_path = APP_PATH.MODULE_NAME.'/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");

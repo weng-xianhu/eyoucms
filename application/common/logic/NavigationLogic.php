@@ -81,7 +81,7 @@ class NavigationLogic extends Model
             {
                 $HtmlCode .= str_repeat('&nbsp;', $yiv['grade'] * 4);
             }
-            $HtmlCode .= htmlspecialchars_decode(addslashes($yiv['typename'])) . '</option>';
+            $HtmlCode .= safe_htmlspecialchars_decode(addslashes($yiv['typename'])) . '</option>';
 
             foreach ($twoLevel as $key => $val) {
                 if ($yiv['id'] == $val['parent_id']) {
@@ -101,7 +101,7 @@ class NavigationLogic extends Model
                     {
                         $HtmlCode .= str_repeat('&nbsp;', $val['grade'] * 4);
                     }
-                    $HtmlCode .= htmlspecialchars_decode(addslashes($val['typename'])) . '</option>';
+                    $HtmlCode .= safe_htmlspecialchars_decode(addslashes($val['typename'])) . '</option>';
                     foreach ($threeLevel as $k => $v) {
                         if ($val['id'] == $v['parent_id']) {
                             if (2 == $seo_pseudo) {
@@ -120,7 +120,7 @@ class NavigationLogic extends Model
                             {
                                 $HtmlCode .= str_repeat('&nbsp;', $v['grade'] * 4);
                             }
-                            $HtmlCode .= htmlspecialchars_decode(addslashes($v['typename'])) . '</option>';
+                            $HtmlCode .= safe_htmlspecialchars_decode(addslashes($v['typename'])) . '</option>';
                             unset($threeLevel[$k]);
                         }
                     }
@@ -166,7 +166,7 @@ class NavigationLogic extends Model
             if ($var['level'] > 0) {
                 $arctypeHtml .= str_repeat('&nbsp;', $var['level'] * 4);
             }
-            $arctypeHtml .= htmlspecialchars_decode(addslashes($var['typename'])) . '</option>';
+            $arctypeHtml .= safe_htmlspecialchars_decode(addslashes($var['typename'])) . '</option>';
         }
         $arctypeHtml .= '</select>';
 
@@ -194,7 +194,7 @@ class NavigationLogic extends Model
             if (intval($var['level']) > 0) {
                 $navHtml .= str_repeat('&nbsp;', intval($var['level']) * 4);
             }
-            $navHtml .= htmlspecialchars_decode(addslashes($var['nav_name'])) . '</option>';
+            $navHtml .= safe_htmlspecialchars_decode(addslashes($var['nav_name'])) . '</option>';
         }
         $navHtml .= '</select>';
         // dump($navHtml);exit;
@@ -271,7 +271,7 @@ class NavigationLogic extends Model
                 if ($value['level'] > 0) {
                     $select .= str_repeat('&nbsp;', $value['level'] * 4);
                 }
-                $select .= htmlspecialchars_decode(addslashes($value['nav_name'])) . '</option>';
+                $select .= safe_htmlspecialchars_decode(addslashes($value['nav_name'])) . '</option>';
             }
         }
 
@@ -313,7 +313,7 @@ class NavigationLogic extends Model
                         $options[$id]             = $value;
                         $options[$id]['level']    = $level;
                         $options[$id]['nav_id']   = $id;
-                        $options[$id]['nav_name'] = htmlspecialchars_decode($value['nav_name']);
+                        $options[$id]['nav_name'] = safe_htmlspecialchars_decode($value['nav_name']);
                         unset($arr[$key]);
 
                         if ($value['has_children'] == 0) {
@@ -329,7 +329,7 @@ class NavigationLogic extends Model
                         $options[$id]             = $value;
                         $options[$id]['level']    = $level;
                         $options[$id]['nav_id']   = $id;
-                        $options[$id]['nav_name'] = htmlspecialchars_decode($value['nav_name']);
+                        $options[$id]['nav_name'] = safe_htmlspecialchars_decode($value['nav_name']);
                         unset($arr[$key]);
 
                         if ($value['has_children'] > 0) {

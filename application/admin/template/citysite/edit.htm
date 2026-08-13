@@ -199,12 +199,14 @@
             $('input[name=name]').focus();
             return false;
         }
+        var province_id = $('select[name=province_id]').val();
+        var city_id = $('select[name=city_id]').val();
         $(obj).html('正在处理');
         $.ajax({
             url: "{:url('Citysite/ajax_get_name_pinyin', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
-            data: {name: name},
+            data: {name:name, province_id:province_id, city_id:city_id},
             success: function(res){
                 $(obj).html('获取拼音');
                 if (res.code == 1) {

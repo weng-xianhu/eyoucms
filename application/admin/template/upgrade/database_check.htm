@@ -1,0 +1,129 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js"></script>
+    <style type="text/css">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; font-size: 14px; color: #333; padding: 20px; background: #fff; }
+        .db-check-wrap { max-width: 100%; }
+        .db-check-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e4eaec; }
+        .db-check-tips { background: #edfbf8; color: #2cbca3; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; line-height: 1.8; }
+        .db-check-result { min-height: 100px; padding: 10px 0; line-height: 2; }
+        .db-check-result p { margin: 3px 0; font-size: 13px; }
+        .db-check-result .success-msg { color: #2cbca3; font-size: 15px; font-weight: bold; }
+        .db-check-result .error-msg { color: #e74c3c; }
+        .db-check-btns { padding-top: 15px; border-top: 1px solid #e4eaec; text-align: center; }
+        .btn-check, .btn-repair, .btn-upgrade { display: inline-block; padding: 8px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; border: none; margin: 0 5px; text-decoration: none; }
+        .btn-check { background: #2cbca3; color: #fff; }
+        .btn-check:hover { background: #26a68e; }
+        .btn-repair { background: #e6a23c; color: #fff; }
+        .btn-repair:hover { background: #cf9236; }
+        .btn-upgrade { background: #409eff; color: #fff; }
+        .btn-upgrade:hover { background: #3a8ee6; }
+        .btn-disabled { background: #ccc !important; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<div class="db-check-wrap">
+    <div class="db-check-tips">
+        <p>1、只对系统内置的数据表、字段进行对比修正；</p>
+        <p>2、会继续保留额外新增的数据表、插件安装的表、自定义字段；</p>
+        <p>3、修正前建议先备份数据库。</p>
+    </div>
+    <div class="db-check-result" id="check_result">
+        <p style="color:#999;">正在检测数据库结构，请稍候...</p>
+    </div>
+    <div class="db-check-btns" id="check_btns" style="display:none;">
+        <a class="btn-repair" id="btn_repair" href="javascript:void(0);" onclick="doRepair();">确认修正</a>
+    </div>
+    <div class="db-check-btns" id="upgrade_btns" style="display:none;">
+        <a class="btn-upgrade" id="btn_upgrade" href="javascript:void(0);" onclick="doUpgrade();">尝试更新系统</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+var eyou_basefile = "{$Request.baseFile}";
+var module_name = "{$Think.const.MODULE_NAME}";
+var check_url = eyou_basefile + '?m=' + module_name + '&c=Upgrade&a=database_check';
+var repair_url = eyou_basefile + '?m=' + module_name + '&c=Upgrade&a=database_repair';
+
+$(document).ready(function(){
+    doCheck();
+});
+
+function doCheck() {
+    $('#check_result').html('');
+    $('#check_btns').hide();
+    $('#upgrade_btns').hide();
+    layer.msg('正在检测数据库结构，请稍候...', {icon: 16, shade: [0.2], time: 60000});
+    $.ajax({
+        url: check_url,
+        data: {_ajax: 1},
+        type: 'post',
+        dataType: 'json',
+        timeout: 60000,
+        success: function(res) {
+            layer.closeAll();
+            if (1 == res.code) {
+                $('#check_result').html('<p class="success-msg">' + res.msg + '</p>');
+                $('#check_btns').hide();
+                $('#upgrade_btns').show();
+            } else {
+                $('#check_result').html(res.msg);
+                $('#check_btns').show();
+                $('#upgrade_btns').hide();
+            }
+        },
+        error: function(e) {
+            layer.closeAll();
+            $('#check_result').html('<p class="error-msg">请求失败，请检查网络后重试。</p>');
+        }
+    });
+}
+
+function doRepair() {
+    if ($('#btn_repair').hasClass('btn-disabled')) return;
+    $('#btn_repair').addClass('btn-disabled').text('正在修正...');
+    layer.msg('正在修正数据库结构，请稍候...', {icon: 16, shade: [0.2], time: 120000});
+    $.ajax({
+        url: repair_url,
+        data: {_ajax: 1},
+        type: 'post',
+        dataType: 'json',
+        timeout: 120000,
+        success: function(res) {
+            layer.closeAll();
+            $('#btn_repair').removeClass('btn-disabled').text('确认修正');
+            if (1 == res.code) {
+                $('#check_result').html('<p class="success-msg">' + res.msg + '</p>');
+                $('#check_btns').hide();
+                $('#upgrade_btns').show();
+            } else {
+                $('#check_result').html('<p class="error-msg">' + res.msg + '</p>');
+                if (res.data && res.data.error_sql) {
+                    var html = '<p style="margin-top:10px;color:#999;">以下SQL执行失败：</p>';
+                    $.each(res.data.error_sql, function(i, sql){
+                        html += '<p style="font-size:12px;color:#666;word-break:break-all;">' + sql + '</p>';
+                    });
+                    $('#check_result').append(html);
+                }
+            }
+        },
+        error: function(e) {
+            layer.closeAll();
+            $('#btn_repair').removeClass('btn-disabled').text('确认修正');
+            $('#check_result').html('<p class="error-msg">请求失败，请检查网络后重试。</p>');
+        }
+    });
+}
+
+function doUpgrade() {
+    window.parent.db_repair_done = true;
+    var parentLayerIndex = window.parent.layer.getFrameIndex(window.name);
+    window.parent.layer.close(parentLayerIndex);
+}
+</script>
+</body>
+</html>

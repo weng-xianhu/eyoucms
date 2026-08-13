@@ -21,19 +21,16 @@ load_trait('controller/Jump');
 class DdosLogic extends Model
 {
     use \traits\controller\Jump;
-    public $admin_info = array();
     public $admin_id = 0;
-    public $admin_lang = 'cn';
-    public $times;
     public static $ddosData = null;
     const FEATURE_MSG_CODE_100 = 100; // 多余文件
     const FEATURE_MSG_CODE_101 = 101; // 多余文件
     const FEATURE_MSG_CODE_110 = 110; // 多余安装目录
     const FEATURE_MSG_CODE_111 = 111; // 多余目录
     const FEATURE_MSG_CODE_500 = 500; // 疑似篡改
-    const FEATURE_MSG_CODE_600 = 600; // 疑似木马
-    const FEATURE_MSG_CODE_601 = 601; // 疑似木马
-    const FEATURE_MSG_CODE_602 = 602; // 疑似木马，不支持修复
+    const FEATURE_MSG_CODE_600 = 600; // 疑似mm
+    const FEATURE_MSG_CODE_601 = 601; // 疑似mm
+    const FEATURE_MSG_CODE_602 = 602; // 疑似mm，不支持修复
     const FEATURE_MSG_CODE_990 = 990; // 高危漏洞
     const FEATURE_MSG_CODE_991 = 991; // 高危漏洞
 
@@ -42,32 +39,155 @@ class DdosLogic extends Model
      */
     public function initialize() {
         parent::initialize();
-        $this->admin_info = session('admin_info');
-        $this->admin_id = empty($this->admin_info) ? 0 : $this->admin_info['admin_id'];
-        $this->admin_lang = get_admin_lang();
-        $this->times = getTime();
-        if (preg_match('/^(ddos_)/i', request()->action()) && null === self::$ddosData) {
-            $ddosData = tpSetting('ddos', [], 'cn');
-            self::$ddosData['ddos_feature_pattern'] = json_decode(base64_decode($ddosData['ddos_feature_pattern']), true);
-            self::$ddosData['ddos_feature_imgpattern'] = json_decode(base64_decode($ddosData['ddos_feature_imgpattern']), true);
-            self::$ddosData['ddos_feature_msg'] = json_decode(base64_decode($ddosData['ddos_feature_msg']), true);
-            self::$ddosData['ddos_feature_msg_grade'] = json_decode(base64_decode($ddosData['ddos_feature_msg_grade']), true);
-            self::$ddosData['ddos_feature_other'] = json_decode(base64_decode($ddosData['ddos_feature_other']), true);
-            foreach ([10010,10013,10030,10035,10070,10090] as $key => $val) {
-                if (isset(self::$ddosData['ddos_feature_other'][$val])) {
-                    self::$ddosData['ddos_feature_other'][$val]['value'] = explode(',', self::$ddosData['ddos_feature_other'][$val]['value']);
+        $this->admin_id = (int)session('admin_info.admin_id');
+        if (null === self::$ddosData) {
+            $is_getNewDdosData = false;
+            // 函数名前缀是 ddos_ 
+            if (preg_match('/^(ddos_)/i', request()->action())) {
+                $is_getNewDdosData = true;
+            }
+            // Win 环境
+            else if (IS_WIN) {
+                if (!empty($_SERVER['argv'][0]) && preg_match('/(scan_for_win(\/|\\\))?ddos_auto_scan.php/', $_SERVER['argv'][0])) {
+                    $is_getNewDdosData = true;
+                } else if (!empty($_SERVER['argv'][1]) && 'ddos_auto_scan' == $_SERVER['argv'][1]) {
+                    $is_getNewDdosData = true;
+                }
+            }
+            // 非 Win 环境
+            else {
+                if (!empty($_SERVER['argv'][1]) && 'ddos_auto_scan' == $_SERVER['argv'][1]) {
+                    $is_getNewDdosData = true;
+                }
+            }
+
+            if ($is_getNewDdosData) {
+                self::$ddosData = $this->getNewDdosData();
+            }
+        }
+    }
+
+    public function set_admin_id($admin_id = 0)
+    {
+        $this->admin_id = $admin_id;
+    }
+
+    public function getNewDdosData()
+    {
+        $new_ddosData = [];
+        $ddosData = tpSetting('ddos', [], 'cn');
+        $new_ddosData['ddos_feature_pattern'] = json_decode(base64_decode($ddosData['ddos_feature_pattern']), true);
+        $new_ddosData['ddos_feature_imgpattern'] = json_decode(base64_decode($ddosData['ddos_feature_imgpattern']), true);
+        $new_ddosData['ddos_feature_msg'] = json_decode(base64_decode($ddosData['ddos_feature_msg']), true);
+        $new_ddosData['ddos_feature_msg_grade'] = json_decode(base64_decode($ddosData['ddos_feature_msg_grade']), true);
+        $new_ddosData['ddos_feature_other'] = json_decode(base64_decode($ddosData['ddos_feature_other']), true);
+        foreach ([10010,10013,10030,10035,10036,10070,10090,10051,10080] as $key => $val) {
+            if (isset($new_ddosData['ddos_feature_other'][$val])) {
+                if (in_array($val, [10051,10080])) {
+                    $new_ddosData['ddos_feature_other'][$val]['value'] = $this->generateCaseVariations($new_ddosData['ddos_feature_other'][$val]['value']);
+                } else {
+                    if (in_array($val, [10010])) {
+                        $new_ddosData['ddos_feature_other'][$val]['value'] = $this->generateCaseVariations($new_ddosData['ddos_feature_other'][$val]['value']);
+                    }
+                    $new_ddosData['ddos_feature_other'][$val]['value'] = explode(',', $new_ddosData['ddos_feature_other'][$val]['value']);
                     if (10035 == $val) {
                         $arr = [];
-                        foreach (self::$ddosData['ddos_feature_other'][$val]['value'] as $_k => $_v) {
+                        foreach ($new_ddosData['ddos_feature_other'][$val]['value'] as $_k => $_v) {
                             $_v_arr = explode('--pattern--', $_v);
                             $arr[$_v_arr[0]]['value'] = $_v_arr[0];
                             $arr[$_v_arr[0]]['pattern'] = $_v_arr[1];
                         }
-                        self::$ddosData['ddos_feature_other'][$val] = $arr;
+                        $new_ddosData['ddos_feature_other'][$val] = $arr;
                     }
                 }
             }
         }
+        return $new_ddosData;
+    }
+
+    /**
+     * 获取远程病毒特征库
+     * @param  string $opt_type [description]
+     * @return [type]             [description]
+     */
+    public function feature_init($opt_type = '')
+    {
+        // 病毒特征库
+        $is_internal_network = function_exists('is_internal_network') ? is_internal_network() : false;
+        if ($is_internal_network) {
+            $response = '100001';
+        } else {
+            $url = 'ht'.'tp'.':/'.'/e'.'yo'.'u-u'.'p'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/other/ddos_feature_library.txt';
+            $response = @httpRequest2($url, 'GET', [], [], 3);
+            if (!strstr($response, '100001')) {
+                $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
+                $response = @file_get_contents($url, false, $context);
+            }
+        }
+        if (strstr($response, '100001')) {
+            $path = DATA_PATH.'conf/ddos_feature_library.txt';
+            if (!file_exists($path) || is_writeable($path)) {
+                try {
+                    $fp = fopen($path, "w+");
+                    if (!empty($fp) && fwrite($fp, $response)) {
+                        fclose($fp);
+                    }
+                } catch (\Exception $e) {}
+            }
+            $this->ddos_setting('sys.feature_library', $response);
+        } else {
+            $response = getVersion('ddos_feature_library', '');
+            if (empty($response)) {
+                $response = $this->ddos_setting('sys.feature_library');
+            }
+        }
+
+        if (empty($response) && !$is_internal_network && empty($opt_type)) {
+            $this->error('文件 data/conf/ddos_feature_library.txt 没有读写权限', null, '', 20);
+        }
+        $response = preg_replace("#[\r\n]{1,}#", "\n", $response);
+        $feature_librarys = explode("\n", $response);
+        $feature_librarys = array_filter($feature_librarys);
+
+        $feature_pattern = [];
+        $feature_imgpattern = [];
+        $feature_msg = [];
+        $feature_msg_grade = [];
+        $feature_other = [];
+        foreach ($feature_librarys as $key => $val) {
+            if (!preg_match('/^#/i', $val)) {
+                if (preg_match('/^pattern\|/i', $val)) {
+                    $_k = preg_replace('/^pattern\|(\d+)\|(.*)$/i', '${1}', $val);
+                    $feature_pattern[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
+                }
+                else if (preg_match('/^imgpattern\|/i', $val)) {
+                    $_k = preg_replace('/^imgpattern\|(\d+)\|(.*)$/i', '${1}', $val);
+                    $feature_imgpattern[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
+                }
+                else if (preg_match('/^msg\|/i', $val)) {
+                    $_k = preg_replace('/^msg\|(\d+)\|(.*)$/i', '${1}', $val);
+                    $feature_msg[$_k]['value'] = preg_replace('/^(.*)\|value\|([^\|]+)\|(.*)$/i', '${2}', $val);
+                    $_k2 = preg_replace('/^(\d{3,3})(.*)$/i', '${1}', $_k);
+                    $feature_msg_grade[$_k2]['grade'] = $_k2;
+                    $feature_msg_grade[$_k2]['value'] = preg_replace('/^msg\|(\d+)\|([^\|]+)\|(.*)$/i', '${2}', $val);
+                    $opt = preg_replace('/^(.*)\|opt_([\w\-]*)\|(.*)$/i', '${2}', $val);
+                    $feature_msg[$_k]['opt']['event'] = $opt;
+                    $feature_msg[$_k]['opt']['value'] = preg_replace('/^(.*)\|opt_([\w\-]*)\|([^\|]+)\|(.*)$/i', '${3}', $val);
+                }
+                else if (preg_match('/^other\|/i', $val)) {
+                    $_k = preg_replace('/^other\|(\d+)\|(.*)$/i', '${1}', $val);
+                    $feature_other[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
+                }
+            }
+        }
+        $setData = [
+            'ddos_feature_pattern' => base64_encode(json_encode($feature_pattern)),
+            'ddos_feature_imgpattern' => base64_encode(json_encode($feature_imgpattern)),
+            'ddos_feature_msg' => base64_encode(json_encode($feature_msg)),
+            'ddos_feature_msg_grade' => base64_encode(json_encode($feature_msg_grade)),
+            'ddos_feature_other' => base64_encode(json_encode($feature_other)),
+        ];
+        tpSetting('ddos', $setData, 'cn');
     }
 
     /*-----------------------ddos攻击脚本查杀 start-----------------------*/
@@ -122,17 +242,37 @@ class DdosLogic extends Model
         foreach ($result as $key=>$val){
             $files = [];
             if (function_exists('glob')) {
-                $files = glob("{$val}/{.[!.],}*.{".$ext."}", GLOB_BRACE);
-            } else {
-                $handle = opendir($val);
-                while (false !== ($file = readdir($handle))) {
-                    $file_path = "{$val}/{$file}";
-                    if (!in_array($file, ['.','..']) && is_file($file_path) && preg_match('/\.('.$ext_pattern.')$/i', $file)) {
-                        $files[] = $file_path;
+                if (false && defined('GLOB_BRACE')) {
+                    $files = glob("{$val}/{.[!.],}*.{" . $ext . "}*", GLOB_BRACE);
+                } else {
+                    $allFiles = glob($val . '/*'); // 获取当前目录所有文件
+                    foreach ($allFiles as $file) {
+                        // 排除系统目录
+                        if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                        // 获取文件扩展名并转为小写
+                        $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        // 检查扩展名是否在允许列表中
+                        if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt)) {
+                            $files[] = $file;
+                        }
                     }
                 }
-                closedir($handle);
+            } else {
+                $allFiles = ey_scandir($val); // 获取当前目录所有文件
+                foreach ($allFiles as $file) {
+                    $file = "{$val}/{$file}";
+                    // 排除系统目录
+                    if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                    // 获取文件扩展名并转为小写
+                    $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    // 检查扩展名是否在允许列表中
+                    if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt)) {
+                        $files[] = $file;
+                    }
+                }
             }
+            $files = array_unique($files);
+
             $info_value = [];
             $info_value['dir'] = $val;
             $info_value['files'] = $files;
@@ -172,7 +312,11 @@ class DdosLogic extends Model
             $insertData = [];
             foreach ($val['files'] as $_k => $_v) {
                 $filepath = $_v;
-                $filetype = strtolower(preg_replace("/^(.*)\.([a-z]+)$/i", '${2}', $filepath));
+                if (!is_readable(realpath($filepath))) {
+                    $this->error("/{$filepath}<br/>文件没有读取权限，请检查以下问题：<br/>1、站点目录权限是否为755；<br/>2、站点所有目录的权限，禁止用root:root ；");
+                }
+                $filetype = strtolower(pathinfo($filepath, PATHINFO_EXTENSION));
+                // $filetype = strtolower(preg_replace("/^(.*)\.([^\.]+)$/i", '${2}', $filepath));
                 if ('html' == $filetype) {
                     $content_tmp = @file_get_contents($filepath);
                     if (false !== $content_tmp && (empty($content_tmp) || 'dir' == $content_tmp)) {
@@ -193,7 +337,7 @@ class DdosLogic extends Model
                     $suspicious_html = "";
                     while ($buffer = fgets($fp, 4096)) {
                         $i++;
-                        $redata = $this->ddos_checkCodeFeatures($i, $buffer, $filetype);
+                        $redata = $this->ddos_checkCodeFeatures($i, $buffer, $filetype, $filepath);
                         if (!empty($redata['bool'])) {
                             $file_grade = empty($redata['file_grade']) ? self::FEATURE_MSG_CODE_600 : $redata['file_grade'];
                             // $suspicious_html .= empty($redata['msg']) ? self::$ddosData['ddos_feature_msg'][$file_grade]['value'] : $redata['msg'];
@@ -202,6 +346,19 @@ class DdosLogic extends Model
                         }
                     }
                     fclose($fp);
+
+                    if (0 == $file_grade && in_array($filetype, self::$ddosData['ddos_feature_other'][10036]['value'])) {
+                        $fp = fopen($fd, "r");
+                        while ($buffer = fgets($fp, 4096)) {
+                            $redata = $this->ddos_checkCodeFeatures(1, $buffer, $filetype, $filepath);
+                            if (!empty($redata['bool'])) {
+                                $file_grade = empty($redata['file_grade']) ? self::FEATURE_MSG_CODE_600 : $redata['file_grade'];
+                                $suspicious_html .= htmlspecialchars($this->ddos_cut_str($buffer,120,0));
+                                break;
+                            }
+                        }
+                        fclose($fp);
+                    }
                 }
 
                 if (!empty($file_grade)) {
@@ -251,7 +408,7 @@ class DdosLogic extends Model
      * @param  string $buffer [description]
      * @return [type]         [description]
      */
-    private function ddos_checkCodeFeatures($i = 0, $buffer = '', $filetype = '')
+    private function ddos_checkCodeFeatures($i = 0, $buffer = '', $filetype = '', $filepath = '')
     {
         $bool = false;
         $msg = '';
@@ -273,11 +430,10 @@ class DdosLogic extends Model
                     if (!empty($patterns['value']) && preg_match($patterns['value'], $buffer)) {
                         $bool = true;
                         $file_grade = preg_replace('/^(\d{3,3})(.*)$/i', '${1}', $key);
-                        if (stristr($buffer, 'select name="${3:$2}" id="${4:$2}"')) {
-                            var_dump($buffer);
-                            var_dump($patterns['value']);
-                            exit;
-                        }
+                        // if (stristr($filepath, 'jquery33.js')) {
+                        //     var_dump($patterns['value']);
+                        //     exit;
+                        // }
                         if ('js' == $filetype) {
                             if (990001 <= $key && $key <= 990010) {
                                 $msg = empty(self::$ddosData['ddos_feature_msg'][$key]['value']) ? self::$ddosData['ddos_feature_msg'][$file_grade]['value'] : self::$ddosData['ddos_feature_msg'][$key]['value'];
@@ -463,21 +619,22 @@ class DdosLogic extends Model
      * 获取对应版本的易优cms源码文件列表
      * @return [type] [description]
      */
-    public function ddos_eyou_source_files()
+    public function ddos_eyou_source_files($opt_type = '')
     {
         $version = getVersion();
         $filename = 'filelist.txt';
         if (version_compare($version,'v1.7.1','<')) {
             $filename = 'filelist_1219.txt';
         }
-        $url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'u.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/'.$filename;
+        $url = 'ht'.'tp'.':/'.'/'.'e'.'yo'.'u-up'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/'.$filename;
         $response = @httpRequest2($url, 'GET', [], [], 3);
         if (!stristr($response, 'application/common.php')) {
             $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
             $response = @file_get_contents($url, false, $context);
         }
         if (stristr($response, 'application/common.php')) {
-            $path = DATA_PATH.'conf/eyoufilelist.txt';
+            tpSetting('system.eyoufilelist', $response, 'cn');
+            /*$path = DATA_PATH.'conf/eyoufilelist.txt';
             if (!file_exists($path) || is_writeable($path)) {
                 try {
                     $fp = fopen($path, "w+");
@@ -485,13 +642,20 @@ class DdosLogic extends Model
                         fclose($fp);
                     }
                 } catch (\Exception $e) {}
-            }
+            }*/
         } else {
-            $response = getVersion('eyoufilelist', '');
+            $response = tpSetting('system.eyoufilelist', [], 'cn');
+            // $response = getVersion('eyoufilelist', '');
         }
-
+        
+        $filelist = [];
         if (empty($response)) {
-            $this->error('文件 data/conf/eyoufilelist.txt 没有读写权限', null, '', 20);
+            if ('auto_scan' == $opt_type) {
+                return [$filelist];
+            } else {
+                $this->error('连接官方扫描接口失败，请尝试', null, '', 20);
+                // $this->error('文件 data/conf/eyoufilelist.txt 没有读写权限', null, '', 20);
+            }
         }
         $response = preg_replace("#[\r\n]{1,}#", "\n", $response);
         $filelist = explode("\n", $response);
@@ -499,6 +663,11 @@ class DdosLogic extends Model
         $channeltypefiles = [];
         if (is_dir(ROOT_PATH.'data/model/application')) {
             $this->ddos_getDirFile('data/model/application', 'application', $channeltypefiles);
+        }
+        if (empty($channeltypefiles)) {
+            $channeltypefiles[] = 'application/common/model/CustomModel.php';
+            $channeltypefiles[] = 'application/home/controller/CustomModel.php';
+            $channeltypefiles[] = 'application/home/model/CustomModel.php';
         }
         $row = Db::name('channeltype')->where(['ifsystem'=>0])->order('id asc')->select();
         foreach ($row as $key => $val) {
@@ -530,7 +699,7 @@ class DdosLogic extends Model
 
         $this->ddos_setting('sys.eyoufilelist', json_encode($filelist));
 
-        return $filelist;
+        return [$filelist];
     }
 
     /**
@@ -565,7 +734,7 @@ class DdosLogic extends Model
                 $val['html'] = $feature_msg_value . $val['html'];
                 $file_all_name = !empty($val['file_name']) ? trim($val['file_name'], '/') : '';
                 $file_alias_name = preg_replace('/^(.*)(\/|\\\)([^\/\\\]+)$/i', '${3}', $file_all_name);
-                // $filetype = strtolower(preg_replace("/^(.*)\.([a-z]+)$/i", '${2}', $file_all_name)); // pathinfo($file_all_name, PATHINFO_EXTENSION);
+                // $filetype = strtolower(pathinfo($file_all_name, PATHINFO_EXTENSION)); // strtolower(preg_replace("/^(.*)\.([^\.]+)$/i", '${2}', $file_all_name));
                 $grade_value = self::$ddosData['ddos_feature_msg_grade'][$file_grade]['value'];
                 $operation_html = "";
                 $opt_arr = self::$ddosData['ddos_feature_msg'][$file_grade]['opt'];
@@ -586,14 +755,20 @@ class DdosLogic extends Model
                 }
 
                 if ('see' == $opt_arr['event']) {
-                    $operation_html = "<a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='{$opt_arr['value']}' target='_blank'>查看</a>";
+                    $operation_html = "<a class='__CLASS__' href='javascript:void(0);' data-md5key='{$val['md5key']}' data-layer_tips_txt='漏洞及木马文件不支持加入白名单，请及时处理' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='{$opt_arr['value']}' target='_blank'>查看</a>";
                 } else if ('replace_tips' == $opt_arr['event']) {
-                    $operation_html = "<a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' {$opt_arr['onclick']}>{$opt_arr['value']}</a>";
+                    $operation_html = "<a class='__CLASS__' href='javascript:void(0);' data-md5key='{$val['md5key']}' data-layer_tips_txt='漏洞及木马文件不支持加入白名单，请及时处理' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' {$opt_arr['onclick']}>{$opt_arr['value']}</a>";
                 } else if ('replace' == $opt_arr['event']) {
                     $tips_title = '执行后，将从官方服务器下载对应版本文件进行覆盖修复';
-                    $operation_html = "<a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' data-md5key='{$val['md5key']}' data-title='{$tips_title}' onclick='replacefile(this, \"single\");'>{$opt_arr['value']}</a>";
+                    $operation_html = "<a class='__CLASS__' href='javascript:void(0);' data-md5key='{$val['md5key']}' data-layer_tips_txt='漏洞及木马文件不支持加入白名单，请及时处理' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' data-md5key='{$val['md5key']}' data-title='{$tips_title}' onclick='replacefile(this, \"single\");'>{$opt_arr['value']}</a>";
                 } else if ('del' == $opt_arr['event']) {
-                    $operation_html = "<a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='delfile(this, \"single\");'>{$opt_arr['value']}</a>";
+                    $operation_html = "<a class='__CLASS__' href='javascript:void(0);' data-md5key='{$val['md5key']}' data-layer_tips_txt='漏洞及木马文件不支持加入白名单，请及时处理' onclick='whitelist_add(this);'>加入白名单</a><i></i><a href='javascript:void(0);' data-md5key='{$val['md5key']}' onclick='delfile(this, \"single\");'>{$opt_arr['value']}</a>";
+                }
+
+                if ($val['file_grade'] >= self::FEATURE_MSG_CODE_500) {
+                    $operation_html = str_replace(['__CLASS__','whitelist_add(this);'], [' ey_auto_layer_tips grey ','javascript:void(0);'], $operation_html);
+                } else {
+                    $operation_html = str_replace(['__CLASS__','__layer_tips__'], '', $operation_html);
                 }
 
                 $grade_color_class = "";
@@ -665,19 +840,33 @@ EOF;
     public function ddos_log_reset()
     {
         $Prefix = config('database.prefix');
-        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'ddos_log\'');
+        $ddosLogTable = $Prefix . 'ddos_log';
+        $ddosSettingTable = $Prefix . 'ddos_setting';
+        // 检查表是否存在
+        if (config('database.type') == 'dm') { // 达梦优化
+            $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = ?", [$ddosLogTable]);
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = ?", [$ddosLogTable]);
+        } else {
+            $database = config('database.database');
+            $isTable = Db::query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?", [$database, $ddosLogTable]);
+        }
         if (!empty($isTable)) {
             Db::name('ddos_log')->where(['admin_id'=>$this->admin_id])->delete(true);
-            @Db::execute("ALTER TABLE `{$Prefix}ddos_log` AUTO_INCREMENT 1");
-            @Db::query("REPAIR TABLE `{$Prefix}ddos_log`");
+            if (!in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓不支持
+                @Db::execute("ALTER TABLE `{$ddosLogTable}` AUTO_INCREMENT 1");
+                @Db::query("REPAIR TABLE `{$ddosLogTable}`");
+            }
         }
 
         Db::name('ddos_setting')->where([
                 'admin_id'=>$this->admin_id,
                 'inc_type'=>['NOTIN', ['sys']],
             ])->delete(true);
-        @Db::execute("ALTER TABLE `{$Prefix}ddos_setting` AUTO_INCREMENT 1");
-        @Db::query("REPAIR TABLE `{$Prefix}ddos_setting`");
+        if (!in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓不支持
+            @Db::execute("ALTER TABLE `{$ddosSettingTable}` AUTO_INCREMENT 1");
+            @Db::query("REPAIR TABLE `{$ddosSettingTable}`");
+        }
         Cache::clear('ddos_setting');
     }
 
@@ -835,9 +1024,9 @@ EOF;
      */
     public function getAdminbasefile($route = true)
     {
-        $new_basefile = request()->baseFile();
         $web_adminbasefile = tpCache('global.web_adminbasefile');
         $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : ROOT_DIR.'/login.php';
+        $new_basefile = (request()->module() == 'admin') ? request()->baseFile() : $web_adminbasefile;
         if (stristr($web_adminbasefile, 'index.php') || $new_basefile != $web_adminbasefile) {
             $web_adminbasefile = $new_basefile;
         }
@@ -886,48 +1075,89 @@ EOF;
     }
 
     /**
-     * 获取要扫描目录的数据
+     * 获取要扫描目录的文件
      */
-    private function getScanFilesData($offset = 0, $limit = 0)
+    public function getScanFilesData($offset = 0, $limit = 0, $opt_type = '', $dirlist = [])
     {
         empty($limit) && $limit = 50;
         $info = [];
-        $source_dirlist = $this->ddos_setting('web.source_dirlist');
-        $dirlist = json_decode($source_dirlist, true);
-        $result = array_slice($dirlist, 0, $limit, true);
+        if ('auto_scan' == $opt_type) {
+            $result = $dirlist;
+        } else {
+            $source_dirlist = $this->ddos_setting('web.source_dirlist');
+            $dirlist = json_decode($source_dirlist, true);
+            $result = array_slice($dirlist, 0, $limit, true);
+        }
         $ext = self::$ddosData['ddos_feature_other'][10051]['value'];
         $ext_pattern = str_replace(',', '|', $ext);
         foreach ($result as $key=>$val){
             if ('/' == $val) {
                 $files = [];
                 if (function_exists('glob')) {
-                    $files = glob("{.[!.],}*.{".$ext."}", GLOB_BRACE);
-                } else {
-                    $handle = opendir($val);
-                    while (false !== ($file = readdir($handle))) {
-                        $file_path = "{$file}";
-                        if (!in_array($file, ['.','..']) && is_file($file_path) && preg_match('/\.('.$ext_pattern.')$/i', $file)) {
-                            $files[] = $file_path;
+                    if (false && defined('GLOB_BRACE')) {
+                        $files = glob("{.[!.],}*.{" . $ext . "}*", GLOB_BRACE);
+                    } else {
+                        $allFiles = glob('*'); // 获取当前目录所有文件
+                        foreach ($allFiles as $file) {
+                            // 排除系统目录
+                            if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                            // 获取文件扩展名并转为小写
+                            $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                            // 检查扩展名是否在允许列表中
+                            if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt) && !preg_match(self::$ddosData['ddos_feature_other'][10052]['value'], $fileExt)) {
+                                $files[] = $file;
+                            }
                         }
                     }
-                    closedir($handle);
+                } else {
+                    $allFiles = ey_scandir('.' . $val); // 获取当前目录所有文件
+                    foreach ($allFiles as $file) {
+                        // 排除系统目录
+                        if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                        // 获取文件扩展名并转为小写
+                        $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        // 检查扩展名是否在允许列表中
+                        if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt) && !preg_match(self::$ddosData['ddos_feature_other'][10052]['value'], $fileExt)) {
+                            $files[] = $file;
+                        }
+                    }
                 }
                 $root_dirs = glob('*', GLOB_ONLYDIR);
+                $files = array_unique($files);
                 $files = array_merge($root_dirs, $files);
             } else {
                 $files = [];
                 if (function_exists('glob')) {
-                    $files = glob("{$val}/{.[!.],}*.{".$ext."}", GLOB_BRACE);
-                } else {
-                    $handle = opendir($val);
-                    while (false !== ($file = readdir($handle))) {
-                        $file_path = "{$val}/{$file}";
-                        if (!in_array($file, ['.','..']) && is_file($file_path) && preg_match('/\.('.$ext_pattern.')$/i', $file)) {
-                            $files[] = $file_path;
+                    if (false && defined('GLOB_BRACE')) {
+                        $files = glob("{$val}/{.[!.],}*.{" . $ext . "}*", GLOB_BRACE);
+                    } else {
+                        $allFiles = glob($val . '/*'); // 获取当前目录所有文件
+                        foreach ($allFiles as $file) {
+                            // 排除系统目录
+                            if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                            // 获取文件扩展名并转为小写
+                            $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                            // 检查扩展名是否在允许列表中
+                            if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt) && !preg_match(self::$ddosData['ddos_feature_other'][10052]['value'], $fileExt)) {
+                                $files[] = $file;
+                            }
                         }
                     }
-                    closedir($handle);
+                } else {
+                    $allFiles = ey_scandir($val); // 获取当前目录所有文件
+                    foreach ($allFiles as $file) {
+                        $file = "{$val}/{$file}";
+                        // 排除系统目录
+                        if ($file === '.' || $file === '..' || is_dir($file)) continue;
+                        // 获取文件扩展名并转为小写
+                        $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        // 检查扩展名是否在允许列表中
+                        if (preg_match('/^('.$ext_pattern.')([\w\-]*)$/i', $fileExt) && !preg_match(self::$ddosData['ddos_feature_other'][10052]['value'], $fileExt)) {
+                            $files[] = $file;
+                        }
+                    }
                 }
+                $files = array_unique($files);
             }
             $info_value = [];
             $info_value['dir'] = $val;
@@ -941,10 +1171,12 @@ EOF;
         } else {
             $pagetotal = (int)$this->ddos_setting('web.source_dirlist_total');
         }
-        // 重新存储剩余目录数据
-        array_splice($dirlist, 0, $limit); // 从索引0开始删除$limit个元素
-        // 存储读取后的文件夹列表
-        $this->ddos_setting('web.source_dirlist', json_encode($dirlist));
+        if (empty($opt_type)) {
+            // 重新存储剩余目录数据
+            array_splice($dirlist, 0, $limit); // 从索引0开始删除$limit个元素
+            // 存储读取后的文件夹列表
+            $this->ddos_setting('web.source_dirlist', json_encode($dirlist));
+        }
 
         return ['info' => $info, 'pagetotal' => $pagetotal];
     }
@@ -952,7 +1184,7 @@ EOF;
     /*
      * 逐个检查扫描的文件
      */
-    private function ddosInspectFiles($result, $achievepage = 0, $achievefile = 0, $allscantotal = 0, $doubtotal = 0, $allpagetotal = 0)
+    public function ddosInspectFiles($result, $achievepage = 0, $achievefile = 0, $allscantotal = 0, $doubtotal = 0, $allpagetotal = 0, $other_data = [])
     {
         $return_data = [
             'msg' => "",
@@ -978,6 +1210,8 @@ EOF;
         empty($eyoufilelist) && $eyoufilelist = [];
         // 扫描白名单列表
         $whitelist = $this->ddos_whitelist_data();
+        // 拼接成字符串
+        $ddos_feature_other_10010 = implode('|', self::$ddosData['ddos_feature_other'][10010]['value']);
 
         foreach ($result as $key => $val) {
             $return_data['achievepage'] += 1;
@@ -1009,7 +1243,22 @@ EOF;
                     }
                 }
                 else {
-                    $filetype = strtolower(preg_replace("/^(.*)\.([a-z]+)$/i", '${2}', $filepath));
+                    // 忽略安全中心自身生成的备份文件（data/ddos_repair/*.bak），避免被误判为多余文件
+                    if (preg_match('/^data\/ddos_repair\/.*\.bak$/i', $filepath)) {
+                        continue;
+                    }
+
+                    if (!is_readable(realpath($filepath))) {
+                        $err_msg = "/{$filepath}<br/>文件没有读取权限，请检查以下问题：<br/>1、站点目录权限是否为755；<br/>2、站点所有目录的权限，禁止用root:root ；";
+                        if (!empty($other_data['opt_type']) && 'auto_scan' == $other_data['opt_type']) {
+                            // file_put_contents ( DATA_PATH."conf/auto_scan_log.txt", date ( "Y-m-d H:i:s" ) . "  " . $err_msg . "\r\n", FILE_APPEND );
+                            exit($err_msg);
+                        } else {
+                            $this->error($err_msg);
+                        }
+                    }
+                    $filetype = strtolower(pathinfo($filepath, PATHINFO_EXTENSION));
+                    // $filetype = strtolower(preg_replace("/^(.*)\.([^\.]+)$/i", '${2}', $filepath));
 
                     if (0 == $file_grade) {
                         // 在官方目录名单里
@@ -1066,7 +1315,7 @@ EOF;
                                         }
                                     }
                                     // 其他，比如：根目录只能存在特定的php文件、特定目录不能存在php等动态语言文件
-                                    if (0 == $file_grade && in_array($filetype, self::$ddosData['ddos_feature_other'][10010]['value'])) {
+                                    if (0 == $file_grade && preg_match('/^('.$ddos_feature_other_10010.')([\w\-]*)$/i', $filetype)) {
                                         if (1 == count(explode('/', $filepath))) {
                                             if (!in_array($filepath, ['index.php',$web_adminbasefile])) {
                                                 $file_grade = self::FEATURE_MSG_CODE_100;
@@ -1098,7 +1347,7 @@ EOF;
                         $suspicious_html = "";
                         while ($buffer = fgets($fp, 4096)) {
                             $i++;
-                            $redata = $this->ddos_checkCodeFeatures($i, $buffer, $filetype);
+                            $redata = $this->ddos_checkCodeFeatures($i, $buffer, $filetype, $filepath);
                             if (!empty($redata['bool'])) {
                                 $file_grade = empty($redata['file_grade']) ? self::FEATURE_MSG_CODE_600 : $redata['file_grade'];
                                 $suspicious_html .= htmlspecialchars($this->ddos_cut_str($buffer,120,0));
@@ -1106,6 +1355,19 @@ EOF;
                             }
                         }
                         fclose($fp);
+
+                        if (0 == $file_grade && in_array($filetype, self::$ddosData['ddos_feature_other'][10036]['value'])) {
+                            $fp = fopen($fd, "r");
+                            while ($buffer = fgets($fp, 4096)) {
+                                $redata = $this->ddos_checkCodeFeatures(1, $buffer, $filetype, $filepath);
+                                if (!empty($redata['bool'])) {
+                                    $file_grade = empty($redata['file_grade']) ? self::FEATURE_MSG_CODE_600 : $redata['file_grade'];
+                                    $suspicious_html .= htmlspecialchars($this->ddos_cut_str($buffer,120,0));
+                                    break;
+                                }
+                            }
+                            fclose($fp);
+                        }
 
                         if (!empty(self::$ddosData['ddos_feature_other'][10035][$filepath])) {
                             $buffer = @file_get_contents($fd);
@@ -1119,13 +1381,21 @@ EOF;
                     if (1 == $file_excess_dir && !empty($file_grade)) {
                         $file_excess = 1;
                     }
-                    // 指定目录里的疑似木马文件，在列表中提示自行修复，不支持在线修复
+                    // 指定目录里的疑似mm文件，在列表中提示自行修复，不支持在线修复
                     else if (self::FEATURE_MSG_CODE_600 == $file_grade) {
-                        if (!in_array($filetype, self::$ddosData['ddos_feature_other'][10010]['value']) && preg_match(self::$ddosData['ddos_feature_other'][10011]['value'], $filepath) && !preg_match(self::$ddosData['ddos_feature_other'][10012]['value'], $filepath)) {
-                            if (!empty(self::$ddosData['ddos_feature_other'][10013]['value']) && in_array($filetype, self::$ddosData['ddos_feature_other'][10013]['value'])) {
-                                $file_excess = 1;
-                            } else {
-                                $file_excess = 2;
+                        if (!preg_match('/^('.$ddos_feature_other_10010.')([\w\-]*)$/i', $filetype)) {
+                            if (preg_match(self::$ddosData['ddos_feature_other'][10011]['value'], $filepath) && !preg_match(self::$ddosData['ddos_feature_other'][10012]['value'], $filepath)) {
+                                if (!empty(self::$ddosData['ddos_feature_other'][10013]['value']) && in_array($filetype, self::$ddosData['ddos_feature_other'][10013]['value'])) {
+                                    $file_excess = 1;
+                                } else {
+                                    $file_excess = 2;
+                                }
+                            }
+                        } else {
+                            if (!isset($eyoufilelist[md5($filepath)])) {
+                                if (preg_match(self::$ddosData['ddos_feature_other'][10014]['value'], $filepath) && !preg_match(self::$ddosData['ddos_feature_other'][10015]['value'], $filepath)) {
+                                    $file_excess = 2;
+                                }
                             }
                         }
                     }
@@ -1135,12 +1405,13 @@ EOF;
                         if (isset($eyoufilelist[md5($filepath)])) {
                             $fparr = explode('|', $eyoufilelist[md5($filepath)]);
                             if (!empty($fparr[1])) {
+                                $cthash_arr = explode(',', $fparr[1]);
                                 $fp = fopen($filepath, 'r');
                                 $ct = fread($fp, filesize($filepath));
                                 fclose($fp);
                                 $ct = preg_replace("/\/\*\*[\r\n]{1,}(.*)[\r\n]{1,} \*\//sU", '', $ct);
                                 $cthash = md5($ct);
-                                if ($cthash != $fparr[1]) {
+                                if (!in_array($cthash, $cthash_arr)) {
                                     $file_grade = self::FEATURE_MSG_CODE_500;
                                 }
                             }
@@ -1176,7 +1447,12 @@ EOF;
                 try {
                     Db::name('ddos_log')->insertAll($insertData);
                 } catch (\Exception $e) {
-                    $return_data['msg'] .= '<span>' . '扫描失败：' . $e->getMessage() . '</span><br>';
+                    if (!empty($other_data['opt_type']) && 'auto_scan' == $other_data['opt_type']) {
+                        // file_put_contents ( DATA_PATH."conf/auto_scan_log.txt", date ( "Y-m-d H:i:s" ) . "  " . '扫描失败：' . $e->getMessage() . "\r\n", FILE_APPEND );
+                        exit($err_msg);
+                    } else {
+                        $return_data['msg'] .= '<span>' . '扫描失败：' . $e->getMessage() . '</span><br>';
+                    }
                 }
             }
 
@@ -1216,8 +1492,12 @@ EOF;
         $code = true;
         $errnum = 0;
         $md5keys = [];
+        $feature_other_arr = [];
         $feature_other = tpSetting('ddos.ddos_feature_other', [], 'cn');
-        $feature_other_arr = json_decode(base64_decode($feature_other), true);
+        if (is_string($feature_other) && $feature_other !== '') {
+            $feature_other_arr = json_decode(base64_decode($feature_other), true);
+            !is_array($feature_other_arr) && $feature_other_arr = [];
+        }
         foreach ($result as $key => $val) {
             $filename = !empty($val['file_name']) ? trim($val['file_name'], '/') : '';
             if (!empty($filename) && !preg_match('/^([\s\/\\\]+)$/i', $filename)) {
@@ -1309,12 +1589,12 @@ EOF;
                         break;
                     }
                     if (990 == $val['file_grade'] && preg_match('/^(.*)\.js$/i', $filename)) {
-                        $url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'u.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/public/static/common/js/jquery.min.js';
+                        $url = 'ht'.'tp'.':/'.'/'.'e'.'yo'.'u-up'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/public/static/common/js/jquery.min.js';
                     } else {
                         if ($this->getAdminbasefile(false) == $val['file_name']) {
                             $filename = 'login.php';
                         }
-                        $url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'u.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/'.$filename;
+                        $url = 'ht'.'tp'.':/'.'/'.'e'.'yo'.'u-up'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/'.$filename;
                         $arr_tmp = explode('/', $filename);
                         $file_alias_name = end($arr_tmp);
                         if ('.htaccess' == $file_alias_name) {
@@ -1445,6 +1725,38 @@ EOF;
         return [
             'file_doubt_total' => $file_doubt_total,
         ];
+    }
+
+    /**
+     * 扩展名区分大小写组合
+     */
+    private function generateCaseVariations($ext = '') {
+        $ext_all = [];
+        $ext_arr = explode(',', $ext);
+        foreach ($ext_arr as $key => $val) {
+            $chars = str_split($val);
+            $variations = [''];
+
+            foreach ($chars as $char) {
+                $lower = strtolower($char);
+                $upper = strtoupper($char);
+                $newVariations = [];
+
+                foreach ($variations as $var) {
+                    $newVariations[] = $var . $lower;
+                    if ($lower !== $upper) {
+                        $newVariations[] = $var . $upper;
+                    }
+                }
+
+                $variations = $newVariations;
+            }
+
+            $ext_all = array_merge($ext_all, $variations);
+        }
+        $ext_all = array_unique($ext_all);
+        
+        return implode(',', $ext_all);
     }
 
     /*-----------------------ddos攻击脚本查杀 end-----------------------*/
@@ -1621,7 +1933,7 @@ EOF;
             $twofactor_check = input('param.twofactor_check/d', 0);
             if (1 == $twofactor_check) {
                 $admin_login_twofactor_check = session('admin_login_twofactor_check');
-                $admin_login_twofactor_check = mchStrCode($admin_login_twofactor_check, 'DECODE');
+                $admin_login_twofactor_check = mchStrCode($admin_login_twofactor_check, 'DECODE', '', false);
                 if (!empty($admin_login_twofactor_check)) {
                     $redata['code'] = 1;
                     $assign_data['twofactor_check'] = $twofactor_check;
@@ -1691,7 +2003,7 @@ EOF;
                 
             } else {
                 session('isset_author', null); // 内置勿动
-                session('admin_login_twofactor_check', mchStrCode($vars['user_name'], 'ENCODE'));
+                session('admin_login_twofactor_check', mchStrCode($vars['user_name'], 'ENCODE', '', false));
                 $redata['url'] = url('Admin/login', ['twofactor_check'=>1]);
             }
         }
@@ -1819,4 +2131,439 @@ EOF;
         return $smtp_from_eamil;
     }
     /*-----------------------双因子 end-----------------------*/
+
+    /*-----------------------备份功能 start-----------------------*/
+    /**
+     * 获取备份目录路径
+     * @return string
+     */
+    public function getBackupDir()
+    {
+        $backupDir = DATA_PATH . 'ddos_repair' . DS;
+        if (!is_dir($backupDir)) {
+            tp_mkdir($backupDir, 0755);
+        }
+        return $backupDir;
+    }
+
+    /**
+     * 创建备份
+     * @param array $fileList 要备份的文件列表 [['file_name' => 'path/to/file', 'file_grade' => 500], ...]
+     * @return array ['code' => 1/0, 'msg' => '', 'backup_file' => '']
+     */
+    public function createBackup($fileList = [])
+    {
+        if (empty($fileList)) {
+            return ['code' => 0, 'msg' => '没有需要备份的文件'];
+        }
+
+        // 检查 ZipArchive 扩展
+        if (!class_exists('ZipArchive')) {
+            return ['code' => 0, 'msg' => '系统未安装 ZipArchive 扩展，无法创建备份'];
+        }
+
+        $version = getCmsVersion();
+        $version = preg_replace('/[^a-z0-9\.]/i', '', $version); // 清理版本号，只保留字母数字和点
+        $backupDir = $this->getBackupDir();
+        $timestamp = date('Ymd-His');
+        $backupFileName = $timestamp . '-' . $version . '.bak';
+        $backupFilePath = $backupDir . $backupFileName;
+
+        $zip = new \ZipArchive();
+        $res = $zip->open($backupFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        
+        if ($res !== true) {
+            return ['code' => 0, 'msg' => '无法创建备份文件'];
+        }
+
+        $backupCount = 0;
+        $backupInfo = [
+            'version' => $version,
+            'timestamp' => $timestamp,
+            'create_time' => date('Y-m-d H:i:s'),
+            'files' => []
+        ];
+
+        foreach ($fileList as $fileInfo) {
+            $filename = !empty($fileInfo['file_name']) ? trim($fileInfo['file_name'], '/') : '';
+            if (empty($filename)) {
+                continue;
+            }
+
+            $filePath = ROOT_PATH . $filename;
+            
+            // 只备份存在的文件
+            if (is_file($filePath)) {
+                // 在压缩包中使用相对路径
+                $zip->addFile($filePath, $filename);
+                $backupInfo['files'][] = [
+                    'file_name' => $filename,
+                    'file_grade' => isset($fileInfo['file_grade']) ? $fileInfo['file_grade'] : 0,
+                    'md5key' => isset($fileInfo['md5key']) ? $fileInfo['md5key'] : '',
+                ];
+                $backupCount++;
+            } elseif (is_dir($filePath)) {
+                // 如果是目录，备份目录下的所有文件
+                $this->addDirectoryToZip($zip, $filePath, $filename);
+                $backupInfo['files'][] = [
+                    'file_name' => $filename,
+                    'file_grade' => isset($fileInfo['file_grade']) ? $fileInfo['file_grade'] : 0,
+                    'md5key' => isset($fileInfo['md5key']) ? $fileInfo['md5key'] : '',
+                    'is_dir' => true,
+                ];
+                $backupCount++;
+            }
+        }
+
+        // 将备份信息写入压缩包
+        $zip->addFromString('backup_info.json', json_encode($backupInfo, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+        $zip->close();
+
+        if ($backupCount > 0 && file_exists($backupFilePath)) {
+            return [
+                'code' => 1,
+                'msg' => "已备份 {$backupCount} 个文件",
+                'backup_file' => $backupFileName,
+                'backup_count' => $backupCount
+            ];
+        } else {
+            @unlink($backupFilePath);
+            return ['code' => 0, 'msg' => '备份失败，没有文件被备份'];
+        }
+    }
+
+    /**
+     * 递归添加目录到压缩包
+     * @param ZipArchive $zip
+     * @param string $dirPath 目录绝对路径
+     * @param string $zipPath 压缩包中的路径
+     */
+    private function addDirectoryToZip($zip, $dirPath, $zipPath)
+    {
+        $files = scandir($dirPath);
+        foreach ($files as $file) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            $filePath = $dirPath . DS . $file;
+            $zipFilePath = $zipPath . '/' . $file;
+            if (is_dir($filePath)) {
+                $this->addDirectoryToZip($zip, $filePath, $zipFilePath);
+            } else {
+                $zip->addFile($filePath, $zipFilePath);
+            }
+        }
+    }
+
+    /**
+     * 从备份包中读取备份信息
+     * @param string $backupFilePath 备份文件绝对路径（.bak）
+     * @return array|null
+     */
+    private function readBackupInfo($backupFilePath)
+    {
+        if (!class_exists('ZipArchive')) {
+            return null;
+        }
+
+        if (empty($backupFilePath) || !file_exists($backupFilePath) || !is_file($backupFilePath)) {
+            return null;
+        }
+
+        // 临时将 .bak 改为 .zip 进行读取
+        $tempZipPath = str_replace('.bak', '.zip', $backupFilePath);
+        if (!@copy($backupFilePath, $tempZipPath)) {
+            return null;
+        }
+
+        $zip = new \ZipArchive();
+        $res = $zip->open($tempZipPath);
+        if ($res !== true) {
+            @unlink($tempZipPath);
+            return null;
+        }
+
+        $backupInfo = null;
+        if ($zip->locateName('backup_info.json') !== false) {
+            $backupInfoJson = $zip->getFromName('backup_info.json');
+            if ($backupInfoJson) {
+                $backupInfo = json_decode($backupInfoJson, true);
+            }
+        }
+
+        $zip->close();
+        @unlink($tempZipPath);
+
+        return $backupInfo;
+    }
+
+    /**
+     * 获取指定备份的详细信息（含文件列表）
+     * @param string $backupFileName 备份文件名
+     * @return array
+     */
+    public function getBackupInfo($backupFileName)
+    {
+        $backupDir = $this->getBackupDir();
+        $backupFilePath = $backupDir . $backupFileName;
+
+        // 安全检查：确保文件在备份目录内
+        $realPath = realpath($backupFilePath);
+        $realDir  = realpath($backupDir);
+        if (!$realPath || strpos($realPath, $realDir) !== 0) {
+            return ['code' => 0, 'msg' => '无效的备份文件'];
+        }
+
+        $backupInfo = $this->readBackupInfo($backupFilePath);
+        if (empty($backupInfo) || !is_array($backupInfo)) {
+            return ['code' => 0, 'msg' => '备份信息不存在或已损坏'];
+        }
+
+        $fileCount = 0;
+        if (!empty($backupInfo['files']) && is_array($backupInfo['files'])) {
+            $fileCount = count($backupInfo['files']);
+        }
+
+        return [
+            'code' => 1,
+            'msg'  => '获取成功',
+            'data' => [
+                'backup_info' => $backupInfo,
+                'file_count'  => $fileCount,
+            ],
+        ];
+    }
+
+    /**
+     * 获取备份列表
+     * @return array
+     */
+    public function getBackupList()
+    {
+        $backupDir = $this->getBackupDir();
+        $backupList = [];
+        
+        if (is_dir($backupDir)) {
+            $files = scandir($backupDir);
+            foreach ($files as $file) {
+                if ($file == '.' || $file == '..' || !preg_match('/\.bak$/i', $file)) {
+                    continue;
+                }
+                
+                $filePath = $backupDir . $file;
+                if (is_file($filePath)) {
+                    // 解析文件名：20251113-091831-v1.7.6.bak
+                    if (preg_match('/^(\d{8})-(\d{6})-(.+?)\.bak$/i', $file, $matches)) {
+                        $item = [
+                            'file_name' => $file,
+                            'file_path' => $filePath,
+                            'date' => $matches[1],
+                            'time' => $matches[2],
+                            'version' => $matches[3],
+                            'size' => filesize($filePath),
+                            'size_format' => format_bytes(filesize($filePath)),
+                            'create_time' => date('Y-m-d H:i:s', filemtime($filePath)),
+                        ];
+
+                        // 读取备份信息中的文件数
+                        $info = $this->readBackupInfo($filePath);
+                        if (!empty($info['files']) && is_array($info['files'])) {
+                            $item['file_count'] = count($info['files']);
+                        } else {
+                            $item['file_count'] = 0;
+                        }
+
+                        $backupList[] = $item;
+                    }
+                }
+            }
+        }
+
+        // 按时间倒序排列
+        usort($backupList, function($a, $b) {
+            return strcmp($b['date'] . $b['time'], $a['date'] . $a['time']);
+        });
+
+        return $backupList;
+    }
+
+    /**
+     * 删除备份
+     * @param string $backupFileName 备份文件名
+     * @return array
+     */
+    public function deleteBackup($backupFileName)
+    {
+        $backupDir = $this->getBackupDir();
+        $backupFilePath = $backupDir . $backupFileName;
+        
+        // 安全检查：确保文件在备份目录内
+        $realPath = realpath($backupFilePath);
+        $realDir = realpath($backupDir);
+        if (!$realPath || strpos($realPath, $realDir) !== 0) {
+            return ['code' => 0, 'msg' => '无效的备份文件'];
+        }
+
+        if (file_exists($backupFilePath) && is_file($backupFilePath)) {
+            if (@unlink($backupFilePath)) {
+                return ['code' => 1, 'msg' => '删除成功'];
+            } else {
+                return ['code' => 0, 'msg' => '删除失败，请检查文件权限'];
+            }
+        } else {
+            return ['code' => 0, 'msg' => '备份文件不存在'];
+        }
+    }
+
+    /**
+     * 还原备份
+     * @param string $backupFileName 备份文件名
+     * @return array
+     */
+    public function restoreBackup($backupFileName)
+    {
+        return $this->doRestoreBackup($backupFileName);
+    }
+
+    /**
+     * 还原备份中的单个文件或目录
+     * @param string $backupFileName 备份文件名
+     * @param string $targetPath     要还原的相对路径（如 application/admin/controller/Security.php 或 application/admin）
+     * @return array
+     */
+    public function restoreBackupItem($backupFileName, $targetPath)
+    {
+        return $this->doRestoreBackup($backupFileName, $targetPath);
+    }
+
+    /**
+     * 内部通用还原逻辑
+     * @param string      $backupFileName 备份文件名
+     * @param string|null $targetPath     目标路径，为空时还原全部
+     * @return array
+     */
+    private function doRestoreBackup($backupFileName, $targetPath = null)
+    {
+        // 检查 ZipArchive 扩展
+        if (!class_exists('ZipArchive')) {
+            return ['code' => 0, 'msg' => '系统未安装 ZipArchive 扩展，无法还原备份'];
+        }
+
+        $backupDir = $this->getBackupDir();
+        $backupFilePath = $backupDir . $backupFileName;
+
+        // 安全检查：确保文件在备份目录内
+        $realPath = realpath($backupFilePath);
+        $realDir  = realpath($backupDir);
+        if (!$realPath || strpos($realPath, $realDir) !== 0) {
+            return ['code' => 0, 'msg' => '无效的备份文件'];
+        }
+
+        if (!file_exists($backupFilePath) || !is_file($backupFilePath)) {
+            return ['code' => 0, 'msg' => '备份文件不存在'];
+        }
+
+        // 检查版本号
+        $currentVersion = getCmsVersion();
+        $currentVersion = preg_replace('/[^a-z0-9\.]/i', '', $currentVersion);
+
+        // 从文件名提取版本号
+        if (preg_match('/^(\d{8})-(\d{6})-(.+?)\.bak$/i', $backupFileName, $matches)) {
+            $backupVersion = $matches[3];
+            if ($backupVersion !== $currentVersion) {
+                return ['code' => 0, 'msg' => "备份版本号({$backupVersion})与当前系统版本号({$currentVersion})不一致，无法还原"];
+            }
+        } else {
+            return ['code' => 0, 'msg' => '备份文件名格式不正确'];
+        }
+
+        // 规范化目标路径（与备份时保持一致，都是 / 分隔）
+        $targetPath = !empty($targetPath) ? trim(str_replace('\\', '/', $targetPath), '/') : null;
+
+        // 临时将 .bak 改为 .zip 进行解压
+        $tempZipPath = str_replace('.bak', '.zip', $backupFilePath);
+        if (!@copy($backupFilePath, $tempZipPath)) {
+            return ['code' => 0, 'msg' => '无法创建临时解压文件'];
+        }
+
+        $zip = new \ZipArchive();
+        $res = $zip->open($tempZipPath);
+
+        if ($res !== true) {
+            @unlink($tempZipPath);
+            return ['code' => 0, 'msg' => '无法打开备份文件，可能文件已损坏'];
+        }
+
+        $restoreCount  = 0;
+        $restoreErrors = [];
+
+        // 目录前缀判断用
+        $targetDirPrefix = null;
+        if (!empty($targetPath)) {
+            $targetDirPrefix = rtrim($targetPath, '/') . '/';
+        }
+
+        // 解压文件（全部或指定路径）
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat     = $zip->statIndex($i);
+            $filename = $stat['name'];
+
+            // 跳过备份信息文件
+            if ($filename == 'backup_info.json') {
+                continue;
+            }
+
+            // 如果指定了目标路径，只处理目标文件或其子目录
+            if (!empty($targetPath)) {
+                if ($filename !== $targetPath && strpos($filename, $targetDirPrefix) !== 0) {
+                    continue;
+                }
+            }
+
+            $targetFilePath = ROOT_PATH . $filename;
+            $targetDir      = dirname($targetFilePath);
+
+            // 创建目录
+            if (!is_dir($targetDir)) {
+                if (!tp_mkdir($targetDir, 0755)) {
+                    $restoreErrors[] = "无法创建目录: {$targetDir}";
+                    continue;
+                }
+            }
+
+            // 提取文件
+            $content = $zip->getFromIndex($i);
+            if ($content !== false) {
+                if (@file_put_contents($targetFilePath, $content) !== false) {
+                    $restoreCount++;
+                } else {
+                    $restoreErrors[] = "无法还原文件: {$filename}";
+                }
+            }
+        }
+
+        $zip->close();
+        @unlink($tempZipPath);
+
+        if ($restoreCount > 0) {
+            if (!empty($targetPath)) {
+                $scopeText = '';
+            } else {
+                $scopeText = '（全部文件）';
+            }
+            $msg = "成功还原 {$restoreCount} 个文件{$scopeText}";
+            if (!empty($restoreErrors)) {
+                $msg .= "，失败 " . count($restoreErrors) . " 个";
+            }
+            return ['code' => 1, 'msg' => $msg, 'restore_count' => $restoreCount, 'errors' => $restoreErrors];
+        } else {
+            if (!empty($targetPath)) {
+                return ['code' => 0, 'msg' => '还原失败，备份中未找到指定的文件或目录', 'errors' => $restoreErrors];
+            } else {
+                return ['code' => 0, 'msg' => '还原失败，没有文件被还原', 'errors' => $restoreErrors];
+            }
+        }
+    }
+    /*-----------------------备份功能 end-----------------------*/
 }

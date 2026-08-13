@@ -40,9 +40,9 @@
             <tr>
               <td class="tar">数据库密码</td>
               <td class="data-password">
-                <input type="password" name="dbpw" id="dbpw" value="" class="input" autocomplete="off" onBlur="TestDbPwd(0)">
+                <input type="text" name="dbpw" id="dbpw" value="" class="input" autocomplete="off" onBlur="TestDbPwd(0)">
                 <div id="J_install_tip_dbpw"></div>
-                <span class="password-icon hide pass-showhide" data-name="dbpw"></span>
+                <!-- <span class="password-icon hide pass-showhide" data-name="dbpw"></span> -->
               </td>
             </tr>
             <tr>
@@ -66,17 +66,17 @@
             <tr>
               <td class="tar">管理员密码</td>
               <td class="data-password">
-                <input type="password" name="manager_pwd" id="manager_pwd" class="input" autocomplete="off">
+                <input type="text" name="manager_pwd" id="manager_pwd" class="input" autocomplete="off">
                 <div id="J_install_tip_manager_pwd"></div>
-                <span class="password-icon hide pass-showhide" data-name="manager_pwd"></span>
+                <!-- <span class="password-icon hide pass-showhide" data-name="manager_pwd"></span> -->
               </td>
             </tr>
             <tr>
               <td class="tar">请确认密码</td>
               <td class="data-password">
-                <input type="password" name="manager_ckpwd" id="manager_ckpwd" class="input" autocomplete="off">
+                <input type="text" name="manager_ckpwd" id="manager_ckpwd" class="input" autocomplete="off">
                 <div id="J_install_tip_manager_ckpwd"></div>
-                <span class="password-icon hide pass-showhide" data-name="manager_ckpwd"></span>
+                <!-- <span class="password-icon hide pass-showhide" data-name="manager_ckpwd"></span> -->
               </td>
             </tr>
             
@@ -333,7 +333,7 @@
       /**
        * 明文密码
        */
-      $('.pass-showhide').toggle(function(){
+      /*$('.pass-showhide').toggle(function(){
           var name = $(this).data('name');
           $("input[name="+name+"]").get(0).type="text";
           $(this).removeClass('hide').addClass('show');
@@ -341,7 +341,7 @@
           var name = $(this).data('name');
           $("input[name="+name+"]").get(0).type="password";
           $(this).removeClass('show').addClass('hide');
-      });
+      });*/
       
       // $('.pass-showhide').on('mousedown', function(){
       //     var name = $(this).data('name');

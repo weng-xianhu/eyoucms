@@ -367,48 +367,48 @@
                        {eyou:notempty name='$vo.info' /} href="{$vo.info|default=''}" download="{$vo.info|get_filename=###}" {/eyou:notempty}>
                     <img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件</a>
                     <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.info|default=''}" style="display: none;">
-                    <button type="button" class="users-btn users-btn-text" id="upload_{$vo.fieldArr}_{$vo.name|default=''}">
-                        <span>上传文件</span>
+                    <button type="button" class="users-btn users-btn-text" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" onclick="return openFileLibrary_{$vo.fieldArr}_{$vo.name|default=''}(event);">
+                        <span>选择文件</span>
                     </button>
                 </div>
             </div>
             
             <script type="text/javascript">
-                layui.use('upload', function(){
-                    var upload = layui.upload;
+                // 附件库URL（单文件）
+                var uploadFileSysLayerUrl_{$vo.fieldArr}_{$vo.name|default=''} = "{:url('Uploadfilenew/upload', ['func'=>'uploadUsersFileCallback_'.$vo['fieldArr'].'_'.$vo['name'], 'path'=>'soft', 'open_source'=>'bendi', 'num'=>1])}";
 
-                    //执行实例
-                    upload.render({
-                        elem: '#upload_{$vo.fieldArr}_{$vo.name|default=""}' //绑定元素
-                        ,url: "{:url('Ueditor/DownloadUploadFileAjax')}"
-                        ,accept: 'file' //普通文件
-                        ,exts: '{$vo.ext}'
-                        ,size: {$vo.filesize} //限制文件大小，单位 KB
-                        ,done: function(res){
-                            if (res.code==1){
-                                layer.msg(res.msg);
-                                var  arr = res.file_url.split("/");
-                                var download = arr[arr.length-1];
-                                $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.file_url);
-                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}")
-                                    .show()
-                                    .attr('href',res.file_url)
-                                    .attr('download',download)
-                                    .css('color','#000')
-                                    .html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
-                            }else {
-                                $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}")
-                                    .show()
-                                    .css('color','red')
-                                    .text(res.msg)
-                                    .attr('href', 'javascript:void(0);');
-                            }
-                        }
-                        ,error: function(){
-                            //请求异常回调
-                        }
+                // 打开附件库
+                function openFileLibrary_{$vo.fieldArr}_{$vo.name|default=''}(event) {
+                    if (event) { event.preventDefault(); event.stopPropagation(); }
+                    layer.open({
+                        type: 2,
+                        title: '选择附件',
+                        shadeClose: false,
+                        shade: 0.3,
+                        maxmin: false,
+                        area: ['1000px', '625px'],
+                        content: uploadFileSysLayerUrl_{$vo.fieldArr}_{$vo.name|default=''}
                     });
-                });
+                    return false;
+                }
+
+                // 附件选择回调
+                function uploadUsersFileCallback_{$vo.fieldArr}_{$vo.name|default=''}(fileurl_tmp, filename_tmp, filesize_tmp, fileext_tmp) {
+                    if (!fileurl_tmp) return;
+                    var fileUrl = Array.isArray(fileurl_tmp) ? fileurl_tmp[0] : fileurl_tmp;
+                    var fileName = Array.isArray(filename_tmp) ? filename_tmp[0] : filename_tmp;
+                    if (!fileName && fileUrl) {
+                        var parts = fileUrl.split('/');
+                        fileName = parts[parts.length - 1];
+                    }
+                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileUrl);
+                    $("#download_file_{$vo.fieldArr}_{$vo.name|default=''}")
+                        .show()
+                        .attr('href', fileUrl)
+                        .attr('download', fileName)
+                        .css('color','#000')
+                        .html('<img src="__STATIC__/common/images/file.png" alt="" style="width: 16px;height:  16px;">下载附件');
+                }
             </script>
             <!-- 单个文件 end -->
             {/case}

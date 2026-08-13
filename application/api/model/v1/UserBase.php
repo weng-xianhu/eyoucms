@@ -32,7 +32,8 @@ class UserBase extends Base
 
         $token = input('param.token/s');
         if (!empty($token)) {
-            $tokenDecode = mchStrCode($token, 'DECODE', '#!@diyminipro#!$');
+            // 安全修复：令牌密钥改为“固定串 + 每站唯一密钥(get_auth_code)”，与生成端保持一致
+            $tokenDecode = mchStrCode($token, 'DECODE', '#!@diyminipro#!$' . get_auth_code());
             if (preg_match_all('/^([0-9a-zA-Z]{8})eyoucms(\d{1,})eyoucms(.+)eyoucms([a-z]{8})eyoucms(.+)eyoucms_token_salt$/i', $tokenDecode, $matches)) {
                 $this->users_id = !empty($matches[2][0]) ? intval($matches[2][0]) : 0;
                 $openid = !empty($matches[3][0]) ? $matches[3][0] : '';

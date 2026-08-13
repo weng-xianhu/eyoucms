@@ -39,7 +39,7 @@ return array (
   'url' => 
   array (
     'name' => 'url',
-    'type' => 'varchar(100)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

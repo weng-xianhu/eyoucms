@@ -228,4 +228,80 @@ class PHPExcel_CachedObjectStorageFactory
         self::$cacheStorageClass = null;
         self::$storageMethodParameters = array();
     }
+
+    /**
+     * Allowed classes for unserialize to prevent PHP Object Injection attacks
+     * Security fix: Only allow PHPExcel internal classes
+     *
+     * @var array
+     */
+    private static $allowedClasses = array(
+        'PHPExcel_Cell',
+        'PHPExcel_Cell_DataType',
+        'PHPExcel_Cell_DataValidation',
+        'PHPExcel_Cell_Hyperlink',
+        'PHPExcel_Comment',
+        'PHPExcel_RichText',
+        'PHPExcel_RichText_Run',
+        'PHPExcel_Style',
+        'PHPExcel_Style_Alignment',
+        'PHPExcel_Style_Border',
+        'PHPExcel_Style_Borders',
+        'PHPExcel_Style_Color',
+        'PHPExcel_Style_Conditional',
+        'PHPExcel_Style_Fill',
+        'PHPExcel_Style_Font',
+        'PHPExcel_Style_NumberFormat',
+        'PHPExcel_Style_Protection',
+        'PHPExcel_Style_Supervisor',
+        'stdClass',
+    );
+
+    /**
+     * Safe unserialize wrapper to prevent PHP Object Injection attacks
+     * Security fix: Validates serialized data before unserializing
+     *
+     * @param string $data Serialized data
+     * @return mixed Unserialized object or false on failure
+     * @throws PHPExcel_Exception If potentially dangerous class is detected
+     */
+    public static function safeUnserialize($data)
+    {
+        if (!is_string($data) || empty($data)) {
+            return false;
+        }
+        // PHP 7.0+ supports allowed_classes option
+        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+            return @unserialize($data, array('allowed_classes' => self::$allowedClasses));
+        }
+        // For PHP 5.4-5.6, validate serialized string before unserializing
+        // Check for dangerous class patterns
+        $dangerousPatterns = array(
+            '/O:\d+:"(?!PHPExcel_|stdClass)[^"]+"/i',  // Objects not starting with PHPExcel_ or stdClass
+        );
+        foreach ($dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $data)) {
+                throw new PHPExcel_Exception('Potentially dangerous class detected in serialized data');
+            }
+        }
+        return @unserialize($data);
+    }
+
+    /**
+     * Safe igbinary_unserialize wrapper
+     * Security fix: Validates data before unserializing
+     *
+     * @param string $data Serialized data
+     * @return mixed Unserialized object or false on failure
+     */
+    public static function safeIgbinaryUnserialize($data)
+    {
+        if (!is_string($data) || empty($data)) {
+            return false;
+        }
+        // igbinary doesn't support allowed_classes, use standard unserialize check
+        // Convert to standard serialized format for validation, then use igbinary
+        // Note: This is a best-effort approach for PHP 5.4 compatibility
+        return @igbinary_unserialize($data);
+    }
 }

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$eyou.field.seo_title}</title>
+    <meta name="description" content="{$eyou.field.seo_description}">
+    <meta name="keywords" content="{$eyou.field.seo_keywords}" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": "{$eyou.field.ai_content_index_url}",
+      "name": "网站内容索引",
+      "description": "{$eyou.field.seo_description}",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "{eyou:global name='web_name' /}",
+        "url": "{eyou:global name='web_basehost' /}"
+      }
+    }
+    </script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #333; border-bottom: 2px solid #007cba; padding-bottom: 5px; }
+        .content-list { list-style: none; padding: 0; }
+        .content-list li { margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 4px solid #007cba; }
+        .meta-info { color: #666; font-size: 0.9em; }
+        .category { font-weight: bold; color: #007cba; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>网站内容索引</h1>
+        <p class="meta-info">本页面专为AI爬虫设计，提供网站完整内容结构和索引信息</p>
+        
+        <!-- 内容导航 -->
+        <nav role="navigation" aria-label="页面内容导航" style="margin-top: 20px;">
+            <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; border-left: 4px solid #007cba;">
+                <strong>内容目录：</strong>
+                <a href="#site-info" style="margin: 0 10px;">网站信息</a> |
+                <a href="#site-structure" style="margin: 0 10px;">栏目结构</a> |
+                {volist name="$eyou.field.channeltype_list" id="vo"}
+                    {if condition="1 == $vo['id']"}<a href="#latest-articles" style="margin: 0 10px;">最新文章</a> |
+                    {elseif condition="2 == $vo['id']" /}<a href="#products" style="margin: 0 10px;">产品信息</a> |
+                    {elseif condition="3 == $vo['id']" /}<a href="#images" style="margin: 0 10px;">图集内容</a> |
+                    {elseif condition="4 == $vo['id']" /}<a href="#downloads" style="margin: 0 10px;">下载资源</a> |
+                    {elseif condition="5 == $vo['id']" /}<a href="#medias" style="margin: 0 10px;">视频内容</a> |
+                    {else /}<a href="#{$vo['nid']}s" style="margin: 0 10px;">{$vo['ntitle']}内容</a> |
+                    {/if}
+                {/volist}
+                <a href="#tags" style="margin: 0 10px;">网站标签</a> |
+                <a href="#faqs" style="margin: 0 10px;">FAQ</a> |
+                <a href="#links" style="margin: 0 10px;">友情链接</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- 网站基本信息 -->
+        <section class="section" role="region" aria-labelledby="site-info">
+            <h2 id="site-info">网站基本信息</h2>
+            <div itemscope itemtype="https://schema.org/Organization">
+                <p><strong>网站名称：</strong><span itemprop="name">{eyou:global name='web_name' /}</span></p>
+                <p><strong>网站地址：</strong><span itemprop="url">{eyou:global name='web_basehost' /}</span></p>
+                <p><strong>网站描述：</strong><span itemprop="description">{eyou:global name='web_description' /}</span></p>
+                <p><strong>网站关键词：</strong><span itemprop="keywords">{eyou:global name='web_keywords' /}</span></p>
+                {if condition="!empty($eyou['field']['web_telephone'])"}
+                <p><strong>联系电话：</strong><span itemprop="telephone">{$eyou.field.web_telephone}</span></p>
+                {/if}
+                {if condition="!empty($eyou['field']['web_email'])"}
+                <p><strong>联系邮箱：</strong><span itemprop="email">{$eyou.field.web_email}</span></p>
+                {/if}
+                {if condition="!empty($eyou['field']['web_address'])"}
+                <p><strong>公司地址：</strong><span itemprop="address">{$eyou.field.web_address}</span></p>
+                {/if}
+            </div>
+            
+            <!-- 网站统计信息 -->
+            <div class="meta-info" style="margin-top: 15px; padding: 10px; background: #fafafa; border-radius: 3px;">
+                <strong>网站内容统计：</strong><br>
+                栏目总数：{$eyou.field.type_list|count=###}个
+                {volist name="$eyou.field.channeltype_list" id="vo"}
+                    {if condition="1 == $vo['id']"} | 文章总数：{$eyou['field']['arc_list'][$vo['id']]['total']|default=0}篇
+                    {else /} | {$eyou['field']['arc_list'][$vo['id']]['channel_info']['ntitle']}总数：{$eyou['field']['arc_list'][$vo['id']]['total']|default=0}个
+                    {/if}
+                {/volist}
+            </div>
+        </section>
+
+        <!-- 网站栏目结构 -->
+        <section class="section" role="region" aria-labelledby="site-structure">
+            <h2 id="site-structure">网站栏目结构</h2>
+            <nav role="navigation" aria-label="网站主要栏目">
+                <ul class="content-list">
+                    {volist name="$eyou.field.type_list" id="vo"}
+                    <li>
+                        <div class="category">{$vo.typename}</div>
+                        <div class="meta-info">栏目ID: {$vo.id} | 链接: <a href="{$vo.typeurl}">{$vo.typeurl}</a></div>
+                    </li>
+                    {/volist}
+                </ul>
+            </nav>
+        </section>
+
+    {volist name="$eyou.field.channeltype_list" id="vo"}
+        {if condition="1 == $vo['id']"}
+        <!-- 最新文章 -->
+        <section class="section" role="region" aria-labelledby="latest-articles">
+            <h2 id="latest-articles">最新文章内容</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/Article">
+                    <h3><a href="{$field.arcurl}" itemprop="headline">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>作者：<span itemprop="author">{$field.author}</span></span> |
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d H:i',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span> |
+                        <span>文章ID：{$field.aid}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {elseif condition="2 == $vo['id']" /}
+        <!-- 产品信息 -->
+        <section class="section" role="region" aria-labelledby="products">
+            <h2 id="products">产品信息</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/Product">
+                    <h3><a href="{$field.arcurl}" itemprop="name">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>价格：<span itemprop="price">￥{$field.users_price}</span></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {elseif condition="3 == $vo['id']" /}
+        <!-- 图集内容 -->
+        <section class="section" role="region" aria-labelledby="images">
+            <h2 id="images">图集内容</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/ImageGallery">
+                    <h3><a href="{$field.arcurl}" itemprop="name">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>作者：<span itemprop="author">{$field.author}</span></span> |
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d H:i',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span> |
+                        <span>图片数量：{$field.image_list|count=###}张</span> |
+                        <span>文章ID：{$field.aid}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {elseif condition="4 == $vo['id']" /}
+        <!-- 下载资源 -->
+        <section class="section" role="region" aria-labelledby="downloads">
+            <h2 id="downloads">下载资源</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/SoftwareApplication">
+                    <h3><a href="{$field.arcurl}" itemprop="name">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>作者：<span itemprop="author">{$field.author}</span></span> |
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d H:i',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span> |
+                        <span>文件大小：{$field.file_size}</span> |
+                        <span>下载次数：{$field.downcount}</span> |
+                        <span>文章ID：{$field.aid}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {elseif condition="5 == $vo['id']" /}
+        <!-- 视频内容 -->
+        <section class="section" role="region" aria-labelledby="videos">
+            <h2 id="videos">视频内容</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/VideoObject">
+                    <h3><a href="{$field.arcurl}" itemprop="name">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>作者：<span itemprop="author">{$field.author}</span></span> |
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d H:i',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span> |
+                        <span>视频时长：{$field.total_duration}</span> |
+                        <span>视频数量：{$field.total_video}个</span> |
+                        <span>文章ID：{$field.aid}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {else /}
+        <!-- {$vo['ntitle']}内容 -->
+        <section class="section" role="region" aria-labelledby="{$vo['nid']}s">
+            <h2 id="{$vo['nid']}s">{$vo['ntitle']}内容</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['arc_list'][$vo['id']]['list']" id="field"}
+                <li itemscope itemtype="https://schema.org/Article">
+                    <h3><a href="{$field.arcurl}" itemprop="headline">{$field.title}</a></h3>
+                    <div class="meta-info">
+                        <span>作者：<span itemprop="author">{$field.author}</span></span> |
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>更新时间：<time itemprop="dateModified" datetime="{$field.update_time|date='c',###}">{$field.update_time|date='Y-m-d H:i',###}</time></span>
+                    </div>
+                    <p itemprop="description">{$field.seo_description}</p>
+                    <div class="meta-info">
+                        <span>浏览量：{$field.click}</span> |
+                        <span>文章ID：{$field.aid}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        {/if}
+    {/volist}
+
+        <!-- 标签云 -->
+        <section class="section" role="region" aria-labelledby="tags">
+            <h2 id="tags">网站标签</h2>
+            <div class="meta-info">以下是网站中使用的所有标签，反映了网站的主要内容主题：</div>
+            <div style="margin-top: 15px;">
+                {volist name="$eyou['field']['tags_list']" id="field"}
+                <span style="display: inline-block; margin: 5px; padding: 5px 10px; background: #f0f0f0; border-radius: 3px; color: #333;">
+                    <a href="{$field.link}">{$field.tag} ({$field.total})</a>
+                </span>
+                {/volist}
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="section" role="region" aria-labelledby="faqs">
+            <h2 id="faqs">FAQ</h2>
+            <ul class="content-list">
+                {volist name="$eyou['field']['faq_list']" id="field"}
+                <li itemscope itemtype="https://schema.org/Question">
+                    <h3 itemprop="name">{$field.asklist_title}</h3>
+                    <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer">
+                        <span itemprop="text">{$field.asklist_content}</span>
+                    </p>
+                    <div class="meta-info">
+                        <span>发布时间：<time itemprop="datePublished" datetime="{$field.add_time|date='c',###}">{$field.add_time|date='Y-m-d H:i',###}</time></span> |
+                        <span>FAQ分组：{$field.group_title}</span> |
+                        <span>FAQ ID：{$field.asklist_id}</span>
+                    </div>
+                </li>
+                {/volist}
+            </ul>
+        </section>
+
+        <!-- 友情链接 -->
+        <section class="section" role="region" aria-labelledby="links">
+            <h2 id="links">友情链接</h2>
+            <ul class="content-list">
+                {eyou:links type='all' loop='100' titlelen='100'}
+                <li>
+                    <a href="{$field.url}" {$field.target} {$field.nofollow}>{$field.title}</a>
+                    <div class="meta-info">链接地址: {$field.url}</div>
+                </li>
+                {/eyou:links}
+            </ul>
+        </section>
+    </main>
+
+    <!-- AI 理解摘要 -->
+    <section class="section" role="region" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px dashed #007cba;">
+        <h2 style="color: #007cba;">AI 理解摘要</h2>
+        <div style="font-size: 0.95em; line-height: 1.8;">
+            <p><strong>网站类型：</strong>基于EyouCMS系统构建的企业网站</p>
+            <p><strong>主要功能：</strong>支持多种内容类型展示，包括{$eyou.field.zygn_channel_text}等</p>
+            <p><strong>内容结构：</strong>采用分栏目管理，每种内容类型都有独立的发布和管理系统</p>
+            <p><strong>SEO优化：</strong>每个内容页面都有独立的SEO标题、关键词、描述设置</p>
+            <p><strong>技术特点：</strong>{if condition="1 == config('ey_config.response_type')"}响应式设计{else /}固定布局{/if}，支持PC和移动端访问，集成了完整的内容管理功能</p>
+            <p><strong>更新频率：</strong>内容动态更新，本页面反映网站实时状态</p>
+        </div>
+    </section>
+
+    <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; color: #666; text-align: center;">
+        <p>本页面最后更新时间：<time datetime="{:MyDate('c', getTime())}">{:MyDate('Y-m-d H:i:s', getTime())}</time></p>
+        <p>{eyou:global name='web_copyright' /} | <a href="{eyou:global name='web_basehost' /}/sitemap.xml">网站地图</a> | <a href="{eyou:global name='web_basehost' /}/robots.txt">Robots.txt</a></p>
+        <p style="margin-top: 10px; font-size: 0.85em; color: #999;">
+            本页面专为AI爬虫和搜索引擎优化设计，包含网站完整内容索引和结构化数据
+        </p>
+    </footer>
+</body>
+</html>

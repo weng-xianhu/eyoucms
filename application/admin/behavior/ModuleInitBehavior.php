@@ -56,7 +56,7 @@ class ModuleInitBehavior {
         );
         $ctlActStr = self::$controllerName.'@'.self::$actionName;
         if (in_array($ctlActStr, $ctlActArr)) {
-            $row = tpSetting('system.system_vertify');
+            $row = tpSetting('system.system_vertify', [], 'cn');
             // 获取验证码配置信息
             $row = json_decode($row, true);
             $baseConfig = Config::get("captcha");

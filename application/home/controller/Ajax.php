@@ -149,7 +149,7 @@ class Ajax extends Base
         $Comment = !empty($Comment) ? $Comment : [];
         foreach ($Comment as &$value) {
             // 规格处理
-            $value['data'] = unserialize($value['data']);
+            $value['data'] = safe_unserialize($value['data']);
             $value['spec_value'] = !empty($value['data']['spec_value']) ? htmlspecialchars_decode($value['data']['spec_value']) : '';
             $value['spec_value'] = rtrim(str_replace("<br/>", "，", $value['spec_value']), '，');
             // 会员头像处理
@@ -161,11 +161,11 @@ class Ajax extends Base
             // 评价转换星级评分(旧版评价数据执行)
             $value['total_score'] = empty($value['is_new_comment']) ? GetScoreArray($value['total_score']) : $value['total_score'];
             // 评价上传的图片
-            $value['upload_img'] = !empty($value['upload_img']) ? explode(',', unserialize($value['upload_img'])) : '';
+            $value['upload_img'] = !empty($value['upload_img']) ? explode(',', safe_unserialize($value['upload_img'])) : '';
             // 评价的内容
-            $value['content'] = !empty($value['content']) ? htmlspecialchars_decode(unserialize($value['content'])) : '';
+            $value['content'] = !empty($value['content']) ? htmlspecialchars_decode(safe_unserialize($value['content'])) : '';
             // 回复的内容
-            $adminReply = !empty($value['admin_reply']) ? unserialize($value['admin_reply']) : [];
+            $adminReply = !empty($value['admin_reply']) ? safe_unserialize($value['admin_reply']) : [];
             $adminReply['adminReply'] = !empty($adminReply['adminReply']) ? htmlspecialchars_decode($adminReply['adminReply']) : '';
             $value['admin_reply'] = $adminReply;
         }
@@ -201,6 +201,24 @@ class Ajax extends Base
         $this->assign('PageObj', $Page);
         $this->assign('Page', $Page->show());
         $this->assign('Comment', $Comment);
+    }
+
+    // 联动选择字段获取子级选项
+    public function ajax_get_cascade_data()
+    {
+        $parent_id = input('param.parent_id/d', 0);
+        $field_id  = input('param.field_id/d', 0);
+        $list = Db::name('field_cascade_data')->field('id,name')
+            ->where(['field_id' => $field_id, 'parent_id' => $parent_id])
+            ->order('sort_order ASC, id ASC')
+            ->select();
+        $html = '';
+        if (!empty($list)) {
+            foreach ($list as $v) {
+                $html .= "<option value='{$v['id']}'>{$v['name']}</option>";
+            }
+        }
+        echo json_encode(['code' => 1, 'html' => $html, 'list' => $list]);
     }
 
     // 联动地址获取

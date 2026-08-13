@@ -22,9 +22,140 @@
     </div>
     <br/>
     <div class="flexigrid">
-        {include file="index/theme_conf" /}
-        {include file="index/theme_welcome_conf" /}
+        <form class="form-horizontal" id="postForm1" action="{:url('Index/theme_conf')}" method="post">
+            <style type="text/css">
+                #theme_main_color,#theme_assist_color {
+                    /*margin:0;*/
+                    /*padding:0;*/
+                    border:solid 1px #ccc;
+                    width:70px;
+                    height:20px;
+                    border-right:40px solid green;
+                    /*line-height:20px;*/
+                } 
+            </style>
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th class="sign w10" axis="col0">
+                                    <div class="tc"></div>
+                                </th>
+                                <th abbr="article_title" axis="col3" class="w10">
+                                    <div class="tc">主题设置</div>
+                                </th>
+                                <th abbr="ac_id" axis="col4">
+                                    <div class=""></div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                {include file="index/theme_conf" /}
+                {include file="index/theme_welcome_conf" /}
+            </div>
+            <div class="ncap-form-default">
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkSubmit();" class="ncap-btn-big ncap-btn-green">确认提交</a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
-
+<script type="text/javascript">
+    function checkSubmit(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'POST',
+            url : "{:url('Index/theme_conf', ['_ajax'=>1])}",
+            data : $('#postForm1').serialize(),
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    if (res.data.is_change == 1) {
+                        /*layer.confirm('已保存，确认要新建主题风格？', {
+                            shade: layer_shade,
+                            area: ['480px', '190px'],
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: ['新建主题','关闭'], //按钮
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                                $(".layui-layer-btn").find('a.layui-layer-btn1').removeClass('layui-layer-btn1').addClass('layui-layer-btn2');
+                                $(".layui-layer-btn").find('a.layui-layer-btn0').removeClass('layui-layer-btn0').addClass('layui-layer-btn1');
+                                $(".layui-layer-btn").find('a.layui-layer-btn2').removeClass('layui-layer-btn2').addClass('layui-layer-btn0');
+                            },
+                            cancel: function(index, layero){
+                                layer.closeAll();
+                                window.location.reload();
+                                return false;
+                            }
+                        }, function () {
+                            layer.closeAll();
+                            layer.prompt({
+                                title: '新建主题风格',
+                                id: 'layerid_1645598368',
+                                btn: ['确定','取消'],
+                                shade: layer_shade,
+                                closeBtn: 0,
+                                success: function(layero, index) {
+                                    $("#layerid_1645598368").find('input').attr('placeholder', '请输入主题名称');
+                                    $("#layerid_1645598368").find('input').bind('keydown', function(event) {
+                                        if (event.keyCode == 13) {
+                                            theme_add_login($(this).val());
+                                        }
+                                    });
+                                },
+                                btn2: function(index, layero){
+                                    window.location.reload();
+                                    return false;
+                                }
+                            }, function(value, index) {
+                                theme_add_login(value);
+                            });
+                        }, function (index) {
+                            layer.closeAll();
+                            window.location.reload();
+                        });*/
+                    } else {
+                        layer.closeAll();
+                        layer.alert(res.msg, {
+                            shade: layer_shade,
+                            area: ['480px', '190px'],
+                            move: false,
+                            title: '提示',
+                            btnAlign:'r',
+                            closeBtn: 3,
+                            btn: ['立即刷新','关闭'],
+                            success: function () {
+                                $(".layui-layer-content").css('text-align', 'left');
+                            },
+                            cancel: function(index, layero){ 
+                                window.location.reload();
+                                return false; 
+                            },
+                            btn2: function(index, layero){
+                                window.location.reload();
+                            }
+                        },function(){
+                            top.window.location.reload();
+                        });
+                    }
+                }else{
+                    layer.closeAll();
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+</script>
 {include file="public/footer" /}

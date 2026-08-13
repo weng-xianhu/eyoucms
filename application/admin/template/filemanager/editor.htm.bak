@@ -1,0 +1,300 @@
+{include file="public/layout" /}
+
+<!-- CodeMirror 核心 -->
+<link rel="stylesheet" href="__SKIN__/js/codemirror/codemirror.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/js/codemirror/addon/dialog/dialog.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/js/codemirror/theme/monokai.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/css/editor.css?v={$version}">
+
+<script src="__SKIN__/js/codemirror/codemirror.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/xml/xml.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/javascript/javascript.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/css/css.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/dialog/dialog.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/search/searchcursor.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/search/search.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/selection/active-line.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/edit/matchbrackets.js?v={$version}"></script>
+
+<body class="bodystyle" style="overflow: hidden; margin: 0; padding: 0;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+
+<div class="editor-container" id="editorContainer">
+    <!-- 左侧文件树 -->
+    <div class="editor-sidebar">
+        <div class="sidebar-header">
+            <i class="iconfont icon-folder"></i> 模板文件
+        </div>
+        <div class="file-tree" id="fileTree"></div>
+    </div>
+
+    <!-- 右侧编辑区 -->
+    <div class="editor-main">
+        <!-- 工具栏 -->
+        <div class="editor-toolbar">
+            <button class="btn" onclick="saveFile()" title="Ctrl+S">
+                <i class="iconfont icon-save"></i> 保存
+            </button>
+            <button class="btn btn-secondary" onclick="EditorApp.find()" title="Ctrl+F">
+                <i class="iconfont icon-search"></i> 搜索
+            </button>
+            <button class="btn btn-secondary" onclick="EditorApp.replace()" title="Ctrl+H">
+                <i class="iconfont icon-replace"></i> 替换
+            </button>
+            <button class="btn btn-secondary" onclick="gotoLine()" title="Ctrl+G">
+                <i class="iconfont icon-goto"></i> 跳转
+            </button>
+            <span class="separator"></span>
+            <button class="btn btn-secondary" onclick="changeFontSize(-1)">A-</button>
+            <button class="btn btn-secondary" onclick="changeFontSize(1)">A+</button>
+            <span class="separator"></span>
+            <button class="btn btn-secondary" onclick="toggleTheme()" id="themeBtn">
+                <i class="iconfont icon-theme"></i> 深色
+            </button>
+            <span class="spacer"></span>
+            <button class="btn btn-secondary" onclick="location.href='{:url(\"Filemanager/index\", [\"activepath\"=>replace_path($info[\"activepath\"])])}'">
+                <i class="iconfont icon-back"></i> 返回
+            </button>
+        </div>
+
+        <!-- 标签页 -->
+        <div class="editor-tabs" id="editorTabs">
+            <div class="editor-tab active" data-file="{$info.filename}">
+                <span class="filename">{$info.filename}</span>
+                <span class="close-btn" onclick="closeTab(this, event)">&times;</span>
+            </div>
+        </div>
+
+        <!-- 编辑器 -->
+        <div class="editor-content">
+            <textarea id="codeEditor">{$info.content|default=''}</textarea>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="editor-statusbar">
+            <span class="status-item" id="cursorPos">行 1, 列 1</span>
+            <span class="status-item">UTF-8</span>
+            <span class="status-item" id="fileType">HTML</span>
+            <span class="status-item" id="saveStatus">已保存</span>
+        </div>
+    </div>
+</div>
+
+<form class="none" id="saveForm" method="POST" action="{:url('Filemanager/edit')}">
+    <input type="hidden" name="filename" value="{$info.filename}">
+    <input type="hidden" name="activepath" value="{$info.activepath}">
+    <input type="hidden" name="content" id="saveContent">
+</form>
+
+<script>
+var EditorApp = {
+    editor: null,
+    isDark: true,
+    fontSize: 14,
+    isModified: false,
+    currentFile: '{$info.filename}',
+    activepath: '{$info.activepath}',
+
+    init: function() {
+        var mode = '{$info.extension}' || 'text/html';
+        this.editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+            lineNumbers: true,
+            lineWrapping: true,
+            mode: mode,
+            theme: 'monokai',
+            styleActiveLine: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            extraKeys: {
+                "Ctrl-S": function() { saveFile(); },
+                "Ctrl-F": function(cm) { cm.execCommand('find'); },
+                "Ctrl-H": function(cm) { cm.execCommand('replace'); },
+                "Ctrl-G": function() { gotoLine(); }
+            }
+        });
+
+        this.editor.on('change', function() {
+            EditorApp.setModified(true);
+        });
+
+        this.editor.on('cursorActivity', function() {
+            var pos = EditorApp.editor.getCursor();
+            document.getElementById('cursorPos').textContent = '行 ' + (pos.line + 1) + ', 列 ' + (pos.ch + 1);
+        });
+
+        this.loadFileTree();
+    },
+
+    setModified: function(val) {
+        this.isModified = val;
+        var tab = document.querySelector('.editor-tab.active');
+        var status = document.getElementById('saveStatus');
+        if (val) {
+            tab && tab.classList.add('modified');
+            status.textContent = '未保存';
+            status.style.color = '#e2c08d';
+        } else {
+            tab && tab.classList.remove('modified');
+            status.textContent = '已保存';
+            status.style.color = '';
+        }
+    },
+
+    find: function() {
+        this.editor.execCommand('find');
+    },
+
+    replace: function() {
+        this.editor.execCommand('replace');
+    },
+
+    loadFileTree: function() {
+        var self = this;
+        $.ajax({
+            url: '{:url("Filemanager/ajax_file_tree")}',
+            type: 'GET',
+            data: { activepath: this.activepath },
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    self.renderTree(res.data, document.getElementById('fileTree'));
+                }
+            }
+        });
+    },
+
+    renderTree: function(data, container) {
+        var html = '<ul>';
+        var self = this;
+        data.forEach(function(item) {
+            if (item.type === 'dir') {
+                html += '<li class="folder">';
+                html += '<div class="tree-item" onclick="EditorApp.toggleFolder(this)">';
+                html += '<i class="iconfont icon-folder-open"></i>';
+                html += '<span>' + item.name + '</span></div>';
+                html += '<ul class="children" style="padding-left:15px;"></ul>';
+                html += '</li>';
+            } else {
+                var isActive = item.name === self.currentFile ? ' active' : '';
+                html += '<li class="file">';
+                html += '<div class="tree-item' + isActive + '" onclick="EditorApp.openFile(\'' + item.path + '\', \'' + item.name + '\')">';
+                html += '<i class="iconfont icon-file"></i>';
+                html += '<span>' + item.name + '</span></div>';
+                html += '</li>';
+            }
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    },
+
+    toggleFolder: function(el) {
+        var li = el.parentNode;
+        var children = li.querySelector('.children');
+        if (children.children.length === 0) {
+            var path = this.activepath + '/' + el.querySelector('span').textContent;
+            this.loadSubTree(path, children);
+        }
+        children.style.display = children.style.display === 'none' ? '' : 'none';
+    },
+
+    loadSubTree: function(path, container) {
+        var self = this;
+        $.ajax({
+            url: '{:url("Filemanager/ajax_file_tree")}',
+            type: 'GET',
+            data: { activepath: path },
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    self.renderTree(res.data, container);
+                }
+            }
+        });
+    },
+
+    openFile: function(path, filename) {
+        if (this.isModified) {
+            if (!confirm('当前文件未保存，确定切换？')) return;
+        }
+        location.href = '{:url("Filemanager/editor")}?activepath=' + encodeURIComponent(path) + '&filename=' + encodeURIComponent(filename);
+    }
+};
+
+function saveFile() {
+    var content = EditorApp.editor.getValue();
+    layer_loading('正在保存...');
+    $.ajax({
+        url: '{:url("Filemanager/ajax_save")}',
+        type: 'POST',
+        data: {
+            filename: EditorApp.currentFile,
+            activepath: EditorApp.activepath,
+            content: content
+        },
+        dataType: 'json',
+        success: function(res) {
+            layer.closeAll();
+            if (res.code == 1) {
+                EditorApp.setModified(false);
+                layer.msg('保存成功', {icon: 1, time: 1000});
+            } else {
+                layer.msg(res.msg || '保存失败', {icon: 2});
+            }
+        },
+        error: function() {
+            layer.closeAll();
+            layer.msg('保存失败', {icon: 2});
+        }
+    });
+}
+
+function gotoLine() {
+    var line = prompt('跳转到行号:');
+    if (line) {
+        var lineNum = parseInt(line, 10) - 1;
+        EditorApp.editor.setCursor(lineNum, 0);
+        EditorApp.editor.focus();
+    }
+}
+
+function changeFontSize(delta) {
+    EditorApp.fontSize += delta;
+    if (EditorApp.fontSize < 10) EditorApp.fontSize = 10;
+    if (EditorApp.fontSize > 24) EditorApp.fontSize = 24;
+    document.querySelector('.CodeMirror').style.fontSize = EditorApp.fontSize + 'px';
+    EditorApp.editor.refresh();
+}
+
+function toggleTheme() {
+    EditorApp.isDark = !EditorApp.isDark;
+    var container = document.getElementById('editorContainer');
+    var btn = document.getElementById('themeBtn');
+    if (EditorApp.isDark) {
+        container.classList.remove('light');
+        EditorApp.editor.setOption('theme', 'monokai');
+        btn.innerHTML = '<i class="iconfont icon-theme"></i> 深色';
+    } else {
+        container.classList.add('light');
+        EditorApp.editor.setOption('theme', 'default');
+        btn.innerHTML = '<i class="iconfont icon-theme"></i> 浅色';
+    }
+}
+
+function closeTab(el, e) {
+    e.stopPropagation();
+    if (EditorApp.isModified) {
+        if (!confirm('文件未保存，确定关闭？')) return;
+    }
+    location.href = '{:url("Filemanager/index", ["activepath"=>replace_path($info["activepath"])])}';
+}
+
+$(function() {
+    EditorApp.init();
+});
+</script>
+
+{include file="public/footer" /}

@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>ueditor图片对话框</title>
-    <script type="text/javascript" src="../internal.js"></script>
+    <script type="text/javascript">
+        document.write(unescape("%3Cscript src='../../ueditor.style.js?t="+new Date().getTime()+"' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    
+    <script type="text/javascript" src="../internal.js?v=1.7.7"></script>
 
     <!-- jquery -->
     <script type="text/javascript" src="../../third-party/jquery-1.10.2.min.js?v=1.6.4"></script>
 
     <!-- webuploader -->
     <script src="../../third-party/webuploader/webuploader.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="../../third-party/webuploader/webuploader.css">
+    <script type="text/javascript">
+        document.write(unescape("%3Clink rel='stylesheet' type='text/css' href='../../third-party/webuploader/webuploader"+editor_bd_style+".css?v=1.7.7' /%3E"));
+    </script>
 
     <!-- attachment dialog -->
-    <link rel="stylesheet" href="attachment.css" type="text/css" />
+    <script type="text/javascript">
+        document.write(unescape("%3Clink rel='stylesheet' type='text/css' href='attachment"+editor_bd_style+".css?v=1.7.7' /%3E"));
+    </script>
 </head>
 <body>
 
@@ -54,7 +62,7 @@
 
         </div>
     </div>
-    <script type="text/javascript" src="attachment.js"></script>
+    <script type="text/javascript" src="attachment.js?v=1.7.8"></script>
 
 </body>
 </html>

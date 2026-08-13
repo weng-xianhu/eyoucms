@@ -135,6 +135,20 @@
                         </div>
                     </dd>
                 </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>表单手机格式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin">
+                            <input type="radio" name="open_mobile_format" value="1" {if condition="!empty($foreignData['foreign_open_mobile_format'])"} checked="checked" {/if}/>启用
+                        </label>&nbsp;&nbsp;
+                        <label class="curpoin">
+                            <input type="radio" name="open_mobile_format" value="0" {if condition="empty($foreignData['foreign_open_mobile_format'])"} checked="checked" {/if}/>关闭
+                        </label>&nbsp;&nbsp;
+                        <p class="notic2">启用后，留言/自由表单里的手机号格式验证将放开，不在限制11位，支持+，-，数字组合</p>
+                    </dd>
+                </dl>
                 <div class="bot mt30">
                     <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">保存</a>
                 </div>

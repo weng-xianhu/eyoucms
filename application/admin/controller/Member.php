@@ -87,7 +87,10 @@ class Member extends Base {
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.users_id desc";
         } else {
             $orderby = "a.users_id desc";
@@ -145,8 +148,8 @@ class Member extends Base {
             getUsersConfigData('shop', ['shop_open'=>0]);
         }
 
-        //计算会员人数
-        /*$levelCountList = [
+        //计算会员人数 -- 目前仅手机后台管理插件使用
+        $levelCountList = [
             'all' => [
                 'level_id'      => 0,
                 'level_name'    => '全部会员',
@@ -164,7 +167,7 @@ class Member extends Base {
             ];
             $levelCountList['all']['level_count'] += $level_num;
         }
-        $this->assign('levelCountList', $levelCountList);*/
+        $this->assign('levelCountList', $levelCountList);
 
         // 手机端后台管理插件特定使用参数
         $isMobile = input('param.isMobile/d', 0);
@@ -466,6 +469,7 @@ class Member extends Base {
         }else{
             $info['level_maturity_days_new'] = $days;
         }
+        $info['users_notes'] = !empty($info['users_notes']) ? htmlspecialchars_decode($info['users_notes']) : '';
         $assign_data['info'] = $info;
 
         /*微信登录插件*/
@@ -921,6 +925,17 @@ class Member extends Base {
             }
             /*--end*/
 
+            /*限制注册 - 同一IP注册时间限制*/
+            if (isset($post['users']['users_reg_limit_time'])) {
+                $users_reg_limit_time = intval($post['users']['users_reg_limit_time']);
+                // 如果设置为0或负数，则不限制
+                if ($users_reg_limit_time < 0) {
+                    $users_reg_limit_time = 0;
+                }
+                $post['users']['users_reg_limit_time'] = $users_reg_limit_time;
+            }
+            /*--end*/
+
             // 会员投稿设置
             if (!empty($this->usersConfig['users_open_release'])) {
                 unset($post['release_typeids']);
@@ -947,7 +962,7 @@ class Member extends Base {
                 $session_conf = [];
                 $session_file = APP_PATH.'admin/conf/session_conf.php';
                 if (file_exists($session_file)) {
-                    require_once($session_file);
+                    safe_require_once($session_file);
                     $session_conf_tmp = EY_SESSION_CONF;
                     if (!empty($session_conf_tmp)) {
                         $session_conf_tmp = json_decode($session_conf_tmp, true);
@@ -1105,14 +1120,15 @@ class Member extends Base {
         return false;
     }
 
-    // 充值记录列表
+    // 余额明细
     public function money_index()
     {
         $list = array();
 
         // 查询条件
         $condition = [
-            // 'a.cause_type' => 1,
+            'a.status' => ['GT', 1],
+            // 'a.pay_method' => 'balance', // 只查询余额支付的订单
         ];
 
         // 来源/用途
@@ -1126,8 +1142,8 @@ class Member extends Base {
         if (!empty($keywords)) $condition['a.order_number|b.username'] = array('LIKE', "%{$keywords}%");
 
         // 支付方式查询
-        $pay_method = input('pay_method/s');
-        if (!empty($pay_method)) $condition['a.pay_method'] = $pay_method;
+        // $pay_method = input('pay_method/s');
+        // if (!empty($pay_method)) $condition['a.pay_method'] = $pay_method;
 
         // 会员级别查询
         $level = input('level/s');
@@ -1379,7 +1395,7 @@ class Member extends Base {
 
             // 处理微信配置数据
             $pay_wechat_config = !empty($this->usersConfig['pay_wechat_config']) ? $this->usersConfig['pay_wechat_config'] : '';
-            $pay_wechat_config = unserialize($pay_wechat_config);
+            $pay_wechat_config = safe_unserialize($pay_wechat_config);
             $config_data['app_id'] = $pay_wechat_config['appid'];
             $config_data['mch_id'] = $pay_wechat_config['mchid'];
             $config_data['key']    = $pay_wechat_config['key'];
@@ -1423,7 +1439,7 @@ class Member extends Base {
                 if (empty($pay_alipay_config)) {
                     return false;
                 }
-                $alipay = unserialize($pay_alipay_config);
+                $alipay = safe_unserialize($pay_alipay_config);
             }
             $config['app_id']     = $alipay['app_id'];
             $config['merchant_private_key'] = $alipay['merchant_private_key'];
@@ -1765,6 +1781,9 @@ class Member extends Base {
             if (1 == $value['order_status'] && 'wechat' == $value['pay_name']) $order_code_arr[] = $value['order_code'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             $value['head_pic'] = get_head_pic($value['head_pic']);
+            // 订单金额格式化为：￥20.00
+            $amount = floatval($value['order_amount']);
+            $value['order_amount_text'] = '￥' . number_format($amount, 2, '.', '');
             $list[$key] = $value;
         }
         if (!empty($order_code_arr)){
@@ -1799,6 +1818,11 @@ class Member extends Base {
         if (!empty($order_id)) {
             // 查询订单信息
             $OrderData = Db::name('media_order')->field('*, product_id as aid')->find($order_id);
+            // 订单金额格式化为：￥20.00
+            if (!empty($OrderData)) {
+                $amount = floatval($OrderData['order_amount']);
+                $OrderData['order_amount_text'] = '￥' . number_format($amount, 2, '.', '');
+            }
             // 查询会员数据
             $UsersData = $this->users_db->find($OrderData['users_id']);
             // 用于点击视频文档跳转到前台
@@ -2014,7 +2038,7 @@ class Member extends Base {
         foreach ($list as $k => $v) {
             $v['money'] = floatval($v['money']);
             $v['users_money'] = floatval($v['users_money']);
-            if (isset($v['cause_type']) && 0 == $v['cause_type']) $v['cause'] = unserialize($v['cause']);
+            if (isset($v['cause_type']) && 0 == $v['cause_type']) $v['cause'] = safe_unserialize($v['cause']);
 
             $list[$k] = $v;
         }
@@ -2451,7 +2475,7 @@ class Member extends Base {
         // 保存前清空删除原先的excel
         delFile(UPLOAD_PATH . 'excel/', true);
         // 创建文件夹
-        @mkdir($ExcelPath, 0777, true);
+        @mkdir($ExcelPath, 0755, true);
         // excel文件路径
         $filePath = $ExcelPath . $FileName . '.xlsx';
         // 保存excel文件
@@ -2618,6 +2642,42 @@ class Member extends Base {
         return $this->fetch();
     }
 
+    // 充值规则管理
+    public function recharge_rule()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $rules = !empty($post['rules']) ? array_filter($post['rules']) : [];
+            // 保存规则到配置
+            $data = serialize($rules);
+            $where = ['name' => 'recharge_rules', 'inc_type' => 'users'];
+            $exists = Db::name('config')->where($where)->find();
+            if ($exists) {
+                Db::name('config')->where($where)->update(['value' => $data, 'update_time' => getTime()]);
+            } else {
+                Db::name('config')->insert([
+                    'name' => 'recharge_rules',
+                    'value' => $data,
+                    'inc_type' => 'users',
+                    'desc' => '充值规则',
+                    'add_time' => getTime(),
+                    'update_time' => getTime()
+                ]);
+            }
+            $this->success('保存成功');
+        }
+
+        // 获取已保存的规则
+        $where = ['name' => 'recharge_rules', 'inc_type' => 'users'];
+        $config = Db::name('config')->where($where)->find();
+        $rules = [];
+        if (!empty($config['value'])) {
+            $rules = unserialize($config['value']);
+        }
+        $this->assign('rules', $rules);
+        return $this->fetch();
+    }
+
     //会员注销列表
     public function log_off_index()
     {
@@ -2710,6 +2770,23 @@ class Member extends Base {
             }
         }
         $this->error('操作失败');
+    }
+
+    // 会员备注
+    public function users_notes()
+    {
+        if (IS_AJAX_POST) {
+            $param = input('param.');
+            if (empty($param['users_id'])) $this->error('会员ID异常，请刷新重试~');
+            // if (empty($param['users_notes'])) $this->error('请填写备注内容...');
+            $update = [
+                'users_notes' => htmlspecialchars($param['users_notes']),
+                'update_time' => getTime(),
+            ];
+            $result = Db::name('users')->where('users_id', intval($param['users_id']))->update($update);
+            if (!empty($result)) $this->success('备注成功');
+            $this->error('备注失败，请刷新重试~');
+        }
     }
   
 }

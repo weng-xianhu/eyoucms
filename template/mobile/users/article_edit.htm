@@ -73,7 +73,14 @@
                         </div>
                         <div class="item-flex-r"> <i class="el-icon-arrow-right"></i> </div>
                     </div>
-
+                    <div class="item-from-flex">
+                        <div class="item-flex-l">
+                            <div class="item-tit">文章来源</div>
+                            <div class="item-con">
+                                <input type="text" value="{$ArchivesData.origin}" name="origin" id="origin" class="input-text">
+                            </div>
+                        </div>
+                    </div>
                     <div class="item-from-flex">
                         <div class="item-flex-l">
                             <div class="item-tit">TAG标签</div>
@@ -82,7 +89,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="item-from-flex" id="openLitpic">
                         <div class="item-flex-l">
                             <div class="item-tit">缩略图</div>
@@ -91,7 +97,7 @@
                                     <a href="javascript:void(0);" onclick="$('#litpicOnclick').trigger('click');" class="img-upload" title="点击上传">
                                         <div class="y-line" id="litpicYline" {notempty name='$ArchivesData.litpic'} style="display: none;" {/notempty}></div>
                                         <div class="x-line" id="litpicXline" {notempty name='$ArchivesData.litpic'} style="display: none;" {/notempty}></div>
-                                        <img src="{$ArchivesData.litpic}" id="litpicImgSrc" class="none" {notempty name='$ArchivesData.litpic'} style="display: inline;" {/notempty}>
+                                        <img src="{$ArchivesData.litpic}" id="litpicImgSrc" {notempty name='$ArchivesData.litpic'} style="display: inline;" {/notempty}>
                                     </a>
                                     <input type="hidden" name="litpic_inpiut" id="litpicInpiut" value="{$ArchivesData.litpic}">
                                     <input type="file" name="litpic_inpiut_file" id="litpicOnclick" onchange="litpicOnclickFile(this);" style="display: none;">

@@ -32,9 +32,9 @@ class AuthRole extends Model{
     public function getRole($where){
         $result =Db::name($this->name)->where($where)->find();
         if (!empty($result)) {
-            $result['language'] = unserialize($result['language']);
-            $result['cud'] = unserialize($result['cud']);
-            $result['permission'] = unserialize($result['permission']);
+            $result['language'] = safe_unserialize($result['language']);
+            $result['cud'] = safe_unserialize($result['cud']);
+            $result['permission'] = safe_unserialize($result['permission']);
         }
 
         return $result;
@@ -43,9 +43,9 @@ class AuthRole extends Model{
     public function getRoleAll($where = ['status'=>1]){
         $result =Db::name($this->name)->where($where)->order('id asc')->select();
         foreach ($result as $key => $val) {
-            $val['language'] = unserialize($val['language']);
-            $val['cud'] = unserialize($val['cud']);
-            $val['permission'] = unserialize($val['permission']);
+            $val['language'] = safe_unserialize($val['language']);
+            $val['cud'] = safe_unserialize($val['cud']);
+            $val['permission'] = safe_unserialize($val['permission']);
             $result[$key] = $val;
         }
 

@@ -103,7 +103,7 @@
                             if (1 === parseInt(value)) $('.openOriginalRefund').show();
                         });
 
-                        var payOriginalRefund = {$usersConfig.pay_original_refund};
+                        var payOriginalRefund = {$usersConfig.pay_original_refund|default=0};
                         if (1 === parseInt(payOriginalRefund)) $('.openOriginalRefund').show();
                     });
 
@@ -240,6 +240,23 @@
                         <span id="a_shop_open_spec" {if condition="!isset($usersConfig.shop_open_spec) || empty($usersConfig.shop_open_spec)"}style="display:none;"{/if}>
                             <a href="javascript:void(0);" id='shop_open' onclick="tag_call('shop_open');" class="ncap-btn ncap-btn-green">标签调用</a>
                         </span>-->
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>收货地址AI识别</label>
+                    </dt>
+                    <dd class="opt" style="width: auto;">
+                        <label>
+                            <input type="radio" id="ai_bd_adr_open" name="ai[ai_bd_adr_open]" value="1" {if isset($row.ai_bd_adr_open) && $row.ai_bd_adr_open==1 && $is_ai==1}checked{/if}>开启
+                        </label>
+                        &nbsp; &nbsp;
+                        <label>
+                            <input type="radio" id="ai_bd_adr_open" name="ai[ai_bd_adr_open]" value="0" {if !isset($row.ai_bd_adr_open)|| empty($row.ai_bd_adr_open) || empty($is_ai)}checked{/if}>关闭
+                        </label>
+                        <P class="notic3" style="display:none;"><img src="__SKIN__/images/ai/feature-4.png" /></P>
+                        <a class="ui_tan view_feature" href="javascript:void(0);">查看功能</a>
+                        <p class="notic2">快速提取字符串中姓名、手机号、地址信息自动填写物流单。需先安装<a href="https://www.eyoucms.com/mall/plus/29424.html" target="_blank" class="red">Ai智能创作平台</a>配置<span class="red">百度智能云</span>模型</p>
                     </dd>
                 </dl>
             </div>
@@ -392,10 +409,27 @@
     </div>
 </div>
 <script type="text/javascript">
-
+    var is_ai ={$is_ai};
     $(function(){
+        $('input[name="ai[ai_bd_adr_open]"]').change(function(){
+            var value = $(this).val();
+            if (value == 1) {
+                if (is_ai != 1) {
+                    layer.confirm('请先安装Ai智能创作平台或开启插件？', {title:'提示'},
+                    function(){
+                        window.open("https://www.eyoucms.com/mall/plus/29424.html", "_blank");
+                        $('input[name="ai[ai_bd_adr_open]"][value="0"]').prop('checked', true);
+                        layer.closeAll();
+                    },function(){
+                        $('input[name="ai[ai_bd_adr_open]"][value="0"]').prop('checked', true);
+                    });
+                    return false;
+                }
+            }else{
+            }
+        });
         try{
-            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            if (typeof window.is_conceal_1649209614 === "function" && window.is_conceal_1649209614()){
                 $(".page").css("margin-left","");
                 $(".page").css("min-width","");
             }else{
@@ -421,7 +455,6 @@
         var ForceUse = $('#shop_force_use_wechat').val();
         if (1 == ForceUse) $('#shop_micro0').attr("disabled", "disabled");
     });
-
     // 设置快递公司
     function SelectExpress() {
         var url = "{:url('Shop/order_express', ['select'=>1])}";

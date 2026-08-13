@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -16,6 +16,8 @@ namespace app\api\model\v1;
 use think\Db;
 use think\Cache;
 use app\api\logic\v1\AskLogic;
+use app\api\model\v1\Api;
+
 
 load_trait('controller/Jump');
 
@@ -372,7 +374,7 @@ class Ask extends Base
             $this->users_id = $users['users_id'];
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->AnswerDealWith($param, true);
-
+            $openid = Db::name('wx_users')->where('users_id', $users['users_id'])->value('openid');
             /*添加数据*/
             $AddAnswer = [
                 'ask_id'      => $param['ask_id'],
@@ -391,6 +393,14 @@ class Ask extends Base
                 'add_time'    => getTime(),
                 'update_time' => getTime(),
             ];
+          
+             if('weixin' ==  self::$provider) {
+                 $apiModel = new Api(); 
+                 if (!$apiModel->checkWeixinContentSecurity($content, $openid)) {
+                      $this->error('您的回答涉及违规信息，请修改后再试！');
+                }
+               
+            }
             $ResultId = $this->weapp_ask_answer_db->add($AddAnswer);
             /* END */
 
@@ -525,6 +535,7 @@ class Ask extends Base
             $this->users_id = $users['users_id'];
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->ParamDealWith($param, $this->users);
+            $openid = Db::name('wx_users')->where('users_id', $users['users_id'])->value('openid');
             $param['title'] = $this->check_sensitive($param['title']);
             /*添加数据*/
             $AddAsk = [
@@ -540,6 +551,22 @@ class Ask extends Base
             // 如果这个会员组属于需要审核的，则追加
             if (1 == $this->users['ask_is_review']) $AddAsk['is_review'] = 0;
             /* END */
+            // 增加微信内容安全审核   25-4-7  胡加
+           if ('weixin' == self::$provider) {
+            $apiModel = new Api(); 
+            // 校验标题
+            if (!empty($param['title'])) {
+                if (!$apiModel->checkWeixinContentSecurity($param['title'], $openid)) {
+                    $this->error('您的标题内容涉及违规信息，请修改后再试！');
+                }
+            }
+            // 校验内容
+            if (!empty($content)) {
+                if (!$apiModel->checkWeixinContentSecurity($content, $openid)) {
+                    $this->error('您的描述内容涉及违规信息，请修改后再试！');
+                }
+            }
+        }
 
             $ResultId = $this->weapp_ask_db->add($AddAsk);
             if (!empty($ResultId)) {

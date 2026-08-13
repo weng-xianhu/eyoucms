@@ -12,7 +12,7 @@
                 </dt>
                 <dd class="opt">
                     <input id="basic_indexname" name="basic_indexname" value="{$config.basic_indexname|default='首页'}" class="input-txt" type="text" />
-                    <p class="notic"></p>
+                    <p class="notic">自定义面包屑导航中首页的显示名称，将显示在网站所有页面的面包屑导航中，默认为"首页"。</p>
                 </dd>
             </dl>
             {eq name='$main_lang' value='$admin_lang'}
@@ -21,8 +21,8 @@
                     <label for="list_symbol">面包屑间隔符</label>
                 </dt>
                 <dd class="opt">
-                    <input id="list_symbol" name="list_symbol" value="{$config.list_symbol|default=' > '}" class="input-txt" type="text" />
-                    <p class="notic"></p>
+                    <input id="list_symbol" name="list_symbol" value="{$config.list_symbol|default=''}" class="input-txt" type="text" />
+                    <p class="notic">自定义面包屑导航中各级目录之间的分隔符，例如：>、/、» 等。留空则使用默认分隔符">"。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -31,7 +31,8 @@
                 </dt>
                 <dd class="opt">
                     <textarea rows="5" cols="60" id="image_type" name="image_type" style="height:20px;">{empty name='config.image_type'}jpg|gif|png|bmp|jpeg|ico{else /}{$config.image_type}{/empty}</textarea>
-                    <p class="notic"></p>
+                    <p class="notic">设置允许上传的图片格式，多个格式用"|"分隔。可在默认格式基础上添加新格式。</p>                 
+                    <p class="notic2">安全提示：已支持SVG格式，SVG 可能包含脚本等恶意内容，前台直接展示存在 XSS 风险；仅建议上传可信来源文件，避免开放匿名上传。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -40,7 +41,7 @@
                 </dt>
                 <dd class="opt">
                     <textarea rows="5" cols="60" id="file_type" name="file_type" style="height:20px;">{empty name='config.file_type'}zip|gz|rar|iso|doc|xsl|ppt|wps{else /}{$config.file_type}{/empty}</textarea>
-                    <p class="notic"></p>
+                    <p class="notic">设置允许上传的软件/文档格式，多个格式用"|"分隔。可在默认格式基础上添加新格式。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -49,7 +50,7 @@
                 </dt>
                 <dd class="opt">
                     <textarea rows="5" cols="60" id="media_type" name="media_type" style="height:20px;">{empty name='config.media_type'}swf|mpg|mp3|rm|rmvb|wmv|wma|wav|mid|mov|mp4{else /}{$config.media_type}{/empty}</textarea>
-                    <p class="notic"></p>
+                    <p class="notic">设置允许上传的视频/音频格式，多个格式用"|"分隔。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -58,7 +59,7 @@
                 </dt>
                 <dd class="opt">
                     <input id="file_size" name="file_size" value="{$config.file_size|default=$max_filesize}" type="text" style="width: 60px;" /> {$max_sizeunit}
-                    <p class="notic">附件上传大小限制，如果空间不支持，请与空间商联系修改php.ini部分参数</p>
+                    <p class="notic">设置单个附件的最大上传大小限制。注意：此设置不能超过服务器PHP配置的最大上传限制，如遇上传失败请联系服务器管理员调整php.ini中的upload_max_filesize和post_max_size参数。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -69,7 +70,18 @@
                     <label class="curpoin"><input type="radio" name="file_uploadname_open" value="1" {if condition='isset($config.file_uploadname_open) && $config.file_uploadname_open eq 1'}checked="checked"{/if}>不做变动</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="file_uploadname_open" value="0" {if condition='empty($config.file_uploadname_open)'}checked="checked"{/if}>随机重命名</label>
-                    <p class="notic">附件名称设置不做变动即为上传的随机+原来名称，随机重命名就是会被系统随便更改名称。</p>
+                    <p class="notic">不做变动：保留上传文件的原始名称，如遇重名系统会自动在文件名前添加随机字符。<br/>随机重命名：系统自动生成随机文件名，完全替换原始文件名，提高文件安全性。</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>附件存放目录</label>
+                </dt>
+                <dd class="opt">
+                    <label class="curpoin"><input type="radio" name="file_save_dirname" value="Ymd" {if condition='empty($config.file_save_dirname) || $config.file_save_dirname eq "Ymd"'}checked="checked"{/if}>年月日（如：20260101）</label>
+                    &nbsp;
+                    <label class="curpoin"><input type="radio" name="file_save_dirname" value="Ym" {if condition='isset($config.file_save_dirname) && $config.file_save_dirname eq "Ym"'}checked="checked"{/if}>年月（如：202601）</label>
+                    <p class="notic">设置上传附件（图片、文件、视频等）的存放目录格式。年月日：按天归档，目录更细分；年月：按月归档，目录更简洁。修改后仅对新上传的文件生效，已有文件不受影响。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -82,7 +94,7 @@
                     <label><input type="checkbox" name="basic_img_alt" value="1" {if condition="!isset($config.basic_img_alt) OR $config.basic_img_alt eq 1"}checked="checked"{/if} onclick="check_basic_img_alt(this);">追加alt属性</label>&nbsp;&nbsp;
                     <label id="basic_img_alt_force" {if condition="isset($config.basic_img_alt) && $config.basic_img_alt != 1"} class="none" {/if}><input type="checkbox" name="basic_img_alt_force" value="1" {if condition="!empty($config.basic_img_alt_force)"} checked="checked" {/if}>alt强制同步title</label>&nbsp;&nbsp;
                     <span class="err"></span>
-                    <p class="notic">针对文档详情页的内容图片附加这些功能效果</p>
+                    <p class="notic">以下功能仅对文档详情页中的内容图片生效，可提升移动端显示效果和搜索引擎优化（SEO）。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -91,7 +103,7 @@
                 </dt>
                 <dd class="opt">
                     <input id="other_arcclick" name="other_arcclick" value="{if isset($other_config.other_arcclick) && 0 <= $other_config.other_arcclick}{$other_config.other_arcclick}{else /}500|1000{/if}" onkeyup="this.value=this.value.replace(/[^\|\d]/g,'');" onpaste="this.value=this.value.replace(/[^\|\d]/g,'')" class="input-txt" type="text" />
-                    <p class="notic">比如：500|1000 表示随机数500-1000之间</p>
+                    <p class="notic">设置新发布文档的初始点击数，用于提升新内容的初始热度。格式：最小值|最大值，例如"500|1000"表示随机生成500到1000之间的点击数。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -100,7 +112,7 @@
                 </dt>
                 <dd class="opt">
                     <input id="other_arcdownload" name="other_arcdownload" value="{if isset($other_config.other_arcdownload) && 0 <= $other_config.other_arcdownload}{$other_config.other_arcdownload}{else /}100|500{/if}" onkeyup="this.value=this.value.replace(/[^\|\d]/g,'');" onpaste="this.value=this.value.replace(/[^\|\d]/g,'')" class="input-txt" type="text" />
-                    <p class="notic">比如：100|500 表示随机数100-500之间</p>
+                    <p class="notic">设置新上传文件的初始下载数，用于提升新文件的初始热度。格式：最小值|最大值，例如"100|500"表示随机生成100到500之间的下载数。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -108,10 +120,12 @@
                     <label for="editor_select">内容编辑器</label>
                 </dt>
                 <dd class="opt">
-                    <label class="curpoin"><input type="radio" name="editor_select" value="1" {if condition="empty($editor.editor_select) || $editor.editor_select eq 1"} checked="checked" {/if}>Ueditor</label>
+                    <label class="curpoin"><input type="radio" name="editor_select" value="1" {if condition="empty($editor.editor_bd_style)"} checked="checked" {/if}>Ueditor（新）</label>
+                    &nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="editor_select" value="1.5" {if condition="isset($editor.editor_bd_style) && $editor.editor_bd_style == '_default'"} checked="checked" {/if}>Ueditor（旧）</label>
                     &nbsp;&nbsp;
                     <label class="curpoin"><input type="radio" name="editor_select" value="2" {if condition="isset($editor.editor_select) && $editor.editor_select eq 2"} checked="checked" {/if}>Ckeditor</label>
-                    <p class="notic"></p>
+                    <p class="notic">选择文档内容编辑时使用的富文本编辑器。<br/><strong>Ueditor：</strong>功能丰富，支持更多高级功能（如地图、视频等），适合内容编辑需求较多的场景。<br/><strong>Ckeditor：</strong>轻量级编辑器，加载速度快，适合追求简洁高效的场景。</p>
                 </dd>
             </dl>
             <dl class="row {if condition="!empty($editor.editor_select) && $editor.editor_select != 1"} none {/if}" id="bdmap_ak_dl">
@@ -120,21 +134,48 @@
                 </dt>
                 <dd class="opt">
                     <input name="editor_bdmap_ak" value="{$editor.editor_bdmap_ak}" class="input-txt" type="text" />
-                    <p class="notic">影响功能：百度编辑器工具栏里的Baidu地图</p>
+                    <p class="notic">配置百度地图API密钥（AK），用于在Ueditor编辑器中插入地图。未配置时将无法使用地图插入功能。点击右侧"获取AK？"查看获取教程。</p>
                     &nbsp;&nbsp;<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=30297&origin_eycms=1" onclick="openFullframe(this,'获取百度地图的访问应用AK');" style="font-size: 12px;">获取AK？</a>
                 </dd>
             </dl>
+            <!-- <dl class="row {if condition="!empty($editor.editor_select) && $editor.editor_select != 1"} none {/if}" id="gmap_ak_dl">
+                <dt class="tit">
+                    <label for="editor_select">谷歌地图AK</label>
+                </dt>
+                <dd class="opt">
+                    <input name="editor_gmap_ak" value="{$editor.editor_gmap_ak}" class="input-txt" type="text" />
+                    <p class="notic">影响功能：谷歌编辑器工具栏里的Google地图</p>
+                    &nbsp;&nbsp;<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=30297&origin_eycms=1" onclick="openFullframe(this,'获取谷歌地图的访问应用AK');" style="font-size: 12px;">获取AK？</a>
+                </dd>
+            </dl> -->
             <dl class="row">
                 <dt class="tit">
                     <label>编辑器常用配置</label>
                 </dt>
                 <dd class="opt">
-                    <label><input type="checkbox" name="editor_remote_img_local" value="1" {if condition="!isset($editor.editor_remote_img_local) OR $editor.editor_remote_img_local eq 1"}checked="checked"{/if} title="开启后,提交保存文档时将先自动执行远程图片本地化操作">远程图片本地化</label>&nbsp;&nbsp;
-                    <label><input type="checkbox" name="editor_img_clear_link" value="1" {if condition="!isset($editor.editor_img_clear_link) OR $editor.editor_img_clear_link eq 1"}checked="checked"{/if}  title="开启后,提交保存文档时将先自动执行清除非本站链接操作">清除非本站链接</label>&nbsp;&nbsp;
+                    <label><input type="checkbox" name="editor_remote_img_local" value="1" {if condition="!isset($editor.editor_remote_img_local) OR $editor.editor_remote_img_local eq 1"}checked="checked"{/if} title="开启后，保存文档时系统会自动将内容中的远程图片下载到本地服务器">远程图片本地化</label>&nbsp;&nbsp;
+                    <label><input type="checkbox" name="editor_img_clear_link" value="1" {if condition="!isset($editor.editor_img_clear_link) OR $editor.editor_img_clear_link eq 1"}checked="checked"{/if}  title="开启后，保存文档时系统会自动清除内容中指向非本站域名的链接">清除非本站链接</label>&nbsp;&nbsp;
                     <span class="err"></span>
-                    <p class="notic">开启远程图片本地化后,提交保存文档时将先自动执行远程图片本地化操作；开启清除非本站链接后,提交保存文档时将先自动执行清除非本站链接操作</p>
+                    <p class="notic"><strong>远程图片本地化：</strong>开启后，保存文档时自动将内容中的远程图片下载到本地服务器，避免因外部图片失效导致显示异常，提升内容稳定性。<strong>清除非本站链接：</strong>开启后，保存文档时自动清除内容中指向非本站域名的链接（白名单域名除外），防止外链流失，提升SEO效果。</p>
                 </dd>
             </dl>
+
+            {notempty name="$databaseType"}
+            <dl class="row">
+                <dt class="tit">
+                    <label>开启特殊字符</label>
+                </dt>
+                <dd class="opt">
+                    {if condition="!empty($specialCharIndex_1752204109)"}
+                    <span style="color: #939799;">已启用</span>
+                    {else/}
+                    <a href="JavaScript:void(0);" onclick="checkSupportUtf8mb4();">一键启用</a>
+                    {/if}
+                    <span style="font-size: 12px; color: #939799;">(开启后编辑器支持发布表情符号，如小红书常见表情等)</span>
+                </dd>
+            </dl>
+            {/notempty}
+
             <dl class="row {if condition="empty($editor.editor_img_clear_link)"}none{/if}" id="dl_basic_body_allowurls">
                 <dt class="tit">
                     <label for="basic_body_allowurls">外链域名白名单</label>
@@ -145,7 +186,7 @@ baidu.com
 aliyun.com
 video.qq.com
                     ">{$config.basic_body_allowurls|default=''}</textarea>
-                    <p class="notic"></p>
+                    <p class="notic">当开启"清除非本站链接"功能时，在此处配置允许保留的外链域名白名单。每行一个域名，支持子域名，例如：baidu.com、video.qq.com。留空则清除所有外链。</p>
                 </dd>
             </dl>
             {/eq}
@@ -153,7 +194,7 @@ video.qq.com
                 <input type="hidden" name="max_filesize" id="max_filesize" value="{$max_filesize}">
                 <input type="hidden" name="max_sizeunit" id="max_sizeunit" value="{$max_sizeunit}">
                 <input type="hidden" name="old_basic_img_setlist" value="{$config.basic_img_auto_wh|default=0}{$config.basic_img_alt|default=0}{$config.basic_img_title|default=0}">
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">保存配置</a>
             </div>
         </div>
     </form>
@@ -161,10 +202,12 @@ video.qq.com
 
 <script type="text/javascript">
     $('input[name=editor_select]').click(function(){
-        if (1 == $(this).val()) {
+        if (1 == $(this).val() || 1.5 == $(this).val()) {
             $('#bdmap_ak_dl').show();
+            $('#gmap_ak_dl').show();
         }else{
             $('#bdmap_ak_dl').hide();
+            $('#gmap_ak_dl').hide();
         }
     });
 

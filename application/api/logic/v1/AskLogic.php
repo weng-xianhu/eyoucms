@@ -149,7 +149,7 @@ EOF;
     public function GetRateData(){
         $rate = [];
         $data = Db::name('weapp')->where(['code'=>'Ask'])->getField('data');
-        $dataArr = unserialize($data);
+        $dataArr = safe_unserialize($data);
         !empty($dataArr['rate']) && $rate = $dataArr['rate'];
 
         return $rate;
@@ -181,7 +181,7 @@ EOF;
     public function GetSensitiveData(){
         $sensitive = [];
         $data = Db::name('weapp')->where(['code'=>'Ask'])->getField('data');
-        $dataArr = unserialize($data);
+        $dataArr = safe_unserialize($data);
         !empty($dataArr['sensitive']) && $sensitive = $dataArr['sensitive'];
         if (!empty($sensitive['sensitive_data'])){
             $sensitive['sensitive_data'] = str_replace("，",",",$sensitive['sensitive_data']);

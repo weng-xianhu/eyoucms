@@ -4,46 +4,12 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <title></title>
-        <style type="text/css">
-            *{color: #838383;margin: 0;padding: 0}
-            html,body {font-size: 12px;overflow: hidden; }
-            .content{padding:5px 0 0 15px;display: flex;flex-direction: row;align-items: center;}
-            .div-label{display: flex;flex-direction: row;align-items: center;}
-            .div-label label{display: flex;flex-direction: row;align-items: center;margin-right: 10px;cursor: pointer;}
-            .div-label label span{margin-left: 2px;}
-            input {
-                width: 210px;
-                line-height: 20px;
-                white-space: nowrap;
-                display: inline-block;
-                height: 20px;
-                overflow: hidden;
-                cursor: text;
-                font-size: 13px;
-                padding: 4px 6px;
-                resize: none;
-                margin-left: 4px;
-                color: #555555;
-                background-color: #FFF;
-                border: solid 1px #eee;
-            }
-            input:focus {
-                color: #33464F;
-                background-color: #fff;
-                border: solid 1px #eee;
-                border-color: #eee;
-                box-shadow: 0 0 0 1px rgba(51,152,204,0.5) !important;
-                outline: 0 none;
-            }
-            
-            input[type="radio"] {
-                width: 13px;
-                height: 21px;
-                line-height: 21px;
-                margin-left: 4px;
-                cursor: pointer;
-            }
-        </style>
+        <script type="text/javascript">
+            document.write(unescape("%3Cscript src='../../ueditor.style.js?t="+new Date().getTime()+"' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+            document.write(unescape("%3Clink rel='stylesheet' type='text/css' href='anchor"+editor_bd_style+".css?v=1.7.7' /%3E"));
+        </script>
     </head>
     <body>
         <div class="content">
@@ -64,7 +30,7 @@
                 <label><input type="radio" name="anchorStyle" value="h3"><span>二级</span></label>
             </div>
         </div>
-        <script type="text/javascript" src="../internal.js"></script>
+        <script type="text/javascript" src="../internal.js?v=1.7.7"></script>
         <script type="text/javascript">
             var anchorInput = $G('anchorName'),
                 node = editor.selection.getRange().getClosedNode();

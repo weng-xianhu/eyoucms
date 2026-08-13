@@ -236,7 +236,12 @@
                     <div class="lumping-content-title" style="line-height: 37px;">维权状态：</div>
                     <div class="lumping-content-text">
                         {eq name="$Service.status" value="1"}<span class="f-28" style="color: #ff1f2c;">申请维权</span>{/eq}
-                        {eq name="$Service.status" value="2"}<span class="f-28" style="color: #2d8cf0;">买家待退货</span>{/eq}
+                        {if condition="2 == $Service.status && in_array($Service.service_type, [1, 2])"}
+                        <span class="f-28" style="color: #2d8cf0;">申请已同意，待买家退货</span>
+                        {/if}
+                        {if condition="2 == $Service.status && in_array($Service.service_type, [3])"}
+                        <span class="f-28" style="color: #2d8cf0;">申请已同意，请给买家退款</span>
+                        {/if}
                         {eq name="$Service.status" value="4"}<span class="f-28" style="color: #19be6b;">买家已退货，商家待收货</span>{/eq}
                         {if condition="5 == $Service.status && 1 == $Service.service_type"}
                         <span class="f-28" style="color: #19be6b;">商家已收到退货，待重新发货</span>

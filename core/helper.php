@@ -473,6 +473,12 @@ if (!function_exists('url')) {
      */
     function url($url = '', $vars = '', $suffix = true, $domain = false, $seo_pseudo = null, $seo_pseudo_format = null, $seo_inlet = null)
     {
+        if (preg_match('/^(([a-z]+)\/)?(Ueditor|Uploadify)\/index$/i', $url)) {
+            if (is_string($vars)) {
+                parse_str($vars, $vars);
+            }
+            $vars['editor_bd_style'] = config('tpcache.editor_bd_style');
+        }
         $seo_pseudo = !empty($seo_pseudo) ? $seo_pseudo : config('ey_config.seo_pseudo');
         $url = Url::build($url, $vars, $suffix, $domain, $seo_pseudo, $seo_pseudo_format, $seo_inlet);
 
@@ -859,9 +865,9 @@ if (!function_exists('hookexec')) {
         if(true === config('app_debug') || empty($value)){
             $exist = \think\Db::query('SHOW TABLES LIKE \''.config('database.prefix').'weapp\'');
             if (!empty($exist)) {
-                $row = M('weapp')->field('id,code')->where(array('code'=>$m,'status'=>1))->find();
+                $row = M('weapp')->field('id,code,is_valid')->where(array('code'=>$m,'status'=>1))->find();
                 $value = -1;
-                if (!empty($row)) {
+                if (!empty($row) && 1 == $row['is_valid']) {
                     $configValue = include WEAPP_DIR_NAME.DS.$row['code'].DS.'config.php';
                     $scene = intval($configValue['scene']);
                     if (0 == $scene) { // 场景：手机端+PC端

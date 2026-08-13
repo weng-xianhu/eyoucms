@@ -3,22 +3,22 @@
  * ALIPAY API: alipay.system.oauth.token request
  *
  * @author auto create
- * @since 1.0, 2017-03-31 15:36:51
+ * @since 1.0, 2025-05-19 13:36:11
  */
 class AlipaySystemOauthTokenRequest
 {
 	/** 
-	 * 授权码，用户对应用授权后得到。
+	 * 授权码，用户对应用授权后得到。本参数在 grant_type 为 authorization_code 时必填；为 refresh_token 时不填。
 	 **/
 	private $code;
 	
 	/** 
-	 * 值为authorization_code时，代表用code换取；值为refresh_token时，代表用refresh_token换取
+	 * 授权方式
 	 **/
 	private $grantType;
 	
 	/** 
-	 * 刷新令牌，上次换取访问令牌时得到。见出参的refresh_token字段
+	 * 刷新令牌，上次换取访问令牌时得到。本参数在 grant_type 为 authorization_code 时不填；为 refresh_token 时必填，且该值来源于此接口的返回值 app_refresh_token（即至少需要通过 grant_type=authorization_code 调用此接口一次才能获取）。
 	 **/
 	private $refreshToken;
 

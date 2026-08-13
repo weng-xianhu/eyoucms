@@ -39,6 +39,7 @@
             } 
             .ui-layout-center{
                 padding:0 15px 0 15px;
+                background: #fff !important;
             }
             .ztree li a {
                 display: inline-block !important;
@@ -65,6 +66,9 @@
                             <li id="tiqu" {eq name="$info.open_source" value="tiqu"} class="layui-this" {/eq}>远程图片</li>
                             {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/uploadimgnew/ai_tab.htm')" /}
                                 {include file="/weapp/Ai/template/uploadimgnew/ai_tab.htm" /}
+                            {/if}
+                            {if condition="file_exists(ROOT_PATH.'weapp/PexelsImg/template/uploadimgnew/pexels_tab.htm')" /}
+                                {include file="/weapp/PexelsImg/template/uploadimgnew/pexels_tab.htm" /}
                             {/if}
                         </ul>
                         <div class="layui-tab-content" style="height: 100%;">
@@ -143,6 +147,9 @@
                             {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/uploadimgnew/ai_drawing.htm')" /}
                                 {include file="/weapp/Ai/template/uploadimgnew/ai_drawing.htm" /}
                             {/if}
+                            {if condition="file_exists(ROOT_PATH.'weapp/PexelsImg/template/uploadimgnew/pexels_panel.htm')" /}
+                                {include file="/weapp/PexelsImg/template/uploadimgnew/pexels_panel.htm" /}
+                            {/if}
                         </div>
                     </div>
                 </div>
@@ -160,7 +167,7 @@
             var callback = "{$info.func}";
             var num = "{$info.num|default=1}";
         </script>
-        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/upload.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/upload.js?v={$version}1"></script>
         <script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
         {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/uploadimgnew/skin/js/ai_upload.js')" /}
         <script type="text/javascript" src="__ROOT_DIR__/weapp/Ai/template/uploadimgnew/skin/js/ai_upload.js?v={:getTime()}"></script>

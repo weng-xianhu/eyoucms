@@ -533,16 +533,30 @@ class PHPExcel_Reader_HTML extends PHPExcel_Reader_Abstract implements PHPExcel_
     }
 
     /**
-     * Scan theXML for use of <!ENTITY to prevent XXE/XEE attacks
+     * Scan the XML for use of <!DOCTYPE and <!ENTITY to prevent XXE/XEE attacks
+     * Security fix: Enhanced detection for both DOCTYPE and ENTITY declarations
      *
      * @param     string         $xml
      * @throws PHPExcel_Reader_Exception
+     * @return    string
      */
     public function securityScan($xml)
     {
-        $pattern = '/\\0?' . implode('\\0?', str_split('<!ENTITY')) . '\\0?/';
-        if (preg_match($pattern, $xml)) {
+        // Check for <!DOCTYPE
+        $doctypePattern = '/\\0?' . implode('\\0?', str_split('<!DOCTYPE')) . '\\0?/i';
+        if (preg_match($doctypePattern, $xml)) {
+            throw new PHPExcel_Reader_Exception('Detected use of DOCTYPE in XML, spreadsheet file load() aborted to prevent XXE/XEE attacks');
+        }
+        // Check for <!ENTITY
+        $entityPattern = '/\\0?' . implode('\\0?', str_split('<!ENTITY')) . '\\0?/i';
+        if (preg_match($entityPattern, $xml)) {
             throw new PHPExcel_Reader_Exception('Detected use of ENTITY in XML, spreadsheet file load() aborted to prevent XXE/XEE attacks');
+        }
+        // Check for SYSTEM and PUBLIC keywords
+        $systemPattern = '/\\0?' . implode('\\0?', str_split('SYSTEM')) . '\\0?/i';
+        $publicPattern = '/\\0?' . implode('\\0?', str_split('PUBLIC')) . '\\0?/i';
+        if (preg_match($systemPattern, $xml) || preg_match($publicPattern, $xml)) {
+            throw new PHPExcel_Reader_Exception('Detected use of SYSTEM/PUBLIC in XML, spreadsheet file load() aborted to prevent XXE/XEE attacks');
         }
         return $xml;
     }

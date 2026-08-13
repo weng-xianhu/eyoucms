@@ -1,5 +1,22 @@
 {include file="public/layout" /}
 
+<!-- CodeMirror 核心 -->
+<link rel="stylesheet" href="__SKIN__/js/codemirror/codemirror.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/js/codemirror/addon/dialog/dialog.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/js/codemirror/theme/monokai.css?v={$version}">
+<link rel="stylesheet" href="__SKIN__/css/editor.css?v={$version}">
+
+<script src="__SKIN__/js/codemirror/codemirror.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/xml/xml.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/javascript/javascript.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/css/css.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/mode/htmlmixed/htmlmixed.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/dialog/dialog.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/search/searchcursor.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/search/search.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/selection/active-line.js?v={$version}"></script>
+<script src="__SKIN__/js/codemirror/addon/edit/matchbrackets.js?v={$version}"></script>
+
 <body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
@@ -56,7 +73,7 @@
                                     {eq name="$vo['filemine']" value='image'}
                                         <a href="__ROOT_DIR__{$vo['filepath']}?v={php}echo time();{/php}" target="_blank">{$vo.filename}</a>
                                     {else /}
-                                        <a href="{:url('Filemanager/edit',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}">{$vo.filename}</a>
+                                        <a href="javascript:;" onclick="openEditor('{$vo.filename}', '{:replace_path(dirname($vo.filepath))}')">{$vo.filename}</a>
                                     {/eq}
                                   {/if}
                                   {$vo.intro}
@@ -85,7 +102,7 @@
                                   {else /}
                                     {if condition="in_array($vo['filetype'], $editOpArr)"}
                                         {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"}
-                                        <a href="{:url('Filemanager/edit',array('filename'=>$vo['filename'], 'activepath'=>replace_path(dirname($vo['filepath']))))}" class="btn blue">编辑</a>
+                                        <a href="javascript:;" onclick="openEditor('{$vo.filename}', '{:replace_path(dirname($vo.filepath))}')" class="btn blue">编辑</a>
                                         {/eq}
                                     {/if}
                                   {/eq}
@@ -166,6 +183,945 @@
             }
         );
     }
+</script>
+
+<!-- 弹窗编辑器模板 -->
+<div id="editorPopup" style="display:none;">
+    <div class="editor-container" id="editorContainer">
+        <!-- 顶部工具栏（通屏） -->
+        <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn primary" onclick="EditorApp.save()" title="Ctrl+S">
+                <i class="fa fa-save"></i> 保存
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.saveAll()" title="保存所有">
+                <i class="fa fa-floppy-o"></i> 全部保存
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.reloadFile()" title="重新加载当前文件">
+                <i class="fa fa-refresh"></i> 重载
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.find()" title="Ctrl+F">
+                <i class="fa fa-search"></i> 搜索
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.replace()" title="Ctrl+H">
+                <i class="fa fa-exchange"></i> 替换
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.gotoLine()" title="Ctrl+G">
+                <i class="fa fa-arrow-right"></i> 跳转行
+            </button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.changeFontSize(-1)">A-</button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.changeFontSize(1)">A+</button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.toggleTheme()" id="themeBtn">
+                <i class="fa fa-adjust"></i> 主题
+            </button>
+            <button type="button" class="toolbar-btn" onclick="EditorApp.showShortcuts()">
+                <i class="fa fa-keyboard-o"></i> 快捷键
+            </button>
+        </div>
+
+        <!-- 路径和标签页区域（同一行） -->
+        <div class="editor-header-bar">
+            <div class="editor-file-info">
+                <span class="file-info-item">
+                    <i class="fa fa-folder-o"></i>
+                    <span id="currentPath"></span>
+                </span>
+            </div>
+            <div class="editor-tabs" id="editorTabs"></div>
+        </div>
+
+        <!-- 主体区域 -->
+        <div class="editor-body">
+            <!-- 左侧文件树 -->
+            <div class="editor-sidebar" id="editorSidebar">
+                <div class="sidebar-tools">
+                    <button type="button" class="sidebar-btn" onclick="EditorApp.goUp()" title="上一级">
+                        <i class="fa fa-level-up"></i> 上一级
+                    </button>
+                    <button type="button" class="sidebar-btn" onclick="EditorApp.refreshTree()" title="刷新">
+                        <i class="fa fa-refresh"></i> 刷新
+                    </button>
+                </div>
+                <div class="file-tree" id="fileTree"></div>
+            </div>
+
+            <!-- 侧边栏折叠按钮 -->
+            <div class="sidebar-toggle" id="sidebarToggle" onclick="EditorApp.toggleSidebar()">
+                <i class="fa fa-chevron-left"></i>
+            </div>
+
+            <!-- 右侧编辑区 -->
+            <div class="editor-main">
+                <!-- 编辑器 -->
+                <div class="editor-content">
+                    <textarea id="codeEditor"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏（通屏） -->
+        <div class="editor-statusbar">
+            <span class="status-item" id="filePath">文件位置: </span>
+            <span class="status-item" id="lineEnding">CRLF</span>
+            <span class="status-item" id="cursorPos">行 1, 列 0</span>
+            <span class="status-item" id="tabSize">制表符: 4</span>
+            <span class="status-item" id="encoding">编码: UTF-8</span>
+            <span class="status-item" id="fileType">语言: HTML</span>
+            <span class="status-item" id="saveStatus">已保存</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// 编辑器应用对象
+var EditorApp = {
+    editor: null,
+    layerIndex: null,
+    isDark: true,
+    fontSize: 14,
+    currentFile: '',
+    activepath: '',
+    basePath: '{$activepath}',
+    minPath: '{$minPath}',
+    sidebarVisible: true,
+    tabs: [],        // 存储所有打开的标签页 {filename, path, content, modified, mode, extension}
+    activeTabIndex: -1,  // 当前激活的标签索引
+
+    // 初始化编辑器
+    init: function(layero) {
+        var self = this;
+        var textarea = layero.find('#codeEditor')[0];
+        this.editor = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            lineWrapping: true,
+            mode: 'text/html',
+            theme: 'monokai',
+            styleActiveLine: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            extraKeys: {
+                "Ctrl-S": function() { self.save(); },
+                "Ctrl-F": function(cm) { cm.execCommand('find'); },
+                "Ctrl-H": function(cm) { cm.execCommand('replace'); },
+                "Ctrl-G": function() { self.gotoLine(); }
+            }
+        });
+
+        this.editor.on('change', function() {
+            self.setModified(true);
+        });
+
+        this.editor.on('cursorActivity', function() {
+            var pos = self.editor.getCursor();
+            self.layerDom.find('#cursorPos').text('行 ' + (pos.line + 1) + ', 列 ' + pos.ch);
+        });
+
+        // 事件委托：处理选项卡点击和关闭
+        this.layerDom.on('click', '#editorTabs .editor-tab', function(e) {
+            var $target = $(e.target);
+            var $tab = $(this);
+            var index = parseInt($tab.attr('data-index'));
+
+            // 如果点击的是关闭按钮
+            if ($target.hasClass('close-btn') || $target.closest('.close-btn').length > 0) {
+                e.stopPropagation();
+                self.closeTab(e, index);
+            } else {
+                // 点击选项卡本身，切换到该选项卡
+                self.switchTab(index);
+            }
+        });
+    },
+
+    // 加载文件内容
+    loadFile: function(filename, path) {
+        var self = this;
+
+        // 检查是否已经打开了这个文件
+        var existingIndex = this.findTab(filename, path);
+        if (existingIndex !== -1) {
+            this.switchTab(existingIndex);
+            return;
+        }
+
+        // 保存当前标签的内容
+        this.saveCurrentTabContent();
+
+        var loadingIdx = layer.load(1, {shade: [0.3, '#000']});
+        $.ajax({
+            url: '{:url("Filemanager/ajax_get_content")}',
+            type: 'GET',
+            data: { filename: filename, activepath: path },
+            dataType: 'json',
+            success: function(res) {
+                layer.close(loadingIdx);
+                // 检查是否需要安全验证
+                if (res.need_security_verify) {
+                    self.showSecurityVerify(function() {
+                        // 验证成功后重新加载文件
+                        self.loadFile(filename, path);
+                    }, res.security_ask);
+                    return;
+                }
+
+                if (res.code == 1) {
+                    // 添加新标签
+                    var newTab = {
+                        filename: filename,
+                        path: path,
+                        content: res.data.content || '',
+                        modified: false,
+                        mode: res.data.mode || 'text/html',
+                        extension: res.data.extension || 'htm'
+                    };
+                    self.tabs.push(newTab);
+                    self.activeTabIndex = self.tabs.length - 1;
+
+                    self.currentFile = filename;
+                    self.activepath = path;
+                    self.editor.setValue(res.data.content || '');
+                    self.editor.setOption('mode', res.data.mode || 'text/html');
+                    self.editor.clearHistory();
+                    self.editor.refresh();
+
+                    // 在所有编辑器操作完成后再设置modified状态和渲染标签页
+                    self.setModified(false);
+                    self.renderTabs();
+
+                    // 更新路径显示
+                    self.layerDom.find('#currentPath').text(path || '/');
+
+                    self.updateStatusBar(filename, path, res.data.extension);
+                    self.highlightActiveFile();
+                } else {
+                    layer.msg(res.msg || '加载失败', {icon: 2});
+                }
+            },
+            error: function() {
+                layer.close(loadingIdx);
+                layer.msg('加载失败', {icon: 2});
+            }
+        });
+    },
+
+    // 设置修改状态
+    setModified: function(val) {
+        if (this.activeTabIndex >= 0 && this.activeTabIndex < this.tabs.length) {
+            this.tabs[this.activeTabIndex].modified = val;
+        }
+        var tab = this.layerDom.find('.editor-tab.active');
+        var status = this.layerDom.find('#saveStatus');
+        if (val) {
+            tab.addClass('modified');
+            status.text('未保存').css('color', '#e2c08d');
+        } else {
+            tab.removeClass('modified');
+            status.text('已保存').css('color', '#67c23a');
+        }
+    },
+
+    // 保存文件
+    save: function() {
+        var self = this;
+
+        // 验证是否有打开的文件
+        if (!this.currentFile || this.activeTabIndex < 0) {
+            layer.msg('没有打开的文件', {icon: 0, time: 1000});
+            return;
+        }
+
+        // 检查文件是否被修改
+        var currentTab = this.tabs[this.activeTabIndex];
+        if (!currentTab.modified) {
+            layer.msg('文件未修改，无需保存', {icon: 0, time: 1000});
+            return;
+        }
+
+        // 验证路径参数
+        if (!this.activepath) {
+            layer.msg('文件路径无效', {icon: 2, time: 1000});
+            return;
+        }
+
+        var content = this.editor.getValue();
+        // 更新当前标签的内容
+        if (this.activeTabIndex >= 0) {
+            this.tabs[this.activeTabIndex].content = content;
+        }
+        var loadingIdx = layer.load(1, {shade: [0.3, '#000']});
+        $.ajax({
+            url: '{:url("Filemanager/ajax_save")}',
+            type: 'POST',
+            data: {
+                filename: this.currentFile,
+                activepath: this.activepath,
+                content: content
+            },
+            dataType: 'json',
+            success: function(res) {
+                layer.close(loadingIdx);
+                // 检查是否需要安全验证
+                if (res.need_security_verify) {
+                    self.showSecurityVerify(function() {
+                        // 验证成功后重新保存
+                        self.save();
+                    }, res.security_ask);
+                    return;
+                }
+
+                if (res.code == 1) {
+                    self.setModified(false);
+                    self.renderTabs();
+                    layer.msg('保存成功', {icon: 1, time: 1000});
+                } else {
+                    layer.msg(res.msg || '保存失败', {icon: 2});
+                }
+            },
+            error: function() {
+                layer.close(loadingIdx);
+                layer.msg('保存失败', {icon: 2});
+            }
+        });
+    },
+
+    // 保存所有文件
+    saveAll: function() {
+        var self = this;
+        var unsavedTabs = this.tabs.filter(function(t) { return t.modified; });
+
+        if (unsavedTabs.length === 0) {
+            layer.msg('没有需要保存的文件', {icon: 0, time: 1000});
+            return;
+        }
+
+        var savedCount = 0;
+        var totalCount = unsavedTabs.length;
+        var loadingIdx = layer.load(1, {shade: [0.3, '#000']});
+
+        unsavedTabs.forEach(function(tab, index) {
+            $.ajax({
+                url: '{:url("Filemanager/ajax_save")}',
+                type: 'POST',
+                data: {
+                    filename: tab.filename,
+                    activepath: tab.path,
+                    content: tab.content
+                },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code == 1) {
+                        tab.modified = false;
+                        savedCount++;
+                        if (savedCount === totalCount) {
+                            layer.close(loadingIdx);
+                            self.renderTabs();
+
+                            // 如果当前激活的标签被保存了，更新状态显示
+                            if (self.activeTabIndex >= 0 && !self.tabs[self.activeTabIndex].modified) {
+                                var status = self.layerDom.find('#saveStatus');
+                                status.text('已保存').css('color', '#67c23a');
+                            }
+
+                            layer.msg('已保存 ' + savedCount + ' 个文件', {icon: 1, time: 1500});
+                        }
+                    } else {
+                        layer.close(loadingIdx);
+                        layer.msg(res.msg || '保存失败', {icon: 2});
+                    }
+                },
+                error: function() {
+                    savedCount++;
+                    if (savedCount === totalCount) {
+                        layer.close(loadingIdx);
+                    }
+                    layer.msg('保存失败', {icon: 2});
+                }
+            });
+        });
+    },
+
+    // 刷新编辑器
+    refreshEditor: function() {
+        if (this.editor) {
+            this.editor.refresh();
+            layer.msg('已刷新', {icon: 1, time: 1000});
+        }
+    },
+
+    // 重新加载当前文件
+    reloadFile: function() {
+        var self = this;
+
+        // 检查是否有打开的文件
+        if (!this.currentFile || this.activeTabIndex < 0) {
+            layer.msg('没有打开的文件', {icon: 0, time: 1000});
+            return;
+        }
+
+        var currentTab = this.tabs[this.activeTabIndex];
+
+        // 如果文件被修改了，提示用户
+        if (currentTab.modified) {
+            layer.confirm('当前文件有未保存的修改，重新加载将丢失这些修改，确定继续？', {
+                shade: [0.3, '#000'],
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消']
+            }, function(index){
+                layer.close(index);
+                self.doReloadFile();
+            });
+        } else {
+            this.doReloadFile();
+        }
+    },
+
+    // 执行重新加载
+    doReloadFile: function() {
+        var self = this;
+        var loadingIdx = layer.load(1, {shade: [0.3, '#000']});
+
+        $.ajax({
+            url: '{:url("Filemanager/ajax_get_content")}',
+            type: 'GET',
+            data: {
+                filename: this.currentFile,
+                activepath: this.activepath
+            },
+            dataType: 'json',
+            success: function(res) {
+                layer.close(loadingIdx);
+                if (res.code == 1) {
+                    // 更新当前标签的内容
+                    var currentTab = self.tabs[self.activeTabIndex];
+                    currentTab.content = res.data.content || '';
+                    currentTab.modified = false;
+
+                    // 更新编辑器
+                    self.editor.setValue(res.data.content || '');
+                    self.editor.clearHistory();
+                    currentTab.history = null;
+                    self.setModified(false);
+                    self.renderTabs();
+
+                    layer.msg('文件已重新加载', {icon: 1, time: 1000});
+                } else {
+                    layer.msg(res.msg || '加载失败', {icon: 2});
+                }
+            },
+            error: function() {
+                layer.close(loadingIdx);
+                layer.msg('加载失败', {icon: 2});
+            }
+        });
+    },
+
+    // 更新路径显示
+    updatePathBar: function() {
+        var pathEl = this.layerDom.find('#currentPath');
+        if (pathEl.length > 0) {
+            pathEl.text(this.basePath || '/');
+        }
+    },
+
+    // 渲染所有标签页
+    renderTabs: function() {
+        var self = this;
+        var html = '';
+        this.tabs.forEach(function(tab, index) {
+            var isActive = index === self.activeTabIndex ? ' active' : '';
+            var isModified = tab.modified ? ' modified' : '';
+            html += '<div class="editor-tab' + isActive + isModified + '" data-index="' + index + '">';
+            html += '<span class="tab-icon"><i class="fa fa-file-o"></i></span>';
+            html += '<span class="filename">' + tab.filename + '</span>';
+            html += '<span class="close-btn" data-action="close">×</span>';
+            html += '</div>';
+        });
+        var tabsEl = this.layerDom.find('#editorTabs');
+        if (tabsEl.length === 0) {
+            console.error('editorTabs element not found');
+        }
+        tabsEl.html(html);
+    },
+
+    // 查找已打开的标签
+    findTab: function(filename, path) {
+        for (var i = 0; i < this.tabs.length; i++) {
+            if (this.tabs[i].filename === filename && this.tabs[i].path === path) {
+                return i;
+            }
+        }
+        return -1;
+    },
+
+    // 保存当前标签内容到内存（包括撤销历史）
+    saveCurrentTabContent: function() {
+        if (this.activeTabIndex >= 0 && this.activeTabIndex < this.tabs.length && this.editor) {
+            this.tabs[this.activeTabIndex].content = this.editor.getValue();
+            this.tabs[this.activeTabIndex].history = this.editor.getHistory();
+        }
+    },
+
+    // 切换标签页
+    switchTab: function(index) {
+        if (index === this.activeTabIndex) return;
+        if (index < 0 || index >= this.tabs.length) return;
+
+        // 保存当前标签内容
+        this.saveCurrentTabContent();
+
+        // 切换到新标签
+        this.activeTabIndex = index;
+        var tab = this.tabs[index];
+        this.currentFile = tab.filename;
+        this.activepath = tab.path;
+
+        // 保存原始的 modified 状态
+        var originalModified = tab.modified;
+
+        // 更新编辑器（这些操作会触发 change 事件）
+        this.editor.setValue(tab.content);
+        this.editor.setOption('mode', tab.mode);
+
+        // 恢复该标签页的独立撤销历史（修复跨文件撤销重做问题）
+        if (tab.history) {
+            this.editor.setHistory(tab.history);
+        } else {
+            this.editor.clearHistory();
+        }
+
+        // 恢复原始的 modified 状态
+        tab.modified = originalModified;
+
+        this.renderTabs();
+        this.updateStatusBar(tab.filename, tab.path, tab.extension);
+        this.highlightActiveFile();
+
+        // 更新修改状态显示
+        var status = this.layerDom.find('#saveStatus');
+        if (tab.modified) {
+            status.text('未保存').css('color', '#e2c08d');
+        } else {
+            status.text('已保存').css('color', '#67c23a');
+        }
+    },
+
+    // 关闭标签页
+    closeTab: function(e, index) {
+        e.stopPropagation();
+        var tab = this.tabs[index];
+
+        if (tab.modified) {
+            if (!confirm('文件 "' + tab.filename + '" 未保存，确定关闭？')) return;
+        }
+
+        this.tabs.splice(index, 1);
+
+        if (this.tabs.length === 0) {
+            // 没有标签了，关闭编辑器
+            layer.close(this.layerIndex);
+            return;
+        }
+
+        // 调整当前激活索引
+        if (index < this.activeTabIndex) {
+            this.activeTabIndex--;
+        } else if (index === this.activeTabIndex) {
+            // 关闭的是当前标签，切换到前一个或后一个
+            if (this.activeTabIndex >= this.tabs.length) {
+                this.activeTabIndex = this.tabs.length - 1;
+            }
+            var newTab = this.tabs[this.activeTabIndex];
+            this.currentFile = newTab.filename;
+            this.activepath = newTab.path;
+
+            // 保存原始 modified 状态
+            var originalModified = newTab.modified;
+
+            // 这些操作会触发 change 事件
+            this.editor.setValue(newTab.content);
+            this.editor.setOption('mode', newTab.mode);
+
+            // 恢复该标签页的独立撤销历史
+            if (newTab.history) {
+                this.editor.setHistory(newTab.history);
+            } else {
+                this.editor.clearHistory();
+            }
+
+            // 恢复原始 modified 状态
+            newTab.modified = originalModified;
+
+            this.updateStatusBar(newTab.filename, newTab.path, newTab.extension);
+            this.highlightActiveFile();
+        }
+
+        this.renderTabs();
+    },
+
+    // 更新状态栏
+    updateStatusBar: function(filename, path, ext) {
+        this.layerDom.find('#filePath').text('文件位置: ' + path + '/' + filename);
+        var langMap = {htm:'HTML', html:'HTML', css:'CSS', js:'JavaScript', php:'PHP', json:'JSON'};
+        this.layerDom.find('#fileType').text('语言: ' + (langMap[ext] || ext.toUpperCase()));
+    },
+
+    // 加载文件树
+    loadFileTree: function() {
+        var self = this;
+        $.ajax({
+            url: '{:url("Filemanager/ajax_file_tree")}',
+            type: 'GET',
+            data: { activepath: this.basePath },
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    self.renderTree(res.data, self.layerDom.find('#fileTree')[0]);
+                    self.updatePathBar();
+                }
+            }
+        });
+    },
+
+    // 渲染文件树
+    // parentPath: 当前目录的冒号格式路径，用于构建子目录路径
+    renderTree: function(data, container, parentPath) {
+        // 如果没有传 parentPath，使用 basePath（顶层调用时）
+        var currentParent = parentPath || this.basePath;
+        var html = '<ul>';
+        var self = this;
+        data.forEach(function(item) {
+            if (item.type === 'dir') {
+                // 根据父目录路径和 item.name 生成正确的子目录路径
+                var itemPath;
+                if (!currentParent || currentParent === '/' || currentParent === '') {
+                    itemPath = ':' + item.name;
+                } else {
+                    // 统一用冒号格式拼接
+                    var normalized = currentParent.replace(/\//g, ':');
+                    itemPath = normalized + ':' + item.name;
+                    // 确保开头只有一个冒号
+                    itemPath = ':' + itemPath.replace(/^:+/, '');
+                }
+
+                html += '<li class="folder collapsed">';
+                html += '<div class="tree-item" onclick="EditorApp.toggleFolder(this, \'' + itemPath + '\')">';
+                html += '<i class="fa fa-caret-right folder-arrow"></i>';
+                html += '<i class="fa fa-folder folder-icon"></i>';
+                html += '<span>' + item.name + '</span></div>';
+                html += '<ul class="children"></ul></li>';
+            } else {
+                var isActive = item.name === self.currentFile ? ' active' : '';
+                html += '<li class="file">';
+                html += '<div class="tree-item' + isActive + '" data-path="' + item.path + '" data-name="' + item.name + '" onclick="EditorApp.openFile(this)">';
+                html += '<i class="fa fa-file-o"></i>';
+                html += '<span>' + item.name + '</span></div></li>';
+            }
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    },
+
+    // 展开/折叠文件夹
+    toggleFolder: function(el, path) {
+        var li = el.parentNode;
+        var children = li.querySelector('.children');
+        var arrow = el.querySelector('.folder-arrow');
+
+        if (li.classList.contains('collapsed')) {
+            li.classList.remove('collapsed');
+            li.classList.add('expanded');
+            arrow.classList.remove('fa-caret-right');
+            arrow.classList.add('fa-caret-down');
+            if (children.children.length === 0) {
+                this.loadSubTree(path, children);
+            }
+        } else {
+            li.classList.remove('expanded');
+            li.classList.add('collapsed');
+            arrow.classList.remove('fa-caret-down');
+            arrow.classList.add('fa-caret-right');
+        }
+    },
+
+    // 加载子目录
+    loadSubTree: function(path, container) {
+        var self = this;
+        $.ajax({
+            url: '{:url("Filemanager/ajax_file_tree")}',
+            type: 'GET',
+            data: { activepath: path },
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    // 传递当前目录路径作为 parentPath，确保子目录路径正确拼接
+                    self.renderTree(res.data, container, path);
+                }
+            }
+        });
+    },
+
+    // 打开文件
+    openFile: function(el) {
+        var path = el.getAttribute('data-path');
+        var name = el.getAttribute('data-name');
+
+        // 检查是否已打开
+        var existingIndex = this.findTab(name, path);
+        if (existingIndex !== -1) {
+            // 如果当前标签有未保存的修改，先保存内容
+            this.saveCurrentTabContent();
+            this.switchTab(existingIndex);
+            return;
+        }
+
+        // 加载新文件
+        this.loadFile(name, path);
+    },
+
+    // 高亮当前文件
+    highlightActiveFile: function() {
+        var self = this;
+        this.layerDom.find('#fileTree .tree-item').each(function() {
+            $(this).removeClass('active');
+            if ($(this).attr('data-name') === self.currentFile) {
+                $(this).addClass('active');
+            }
+        });
+    },
+
+    // 切换侧边栏
+    toggleSidebar: function() {
+        var sidebar = this.layerDom.find('#editorSidebar');
+        var toggle = this.layerDom.find('#sidebarToggle');
+        var icon = toggle.find('i');
+        this.sidebarVisible = !this.sidebarVisible;
+        if (this.sidebarVisible) {
+            sidebar.show();
+            toggle.removeClass('collapsed');
+            icon.removeClass('fa-chevron-right').addClass('fa-chevron-left');
+        } else {
+            sidebar.hide();
+            toggle.addClass('collapsed');
+            icon.removeClass('fa-chevron-left').addClass('fa-chevron-right');
+        }
+        this.editor && this.editor.refresh();
+    },
+
+    // 上一级目录
+    goUp: function() {
+        if (!this.basePath || this.basePath === '/' || this.basePath === '') {
+            layer.msg('已经是最上级目录', {icon: 0, time: 1000});
+            return;
+        }
+
+        // 统一用冒号格式比较
+        var normalize = function(p) {
+            return p.replace(/\//g, ':').replace(/^:+/, '').replace(/:+$/, '');
+        };
+        var currentNorm = normalize(this.basePath);
+        var minNorm = normalize(this.minPath);
+
+        // 已经到达或低于最小路径，禁止继续上翻
+        if (currentNorm === minNorm || currentNorm.indexOf(':') === -1) {
+            layer.msg('已经是最上级目录', {icon: 0, time: 1000});
+            return;
+        }
+
+        // 去掉最后一段
+        var parts = currentNorm.split(':');
+        parts.pop();
+        var newNorm = parts.join(':');
+
+        // 确保不超出 minPath
+        if (newNorm.length < minNorm.length && minNorm.indexOf(newNorm) !== 0) {
+            layer.msg('已经是最上级目录', {icon: 0, time: 1000});
+            return;
+        }
+
+        this.basePath = ':' + newNorm;
+        this.loadFileTree();
+        layer.msg('已返回上一级', {icon: 1, time: 1000});
+    },
+
+    // 刷新文件树
+    refreshTree: function() {
+        this.loadFileTree();
+    },
+
+    // 搜索
+    find: function() {
+        this.editor.execCommand('find');
+    },
+
+    // 替换
+    replace: function() {
+        this.editor.execCommand('replace');
+    },
+
+    // 跳转行
+    gotoLine: function() {
+        var line = prompt('跳转到行号:');
+        if (line) {
+            var lineNum = parseInt(line, 10) - 1;
+            this.editor.setCursor(lineNum, 0);
+            this.editor.focus();
+        }
+    },
+
+    // 改变字体大小
+    changeFontSize: function(delta) {
+        this.fontSize += delta;
+        if (this.fontSize < 10) this.fontSize = 10;
+        if (this.fontSize > 24) this.fontSize = 24;
+        this.layerDom.find('.CodeMirror').css('fontSize', this.fontSize + 'px');
+        this.editor.refresh();
+    },
+
+    // 切换主题
+    toggleTheme: function() {
+        this.isDark = !this.isDark;
+        var container = this.layerDom.find('#editorContainer');
+        if (this.isDark) {
+            container.removeClass('light');
+            this.editor.setOption('theme', 'monokai');
+        } else {
+            container.addClass('light');
+            this.editor.setOption('theme', 'default');
+        }
+    },
+
+    // 显示快捷键
+    showShortcuts: function() {
+        var html = '<div style="padding:15px;line-height:2;">';
+        html += '<p><b>Ctrl+S</b> - 保存文件</p>';
+        html += '<p><b>Ctrl+F</b> - 搜索</p>';
+        html += '<p><b>Ctrl+H</b> - 替换</p>';
+        html += '<p><b>Ctrl+G</b> - 跳转行</p>';
+        html += '</div>';
+        layer.open({type:1, title:'快捷键', area:['300px','200px'], content:html});
+    },
+
+    // 显示安全验证对话框
+    showSecurityVerify: function(callback, securityAsk) {
+        var self = this;
+        var html = '<div style="padding:20px;">';
+        html += '<div style="margin-bottom:15px;color:#333;font-size:14px;">';
+        html += '<i class="fa fa-shield" style="color:#67c23a;margin-right:8px;"></i>';
+        html += '出于安全考虑，需要验证密保问题';
+        html += '</div>';
+        html += '<div style="margin-bottom:10px;color:#666;font-size:13px;">';
+        html += '<strong>问题：</strong>' + (securityAsk || '请输入密保答案');
+        html += '</div>';
+        html += '<div style="margin-bottom:15px;">';
+        html += '<input type="password" id="securityAnswer" placeholder="请输入密保答案" ';
+        html += 'style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;" />';
+        html += '</div>';
+        html += '<div style="color:#999;font-size:12px;line-height:1.6;">';
+        html += '<i class="fa fa-info-circle"></i> 验证通过后，本次登录期间无需重复验证';
+        html += '</div>';
+        html += '</div>';
+
+        layer.open({
+            type: 1,
+            title: '安全验证',
+            area: ['450px', '280px'],
+            shade: [0.3, '#000'],
+            closeBtn: 1,
+            content: html,
+            btn: ['确定', '取消'],
+            yes: function(index, layero) {
+                var answer = layero.find('#securityAnswer').val();
+                if (!answer) {
+                    layer.msg('请输入密保答案', {icon: 0});
+                    return;
+                }
+
+                var loadingIdx = layer.load(1, {shade: [0.3, '#000']});
+                $.ajax({
+                    url: '{:url("Security/ajax_answer_verify")}',
+                    type: 'POST',
+                    data: { answer: answer },
+                    dataType: 'json',
+                    success: function(res) {
+                        layer.close(loadingIdx);
+                        if (res.code == 1) {
+                            layer.close(index);
+                            layer.msg('验证成功', {icon: 1, time: 1000});
+                            // 调用回调函数，重新执行原操作
+                            if (typeof callback === 'function') {
+                                setTimeout(function() {
+                                    callback();
+                                }, 500);
+                            }
+                        } else {
+                            layer.msg(res.msg || '验证失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.close(loadingIdx);
+                        layer.msg('验证失败', {icon: 2});
+                    }
+                });
+            }
+        });
+    },
+
+    // 关闭编辑器
+    closeEditor: function(e) {
+        e && e.stopPropagation();
+        // 检查是否有未保存的标签
+        var unsaved = this.tabs.filter(function(t) { return t.modified; });
+        if (unsaved.length > 0) {
+            if (!confirm('有 ' + unsaved.length + ' 个文件未保存，确定关闭？')) return;
+        }
+        // 重置状态
+        this.tabs = [];
+        this.activeTabIndex = -1;
+        layer.close(this.layerIndex);
+    }
+};
+
+// 打开编辑器弹窗
+function openEditor(filename, path) {
+    console.log('openEditor called:', filename, path);
+
+    // 检查 editorPopup 元素是否存在
+    var popup = $('#editorPopup');
+    console.log('editorPopup found:', popup.length);
+
+    if (popup.length === 0) {
+        layer.msg('编辑器模板未找到', {icon: 2});
+        return;
+    }
+
+    // 重置标签状态
+    EditorApp.tabs = [];
+    EditorApp.activeTabIndex = -1;
+
+    EditorApp.layerIndex = layer.open({
+        type: 1,
+        title: '在线文本编辑器',
+        closeBtn: 1,
+        area: ['90%', '85%'],
+        shadeClose: false,
+        content: popup.html(),
+        success: function(layero) {
+            console.log('Layer opened successfully');
+            EditorApp.layerDom = layero;
+            EditorApp.init(layero);
+            EditorApp.basePath = path;
+            EditorApp.loadFileTree();
+            EditorApp.loadFile(filename, path);
+        }
+    });
+}
 </script>
 
 {include file="public/footer" /}

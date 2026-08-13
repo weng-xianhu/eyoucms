@@ -73,7 +73,7 @@
                         <tr>
                             <td class="sign">
                                 <div class="tc w40">
-                                    <input type="checkbox" name="ids[]" id="input_ids_{$vo.aid}" value="{$vo.aid}" data-title="{$vo.title}">
+                                    <input type="checkbox" name="ids[]" id="input_ids_{$vo.aid}" value="{$vo.aid}" data-title="{$vo.title}" data-sort="{$vo.sort_order}">
                                     <textarea class="none" id="ids_{$vo.aid}">{$vo.json_encode_params}</textarea>
                                 </div>
                             </td>
@@ -194,7 +194,7 @@
                     // aid处理
                     aidArr.push(value);
                     // 列表处理
-                    addList.push({'aid': value, 'title': $(o).data('title')});
+                    addList.push({'aid': value, 'title': $(o).data('title'), 'sort_order': $(o).data('sort')});
                 }
             });
             // 合并已选的文档aid数据

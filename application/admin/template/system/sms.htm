@@ -252,7 +252,7 @@
                 if (res.code == 1) {
                     layer.msg('发送成功', {icon: 1, time:1000});
                 } else {
-                    layer.msg(res.msg, {icon: 2, time: 1000});
+                    showErrorAlert(res.msg);
                 }
             },
             error: function(e){

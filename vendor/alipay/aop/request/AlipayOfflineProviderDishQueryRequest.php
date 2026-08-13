@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.offline.provider.dish.query request
  *
  * @author auto create
- * @since 1.0, 2017-03-31 13:28:51
+ * @since 1.0, 2022-10-11 12:02:49
  */
 class AlipayOfflineProviderDishQueryRequest
 {

@@ -120,8 +120,8 @@
             var location = $("#location").val();
             var callback = "{$func}";
             var alladdress = $("#alladdress").val();
-            if (callback != "undefined") {
-                eval('window.parent.'+callback+'(location, alladdress)');
+            if (callback != "undefined" && typeof window.parent[callback] === 'function') {
+                window.parent[callback](location, alladdress);
             }
             parent.layer.close(index);
         });

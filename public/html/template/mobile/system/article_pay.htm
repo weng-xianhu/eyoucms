@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="zh-CN">
     <head>
         <meta charset="utf-8" />
         <title>订单支付-{eyou:global name='web_name' /}</title>
@@ -43,7 +43,7 @@
                     <img src="{$data.product_litpic}" style="height: 60px;" class="left-pic">
                     <div class="right-con">
                         <p class="p1">{$data.cause}</p>
-                        <p class="p2">¥ {$data.order_amount}</p>
+                        <p class="p2">{notempty name="$data.order_score"}{$data.order_score}{$usersConfig.score_name}{else/}¥ {$data.order_amount}{/notempty}</p>
                     </div>
                 </div>
             </div>
@@ -51,28 +51,37 @@
             <div class="el-row bgfff mt10">
                 <div class="el-row" id="div_zhifufangshi">
                     <div class="el-form level-row">
-                        {eyou:sppayapilist id='vo'}
-                        {eyou:notempty name="$vo.pay_id"}
-                        <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
-                            <span class="ariticlePay phpSelectPayRadio" data-id="{$vo.pay_id}" data-mark="{$vo.pay_mark}" onclick="selectPayType(this);">
-                                <span><img class="pay_img" src="{$vo.pay_img}" alt="{$vo.pay_name}">{$vo.pay_name} </span>
-                                <input class="radio" type="radio" name='pay_id' value="{$vo.pay_id}" {eyou:eq name="$key" value="0"} checked {/eyou:eq}>
-                                <span class="check-mark top15 ri20"></span>
-                            </span>
-                        </label>
-                        {/eyou:notempty}
-                        {$vo.hidden}
-                        {/eyou:sppayapilist}
-
-                        {eyou:eq name="$data.pay_balance_open" value="1"}
-                        <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
-                            <span class="ariticlePay phpSelectPayRadio" data-id="0" data-mark="balance" onclick="selectPayType(this);">
-                                <span><img class="pay_img" src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" alt="余额支付">余额支付 </span>
-                                <input class="radio" type="radio" name='pay_id' value="0">
-                                <span class="check-mark top15 ri20"></span>
-                            </span>
-                        </label>
-                        {/eyou:eq}
+                        {empty name="$data.order_score"}
+                            {eyou:sppayapilist id='vo'}
+                            {eyou:notempty name="$vo.pay_id"}
+                            <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
+                                <span class="ariticlePay phpSelectPayRadio" data-id="{$vo.pay_id}" data-mark="{$vo.pay_mark}" onclick="selectPayType(this);">
+                                    <span><img class="pay_img" src="{$vo.pay_img}" alt="{$vo.pay_name}">{$vo.pay_name} </span>
+                                    <input class="radio" type="radio" name='pay_id' value="{$vo.pay_id}" {eyou:eq name="$key" value="0"} checked {/eyou:eq}>
+                                    <span class="check-mark top15 ri20"></span>
+                                </span>
+                            </label>
+                            {/eyou:notempty}
+                            {$vo.hidden}
+                            {/eyou:sppayapilist}
+                            {eyou:eq name="$data.pay_balance_open" value="1"}
+                            <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
+                                <span class="ariticlePay phpSelectPayRadio" data-id="0" data-mark="balance" onclick="selectPayType(this);">
+                                    <span><img class="pay_img" src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" alt="余额支付">余额支付 </span>
+                                    <input class="radio" type="radio" name='pay_id' value="0">
+                                    <span class="check-mark top15 ri20"></span>
+                                </span>
+                            </label>
+                            {/eyou:eq}
+                        {else/}
+                            <label class="radio-label pt10 pb10 pl20 pr20 e-label border-b-1-e">
+                                <span class="ariticlePay phpSelectPayRadio" data-id="0" data-mark="score" onclick="selectPayType(this);">
+                                    <span><img class="pay_img" src="{eyou:static file='users/skin/images/pay_score.png' /}" alt="{$usersConfig.score_name}支付">{$usersConfig.score_name}支付 </span>
+                                    <input class="radio" type="radio" name='pay_id' value="0">
+                                    <span class="check-mark top15 ri20"></span>
+                                </span>
+                            </label>
+                        {/empty}
                         <input type="hidden" id="PayID">
                         <input type="hidden" id="PayMark">
                         <input type="hidden" id="PayType" value="9">
@@ -80,7 +89,7 @@
                 </div>
             </div>
             <div class="buy-price mt10">
-                <p><strong>应付金额</strong><b>￥{$data.order_amount}</b></p>
+                <p><strong>应付金额</strong><b>{notempty name="$data.order_score"}{$data.order_score}{$usersConfig.score_name}{else/}¥{$data.order_amount}{/notempty}</b></p>
             </div>
             <div class="el-row mt30 btfx">
                 <input type="hidden" id="unified_id" value="{$data.unified_id}">
@@ -108,7 +117,7 @@
                 var unified_number = $('#unified_number').val();
                 if (0 === parseInt(pay_id) && 'balance' == pay_mark) {
                     // 发送请求
-                    layer_loading('订单处理中');
+                    layer_loading();
                     $.ajax({
                         url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
                         data: {unified_id: unified_id, unified_number: unified_number, transaction_type: pay_type},
@@ -122,6 +131,26 @@
                                 });
                             } else {
                                 rechargePay(obj, res.msg, res.url);
+                            }
+                        }
+                    });
+                } else if (0 === parseInt(pay_id) && 'score' == pay_mark) {
+                    // 发送请求
+                    layer_loading();
+                    $.ajax({
+                        url: '{$RootDir}/index.php?m=user&c=PayApi&a=score_payment&_ajax=1',
+                        data: {unified_id: unified_id, unified_number: unified_number, transaction_type: pay_type},
+                        type: 'post',
+                        dataType: 'json',
+                        success: function(res) {
+                            layer.closeAll();
+                            if (1 == res.code) {
+                                layer.msg(res.msg, {time: 1500}, function() {
+                                    window.location.href = res.url;
+                                });
+                            } else {
+                                showLayerAlert(res.msg);
+                                $(obj).prop("disabled", false).css("pointer-events", "");
                             }
                         }
                     });

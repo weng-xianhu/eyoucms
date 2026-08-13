@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.daowei.order.refund request
  *
  * @author auto create
- * @since 1.0, 2017-03-20 14:02:08
+ * @since 1.0, 2019-01-07 20:51:15
  */
 class AlipayDaoweiOrderRefundRequest
 {

@@ -30,7 +30,7 @@ return array (
   'title' => 
   array (
     'name' => 'title',
-    'type' => 'varchar(60)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -39,7 +39,7 @@ return array (
   'links' => 
   array (
     'name' => 'links',
-    'type' => 'varchar(255)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -48,7 +48,7 @@ return array (
   'litpic' => 
   array (
     'name' => 'litpic',
-    'type' => 'varchar(255)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

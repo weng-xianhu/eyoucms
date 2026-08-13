@@ -368,7 +368,8 @@ class ProductSpecLogic extends Model
         }
         $ReturnHtml .= "<td><b>价格 <a href=\"javascript:void(0);\" onclick=\"BulkSetPrice(this);\">批量设置 </a></b></td>";
         $ReturnHtml .= "<td><b>库存 <a href=\"javascript:void(0);\" onclick=\"BulkSetStock(this);\">批量设置 </a></b></td>";
-        $ReturnHtml .= "<td><b>虚拟销量</b></td>";
+        $ReturnHtml .= "<td><b>虚拟销量 <a href=\"javascript:void(0);\" onclick=\"BulkSetSales(this);\">批量设置 </a></b></td>";
+        $ReturnHtml .= "<td><b>商品编码 <a href=\"javascript:void(0);\" onclick=\"BulkSetCode(this);\">批量设置 </a></b></td>";
         $ReturnHtml .= "</tr></thead><tbody>";
 
        // 显示第二行开始
@@ -387,6 +388,8 @@ class ProductSpecLogic extends Model
             $ReturnHtml .="<td><input class='stock_count' name='preset_stock[$preset_key][stock_count]' value='0' onkeyup='this.value=this.value.replace(/[^\d.]/g,\"\");UpStock(this);' onpaste='this.value=this.value.replace(/[^\d.]/g,\"\")' data-old_stock='0'/></td>";
 
             $ReturnHtml .="<td><input type='text' name='preset_sales[$preset_key][spec_sales_num]' value='0' onkeyup='this.value=this.value.replace(/[^\d.]/g,\"\")' onpaste='this.value=this.value.replace(/[^\d.]/g,\"\")'></td>";
+            
+            $ReturnHtml .="<td><input type='text' name='preset_sales[$preset_key][stock_code]' value='0' onkeyup='this.value=this.value.replace(/[^\d.]/g,\"\")' onpaste='this.value=this.value.replace(/[^\d.]/g,\"\")'></td>";
 
             $ReturnHtml .="</tr>";
         }
@@ -426,7 +429,7 @@ class ProductSpecLogic extends Model
             $order2 = 'spec_value_id desc';
             $specItem = Db::name('product_spec_data')->where($where)->order($order2)->getField('spec_value_id, spec_value, spec_mark_id');
             // 查询规格价格
-            $specPrice = Db::name('product_spec_value')->where('aid', $aid)->order('spec_price asc')->getField('spec_value_id, value_id, spec_price, spec_crossed_price, spec_stock, spec_sales_num');
+            $specPrice = Db::name('product_spec_value')->where('aid', $aid)->order('spec_price asc')->getField('spec_value_id, value_id, spec_price, spec_crossed_price, spec_stock, spec_sales_num,stock_code');            
         } else {
             // 查询规格名称
             $order1 = 'spec_mark_id asc, spec_value_id asc';
@@ -435,7 +438,7 @@ class ProductSpecLogic extends Model
             $order2 = 'spec_value_id desc';
             $specItem = Db::name('product_spec_data_handle')->where($where)->order($order2)->getField('spec_value_id, spec_value, spec_mark_id');
             // 查询规格价格
-            $specPrice = Db::name('product_spec_value_handle')->where('aid', $aid)->order('spec_price asc')->getField('spec_value_id, handle_id, spec_price, spec_crossed_price, spec_stock, spec_sales_num');
+            $specPrice = Db::name('product_spec_value_handle')->where('aid', $aid)->order('spec_price asc')->getField('spec_value_id, handle_id, spec_price, spec_crossed_price, spec_stock, spec_sales_num,stock_code');
         }
         // 组合HTML
         $ReturnHtml  = "<table class='table table-bordered' id='spec_input_tab' border='1' cellpadding='10' cellspacing='10'><thead><tr>";
@@ -446,7 +449,8 @@ class ProductSpecLogic extends Model
         $ReturnHtml .= "<td><b>价格 <a href=\"javascript:void(0);\" onclick=\"BulkSetPrice(this);\">批量设置 </a></b></td>";
         $ReturnHtml .= "<td><b>划线价 <a href=\"javascript:void(0);\" onclick=\"BulkSetCrossedPrice(this);\">批量设置 </a></b></td>";
         $ReturnHtml .= "<td><b>库存 <a href=\"javascript:void(0);\" onclick=\"BulkSetStock(this);\">批量设置 </a></b></td>";
-        $ReturnHtml .= "<td><b>虚拟销量</b></td>";
+        $ReturnHtml .= "<td><b>虚拟销量 <a href=\"javascript:void(0);\" onclick=\"BulkSetSales(this);\">批量设置 </a></b></td>";
+        $ReturnHtml .= "<td><b>商品编码 <a href=\"javascript:void(0);\" onclick=\"BulkSetCode(this);\">批量设置 </a></b></td>";
         $ReturnHtml .= "</tr></thead><tbody>";
 
        // 显示第二行开始
@@ -472,7 +476,9 @@ class ProductSpecLogic extends Model
 
             $ReturnHtml .="<td><input type='text' class='stock_count' name='spec_stock[$spec_key][stock_count]' value='{$specPrice[$spec_key]['spec_stock']}' onkeyup='this.value=this.value.replace(/[^\d]/g,\"\");UpStock(this);' onpaste='this.value=this.value.replace(/[^\d]/g,\"\")' data-old_stock='{$specPrice[$spec_key]['spec_stock']}' onchange='setProductSpecPrice();'/></td>";
 
-            $ReturnHtml .="<td><input type='text' name='spec_sales[$spec_key][spec_sales_num]' value='{$specPrice[$spec_key]['spec_sales_num']}' onkeyup='this.value=this.value.replace(/[^\d]/g,\"\")' onpaste='this.value=this.value.replace(/[^\d]/g,\"\")'></td>";
+            $ReturnHtml .="<td><input type='text' class='spec_sales_num' name='spec_sales[$spec_key][spec_sales_num]' value='{$specPrice[$spec_key]['spec_sales_num']}' onkeyup='this.value=this.value.replace(/[^\d]/g,\"\")' onpaste='this.value=this.value.replace(/[^\d]/g,\"\")'></td>";
+            
+            $ReturnHtml .="<td><input type='text' class='stock_code' name='preset_sales[$spec_key][stock_code]' value='{$specPrice[$spec_key]['stock_code']}' onkeyup='this.value=this.value.replace(/[^\d.]/g,\"\")' onpaste='this.value=this.value.replace(/[^\d.]/g,\"\")'></td>";
 
             $ReturnHtml .="</tr>";
         }

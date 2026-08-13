@@ -28,6 +28,7 @@ class OrderPreHandle extends Model
         // 需要调用`Model`的`initialize`方法
         parent::initialize();
         // 接收参数
+        $this->times = getTime();
         $this->users_id = 0;
         $this->usersConfig = [];
     }
@@ -56,6 +57,18 @@ class OrderPreHandle extends Model
             // 查询 (需要赠送积分 && 不可维权) 订单，执行赠送积分
             $this->eyou_consumObtainScoresHandle();
 
+            // 查询文章购买订单，执行赠送积分
+            $this->eyou_articleOrderObtainScoresHandle();
+
+            // 查询会员升级套餐订单，执行赠送积分
+            $this->eyou_upgradeOrderObtainScoresHandle();
+
+            // 查询下载订单，执行赠送积分
+            $this->eyou_downloadOrderObtainScoresHandle();
+
+            // 查询视频订单，执行赠送积分
+            $this->eyou_mediaOrderObtainScoresHandle();
+
             // 查询 分销商的分销订单执行分销订单结算分佣处理
             if ('users' == $action) $this->eyou_dealerOrderSettlementHandle();
 
@@ -70,7 +83,7 @@ class OrderPreHandle extends Model
         // 计算订单过期时间
         $orderUnpayCloseTime = intval($this->usersConfig['order_unpay_close_time']) * 60;
         // 查询过期的订单
-        $time = getTime() - intval($orderUnpayCloseTime);
+        $time = $this->times - intval($orderUnpayCloseTime);
         $where = [
             'order_status' => 0,
             'add_time' => ['<', $time],
@@ -148,11 +161,16 @@ class OrderPreHandle extends Model
     {
         $useID = Db::name('shop_order')->where($where)->column('use_id');
         if (!empty($useID)) {
-            $times = getTime();
             $where = [
                 'use_id' => ['IN', $useID]
             ];
-            $couponUse = Db::name('shop_coupon_use')->where($where)->select();
+            // 启用优惠券插件时，使用插件的领券记录表
+            $coupon_use_table = 'shop_coupon_use';
+            $weappInfo = model('ShopPublicHandle')->getWeappInfo('Coupons');
+            if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+                $coupon_use_table = 'weapp_coupons_use';
+            }
+            $couponUse = Db::name($coupon_use_table)->where($where)->select();
             if (!empty($couponUse)) {
                 foreach ($couponUse as $key => $value) {
                     $where = [
@@ -162,10 +180,10 @@ class OrderPreHandle extends Model
                     $update = [
                         'use_time' => 0,
                         'use_status' => 2,
-                        'update_time' => $times
+                        'update_time' => $this->times
                     ];
-                    if ($value['start_time'] <= $times && $value['end_time'] >= $times) $update['use_status'] = 0;
-                    Db::name('shop_coupon_use')->where($where)->update($update);
+                    if ($value['start_time'] <= $this->times && $value['end_time'] >= $this->times) $update['use_status'] = 0;
+                    Db::name($coupon_use_table)->where($where)->update($update);
                 }
             }
         }
@@ -195,7 +213,7 @@ class OrderPreHandle extends Model
             // 循环组装数据
             $arcData = $specData = $pointsGoods = [];
             foreach ($orderDetails as $key => $value) {
-                $productData = !empty($value['product_data']) ? unserialize($value['product_data']) : [];
+                $productData = !empty($value['product_data']) ? safe_unserialize($value['product_data']) : [];
                 if (!empty($productData['pointsGoodsBuyField'])) {
                     !in_array($productData['pointsGoodsBuyField'], $pointsGoods) && array_push($pointsGoods, $productData['pointsGoodsBuyField']);
                 } else {
@@ -235,14 +253,14 @@ class OrderPreHandle extends Model
             if (!empty($specData)) {
                 $productSpecValueModel = new \app\user\model\ProductSpecValue();
                 $productSpecValueModel->saveAll($specData);
-                Db::name('product_spec_value')->where(['spec_sales_num'=>['lt',0]])->update(['spec_sales_num'=>0, 'update_time'=>getTime()]);
+                Db::name('product_spec_value')->where(['spec_sales_num'=>['lt',0]])->update(['spec_sales_num'=>0, 'update_time'=>$this->times]);
             }
 
             // 更新商品库存销量
             if (!empty($arcData)) {
                 $archivesModel = new \app\user\model\Archives();
                 $archivesModel->saveAll($arcData);
-                Db::name('archives')->where(['sales_num'=>['lt',0]])->update(['sales_num'=>0, 'update_time'=>getTime()]);
+                Db::name('archives')->where(['sales_num'=>['lt',0]])->update(['sales_num'=>0, 'update_time'=>$this->times]);
             }
 
             // 积分商品库存处理
@@ -262,7 +280,7 @@ class OrderPreHandle extends Model
         // 计算订单自动收货时间
         $orderAutoReceiptTime = intval($this->usersConfig['order_auto_receipt_time']) * 86400;
         // 查询待收货订单
-        $time = getTime() - intval($orderAutoReceiptTime);
+        $time = $this->times - intval($orderAutoReceiptTime);
         $where = [
             // 'prom_type' => 0,
             'order_status' => 2,
@@ -275,13 +293,13 @@ class OrderPreHandle extends Model
             // 更新订单为已收货
             $update = [
                 'order_status' => 3,
-                'update_time' => getTime(),
-                'confirm_time' => getTime(),
+                'update_time' => $this->times,
+                'confirm_time' => $this->times,
             ];
             Db::name('shop_order')->where($where)->update($update);
 
             // 添加订单操作记录
-            $actionNote = '订单已超过' . $this->usersConfig['order_auto_receipt_time'] . '天，用户未确认收货，系统自动收货！';
+            $actionNote = '订单已超过' . $this->usersConfig['order_auto_receipt_time'] . '天，用户未确认收货，系统自动收货';
             AddOrderAction($order_ids, 0, 0, 3, 0, 0, '自动收货', $actionNote);
         }
     }
@@ -291,8 +309,8 @@ class OrderPreHandle extends Model
     {
         // 计算订单可维权时间
         $orderRightProtectTime = intval($this->usersConfig['order_right_protect_time']) * 86400;
-        // 查询待收货订单
-        $time = getTime() - intval($orderRightProtectTime);
+        // 查询已完成订单
+        $time = $this->times - intval($orderRightProtectTime);
         $where = [
             'order_status' => 3,
             'allow_service' => 0,
@@ -305,12 +323,12 @@ class OrderPreHandle extends Model
             // 更新订单为不允许申请维权
             $update = [
                 'allow_service' => 1,
-                'update_time' => getTime(),
+                'update_time' => $this->times,
             ];
             Db::name('shop_order')->where($where)->update($update);
 
             // 添加订单操作记录
-            $actionNote = '订单已超过' . $this->usersConfig['order_right_protect_time'] . '天，不再允许申请售后维权！';
+            $actionNote = '订单已超过' . $this->usersConfig['order_right_protect_time'] . '天，不再允许申请售后维权';
             AddOrderAction($order_ids, 0, 0, 3, 0, 0, '关闭维权', $actionNote);
         }
     }
@@ -364,7 +382,7 @@ class OrderPreHandle extends Model
             // 批量修改订单状态
             $update = [
                 'is_obtain_scores' => 1,
-                'update_time' => getTime(),
+                'update_time' => $this->times,
             ];
             Db::name('shop_order')->where($where)->update($update);
         }
@@ -408,9 +426,387 @@ class OrderPreHandle extends Model
             // 批量修改订单状态
             $update = [
                 'is_total_amount' => 1,
-                'update_time' => getTime(),
+                'update_time' => $this->times,
             ];
             Db::name('shop_order')->where($where)->update($update);
+        }
+    }
+
+    // 查询文章购买订单，执行赠送积分
+    private function eyou_articleOrderObtainScoresHandle()
+    {
+        // 检查功能是否开启
+        if (empty($this->usersConfig['score_consume_status']) || 1 !== intval($this->usersConfig['score_consume_status'])) {
+            return; // 功能未开启，不处理
+        }
+        
+        // 查询第一条"文章购买消费赠送"的积分记录，获取功能开启的大概时间
+        $firstScoreRecord = Db::name('users_score')
+            ->where('type', 8)
+            ->where('remark', 'like', '文章购买消费赠送%')
+            ->order('add_time asc')
+            ->find();
+        $enableTime = !empty($firstScoreRecord['add_time']) ? intval($firstScoreRecord['add_time']) : 0;
+        
+        // 查询已付款的文章订单（仅金额支付，排除积分支付）
+        $where = [
+            'order_status' => 1, // 已付款
+            'order_amount' => ['>', 0], // 有金额的订单
+            'pay_name' => ['<>', 'scorePay'], // 排除积分支付，只处理金额支付的订单
+        ];
+        // 只处理功能开启后的订单（通过订单的支付时间来判断）
+        if (!empty($enableTime)) {
+            $where['pay_time'] = ['>=', $enableTime];
+        }
+        // 查询条件-会员ID处理
+        if (!empty($this->users_id)) $where['users_id'] = $this->users_id;
+        
+        // 查询文章订单
+        $articleOrder = Db::name('article_order')->where($where)->select();
+        if (!empty($articleOrder)) {
+            // 获取所有订单号
+            $orderCodes = get_arr_column($articleOrder, 'order_code');
+            
+            // 查询已发放过积分的订单（通过积分记录表判断）
+            $scoreWhere = [
+                'type' => 8, // 消费赠送积分
+                'remark' => ['like', '文章购买消费赠送%'],
+            ];
+            if (!empty($this->users_id)) $scoreWhere['users_id'] = $this->users_id;
+            
+            $scoreRecords = Db::name('users_score')->where($scoreWhere)->field('remark')->select();
+            $alreadyObtainedOrders = [];
+            if (!empty($scoreRecords)) {
+                foreach ($scoreRecords as $record) {
+                    // 从备注中提取订单号，格式：文章购买消费赠送-订单号
+                    if (preg_match('/文章购买消费赠送[_-]?([A-Za-z0-9]+)/', $record['remark'], $matches)) {
+                        $alreadyObtainedOrders[] = $matches[1];
+                    }
+                }
+            }
+            
+            // 过滤掉已发放过积分的订单
+            foreach ($articleOrder as $key => $value) {
+                if (in_array($value['order_code'], $alreadyObtainedOrders)) {
+                    unset($articleOrder[$key]);
+                }
+            }
+            
+            // 重新索引数组
+            $articleOrder = array_values($articleOrder);
+            
+            // 处理需要发放积分的订单（再次确认排除积分支付）
+            if (!empty($articleOrder)) {
+                foreach ($articleOrder as $key => $value) {
+                    // 排除积分支付的订单，只处理金额支付的订单
+                    if (!empty($value['users_id']) && !empty($value['order_amount']) && $value['pay_name'] != 'scorePay') {
+                        // 构造订单数据格式（兼容 getConsumObtainScores 函数）
+                        $orderData = [
+                            'order_total_amount' => $value['order_amount'],
+                            'order_amount' => $value['order_amount'],
+                        ];
+                        
+                        // 计算应赠送的积分
+                        $obtainScores = getConsumObtainScores($orderData, $this->usersConfig, true);
+                        
+                        if (!empty($obtainScores) && $obtainScores > 0) {
+                            // 赠送会员积分
+                            $insert = [
+                                'type' => 8,
+                                'users_id' => $value['users_id'],
+                                'score' => $obtainScores,
+                                'info' => '文章购买消费赠送',
+                                'remark' => '文章购买消费赠送-' . $value['order_code'],
+                            ];
+                            addConsumObtainScores($insert, 2, true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 查询会员升级套餐订单，执行赠送积分
+    private function eyou_upgradeOrderObtainScoresHandle()
+    {
+        // 检查功能是否开启
+        if (empty($this->usersConfig['score_consume_status']) || 1 !== intval($this->usersConfig['score_consume_status'])) {
+            return; // 功能未开启，不处理
+        }
+        
+        // 查询第一条"会员升级消费赠送"的积分记录，获取功能开启的大概时间
+        $firstScoreRecord = Db::name('users_score')
+            ->where('type', 8)
+            ->where('remark', 'like', '会员升级消费赠送%')
+            ->order('add_time asc')
+            ->find();
+        $enableTime = !empty($firstScoreRecord['add_time']) ? intval($firstScoreRecord['add_time']) : 0;
+        
+        // 查询已支付的会员升级订单（仅金额支付，排除积分支付）
+        $where = [
+            'cause_type' => 0, // 会员升级订单
+            'status' => ['in', [2, 3]], // 已支付或已完成（支付完成后status=2，某些情况下会变成3）
+            'level_id' => ['>', 0], // 有升级会员级别ID
+            'money' => ['>', 0], // 有金额的订单
+            'pay_method' => ['<>', 'scorePay'], // 排除积分支付，只处理金额支付的订单
+        ];
+        // 只处理功能开启后的订单（通过订单的创建时间来判断）
+        if (!empty($enableTime)) {
+            $where['add_time'] = ['>=', $enableTime];
+        }
+        // 查询条件-会员ID处理
+        if (!empty($this->users_id)) $where['users_id'] = $this->users_id;
+        
+        // 查询会员升级订单
+        $upgradeOrder = Db::name('users_money')->where($where)->select();
+        if (!empty($upgradeOrder)) {
+            // 获取所有订单号
+            $orderNumbers = get_arr_column($upgradeOrder, 'order_number');
+            
+            // 查询已发放过积分的订单（通过积分记录表判断）
+            $scoreWhere = [
+                'type' => 8, // 消费赠送积分
+                'remark' => ['like', '会员升级消费赠送%'],
+            ];
+            if (!empty($this->users_id)) $scoreWhere['users_id'] = $this->users_id;
+            
+            $scoreRecords = Db::name('users_score')->where($scoreWhere)->field('remark')->select();
+            $alreadyObtainedOrders = [];
+            if (!empty($scoreRecords)) {
+                foreach ($scoreRecords as $record) {
+                    // 从备注中提取订单号，格式：会员升级消费赠送-订单号
+                    if (preg_match('/会员升级消费赠送[_-]?([A-Za-z0-9]+)/', $record['remark'], $matches)) {
+                        $alreadyObtainedOrders[] = $matches[1];
+                    }
+                }
+            }
+            
+            // 过滤掉已发放过积分的订单
+            foreach ($upgradeOrder as $key => $value) {
+                if (in_array($value['order_number'], $alreadyObtainedOrders)) {
+                    unset($upgradeOrder[$key]);
+                }
+            }
+            
+            // 重新索引数组
+            $upgradeOrder = array_values($upgradeOrder);
+            
+            // 处理需要发放积分的订单（再次确认排除积分支付）
+            if (!empty($upgradeOrder)) {
+                foreach ($upgradeOrder as $key => $value) {
+                    // 排除积分支付的订单，只处理金额支付的订单
+                    if (!empty($value['users_id']) && !empty($value['money']) && $value['pay_method'] != 'scorePay') {
+                        // 构造订单数据格式（兼容 getConsumObtainScores 函数）
+                        $orderData = [
+                            'order_total_amount' => $value['money'],
+                            'order_amount' => $value['money'],
+                        ];
+                        
+                        // 计算应赠送的积分
+                        $obtainScores = getConsumObtainScores($orderData, $this->usersConfig, true);
+                        
+                        if (!empty($obtainScores) && $obtainScores > 0) {
+                            // 赠送会员积分
+                            $insert = [
+                                'type' => 8,
+                                'users_id' => $value['users_id'],
+                                'score' => $obtainScores,
+                                'info' => '会员升级消费赠送',
+                                'remark' => '会员升级消费赠送-' . $value['order_number'],
+                            ];
+                            addConsumObtainScores($insert, 2, true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 查询下载订单，执行赠送积分
+    private function eyou_downloadOrderObtainScoresHandle()
+    {
+        // 检查功能是否开启
+        if (empty($this->usersConfig['score_consume_status']) || 1 !== intval($this->usersConfig['score_consume_status'])) {
+            return; // 功能未开启，不处理
+        }
+        
+        // 查询第一条"下载订单消费赠送"的积分记录，获取功能开启的大概时间
+        $firstScoreRecord = Db::name('users_score')
+            ->where('type', 8)
+            ->where('remark', 'like', '下载订单消费赠送%')
+            ->order('add_time asc')
+            ->find();
+        $enableTime = !empty($firstScoreRecord['add_time']) ? intval($firstScoreRecord['add_time']) : 0;
+        
+        // 查询已付款的下载订单（仅金额支付，排除积分支付）
+        $where = [
+            'order_status' => 1, // 已付款
+            'order_amount' => ['>', 0], // 有金额的订单
+            'pay_name' => ['<>', 'scorePay'], // 排除积分支付，只处理金额支付的订单
+        ];
+        // 只处理功能开启后的订单（通过订单的支付时间来判断）
+        if (!empty($enableTime)) {
+            $where['pay_time'] = ['>=', $enableTime];
+        }
+        // 查询条件-会员ID处理
+        if (!empty($this->users_id)) $where['users_id'] = $this->users_id;
+        
+        // 查询下载订单
+        $downloadOrder = Db::name('download_order')->where($where)->select();
+        if (!empty($downloadOrder)) {
+            // 获取所有订单号
+            $orderCodes = get_arr_column($downloadOrder, 'order_code');
+            
+            // 查询已发放过积分的订单（通过积分记录表判断）
+            $scoreWhere = [
+                'type' => 8, // 消费赠送积分
+                'remark' => ['like', '下载订单消费赠送%'],
+            ];
+            if (!empty($this->users_id)) $scoreWhere['users_id'] = $this->users_id;
+            
+            $scoreRecords = Db::name('users_score')->where($scoreWhere)->field('remark')->select();
+            $alreadyObtainedOrders = [];
+            if (!empty($scoreRecords)) {
+                foreach ($scoreRecords as $record) {
+                    // 从备注中提取订单号，格式：下载订单消费赠送-订单号
+                    if (preg_match('/下载订单消费赠送[_-]?([A-Za-z0-9]+)/', $record['remark'], $matches)) {
+                        $alreadyObtainedOrders[] = $matches[1];
+                    }
+                }
+            }
+            
+            // 过滤掉已发放过积分的订单
+            foreach ($downloadOrder as $key => $value) {
+                if (in_array($value['order_code'], $alreadyObtainedOrders)) {
+                    unset($downloadOrder[$key]);
+                }
+            }
+            
+            // 重新索引数组
+            $downloadOrder = array_values($downloadOrder);
+            
+            // 处理需要发放积分的订单（再次确认排除积分支付）
+            if (!empty($downloadOrder)) {
+                foreach ($downloadOrder as $key => $value) {
+                    // 排除积分支付的订单，只处理金额支付的订单
+                    if (!empty($value['users_id']) && !empty($value['order_amount']) && $value['pay_name'] != 'scorePay') {
+                        // 构造订单数据格式（兼容 getConsumObtainScores 函数）
+                        $orderData = [
+                            'order_total_amount' => $value['order_amount'],
+                            'order_amount' => $value['order_amount'],
+                        ];
+                        
+                        // 计算应赠送的积分
+                        $obtainScores = getConsumObtainScores($orderData, $this->usersConfig, true);
+                        
+                        if (!empty($obtainScores) && $obtainScores > 0) {
+                            // 赠送会员积分
+                            $insert = [
+                                'type' => 8,
+                                'users_id' => $value['users_id'],
+                                'score' => $obtainScores,
+                                'info' => '下载订单消费赠送',
+                                'remark' => '下载订单消费赠送-' . $value['order_code'],
+                            ];
+                            addConsumObtainScores($insert, 2, true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 查询视频订单，执行赠送积分
+    private function eyou_mediaOrderObtainScoresHandle()
+    {
+        // 检查功能是否开启
+        if (empty($this->usersConfig['score_consume_status']) || 1 !== intval($this->usersConfig['score_consume_status'])) {
+            return; // 功能未开启，不处理
+        }
+        
+        // 查询第一条"视频订单消费赠送"的积分记录，获取功能开启的大概时间
+        $firstScoreRecord = Db::name('users_score')
+            ->where('type', 8)
+            ->where('remark', 'like', '视频订单消费赠送%')
+            ->order('add_time asc')
+            ->find();
+        $enableTime = !empty($firstScoreRecord['add_time']) ? intval($firstScoreRecord['add_time']) : 0;
+        
+        // 查询已付款的视频订单（仅金额支付，排除积分支付）
+        $where = [
+            'order_status' => 1, // 已付款
+            'order_amount' => ['>', 0], // 有金额的订单
+            'pay_name' => ['<>', 'scorePay'], // 排除积分支付，只处理金额支付的订单
+        ];
+        // 只处理功能开启后的订单（通过订单的支付时间来判断）
+        if (!empty($enableTime)) {
+            $where['pay_time'] = ['>=', $enableTime];
+        }
+        // 查询条件-会员ID处理
+        if (!empty($this->users_id)) $where['users_id'] = $this->users_id;
+        
+        // 查询视频订单
+        $mediaOrder = Db::name('media_order')->where($where)->select();
+        if (!empty($mediaOrder)) {
+            // 获取所有订单号
+            $orderCodes = get_arr_column($mediaOrder, 'order_code');
+            
+            // 查询已发放过积分的订单（通过积分记录表判断）
+            $scoreWhere = [
+                'type' => 8, // 消费赠送积分
+                'remark' => ['like', '视频订单消费赠送%'],
+            ];
+            if (!empty($this->users_id)) $scoreWhere['users_id'] = $this->users_id;
+            
+            $scoreRecords = Db::name('users_score')->where($scoreWhere)->field('remark')->select();
+            $alreadyObtainedOrders = [];
+            if (!empty($scoreRecords)) {
+                foreach ($scoreRecords as $record) {
+                    // 从备注中提取订单号，格式：视频订单消费赠送-订单号
+                    if (preg_match('/视频订单消费赠送[_-]?([A-Za-z0-9]+)/', $record['remark'], $matches)) {
+                        $alreadyObtainedOrders[] = $matches[1];
+                    }
+                }
+            }
+            
+            // 过滤掉已发放过积分的订单
+            foreach ($mediaOrder as $key => $value) {
+                if (in_array($value['order_code'], $alreadyObtainedOrders)) {
+                    unset($mediaOrder[$key]);
+                }
+            }
+            
+            // 重新索引数组
+            $mediaOrder = array_values($mediaOrder);
+            
+            // 处理需要发放积分的订单（再次确认排除积分支付）
+            if (!empty($mediaOrder)) {
+                foreach ($mediaOrder as $key => $value) {
+                    // 排除积分支付的订单，只处理金额支付的订单
+                    if (!empty($value['users_id']) && !empty($value['order_amount']) && $value['pay_name'] != 'scorePay') {
+                        // 构造订单数据格式（兼容 getConsumObtainScores 函数）
+                        $orderData = [
+                            'order_total_amount' => $value['order_amount'],
+                            'order_amount' => $value['order_amount'],
+                        ];
+                        
+                        // 计算应赠送的积分
+                        $obtainScores = getConsumObtainScores($orderData, $this->usersConfig, true);
+                        
+                        if (!empty($obtainScores) && $obtainScores > 0) {
+                            // 赠送会员积分
+                            $insert = [
+                                'type' => 8,
+                                'users_id' => $value['users_id'],
+                                'score' => $obtainScores,
+                                'info' => '视频订单消费赠送',
+                                'remark' => '视频订单消费赠送-' . $value['order_code'],
+                            ];
+                            addConsumObtainScores($insert, 2, true);
+                        }
+                    }
+                }
+            }
         }
     }
 }

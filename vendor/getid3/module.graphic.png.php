@@ -57,6 +57,7 @@ class getid3_png extends getid3_handler
 		}
 
 		while ((($this->ftell() - (strlen($PNGfiledata) - $offset)) < $info['filesize'])) {
+			$chunk = array();
 			$chunk['data_length'] = getid3_lib::BigEndian2Int(substr($PNGfiledata, $offset, 4));
 			if ($chunk['data_length'] === false) {
 				$this->error('Failed to read data_length at offset '.$offset);
@@ -66,7 +67,13 @@ class getid3_png extends getid3_handler
 			$truncated_data = false;
 			while (((strlen($PNGfiledata) - $offset) < ($chunk['data_length'] + 4)) && ($this->ftell() < $info['filesize'])) {
 				if (strlen($PNGfiledata) < $this->max_data_bytes) {
-					$PNGfiledata .= $this->fread($this->getid3->fread_buffer_size());
+					$str = $this->fread($this->getid3->fread_buffer_size());
+					if (strlen($str) > 0) {
+						$PNGfiledata .= $str;
+					} else {
+						$this->warning('At offset '.$offset.' chunk "'.substr($PNGfiledata, $offset, 4).'" no more data to read, data chunk will be truncated at '.(strlen($PNGfiledata) - 8).' bytes');
+						break;
+					}
 				} else {
 					$this->warning('At offset '.$offset.' chunk "'.substr($PNGfiledata, $offset, 4).'" exceeded max_data_bytes value of '.$this->max_data_bytes.', data chunk will be truncated at '.(strlen($PNGfiledata) - 8).' bytes');
 					break;
@@ -130,7 +137,7 @@ class getid3_png extends getid3_handler
 
 				case 'tRNS': // Transparency
 					$thisfile_png_chunk_type_text['header'] = $chunk;
-					switch ($thisfile_png['IHDR']['raw']['color_type']) {
+					switch ($thisfile_png['IHDR']['raw']['color_type']) { // @phpstan-ignore-line
 						case 0:
 							$thisfile_png_chunk_type_text['transparent_color_gray']  = getid3_lib::BigEndian2Int(substr($chunk['data'], 0, 2));
 							break;
@@ -266,7 +273,7 @@ class getid3_png extends getid3_handler
 
 				case 'bKGD': // Background Color
 					$thisfile_png_chunk_type_text['header']                   = $chunk;
-					switch ($thisfile_png['IHDR']['raw']['color_type']) {
+					switch ($thisfile_png['IHDR']['raw']['color_type']) { // @phpstan-ignore-line
 						case 0:
 						case 4:
 							$thisfile_png_chunk_type_text['background_gray']  = getid3_lib::BigEndian2Int($chunk['data']);
@@ -300,7 +307,7 @@ class getid3_png extends getid3_handler
 
 				case 'sBIT': // Significant Bits
 					$thisfile_png_chunk_type_text['header'] = $chunk;
-					switch ($thisfile_png['IHDR']['raw']['color_type']) {
+					switch ($thisfile_png['IHDR']['raw']['color_type']) { // @phpstan-ignore-line
 						case 0:
 							$thisfile_png_chunk_type_text['significant_bits_gray']  = getid3_lib::BigEndian2Int(substr($chunk['data'], 0, 1));
 							break;
@@ -415,10 +422,7 @@ class getid3_png extends getid3_handler
 
 
 				case 'gIFg': // GIF Graphic Control Extension
-					$gIFgCounter = 0;
-					if (isset($thisfile_png_chunk_type_text) && is_array($thisfile_png_chunk_type_text)) {
-						$gIFgCounter = count($thisfile_png_chunk_type_text);
-					}
+					$gIFgCounter = count($thisfile_png_chunk_type_text);
 					$thisfile_png_chunk_type_text[$gIFgCounter]['header']          = $chunk;
 					$thisfile_png_chunk_type_text[$gIFgCounter]['disposal_method'] = getid3_lib::BigEndian2Int(substr($chunk['data'], 0, 1));
 					$thisfile_png_chunk_type_text[$gIFgCounter]['user_input_flag'] = getid3_lib::BigEndian2Int(substr($chunk['data'], 1, 1));
@@ -427,10 +431,7 @@ class getid3_png extends getid3_handler
 
 
 				case 'gIFx': // GIF Application Extension
-					$gIFxCounter = 0;
-					if (isset($thisfile_png_chunk_type_text) && is_array($thisfile_png_chunk_type_text)) {
-						$gIFxCounter = count($thisfile_png_chunk_type_text);
-					}
+					$gIFxCounter = count($thisfile_png_chunk_type_text);
 					$thisfile_png_chunk_type_text[$gIFxCounter]['header']                 = $chunk;
 					$thisfile_png_chunk_type_text[$gIFxCounter]['application_identifier'] = substr($chunk['data'],  0, 8);
 					$thisfile_png_chunk_type_text[$gIFxCounter]['authentication_code']    = substr($chunk['data'],  8, 3);
@@ -439,10 +440,7 @@ class getid3_png extends getid3_handler
 
 
 				case 'IDAT': // Image Data
-					$idatinformationfieldindex = 0;
-					if (isset($thisfile_png['IDAT']) && is_array($thisfile_png['IDAT'])) {
-						$idatinformationfieldindex = count($thisfile_png['IDAT']);
-					}
+					$idatinformationfieldindex = count($thisfile_png['IDAT']);
 					unset($chunk['data']);
 					$thisfile_png_chunk_type_text[$idatinformationfieldindex]['header'] = $chunk;
 					break;

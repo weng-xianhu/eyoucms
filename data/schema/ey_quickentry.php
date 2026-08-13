@@ -90,6 +90,51 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'menu_id' => 
+  array (
+    'name' => 'menu_id',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'menu_group' => 
+  array (
+    'name' => 'menu_group',
+    'type' => 'smallint(5)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'is_lang' => 
+  array (
+    'name' => 'is_lang',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'auth_role' => 
+  array (
+    'name' => 'auth_role',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'intro' => 
+  array (
+    'name' => 'intro',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'statistics_type' => 
   array (
     'name' => 'statistics_type',

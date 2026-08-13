@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -136,21 +136,28 @@ class Ajax extends Base {
     {
         \think\Session::pause(); // 暂停session，防止session阻塞机制
         $type = input('param.type/d', 0);
-        $tpCacheKey = 'system_explanation_welcome';
-        if (1 < $type) {
-            $tpCacheKey .= '_'.$type;
-        }
-        
-        /*多语言*/
-        if (is_language()) {
-            $langRow = \think\Db::name('language')->field('mark')->order('id asc')->select();
-            foreach ($langRow as $key => $val) {
-                tpCache('system', [$tpCacheKey=>1], $val['mark']);
+        if (4 == $type) {
+            $setdata = [
+                'ddos_scan_last_time' => getTime(),
+            ];
+            tpSetting('ddos', $setdata, 'cn');
+        } else {
+            $tpCacheKey = 'system_explanation_welcome';
+            if (1 < $type) {
+                $tpCacheKey .= '_'.$type;
             }
-        } else { // 单语言
-            tpCache('system', [$tpCacheKey=>1]);
+            
+            /*多语言*/
+            if (is_language()) {
+                $langRow = \think\Db::name('language')->field('mark')->order('id asc')->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('system', [$tpCacheKey=>1], $val['mark']);
+                }
+            } else { // 单语言
+                tpCache('system', [$tpCacheKey=>1]);
+            }
+            /*--end*/
         }
-        /*--end*/
     }
 
     /**
@@ -159,7 +166,7 @@ class Ajax extends Base {
     public function check_upgrade_version()
     {
         \think\Session::pause(); // 暂停session，防止session阻塞机制
-        if ($this->admin_lang != $this->main_lang) {
+        if ($this->admin_lang != $this->main_lang || is_internal_network()) {
             $upgradeMsg = ['code' => 1, 'msg' => '已是最新版'];
         } else {
             if ($this->php_servicemeal > 0) {
@@ -172,7 +179,7 @@ class Ajax extends Base {
                 }
             } else {
                 $cur_version = getCmsVersion();
-                $file_url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'u.5'.'f'.'a.'.'c'.'n/'.'pa'.'ck'.'ag'.'e/'.'ve'.'rs'.'io'.'n.'.'tx'.'t';
+                $file_url = 'ht'.'tp'.':/'.'/'.'e'.'yo'.'u-up'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/'.'pa'.'ck'.'ag'.'e/'.'ve'.'rs'.'io'.'n.'.'tx'.'t';
                 $max_version = @file_get_contents($file_url);
                 $max_version = empty($max_version) ? '' : $max_version;
                 if (!empty($max_version) && $cur_version >= $max_version) {
@@ -205,6 +212,11 @@ class Ajax extends Base {
     {
         if (IS_AJAX_POST) {
             \think\Session::pause(); // 暂停session，防止session阻塞机制
+            $is_home_lang = get_current_lang();
+            $config_lang = tpCache('sitemap.sitemap_lang');
+            if (!empty($config_lang) && is_array($config_lang) && !in_array($is_home_lang, $config_lang)) {
+                $this->error('更新sitemap失败！');
+            }
             $channeltype_row = \think\Cache::get("extra_global_channeltype");
             if (empty($channeltype_row)) {
                 $ctlArr = \think\Db::name('channeltype')
@@ -218,7 +230,6 @@ class Ajax extends Base {
                     }
                 }
             }
-
             $systemCtl= ['Arctype','Archives'];
             $ctlArr = array_merge($systemCtl, $ctlArr);
             $actArr = ['add','edit','del'];
@@ -228,7 +239,6 @@ class Ajax extends Base {
                 $this->success('更新sitemap成功！');
             }
         }
-
         $this->error('更新sitemap失败！');
     }
 
@@ -351,10 +361,23 @@ class Ajax extends Base {
     {
         $ip = input('param.ip/s');
         $city_name = '';
-        $city_arr = getCityLocation($ip);
-        if (!empty($city_arr)) {
-            !empty($city_arr['location']) && $city_name .= $city_arr['location'];
+        if (empty($ip) || '0.0.0.0' == $ip) {
+            $city_name = '无效IP地址';
+        } else {
+            $city_arr = getCityLocation($ip);
+            if (!empty($city_arr)) {
+                !empty($city_arr['location']) && $city_name .= $city_arr['location'];
+            }
         }
         $this->success('读取成功', null, ['city_name'=>$city_name]);
+    }
+
+    public function set_pop_detecting_domain()
+    {
+        // 针对可能有风险的域名进行弹窗后，关闭欢迎页的弹窗提示
+        $pop_detecting_domain = input('param.value/d');
+        if (!empty($pop_detecting_domain)) {
+            tpSetting('pop', ['pop_detecting_domain' => $pop_detecting_domain], 'cn');
+        }
     }
 }

@@ -232,6 +232,19 @@ script">{$global.web_xss_words|default=''}</textarea>
 wd">{$global.web_anti_words|default=''}</textarea>
                         <span class="err"></span>
                         <p class="notic">当前台URL含有参数在黑名单内，访问时报404</p>
+                        <p class="notic2">注意：请输入链接内的有效参数，?和=之间的或者&和=之间的参数，例如这种/?wb=1，我们就只需填写wb即可</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="web_tpl_deny_php">模板php代码</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input id="web_tpl_deny_php1" name="web_tpl_deny_php" value="1" type="radio" {if condition="!empty($global.web_tpl_deny_php)"} checked="checked"{/if}>开启</label>
+                        &nbsp;
+                        <label class="curpoin"><input id="web_tpl_deny_php0" name="web_tpl_deny_php" value="0" type="radio" {if condition="empty($global.web_tpl_deny_php)"} checked="checked"{/if}>关闭</label>
+                        <span class="err"></span>
+                        <p class="notic2">开启后，模板支持php代码，如果不是业务要求，强烈建议关闭该功能</p>
                     </dd>
                 </dl>
                 <dl class="row">

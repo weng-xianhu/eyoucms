@@ -3,7 +3,7 @@
  * ALIPAY API: koubei.member.brandowner.name.query request
  *
  * @author auto create
- * @since 1.0, 2016-07-06 10:48:20
+ * @since 1.0, 2024-08-08 21:36:01
  */
 class KoubeiMemberBrandownerNameQueryRequest
 {

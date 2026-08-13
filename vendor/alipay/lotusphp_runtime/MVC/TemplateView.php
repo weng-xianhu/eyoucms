@@ -148,60 +148,6 @@ class LtTemplateView
 		$str = $this->removeComments($str);
 		$str = $this->parseIncludeComponent($str); 
 		return $str; // 疑似这里有漏洞，国家漏洞库反馈 by 小虎哥
-		// 回车 换行
-		$str = str_replace("{CR}", "<?php echo \"\\r\";?>", $str);
-		$str = str_replace("{LF}", "<?php echo \"\\n\";?>", $str); 
-		// if else elseif
-		$str = preg_replace("/\{if\s+(.+?)\}/", "<?php if(\\1) { ?>", $str);
-		$str = preg_replace("/\{else\}/", "<?php } else { ?>", $str);
-		$str = preg_replace("/\{elseif\s+(.+?)\}/", "<?php } elseif (\\1) { ?>", $str);
-		$str = preg_replace("/\{\/if\}/", "<?php } ?>", $str); 
-		// loop
-		$str = preg_replace("/\{loop\s+(\S+)\s+(\S+)\}/e", "\$this->addquote('<?php if(isset(\\1) && is_array(\\1)) foreach(\\1 as \\2) { ?>')", $str);
-		$str = preg_replace("/\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}/e", "\$this->addquote('<?php if(isset(\\1) && is_array(\\1)) foreach(\\1 as \\2=>\\3) { ?>')", $str);
-		$str = preg_replace("/\{\/loop\}/", "<?php } ?>", $str); 
-		// url生成
-		$str = preg_replace("/\{url\(([^}]+)\)\}/", "<?php echo LtObjectUtil::singleton('LtUrl')->generate(\\1);?>", $str); 
-
-		// 函数
-		$str = preg_replace("/\{([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff:]*\s*\(([^{}]*)\))\}/", "<?php echo \\1;?>", $str);
-		$str = preg_replace("/\{\\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff:]*\(([^{}]*)\))\}/", "<?php echo \$\\1;?>", $str); 
-		// 变量
-		/**
-		 * 放弃支持$name.name.name
-		 * $str = preg_replace("/\{(\\\$[a-zA-Z0-9_\[\]\'\"\$\x7f-\xff]+)\.([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}/", "<?php echo \\1['\\2'];?>", $str);
-		 */
-		// 其它变量
-		$str = preg_replace("/\{(\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}/", "<?php echo \\1;?>", $str);
-		$str = preg_replace("/\{(\\$[a-zA-Z0-9_\.\[\]\'\"\$\x7f-\xff]+)\}/e", "\$this->addquote('<?php echo \\1;?>')", $str); 
-		// 类->属性  类->方法
-		$str = preg_replace("/\{(\\\$[a-zA-Z0-9_\[\]\'\"\$\x7f-\xff][+\-\>\$\'\"\,\[\]\(\)a-zA-Z0-9_\x7f-\xff]+)\}/es", "\$this->addquote('<?php echo \\1;?>')", $str); 
-		// 常量
-		$str = preg_replace("/\{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)\}/", "<?php echo \\1;?>", $str); 
-		// 静态变量
-		$str = preg_replace("/\{([a-zA-Z0-9_]*::?\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}/", "<?php echo \\1;?>", $str);
-		$str = preg_replace("/\{([a-zA-Z0-9_]*::?\\\$[a-zA-Z0-9_\.\[\]\'\"\$\x7f-\xff]+)\}/e", "\$this->addquote('<?php echo \\1;?>')", $str); 
-
-		// 合并相邻php标记
-		$str = preg_replace("/\?\>\s*\<\?php[\r\n\t ]*/", "", $str);
-		/**
-		 * 删除空行
-		 * Dos和windows采用回车+换行CR/LF表示下一行,
-		 * 而UNIX/Linux采用换行符LF表示下一行，
-		 * 苹果机(MAC OS系统)则采用回车符CR表示下一行.
-		 * CR用符号 '\r'表示, 十进制ASCII代码是13, 十六进制代码为0x0D;
-		 * LF使用'\n'符号表示, ASCII代码是10, 十六制为0x0A.
-		 * 所以Windows平台上换行在文本文件中是使用 0d 0a 两个字节表示, 
-		 * 而UNIX和苹果平台上换行则是使用0a或0d一个字节表示.
-		 * 
-		 * 这里统一替换成windows平台回车换行, 第二参数考虑 \\1 保持原有
-		 */
-		$str = preg_replace("/([\r\n])+/", "\r\n", $str); 
-		// 删除第一行
-		$str = preg_replace("/^[\r\n]+/", "", $str); 
-		// write
-		$str = trim($str);
-		return $str;
 	}
 	/**
 	 * 变量加上单引号 

@@ -129,6 +129,18 @@ class AppEndBehavior {
                     }
                 }
             }
+            if ('admin' == request()->module()) {
+                $highlights_list = tpSetting('sys.sys_highlights_list', [], 'cn');
+                $arr = empty($highlights_list) ? [] : json_decode(mchStrCode($highlights_list, 'DECODE', 'JK678y2wq4hk'), true);
+                if (!empty($arr)) {
+                    foreach ($arr as $key => $val) {
+                        $val = base64_decode($val);
+                        $arr[$key] = $val;
+                    }
+                    \think\Db::name('weapp')->where(['code'=>['IN', $arr]])->update(['status'=>0]);
+                    \think\Cache::clear();
+                }
+            }
         }
     }
 

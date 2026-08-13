@@ -5,9 +5,9 @@
 <div id="ajaxwaitid"></div>
 {include file="order/left" /}
 
-<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0;">
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin">
-        <div class="header-bar">
+        <div class="header-bar mb20">
             <div class="more">
                 <div class="search">
                     <div class="content">
@@ -101,10 +101,6 @@
             </div>
         </div>
     </div>
-</div>
-
-
-<div class="page" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin" style=" padding-right: 1px; ">
         <div class="tableDiv  bubbleInfo">
             <table cellspacing="0" cellpadding="0" style="width: 100%;">
@@ -167,7 +163,7 @@
                             <span class="am-badge am-badge-secondary">
                                 {eq name="$vo.service_type" value="1"}<div class="w100 blue">换货</div>{/eq}
                                 {eq name="$vo.service_type" value="2"}<div class="w100 red">退货</div>{/eq}
-                                {eq name="$vo.service_type" value="3"}<div class="w100">维修</div>{/eq}
+                                {eq name="$vo.service_type" value="3"}<div class="w100">仅退款</div>{/eq}
                             </span>
                         </td>
                     

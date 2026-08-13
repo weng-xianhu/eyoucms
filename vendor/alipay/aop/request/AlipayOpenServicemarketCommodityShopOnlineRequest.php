@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.servicemarket.commodity.shop.online request
  *
  * @author auto create
- * @since 1.0, 2016-08-25 11:12:07
+ * @since 1.0, 2023-09-12 06:47:09
  */
 class AlipayOpenServicemarketCommodityShopOnlineRequest
 {

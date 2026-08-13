@@ -58,6 +58,9 @@
                         <th axis="col1" class="w180">
                             <div class="tc">操作</div>
                         </th>
+                        <th abbr="article_time" axis="col6" class="w60">
+                            <div class="tc sort_style">排序</div>
+                        </th>
                     </tr>
                     </thead>
                 </table>
@@ -135,7 +138,15 @@
                                     <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard('{$vo.fieldname}', '{$vo.attr_id}', {$vo.attr_input_type|default='0'})">标签调用</a>
                                 </div>
                             </td>
-                           
+                            <td class="sort">
+                                <div class="w60 tc">
+                                    {eq name="$Think.const.CONTROLLER_NAME.'@attribute_edit'|is_check_access" value="1"}
+                                    <input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('guestbook_attribute','attr_id','{$vo.orgin_attr_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    {else /}
+                                    {$vo.sort_order}
+                                    {/eq}
+                                </div>
+                            </td>
                         </tr>
                         {/volist}
                     {/empty}

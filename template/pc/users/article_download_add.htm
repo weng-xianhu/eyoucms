@@ -784,8 +784,18 @@
                 });
             },
             done: function(res, index, upload){
-                console.log(res)
                 if(res.code == 1){
+                    if(!index){
+                        for (var key in this.files) {
+                            if (this.files.hasOwnProperty(key)) {
+                                var file = this.files[key];
+                                if (file.name === res.file_name) {
+                                    index = key;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     // 上传成功
                     var html = '';
                     html += '<input type="hidden" name="fileupload[file_url][]" value="'+res.file_url+'">';

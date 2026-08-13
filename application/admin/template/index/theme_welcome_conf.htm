@@ -1,50 +1,21 @@
-{eq name="'Index@theme_welcome_conf'|is_check_access" value="1"}
-    {eq name='$main_lang' value='$admin_lang'}
-    <form class="form-horizontal" id="postForm2" action="{:url('Index/theme_welcome_conf')}" method="post">
-        <div class="hDiv">
-            <div class="hDivBox">
-                <table cellspacing="0" cellpadding="0" style="width: 100%">
-                    <thead>
-                        <tr>
-                            <th class="sign w10" axis="col0">
-                                <div class="tc"></div>
-                            </th>
-                            <th abbr="article_title" axis="col3" class="w10">
-                                <div class="tc">欢迎页设置</div>
-                            </th>
-                            <th abbr="ac_id" axis="col4">
-                                <div class=""></div>
-                            </th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
-        </div>
-        <div class="ncap-form-default">
-            <dl class="row">
-                <dt class="tit">
-                    <label for="welcome_tplname">模板选择</label>
-                </dt>
-                <dd class="opt">
-                    <span class="theme_style" id="welcome_tplname">
-                        {volist name="$welcome_list" id="vo"}
-                        <span id="per_welcome_tplname_{$vo.theme_id}">
-                            <label class="theme_style_li curpoin" {$vo.disabled_tips}><input name="welcome_tplname" value="{$vo.welcome_tplname}" data-theme_id="{$vo.theme_id}" type="radio" {if condition="$vo['welcome_tplname'] == $global['web_theme_welcome_tplname']"} checked="checked" {/if} {$vo.disabled}><span id="welcome_tplname_{$vo.theme_id}">{$vo.theme_title}</span></label>&nbsp;{if condition="empty($vo['is_system'])"}<a class="curpoin" title="编辑" href="javascript:void(0);" onclick="welcome_tplname_edit(this);" data-theme_id="{$vo.theme_id}"><i class="iconfont e-bianji"></i></a>{/if}&nbsp;&nbsp;
-                        </span>
-                        {/volist}
-                    </span>
-                    <p class="notic">模板格式：welcome_自定义.htm<br/>模板目录：__ROOT_DIR__/application/admin/template/theme/</p>
-                    <!-- &nbsp;<a href="javascript:void(0);" onclick="welcome_tplname_add();" class="ncap-btn ncap-btn-green">新建模板</a> -->
-                </dd>
-            </dl>
-            <dl class="row">
-                <div class="bot">
-                    <a href="JavaScript:void(0);" onclick="checkSubmit2();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
-                </div>
-            </dl>
-        </div>
-    </form>
-    {/eq}
+{eq name='$main_lang' value='$admin_lang'}
+    <dl class="row"><dt class="tit"><label><b>欢迎页设置</b></label></dt></dl>
+    <dl class="row">
+        <dt class="tit">
+            <label for="welcome_tplname">模板选择</label>
+        </dt>
+        <dd class="opt">
+            <span class="theme_style" id="welcome_tplname">
+                {volist name="$welcome_list" id="vo"}
+                <span id="per_welcome_tplname_{$vo.theme_id}">
+                    <label class="theme_style_li curpoin" {$vo.disabled_tips}><input name="welcome_tplname" value="{$vo.welcome_tplname}" data-theme_id="{$vo.theme_id}" type="radio" {if condition="$vo['welcome_tplname'] == $global['web_theme_welcome_tplname']"} checked="checked" {/if} {$vo.disabled}><span id="welcome_tplname_{$vo.theme_id}">{$vo.theme_title}</span></label>&nbsp;{if condition="empty($vo['is_system'])"}<a class="curpoin" title="编辑" href="javascript:void(0);" onclick="welcome_tplname_edit(this);" data-theme_id="{$vo.theme_id}"><i class="iconfont e-bianji"></i></a>{/if}&nbsp;&nbsp;
+                </span>
+                {/volist}
+            </span>
+            <p class="notic">模板格式：welcome_自定义.htm<br/>模板目录：__ROOT_DIR__/application/admin/template/theme/</p>
+            <!-- &nbsp;<a href="javascript:void(0);" onclick="welcome_tplname_add();" class="ncap-btn ncap-btn-green">新建模板</a> -->
+        </dd>
+    </dl>
     <script type="text/javascript">
 
         $(document).ready(function(){
@@ -154,7 +125,7 @@
             });
         }
 
-        function checkSubmit2(){
+        /*function checkSubmit2(){
             layer_loading('正在处理');
             $.ajax({
                 type : 'post',
@@ -174,6 +145,6 @@
                     layer.alert(e.responseText, {icon: 5, title:false});
                 }
             });
-        }
+        }*/
     </script>
 {/eq}

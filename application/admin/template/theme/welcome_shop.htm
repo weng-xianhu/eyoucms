@@ -10,7 +10,6 @@
     <!-- Apple devices fullscreen -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
-    <!-- <link href="__SKIN__/css/main_new.css?v={$version}" rel="stylesheet" type="text/css"> -->
     <link href="__SKIN__/css/theme/shop_main.css?v={$version}" rel="stylesheet" type="text/css">
     <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet"/>
     <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet"/>
@@ -23,10 +22,10 @@
     <script type="text/javascript">
         var eyou_basefile = "{$Request.baseFile}";
         var module_name = "{$Think.const.MODULE_NAME}";
-        var __lang__ = "{$admin_lang}";
         var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
         var __main_lang__ = "{$main_lang}";
-        var VarSecurityPatch = "{$security_patch|default='0'}";
+        var VarSecurityPatch = {$security_patch|default=0};
     </script>
     <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
     <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
@@ -40,12 +39,20 @@
 <div id="ajaxwaitid"></div>
 <div class="survey">
     <div class="survey_left">
-        
         <div class="warpper">
             <div class="content start_content">
                 <div class="contentWarp">
-                    {if condition="empty($system_explanation_welcome_2)"}
-                    <div id="explanation_welcome" class="mb10">
+                    <div id="explanation_welcome" class="mb10" style="display: none;">
+                        {if condition="intval($ddos_scan_last_time) + (15*86400) < getTime()"}
+                        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important; width: 100%; height: 100%;">
+                            <div class="title checkZoom" data-type="4" style="height:0px;">
+                                <span title="不再提示" style="display: block;"></span>
+                            </div>
+                            <ul>
+                                <li style="color: red;">温馨提示：欢迎使用{$version}版本，建议到安全中心给系统做一次安全检测，是否有安全隐患需要处理<a href="{:url('Security/index')}">【点击进入】</a></li>
+                            </ul>
+                        </div>
+                        {/if}
                         {if condition='empty($system_explanation_welcome_2)'}
                         <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important; width: 100%; height: 100%;">
                             <div class="title checkZoom" data-type="2" style="height:0px;">
@@ -57,13 +64,31 @@
                             </ul>
                         </div>
                         {/if}
+                        {if condition='empty($system_explanation_welcome_5)'}
+                        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important; width: 100%; height: 100%;">
+                            <div class="title checkZoom" data-type="5" style="height:0px;">
+                                <span title="不再提示" style="display: block;"></span>
+                            </div>
+                            <ul>
+                                <li style="color: red;">风险提示：通过定期扫描网站发现存在一些安全隐患，请前往处理<a href="{:url('Security/index', ['noreset'=>1])}">【点击进入】</a></li>
+                            </ul>
+                        </div>
+                        {/if}
                     </div>
-                    {/if}
+                    <script type="text/javascript">
+                        $(function(){
+                            if ($('#explanation_welcome div.explanation').length > 0) {
+                                $('#explanation_welcome').show();
+                            }
+                        });
+                    </script>
                     <div class="index_box">
                         <div class="real_time_count">
                              <div class="survey_title">
                                  <h3 class="fl">实时概况 <span class="f-12 color-grey">更新时间：{$current_time}</span></h3>
+                                 {eq name="'Index@ajax_surveyquickmenu'|is_check_access" value="1"}
                                  <div class="fr"><a href="javascript:void(0);" id="surveyQuickMenuAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div><!-- 链接商品订单页面 -->
+                                 {/eq}
                              </div>
                              <div class="container-fluid list-stats-survey">
                                  <ul class="stats4">
@@ -119,6 +144,7 @@
                             window.location.href = $(obj).data('href');
                         }
                     </script>
+                    {eq name="'Order@index'|is_check_access" value="1"}
                     <div class="index_box">
                         <div class="info_count">
                              <div class="survey_title">
@@ -135,6 +161,7 @@
                              </div>
                         </div>
                     </div>
+                    {/eq}
                     <div class="index_box">
                         <div class="utilities_count">
                              <div class="survey_title">
@@ -170,6 +197,51 @@
                                      {/volist}
 
                                 </ul>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="index_box">
+                        <div class="utilities_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">系统信息</h3>
+                                 <div class="fr"></div>
+                             </div>
+                             <div class="container-fluid">
+                                <div class="sc_warp" id="system_warp" style="display: block;">
+                                    <table cellpadding="0" cellspacing="0" class="system_table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="gray_bg">系统更新：</td>
+                                                <td id="td_upgrade_msg">
+                                                    <div id="upgrade_filelist" style="display:none;"></div>
+                                                    <div id="upgrade_intro" style="display:none;"></div>
+                                                    <div id="upgrade_notice" style="display:none;"></div>
+                                                    <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}" data-php_servicemeal="{$php_servicemeal|default=0}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+                                                </td>
+                                                <td class="gray_bg">当前版本：</td>
+                                                <td>{$sys_info.curent_version|default='v1.0.0'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="gray_bg">网站名称：</td>
+                                                <td>{$sys_info.web_name|default='Eyoucms企业网站管理系统'}</td>
+                                                <td class="gray_bg">版权所有：</td>
+                                                <td>{notempty name="$is_eyou_authortoken"}<a href="https://www.eyoucms.com/buy/" target="_blank" style="color: #454545;">盗版必究</a>{else /}正版软件{/notempty}&nbsp;
+                                                    {if condition="!is_internal_network()"}
+                                                    <a href="javascript:void(0);" onclick="top.openItem('Index|authortoken|is_force|1');">校验</a>
+                                                    {/if}
+                                                </td>
+                                            </tr>
+                                            {if condition="!empty($is_eyou_authortoken) && !is_internal_network()"}
+                                            <tr>
+                                                <td class="gray_bg">更新日志：</td>
+                                                <td><a href="https://www.eyoucms.com/rizhi/" target="_blank">查看</a></td>
+                                                <td class="gray_bg">帮助中心:</td>
+                                                <td><a href="https://www.eyoucms.com/ask/" target="_blank">查看</a></td>
+                                            </tr>
+                                            {/if}
+                                        </tbody>
+                                    </table>
+                                </div>
                              </div>
                         </div>
                     </div>
@@ -226,6 +298,7 @@
                         </div>
                     </div>
                     <!-- 待办事项 -->
+                    {eq name="'Order@index'|is_check_access" value="1"}
                     <div class="pending mt15">
                         <h3>待办事项</h3>
                         <div class="pending-list">
@@ -266,6 +339,7 @@
                             
                         </div>
                     </div>
+                    {/eq}
                 </div>
             </div>
         </div>
@@ -530,6 +604,13 @@
                             {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
                                 btn_upgrade($("#a_upgrade"), 1);
                             {/if}
+                        } else if (99 == res.data.code) {
+                            try {
+                                $('#a_upgrade', window.parent.document).attr('data-max_version',res.data.max_version).show();
+                            } catch(e) {}
+
+                            $('#a_upgrade').attr('data-max_version', res.data.max_version).attr('title', res.data.tips);
+                            $('#a_upgrade').html(res.data.msg).css('color', '#F00');
                         } else {
                             $('#td_upgrade_msg').html(res.data.msg);
                         }

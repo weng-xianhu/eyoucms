@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -56,8 +56,8 @@ class ShopPublicHandle
     {
         // 规格处理
         $goodsSpecList = [];
-        $goodsSpec = !empty($goods['data']) ? unserialize($goods['data']) : [];
-        $goodsSpec = empty($goodsSpec) && !empty($goods['detailsData']) ? unserialize($goods['detailsData']) : $goodsSpec;
+        $goodsSpec = !empty($goods['data']) ? safe_unserialize($goods['data']) : [];
+        $goodsSpec = empty($goodsSpec) && !empty($goods['detailsData']) ? safe_unserialize($goods['detailsData']) : $goodsSpec;
         if (!empty($goodsSpec['spec_value'])) {
             $specValueArr = explode('<br/>', htmlspecialchars_decode($goodsSpec['spec_value']));
             foreach ($specValueArr as $value_10000) {
@@ -186,7 +186,7 @@ class ShopPublicHandle
             'order_source' => intval($orderSource),
         ];
         $result = Db::name('wx_shipping_info')->where($where)->find();
-        $result['pay_config'] = !empty($result['pay_config']) ? unserialize($result['pay_config']) : [];
+        $result['pay_config'] = !empty($result['pay_config']) ? safe_unserialize($result['pay_config']) : [];
 
         return $result;
     }
@@ -259,7 +259,7 @@ class ShopPublicHandle
                     'order_id' => intval($orderData['order_id']),
                 ];
                 $detailsData = Db::name('shop_order_details')->where($where)->getField('data');
-                $detailsData = !empty($detailsData) ? unserialize($detailsData) : [];
+                $detailsData = !empty($detailsData) ? safe_unserialize($detailsData) : [];
                 $pointsGoodsBuyField = !empty($detailsData['pointsGoodsBuyField']) ? json_decode($detailsData['pointsGoodsBuyField'], true) : [];
                 $usersScores = Db::name('users')->where('users_id', $users_id)->getField('scores');
                 if (!empty($pointsGoodsBuyField['goodsTotalPoints']) && intval($pointsGoodsBuyField['goodsTotalPoints']) > intval($usersScores)) {
@@ -293,7 +293,7 @@ class ShopPublicHandle
             }
         }
         // 未知异常则返回提示
-        if (empty($fromAsync)) $this->error('微信接口异常，如已真实完成支付请联系客服查询微信支付');
+        if (empty($fromAsync)) $this->error('微信接口异常，如已真实完成支付请联系本站客服查询微信支付');
     }
 
     // 商品购买确认页 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
@@ -433,7 +433,7 @@ class ShopPublicHandle
                 'pay_mark' => 'wechat',
             ];
             $weChatConfig = Db::name('pay_api_config')->where($where)->getField('pay_info');
-            $weChatConfig = !empty($weChatConfig) ? unserialize($weChatConfig) : [];
+            $weChatConfig = !empty($weChatConfig) ? safe_unserialize($weChatConfig) : [];
             if (empty($weChatConfig) || 1 === intval($weChatConfig['is_open_wechat']) || empty($weChatConfig['appid']) || empty($weChatConfig['mchid']) || empty($weChatConfig['key'])) $result = false;
         } else {
             $miniproWeixin = $this->getSpecifyAppletsConfig();
@@ -472,7 +472,7 @@ class ShopPublicHandle
         // 在线支付判断
         if (!empty($payApiList)) {
             foreach ($payApiList as $key => $value) {
-                $PayInfo = unserialize($value['pay_info']);
+                $PayInfo = safe_unserialize($value['pay_info']);
                 if ('wechat' == $value['pay_mark']) {
                     // 微信判断
                     if ((isset($PayInfo['is_open_wechat']) && 0 == $PayInfo['is_open_wechat']) || false === $this->getHupijiaoPay('wechat')) {
@@ -522,7 +522,7 @@ class ShopPublicHandle
         $hupijiaoPay = Db::name('pay_api_config')->where(['pay_mark'=>'Hupijiaopay'])->find();
         if (empty($hupijiaoPay) || empty($hupijiaoInfo)) return true;
         if (empty($hupijiaoPay['pay_info'])) return true;
-        $payInfo = unserialize($hupijiaoPay['pay_info']);
+        $payInfo = safe_unserialize($hupijiaoPay['pay_info']);
         if (empty($payInfo)) return true;
         if (!isset($payInfo['is_open_pay']) || $payInfo['is_open_pay'] == 1) return true;
         $type .= '_appid';
@@ -538,7 +538,7 @@ class ShopPublicHandle
         $payApiConfig = Db::name('pay_api_config')->where(['pay_mark'=>'PersonPay'])->find();
         if (empty($payApiConfig) || empty($personPay)) return true;
         if (empty($payApiConfig['pay_info'])) return true;
-        $payInfo = unserialize($payApiConfig['pay_info']);
+        $payInfo = safe_unserialize($payApiConfig['pay_info']);
         if (empty($payInfo)) return true;
         if (!isset($payInfo['is_open_pay']) || 1 === intval($payInfo['is_open_pay'])) return true;
 
@@ -574,7 +574,20 @@ class ShopPublicHandle
         // 返回数据
         return $result;
     }
-
+	// 获取拼团插件数据
+	public function getWeappGroupBuy()
+	{
+	    $result = [];
+	
+	    // 如果安装了拼团插件则执行
+	    if (is_dir('./weapp/GroupBuy/')) {
+	        // 拼团插件数据信息
+	        $result = model('Weapp')->getWeappList('GroupBuy');
+	    }
+	
+	    // 返回数据
+	    return $result;
+	}
     //判断是否安装某插件 传插件标识即可用
     public function getWeappInfo($code = '')
     {

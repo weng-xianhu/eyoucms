@@ -76,12 +76,9 @@
                     <label>新窗口打开</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="target1" class="cb-enable {if condition='$row.target eq 1'}selected{/if}">是</label>
-                        <label for="target0" class="cb-disable {if condition='$row.target eq 0'}selected{/if}">否</label>
-                        <input id="target1" name="target" value="1" type="radio" {if condition="$row.target eq 1"} checked="checked"{/if}>
-                        <input id="target0" name="target" value="0" type="radio" {if condition="$row.target eq 0"} checked="checked"{/if}>
-                    </div>
+                    <label class="curpoin"><input type="radio" name="target" value="1" {if condition="$row.target eq 1"} checked="checked"{/if}>是</label>
+                    &nbsp;
+                    <label class="curpoin"><input type="radio" name="target" value="0" {if condition="$row.target eq 0"} checked="checked"{/if}>否</label>
                     <p class="notic"></p>
                 </dd>
             </dl>

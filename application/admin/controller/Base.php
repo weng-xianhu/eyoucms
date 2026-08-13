@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -34,11 +34,6 @@ class Base extends Controller {
         }
         header("Cache-control: private");  // history.back返回后输入框值丢失问题
         parent::__construct();
-
-        $this->editor = tpSetting('editor');
-        if (empty($this->editor['editor_select'])) $this->editor['editor_select'] = 1;
-        $this->assign('editor', $this->editor);
-
     }
     
     /*
@@ -109,7 +104,7 @@ class Base extends Controller {
 
         /* 增、改的跳转提示页，只限制于发布文档的模型和自定义模型 */
         $channeltype_list = config('global.channeltype_list');
-        $controller_name = $this->request->controller();
+        $controller_name = $this->request->controller();tp_proving($this->globalConfig);
         $this->assign('controller_name', $controller_name);
         if (isset($channeltype_list[strtolower($controller_name)]) || 'Custom' == $controller_name) {
             if (in_array($this->request->action(), ['add','edit'])) {
@@ -120,20 +115,27 @@ class Base extends Controller {
                     \think\Config::set('dispatch_success_tmpl', 'public/dispatch_jump');
                 }
                 $id = input('param.id/d', input('param.aid/d'));
-                ('GET' == $this->request->method()) && cookie('ENV_IS_UPHTML', 0);
+                ('GET' == $this->request->method()) && cookie('ENV_IS_UPHTML'.INSTALL_DATE, 0);
 
                 // 解决没有从文档列表点击编辑的情况
-                $ENV_GOBACK_URL = cookie('ENV_GOBACK_URL');
-                empty($ENV_GOBACK_URL) && cookie('ENV_GOBACK_URL', url($controller_name.'/index'));
+                $ENV_GOBACK_URL = cookie('ENV_GOBACK_URL'.INSTALL_DATE);
+                if (empty($ENV_GOBACK_URL)) {
+                    $url_data = [];
+                    $channel = input('param.channel/d');
+                    if ('Custom' == $controller_name && !empty($channel)) {
+                        $url_data = ['channel'=>$channel];
+                    }
+                    cookie('ENV_GOBACK_URL'.INSTALL_DATE, url($controller_name.'/index', $url_data));
+                } 
                 $ENV_LIST_URL = cookie('ENV_LIST_URL');
-                empty($ENV_LIST_URL) && cookie('ENV_LIST_URL', url($controller_name.'/index'));
+                empty($ENV_LIST_URL) && cookie('ENV_LIST_URL'.INSTALL_DATE, url($controller_name.'/index'));
             } else if (in_array($this->request->action(), ['index'])) {
-                cookie('ENV_GOBACK_URL', $this->request->url());
-                cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c={$controller_name}&a=index&lang=".$this->admin_lang);
+                cookie('ENV_GOBACK_URL'.INSTALL_DATE, $this->request->url());
+                cookie('ENV_LIST_URL'.INSTALL_DATE, request()->baseFile()."?m=admin&c={$controller_name}&a=index&lang=".$this->admin_lang);
             }
         } else if ('Archives' == $controller_name && in_array($this->request->action(), ['index_archives','index_draft','index_reback'])) {
-            cookie('ENV_GOBACK_URL', $this->request->url());
-            cookie('ENV_LIST_URL', request()->baseFile()."?m=admin&c=Archives&a=".$this->request->action()."&lang=".$this->admin_lang);
+            cookie('ENV_GOBACK_URL'.INSTALL_DATE, $this->request->url());
+            cookie('ENV_LIST_URL'.INSTALL_DATE, request()->baseFile()."?m=admin&c=Archives&a=".$this->request->action()."&lang=".$this->admin_lang);
         }
 
         if ($this->request->action() == 'add') {
@@ -251,7 +253,8 @@ class Base extends Controller {
             /*--end*/
 
             /*在列表中的操作不需要验证权限*/
-            if (IS_AJAX || strpos($act,'ajax') !== false || in_array($ctl_act, $uneed_check_action) || in_array($ctl_all, $uneed_check_action)) {
+            // 安全修复：移除由 X-Requested-With 头(IS_AJAX)控制的笼统放行，防止子管理员仅加该头即绕过菜单权限校验
+            if (strpos($act,'ajax') !== false || in_array($ctl_act, $uneed_check_action) || in_array($ctl_all, $uneed_check_action)) {
                 $bool = true;
             }
             /*--end*/
@@ -301,10 +304,34 @@ class Base extends Controller {
         $this->globalConfig = array_merge($this->globalConfig, $security);
         $this->assign('global', $this->globalConfig);
 
+        // 编辑器
+        $this->editor = tpSetting('editor');
+        if (empty($this->editor['editor_select'])) $this->editor['editor_select'] = 1;
+        $this->assign('editor', $this->editor);
+
+        // 会员配置
         if (!empty($this->globalConfig['web_users_switch'])) {
             $this->usersConfig = getUsersConfigData('all');
         }
         $this->assign('usersConfig', $this->usersConfig);
+
+        // 数据库类型
+        $this->assign('databaseType', config('database.type'));
+
+        // 是否已执行过 [一键支持特殊字符]
+        $specialCharIndex_1752204109 = tpSetting('syn.admin_system_specialCharIndex_1752204109', [], 'cn');
+        $this->assign('specialCharIndex_1752204109', $specialCharIndex_1752204109);
+
+        // 查询编辑器插件，并循环加载插件的配置信息到模板
+        $where = [
+            'status' => 1,
+            'name' => ['IN', ['AiEditor']]
+        ];
+        $editorWeapp = Db::name('weapp')->where($where)->getAllWithIndex('code');
+        foreach ($editorWeapp as $key => $value) {
+            $editorConfig = !empty($value['data']) ? json_decode($value['data'], true) : [];
+            $this->assign($key . 'Config', $editorConfig);
+        }
     } 
     
     /**

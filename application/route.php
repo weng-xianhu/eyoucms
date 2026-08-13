@@ -218,6 +218,12 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     ['method' => 'get', 'ext' => 'html'], 
                     'cache'=>1
                 ],
+                // AI内容索引页
+                $lang_rewrite_str.'ai-content-index$' => [
+                    'api/Sitemap/ai_content_index',
+                    ['method' => 'get', 'ext' => 'html'], 
+                    'cache'=>1
+                ], 
             ];
             if (config('city_switch_on')) {
                 $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
@@ -514,6 +520,12 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                     ['tid' => $__pattern__['tid']], 
                     'cache'=>1
                 ],
+                // AI内容索引页
+                $lang_rewrite_str.'ai-content-index$' => [
+                    'api/Sitemap/ai_content_index',
+                    ['method' => 'get', 'ext' => 'html'], 
+                    'cache'=>1
+                ], 
             ];
             if (config('city_switch_on')) {
                 $lang_rewrite_str_1 = str_replace('<site>/', '', $lang_rewrite_str);
@@ -623,7 +635,14 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
     }
     else if (2 == $seo_pseudo) {
         $lang_rewrite_str = $site_rewrite_str = '';
-        $home_rewrite = [];
+        $home_rewrite = [
+            // AI内容索引页
+            $lang_rewrite_str.'ai-content-index$' => [
+                'api/Sitemap/ai_content_index',
+                ['method' => 'get', 'ext' => 'html'], 
+                'cache'=>1
+            ], 
+        ];
         if (false === $is_ask_weapp) {
             // 问答模型
             $home_rewrite += [
@@ -658,6 +677,17 @@ if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
                 ],
             ];
         }
+    }
+    else if (1 == $seo_pseudo) {
+        $lang_rewrite_str = $site_rewrite_str = '';
+        $home_rewrite = [
+            // AI内容索引页
+            $lang_rewrite_str.'ai-content-index$' => [
+                'api/Sitemap/ai_content_index',
+                ['method' => 'get', 'ext' => 'html'], 
+                'cache'=>1
+            ], 
+        ];
     }
     /*插件模块路由*/
     $weapp_route_file = 'plugins/route.php';

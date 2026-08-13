@@ -51,8 +51,17 @@
     <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
     <div id="append_parent"></div>
     <div id="ajaxwaitid"></div>
-    {if condition="empty($system_explanation_welcome_2)"}
-    <div id="explanation_welcome" style="margin:10px 10px 0px 10px;">
+    <div id="explanation_welcome" style="margin:10px 10px 0px 10px;display: none;">
+        {if condition="intval($ddos_scan_last_time) + (15*86400) < getTime()"}
+        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
+            <div class="title checkZoom" data-type="4">
+                <span title="不再提示" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">温馨提示：欢迎使用{$version}版本，建议到安全中心给系统做一次安全检测，是否有安全隐患需要处理<a href="{:url('Security/index')}">【点击进入】</a></li>
+            </ul>
+        </div>
+        {/if}
         {if condition='empty($system_explanation_welcome_2)'}
         <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
             <div class="title checkZoom" data-type="2">
@@ -64,8 +73,24 @@
             </ul>
         </div>
         {/if}
+        {if condition='empty($system_explanation_welcome_5)'}
+        <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
+            <div class="title checkZoom" data-type="5">
+                <span title="不再提示" style="display: block;"></span>
+            </div>
+            <ul>
+                <li style="color: red;">风险提示：通过定期扫描网站发现存在一些安全隐患，请前往处理<a href="{:url('Security/index', ['noreset'=>1])}">【点击进入】</a></li>
+            </ul>
+        </div>
+        {/if}
     </div>
-    {/if}
+    <script type="text/javascript">
+        $(function(){
+            if ($('#explanation_welcome div.explanation').length > 0) {
+                $('#explanation_welcome').show();
+            }
+        });
+    </script>
     <div class="warpper">
         <div class="content start_content">
             <div class="contentWarp">
@@ -519,6 +544,13 @@
                                 {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
                                     btn_upgrade($("#a_upgrade"), 1);
                                 {/if}
+                            } else if (99 == res.data.code) {
+                                try {
+                                    $('#a_upgrade', window.parent.document).attr('data-max_version',res.data.max_version).show();
+                                } catch(e) {}
+
+                                $('#a_upgrade').attr('data-max_version', res.data.max_version).attr('title', res.data.tips);
+                                $('#a_upgrade').html(res.data.msg).css('color', '#F00');
                             } else {
                                 $('#td_upgrade_msg').html(res.data.msg);
                             }

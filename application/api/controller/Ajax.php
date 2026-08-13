@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -25,86 +25,143 @@ class Ajax extends Base
         parent::_initialize();
     }
 
+    /**
+     * 安全验证模型名称，防止动态类实例化RCE攻击
+     */
+    private function validateCtlName($ctl_name)
+    {
+        if (empty($ctl_name)) {
+            return false;
+        }
+        // 只允许字母和数字，防止注入
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9]*$/', $ctl_name)) {
+            return false;
+        }
+        // 从 channeltype 表读取允许的模型名称
+        $allowed_models = Db::name('channeltype')->column('ctl_name');
+        return in_array($ctl_name, $allowed_models);
+    }
+
     public function multistation()
     {
+        // 增加令牌验证
         $token = input('param.token/s');
+        if (empty($token) || !preg_match('/^[A-Za-z0-9\+\/\=]{100,}$/', $token)) {
+            $this->error('无效的令牌');
+        }
+
         $auth_code = msubstr($token, 6, 32);
         $request_time = msubstr($token, 38, 10);
         $querystr = msubstr($token, 48, strlen($token));
+    
+        // 时间戳验证，防止重放攻击
+        if (abs(time() - intval($request_time)) > 1800) { // 30分钟内有效
+            $this->error('令牌已过期');
+        }
+
+        // 解码参数
         $querystr = mchStrCode($querystr, 'DECODE', $auth_code);
+        if (!$querystr) {
+            $this->error('令牌解析失败');
+        }
+
+        // 验证内容格式
+        if (!preg_match('/^(.*)-#eyou#([\w\-]+)#cms#-(.*)$/i', $querystr)) {
+            $this->error('非法的访问请求');
+        }
+
         $verify_content = preg_replace('/^(.*)-#eyou#([\w\-]+)#cms#-(.*)$/i', '${2}', $querystr);
         $file = ROOT_PATH . "EY_{$verify_content}.txt";
         $_ajax = input('param._ajax/d');
-        if (file_exists($file)) {
-            $fp = fopen($file, 'r');
-            $file_content = fread($fp, filesize($file));
-            fclose($fp);
-            if (!empty($file_content) && $file_content == $verify_content) {
-                $arr = explode("-#eyou#{$verify_content}#cms#-", $querystr);
-                $user_name = empty($arr[0]) ? '' : mchStrCode($arr[0], 'DECODE', $auth_code);
-                $password = empty($arr[1]) ? '' : mchStrCode($arr[1], 'DECODE', $auth_code);
-                $admin_info = Db::name('admin')->where(['user_name'=>$user_name])->find();
-                if (empty($admin_info)) {
-                    $this->error('登录失败(账号/密码错误)');
-                }
-                $password = func_encrypt($password, true, pwd_encry_type($admin_info['password']));
-                if ($password != $admin_info['password']) {
-                    $this->error('登录失败(账号/密码错误)');
-                } else if (empty($admin_info['status'])) {
-                    $this->error('登录失败(账号已禁用)');
-                }
 
-                $opt = input('param.opt/s');
-                if ('push_archives' == $opt) { // 群发文档
-                    $this->multistation_push_archives('add');
-                } else if ('edit_archives' == $opt) { // 编辑文档
-                    $this->multistation_push_archives('edit');
-                } else if ('del_archives' == $opt) { // 删除文档
-                    $this->multistation_del_archives();
-                } else { // 登录
-                    $third_type = '';
-                    $thirdata = login_third_type();
-                    if ('EyouGzhLogin' == $thirdata['type']) {
-                        $openid = Db::name('admin_wxlogin')->where(['admin_id'=>$admin_info['admin_id'], 'type'=>1])->value('openid');
-                        if (!empty($openid)) {
-                            $third_type = 'EyouGzhLogin';
-                        }
-                    } else if ('WechatLogin' == $thirdata['type']) {
-                        $openid = Db::name('admin_wxlogin')->where(['admin_id'=>$admin_info['admin_id'], 'type'=>2])->value('openid');
-                        if (!empty($openid)) {
-                            $third_type = 'WechatLogin';
-                        }
-                    }
-                    $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id, $third_type);
-                    adminLog('后台登录(站群快捷管理)');
-                    session('isset_author', null); // 内置勿动
-
-                    $web_adminbasefile = tpCache('global.web_adminbasefile');
-                    $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : $this->root_dir.'/login.php';
-                    if (stristr($web_adminbasefile, 'index.php')) {
-                        $baseFile = explode('/', request()->baseFile());
-                        $web_adminbasefile = end($baseFile);
-                        $web_adminbasefile = $this->root_dir.'/'.$web_adminbasefile;
-                    }
-                    // $this->redirect($web_adminbasefile);
-                    $this->success('正在登录', $web_adminbasefile);
-                }
-            } else {
-                if (empty($_ajax)) {
-                    $this->error('验证文件失败，请重新按照教程操作');
-                }
+        if (!file_exists($file)) {
+            if (empty($_ajax)) {
+                $this->error('验证文件不存在，请重新操作');
             }
+            $data = [
+                'code' => 0,
+                'msg'  => '验证文件不存在，请重新按照教程操作',
+            ];
+            respose($data);
         }
 
-        if (!empty($_ajax)) {
+        $fp = fopen($file, 'r');
+        $file_content = fread($fp, filesize($file));
+        fclose($fp);
+
+        if (empty($file_content) || $file_content != $verify_content) {
+            if (empty($_ajax)) {
+                $this->error('验证文件失败，请重新按照教程操作');
+            }
             $data = [
                 'code' => 0,
                 'msg'  => '验证文件失败，请重新按照教程操作',
             ];
             respose($data);
-        } else {
-            abort(404);
         }
+
+        $arr = explode("-#eyou#{$verify_content}#cms#-", $querystr);
+        $user_name = empty($arr[0]) ? '' : mchStrCode($arr[0], 'DECODE', $auth_code);
+        $password = empty($arr[1]) ? '' : mchStrCode($arr[1], 'DECODE', $auth_code);
+        $admin_info = Db::name('admin')->where(['user_name'=>$user_name])->find();
+        if (empty($admin_info)) {
+            $this->error('登录失败(账号/密码错误)');
+        }
+        $password = func_encrypt($password, true, pwd_encry_type($admin_info['password']));
+        if ($password != $admin_info['password']) {
+            $this->error('登录失败(账号/密码错误)');
+        } else if (empty($admin_info['status'])) {
+            $this->error('登录失败(账号已禁用)');
+        }
+
+        $opt = input('param.opt/s', '', 'trim,strip_tags');
+        // 防止SQL注入
+        if (!in_array($opt, ['push_archives', 'edit_archives', 'del_archives', ''])) {
+            $this->error('非法的操作参数');
+        }
+
+        if ('push_archives' == $opt) { // 群发文档
+            $this->multistation_push_archives('add');
+        } else if ('edit_archives' == $opt) { // 编辑文档
+            $this->multistation_push_archives('edit');
+        } else if ('del_archives' == $opt) { // 删除文档
+            $this->multistation_del_archives();
+        } else { // 登录
+            $third_type = '';
+            $thirdata = login_third_type();
+            if ('EyouGzhLogin' == $thirdata['type']) {
+                $openid = Db::name('admin_wxlogin')->where(['admin_id'=>$admin_info['admin_id'], 'type'=>1])->value('openid');
+                if (!empty($openid)) {
+                    $third_type = 'EyouGzhLogin';
+                }
+            } else if ('WechatLogin' == $thirdata['type']) {
+                $openid = Db::name('admin_wxlogin')->where(['admin_id'=>$admin_info['admin_id'], 'type'=>2])->value('openid');
+                if (!empty($openid)) {
+                    $third_type = 'WechatLogin';
+                }
+            }
+
+            // 记录登录IP和时间
+            $update_data = [
+                'last_login' => getTime(),
+                'last_ip' => $this->request->ip()
+            ];
+            Db::name('admin')->where(['admin_id'=>$admin_info['admin_id']])->update($update_data);
+
+            $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id, $third_type);
+            adminLog('后台登录(站群快捷管理)');
+            session('isset_author', null); // 内置勿动
+
+            $web_adminbasefile = tpCache('global.web_adminbasefile');
+            $web_adminbasefile = !empty($web_adminbasefile) ? $web_adminbasefile : $this->root_dir.'/login.php';
+            if (stristr($web_adminbasefile, 'index.php')) {
+                $baseFile = explode('/', request()->baseFile());
+                $web_adminbasefile = end($baseFile);
+                $web_adminbasefile = $this->root_dir.'/'.$web_adminbasefile;
+            }
+            $this->success('正在登录', $web_adminbasefile);
+        }
+        abort(404);
     }
 
     private function multistation_push_archives($opt = 'add')
@@ -115,15 +172,17 @@ class Ajax extends Base
         ];
         $post = input('post.');
         $archivesInfo = empty($post['archives']) ? '' : json_decode(base64_decode($post['archives']), true);
-
+        
+        // 安全处理远程图片
         if (!empty($archivesInfo['litpic']) && !empty($archivesInfo['is_syn_local'])) {
+            // 远程图片保存
             $ret_litpic = saveRemote($archivesInfo['litpic'],'allimg');
             $ret_litpic = json_decode($ret_litpic,true);
             $archivesInfo['litpic'] = empty($ret_litpic['url']) ? $archivesInfo['litpic'] : $ret_litpic['url'];
         }
         $archivesInfo['update_time'] = getTime();
 
-//        $litpic_base64 = empty($post['litpic_base64']) ? '' : $post['litpic_base64'];
+        // 验证栏目权限
         $arctypeInfo = Db::name('arctype')->where(['id'=>intval($archivesInfo['typeid'])])->find();
         if (empty($arctypeInfo)) {
             $data['push_msg'] = '网站栏目不存在';
@@ -144,6 +203,12 @@ class Ajax extends Base
             }
 
             $ctl_name = $channeltypeInfo['ctl_name'];
+            // 安全验证：验证模型名称
+            if (!$this->validateCtlName($ctl_name)) {
+                $data['push_msg'] = '无效的模型类型';
+                respose($data);
+                return;
+            }
             $class     = "\\app\\admin\\model\\{$ctl_name}";
             $model     = new $class;
             try {
@@ -227,6 +292,12 @@ class Ajax extends Base
                 $archivesInfo = Db::name('archives')->where(['aid'=>$aid])->find();
                 $channeltypeInfo = Db::name('channeltype')->where(['id'=>$archivesInfo['channel']])->find();
                 $ctl_name = $channeltypeInfo['ctl_name'];
+                // 安全验证：验证模型名称
+                if (!$this->validateCtlName($ctl_name)) {
+                    $data['push_msg'] = '无效的模型类型';
+                    respose($data);
+                    return;
+                }
                 $class     = "\\app\\admin\\model\\{$ctl_name}";
                 $model     = new $class;
                 Db::name('archives')->where(['aid'=>$aid])->delete();
@@ -438,7 +509,7 @@ class Ajax extends Base
             }
 
             // 取出属性并解析为变量
-            $attarray = unserialize(stripslashes($arcmultiRow['attstr']));
+            $attarray = json_decode($arcmultiRow['attstr'], true);
             // extract($attarray, EXTR_SKIP); // 把数组中的键名直接注册为了变量
 
             // 通过页面及总数解析当前页面数据范围
@@ -640,7 +711,7 @@ class Ajax extends Base
         if (empty($type)) {
             $qqlogin = 0;
             if (!empty($result['QqLogin']['data'])) {
-                $qqData = unserialize($result['QqLogin']['data']);
+                $qqData = safe_unserialize($result['QqLogin']['data']);
                 if (!empty($qqData['login_show'])) {
                     $qqlogin = 1;
                 }
@@ -648,7 +719,7 @@ class Ajax extends Base
 
             $wxlogin = 0;
             if (!empty($result['WxLogin']['data'])) {
-                $wxData = unserialize($result['WxLogin']['data']);
+                $wxData = safe_unserialize($result['WxLogin']['data']);
                 if (!empty($wxData['login_show'])) {
                     $wxlogin = 1;
                 }
@@ -656,7 +727,7 @@ class Ajax extends Base
 
             $wblogin = 0;
             if (!empty($result['Wblogin']['data'])) {
-                $wbData = unserialize($result['Wblogin']['data']);
+                $wbData = safe_unserialize($result['Wblogin']['data']);
                 if (!empty($wbData['login_show'])) {
                     $wblogin = 1;
                 }
@@ -668,21 +739,21 @@ class Ajax extends Base
         } else {
             if ('qq' == $type) {
                 if (!empty($result['QqLogin']['data'])) {
-                    $qqData = unserialize($result['QqLogin']['data']);
+                    $qqData = safe_unserialize($result['QqLogin']['data']);
                     if (!empty($qqData['login_show'])) {
                         $value = 1;
                     }
                 }
             } else if ('wx' == $type) {
                 if (!empty($result['WxLogin']['data'])) {
-                    $wxData = unserialize($result['WxLogin']['data']);
+                    $wxData = safe_unserialize($result['WxLogin']['data']);
                     if (!empty($wxData['login_show'])) {
                         $value = 1;
                     }
                 }
             } else if ('wb' == $type) {
                 if (!empty($result['Wblogin']['data'])) {
-                    $wbData = unserialize($result['Wblogin']['data']);
+                    $wbData = safe_unserialize($result['Wblogin']['data']);
                     if (!empty($wbData['login_show'])) {
                         $value = 1;
                     }
@@ -699,7 +770,7 @@ class Ajax extends Base
      */
     private function is_login_vertify()
     {
-        $row = tpSetting('system.system_vertify');
+        $row = tpSetting('system.system_vertify', [], 'cn');
         // 获取验证码配置信息
         $row = json_decode($row, true);
         $baseConfig = \think\Config::get("captcha");
@@ -875,7 +946,7 @@ class Ajax extends Base
                 $web_name = $info['form_name'] . '-' . $web_name;
 
                 // 拼装发送的字符串内容
-                $attr_list = Db::name('guestbook_attribute')->where(['typeid'=>$tid,'form_type'=>$form_type])->order('attr_id asc')->select();
+                $attr_list = Db::name('guestbook_attribute')->where(['typeid'=>$tid,'form_type'=>$form_type,'is_del'=>0])->order('sort_order asc, attr_id asc')->select();
                 $attr_values = Db::name('guestbook_attr')->field('attr_id,attr_value')->where(['aid'=>$aid,'form_type'=>$form_type])->getAllWithIndex('attr_id');
                 foreach ($attr_list as $key => $val) {
                     $val['attr_value'] = empty($attr_values[$val['attr_id']]) ? '' : $attr_values[$val['attr_id']]['attr_value'];
@@ -930,7 +1001,53 @@ class Ajax extends Base
                     $content .= "提交来源：电脑端<br/>";
                 }
                 $content .= '提交时间：' . MyDate('Y-m-d H:i:s', $info['add_time']) . '<br/>';
-                $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$content}</p>";
+
+                // 美化邮件模板
+                $year = date('Y');
+                $source_text = (2 == $info['source']) ? '手机端' : '电脑端';
+                $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Microsoft YaHei',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:normal;">新的留言消息</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <p style="margin-bottom:20px;color:#333;">您好，管理员：</p>
+                            <p style="color:#333;">您收到一条新的留言，详情如下：</p>
+                            <div style="background:#f8f9fa;border-radius:6px;padding:20px;margin:20px 0;">
+                                <table width="100%" style="font-size:14px;color:#333;">
+                                    {$content}
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:20px 30px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">
+                                来源：{$source_text} | {$web_name}<br>
+                                &copy; {$year} {$web_name} 版权所有
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
 
                 // 发送邮件
                 $res = send_email(null, null, $html, $scene);
@@ -948,11 +1065,49 @@ class Ajax extends Base
                     $this->error("邮箱尚未配置，发送失败");
                 }
 
-                // 判断标题拼接
-                $web_name = '网站名称：'.tpCache('web.web_name');
-                $code = get_rand_str(6, 0, 1);
-                $content = "您的后台登录验证为 ${code} ，该验证码30分钟内有效，请勿泄露于他人。<br/>";
-                $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$content}</p>";
+                // 生成验证码
+                $web_name = tpCache('web.web_name');
+                $code = get_rand_str(10, 0, 1);
+                $year = date('Y');
+
+                // 美化邮件模板
+                $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Microsoft YaHei',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:normal;">后台登录验证</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <p style="margin-bottom:20px;color:#333;">您好，管理员：</p>
+                            <p style="color:#333;">您正在进行后台登录操作，验证码如下：</p>
+                            <div style="text-align:center;margin:30px 0;">
+                                <div style="display:inline-block;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:28px;font-weight:bold;letter-spacing:6px;padding:15px 35px;border-radius:8px;">{$code}</div>
+                            </div>
+                            <p style="color:#999;font-size:12px;">验证码30分钟内有效，请勿泄露于他人。</p>
+                            <p style="color:#999;font-size:12px;">如非本人操作，请检查账号安全。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:20px 30px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">&copy; {$year} {$web_name} 版权所有</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
 
                 // 发送邮件
                 $send_email_scene = config('send_email_scene');
@@ -968,7 +1123,105 @@ class Ajax extends Base
                     $datas['code']     = $code;
                     $datas['lang']     = $this->home_lang;
                     $datas['add_time'] = getTime();
-                    M('smtp_record')->add($datas);
+                    $insertId = Db::name('smtp_record')->insertGetId($datas);
+                    if ($insertId !== false) {
+                        $where = [
+                            'source' => 30,
+                            'email' => $email,
+                            'lang' => $this->home_lang,
+                            'record_id' => ['NEQ', $insertId],
+                        ];
+                        Db::name('smtp_record')->where($where)->update(['status'=>1]);
+                    }
+                    $this->success($res['msg']);
+                } else {
+                    $this->error($res['msg']);
+                }
+            }
+            else if ('gbook_real_validate' == $type) {
+                // 是否满足发送邮箱的条件
+                $tplInfo = Db::name('smtp_tpl')->where(['send_scene' => 40, 'lang' => $this->home_lang])->find();
+                $smtp_config = tpCache('smtp');
+                if (empty($tplInfo['is_open']) || empty($smtp_config['smtp_user']) || empty($smtp_config['smtp_pwd'])) {
+                    $this->error("邮箱尚未配置，发送失败");
+                }
+
+                $code = input('param.code/s', '');
+                $code_token = input('param.code_token/s', '');
+                // 图形验证码判断
+                if (empty($code)) $this->error('请输入图形验证码！');
+                $verify = new \think\Verify();
+                if (!$verify->check($code, $code_token)) $this->error('图形验证码错误！', null, ['code' => 'code']);
+
+                // 判断标题拼接
+                $web_name = tpCache('web.web_name');
+                $code = mt_rand(1000, 9999);
+                $year = date('Y');
+
+                // 美化邮件模板
+                $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Microsoft YaHei',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:normal;">邮箱验证</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <p style="margin-bottom:20px;color:#333;">您好：</p>
+                            <p style="color:#333;">您正在进行邮箱验证操作，验证码如下：</p>
+                            <div style="text-align:center;margin:30px 0;">
+                                <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-size:32px;font-weight:bold;letter-spacing:8px;padding:15px 40px;border-radius:8px;">{$code}</div>
+                            </div>
+                            <p style="color:#999;font-size:12px;">验证码30分钟内有效，请勿泄露于他人。</p>
+                            <p style="color:#999;font-size:12px;">如非本人操作，请忽略此邮件。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:20px 30px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">&copy; {$year} {$web_name} 版权所有</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
+
+                // 发送邮件
+                $send_email_scene = config('send_email_scene');
+                $scene = $send_email_scene[1]['scene'];
+                $email = input('param.email/s');
+                $email = preg_replace('/([\,]*)/i', '', $email);
+                if (!empty($email) && !check_email($email)) $this->error("Email邮箱格式不正确！");
+                $res = send_email($email, $tplInfo['tpl_title'], $html, $scene);
+                if (intval($res['code']) == 1) {
+                    // 数据添加
+                    $datas = [];
+                    $datas['source']   = 40;
+                    $datas['email']    = $email;
+                    $datas['code']     = $code;
+                    $datas['lang']     = $this->home_lang;
+                    $datas['add_time'] = getTime();
+                    $insertId = Db::name('smtp_record')->insertGetId($datas);
+                    if ($insertId !== false) {
+                        $where = [
+                            'source' => 40,
+                            'email' => $email,
+                            'lang' => $this->home_lang,
+                            'record_id' => ['NEQ', $insertId],
+                        ];
+                        Db::name('smtp_record')->where($where)->update(['status'=>1]);
+                    }
                     $this->success($res['msg']);
                 } else {
                     $this->error($res['msg']);
@@ -1001,8 +1254,17 @@ class Ajax extends Base
         if (IS_AJAX_POST) {
             $post = input('post.');
             $source = !empty($post['source']) ? $post['source'] : 0;
-            !empty($post['phone']) && $post['phone'] = preg_replace('/([^0-9]+)/i', '', $post['phone']);
-            !empty($post['mobile']) && $post['mobile'] = preg_replace('/([^0-9]+)/i', '', $post['mobile']);
+            // !empty($post['phone']) && $post['phone'] = preg_replace('/([^0-9]+)/i', '', $post['phone']);
+            // !empty($post['mobile']) && $post['mobile'] = preg_replace('/([^0-9]+)/i', '', $post['mobile']);
+            $openMobileFormat = \think\Cache::get("foreign_open_mobile_format");
+            if (empty($openMobileFormat)) {
+                if (!empty($post['phone']) && !check_mobile($post['phone'])) {
+                    $this->error(foreign_lang('users29', $this->home_lang));
+                }
+                else if (!empty($post['mobile']) && !check_mobile($post['mobile'])) {
+                    $this->error(foreign_lang('users29', $this->home_lang));
+                }
+            }
 
             // 留言验证类型发送短信处理
             if (isset($post['scene']) && in_array($post['scene'], [7])) {
@@ -1129,7 +1391,13 @@ class Ajax extends Base
                     if (0 == $post['source']) {
                         if (!empty($Result)) $this->error('手机号码已注册');
                     } else if (2 == $post['source']) {
-                        if (empty($Result)) $this->error('手机号码未注册');
+                        // 手机登录：根据后台开关判断是否允许未注册手机号发送验证码
+                        if (empty($Result)) {
+                            $users_mobile_login_auto_reg = getUsersConfigData('users.users_mobile_login_auto_reg');
+                            if (empty($users_mobile_login_auto_reg)) {
+                                $this->error('手机号码未注册');
+                            }
+                        }
                     } else if (4 == $post['source']) {
                         if (empty($Result)) $this->error('手机号码不存在');
                     } else {
@@ -1961,7 +2229,7 @@ class Ajax extends Base
         }
         $artData = Db::name('archives')
             ->alias('a')
-            ->field('a.channel,a.title,a.restric_type,a.arc_level_id,a.users_price,a.no_vip_pay,a.add_time,b.content,b.content_ey_m')
+            ->field('a.channel,a.title,a.restric_type,a.arc_level_id,a.users_price,a.users_score,a.no_vip_pay,a.add_time,a.editor_ai_create,b.content,b.content_ey_m')
             ->join('article_content b', 'a.aid = b.aid')
             ->where('a.aid', $aid)
             ->find();
@@ -1990,6 +2258,18 @@ class Ajax extends Base
             $pay_data = Db::name('article_pay')->field('part_free,free_content')->where('aid', $aid)->find();
             if (!empty($pay_data['part_free'])) {
                 $free_content = !empty($pay_data['free_content']) ? $pay_data['free_content'] : '';
+                if (3 == $pay_data['part_free']) {
+                    // 替换付费内容标签为隐藏提示
+                    $free_content = htmlspecialchars_decode($artData['content']);
+                    $free_content = free_taglib_handle($free_content, $artData, 'hide');
+                    $free_content = htmlspecialchars($free_content);
+                } else {
+                    // 移除付费内容标签
+                    // if (stripos($free_content, '[付费内容开始]') !== false && stripos($free_content, '[/付费内容结束]') !== false) {
+                    //     $pattern = '/\[付费内容开始\](.*?)\[\/付费内容结束\]/is';
+                    //     $free_content = preg_replace($pattern, '', $free_content);
+                    // }
+                }
             }
             /*end*/
             $users_id = session('users_id');
@@ -1998,6 +2278,9 @@ class Ajax extends Base
             $result['content'] = $free_content;
             $result['users_price'] = get_discount_price($UsersData, $artData['users_price']);
 
+            // 积分购买
+            $result['users_score'] = !empty($artData['users_score']) ? intval($artData['users_score']) : 0;
+            
             if (1 == $artData['restric_type']) { // 付费
                 $result['display'] = 1; // 1-显示购买 0-不显示
 
@@ -2055,9 +2338,29 @@ class Ajax extends Base
                     }
                 }
             }
+            // 会员积分购买
+            else if (4 === intval($artData['restric_type'])) {
+                $result['display'] = 1;
+
+                if (!empty($users_id)) {
+                    $is_pay = Db::name('article_order')->where(['users_id' => $users_id, 'order_status' => 1, 'product_id' => $aid])->find();
+                    // 已经购买
+                    if (!empty($is_pay)) {
+                        $result['display'] = 0; // 1-显示购买 0-不显示
+                        $result['content'] = $artData['content'];
+                    }
+                }
+            }
         }
 
         $result['content'] = htmlspecialchars_decode($result['content']);
+        if (0 == $result['display']) {
+            // 移除付费内容标签
+            if (stripos($result['content'], '[付费内容开始]') !== false && stripos($result['content'], '[/付费内容结束]') !== false) {
+                $pattern = '/\[付费内容开始\](.*?)\[\/付费内容结束\]/is';
+                $result['content'] = preg_replace($pattern, '${1}', $result['content']);
+            }
+        }
         $titleNew = !empty($artData['title']) ? $artData['title'] : '';
         $result['content'] = img_style_wh($result['content'], $titleNew);
         $result['content'] = handle_subdir_pic($result['content'], 'html');
@@ -2067,6 +2370,12 @@ class Ajax extends Base
                 $result['content'] = $LinkkeywordModel->handle_content($result['content']);
             }
         }
+
+        /* AI创作声明 --- chenfy --- 2025.09.04*/
+        if (isset($result['content']) && !empty($artData['editor_ai_create'])) {
+            $result['content'] .= '<div class="ai-statement">此内容由AI生成</div>';
+        }
+        /* END */
 
         $this->success('success', null, $result);
     }
@@ -2407,15 +2716,20 @@ class Ajax extends Base
     {
         // 管理员ID
         $admin_id = input('param.admin_id');
-        if (empty($admin_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        $users_id = input('param.users_id');
+        if (empty($admin_id) && empty($users_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
         $conf_wechat = !empty($conf_wechat) ? json_decode($conf_wechat, true) : [];
 
         // 回调链接
-        $url = urlencode(url('api/Ajax/defaultGetWechatUserinfo', ['admin_id' => $admin_id], true, true));
-
+        if (!empty($admin_id)) {
+            $data = ['admin_id' => $admin_id];
+        } else if (!empty($users_id)) {
+            $data = ['users_id' => $users_id];
+        }
+        $url = urlencode(url('api/Ajax/defaultGetWechatUserinfo', $data, true, true));
         // 静默授权链接
         $redirect = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" . strval($conf_wechat['appid']) . "&redirect_uri=" . $url . "&response_type=code&scope=snsapi_base&state=eyoucms&#wechat_redirect";
 
@@ -2428,7 +2742,8 @@ class Ajax extends Base
         // 通过微信code获取用户access_token
         $code = input('param.code/s', '');
         $admin_id = input('param.admin_id/d', 0);
-        if (empty($code) || empty($admin_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        $users_id = input('param.users_id/d', 0);
+        if (empty($code) || (empty($admin_id) && empty($users_id))) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
@@ -2454,24 +2769,57 @@ class Ajax extends Base
             // 后台扫码登录插件
             model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
         }
+        else if (!empty($userInfo['openid']) && !empty($users_id)) {
+            $usersJoin = Db::name('weapp_ask_users_join')->where(['users_id' => $users_id])->find();
+            if (!empty($usersJoin)) {
+                $update = [
+                    'join_open_id' => $userInfo['openid'],
+                    'update_time' => getTime(),
+                ];
+                Db::name('weapp_ask_users_join')->where('users_id', $users_id)->update($update);
+            } else {
+                $insert = [
+                    'users_id' => intval($users_id),
+                    'join_type' => 1,
+                    'join_open_id' => $userInfo['openid'],
+                    'add_time' => getTime(),
+                    'update_time' => getTime(),
+                ];
+                Db::name('weapp_ask_users_join')->insert($insert);
+            }
+        }
 
         // 查询用户是否关注了公众号
         $tokenData = get_wechat_access_token();
         if (!empty($tokenData)) {
-            $result['openid'] = Db::name('admin')->where('admin_id', $admin_id)->getField('wechat_open_id');
+            if (!empty($admin_id)) {
+                $result['openid'] = Db::name('admin')->where('admin_id', $admin_id)->getField('wechat_open_id');
+            } else if (!empty($users_id)) {
+                $result['openid'] = Db::name('weapp_ask_users_join')->where('users_id', $users_id)->getField('join_open_id');
+            }
             $userInfo = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token=' . $tokenData['access_token'] . '&openid=' . $result['openid'] . '&lang=zh_CN';
             $userInfo = json_decode(httpRequest($userInfo), true);
             // 关注则执行关联关注
             if (!empty($userInfo['subscribe']) && $userInfo['openid'] == $result['openid']) {
-                $update = [
-                    'wechat_appid' => $conf_wechat['appid'],
-                    'wechat_followed' => 1,
-                    'union_id' => empty($userInfo['unionid']) ? '' : $userInfo['unionid'],
-                    'update_time' => getTime(),
-                ];
-                Db::name('admin')->where('admin_id', $admin_id)->update($update);
-                // 后台扫码登录插件
-                model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
+                if (!empty($admin_id)) {
+                    $update = [
+                        'wechat_appid' => $conf_wechat['appid'],
+                        'wechat_followed' => 1,
+                        'union_id' => empty($userInfo['unionid']) ? '' : $userInfo['unionid'],
+                        'update_time' => getTime(),
+                    ];
+                    Db::name('admin')->where('admin_id', $admin_id)->update($update);
+                    // 后台扫码登录插件
+                    model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
+                } else if (!empty($users_id)) {
+                    $update = [
+                        'join_appid' => $conf_wechat['appid'],
+                        'join_union_id' => $userInfo['unionid'],
+                        'join_followed' => 1,
+                        'update_time' => getTime(),
+                    ];
+                    Db::name('weapp_ask_users_join')->where('users_id', $users_id)->update($update);
+                }
                 // 显示成功信息
                 $this->redirect(url('api/Ajax/showSuccessInfo', ['info' => '绑定成功'], true, true));
             }
@@ -2480,7 +2828,7 @@ class Ajax extends Base
         }
 
         // 用户尚未关注公众号，显示公众号二维码
-        $this->redirect(url('api/Ajax/showWechatQrCode', ['admin_id' => $admin_id], true, true));
+        $this->redirect(url('api/Ajax/showWechatQrCode', ['admin_id' => $admin_id, 'users_id' => $users_id], true, true));
     }
 
     public function showSuccessInfo()
@@ -2524,15 +2872,21 @@ EOF;
     public function showWechatQrCode()
     {
         $admin_id = input('param.admin_id/d', 0);
-        if (empty($admin_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        $users_id = input('param.users_id/d', 0);
+        if (empty($admin_id) && empty($users_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
         $conf_wechat = !empty($conf_wechat) ? json_decode($conf_wechat, true) : [];
 
         // 生成图片名称及径路
-        $qrcodeName = 'wechat_' . md5($admin_id) . ".jpg";
-        $qrcodePath = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
+        if (!empty($admin_id)) {
+            $qrcodeName = 'wechat_' . md5($admin_id) . ".jpg";
+            $qrcodePath = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
+        } else if (!empty($users_id)) {
+            $qrcodeName = 'wechat_' . md5($users_id) . ".jpg";
+            $qrcodePath = UPLOAD_PATH . 'system/wechat_followed/users/' . $users_id . '/';
+        }
         $qrcodeUrl = $qrcodePath . $qrcodeName;
 
         // 检测图片是否存在
@@ -2549,7 +2903,8 @@ EOF;
                 // 调用微信接口，返回生成二维码的ticket参数
                 $url = 'https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=' . $tokenData['access_token'];
                 // 永久二维码，目前暂时没用到 scene_str 里参数值
-                $data = '{"action_name": "QR_LIMIT_STR_SCENE", "action_info": {"scene": {"scene_str": "bind|'.$admin_id.'"}}}';
+                $id = !empty($users_id) ? intval($users_id) : intval($admin_id);
+                $data = '{"action_name": "QR_LIMIT_STR_SCENE", "action_info": {"scene": {"scene_str": "bind|'.$id.'"}}}';
                 // 调用接口获取数据，解析返回的数据
                 $ticketData = json_decode(httpRequest($url, 'POST', $data), true);
                 if (empty($ticketData['ticket'])) $this->error('数据错误，请重新生成二维码并扫码！');

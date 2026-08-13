@@ -1,0 +1,508 @@
+/* 专业级模板编辑器样式 */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+  position: relative;
+}
+
+/* 弹窗样式 */
+.layui-layer-content {
+  overflow: hidden !important;
+}
+
+.layui-layer-content .editor-container {
+  height: 100%;
+}
+
+/* 主体区域（文件树+编辑器） */
+.editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* 左侧文件树 */
+.editor-sidebar {
+  width: 250px;
+  background: #252526;
+  border-right: 1px solid #3c3c3c;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-tools {
+  display: flex;
+  padding: 8px;
+  gap: 5px;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.sidebar-btn {
+  padding: 4px 8px;
+  background: #3c3c3c;
+  color: #ccc;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.sidebar-btn:hover {
+  background: #505050;
+}
+
+/* 侧边栏折叠按钮 */
+.sidebar-toggle {
+  position: absolute;
+  left: 250px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 50px;
+  background: #3c3c3c;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: left 0.3s ease;
+}
+
+.sidebar-toggle.collapsed {
+  left: 0;
+}
+
+.sidebar-toggle:hover {
+  background: #505050;
+}
+
+.sidebar-toggle i {
+  color: #ccc;
+  font-size: 12px;
+}
+
+.file-tree {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 5px 0;
+}
+
+/* 自定义滚动条 */
+.file-tree::-webkit-scrollbar {
+  width: 6px;
+}
+
+.file-tree::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.file-tree::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.file-tree::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.file-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.file-tree li {
+  cursor: pointer;
+}
+
+.file-tree .tree-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  color: #ccc;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.file-tree .tree-item:hover {
+  background: #2a2d2e;
+}
+
+.file-tree .tree-item.active {
+  background: #37473f;
+}
+
+.file-tree .tree-item i {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.file-tree .folder > .tree-item i:first-child {
+  color: #dcb67a;
+}
+
+.file-tree .file > .tree-item i {
+  color: #519aba;
+}
+
+/* 文件夹展开/折叠 */
+.file-tree .folder.collapsed > .children {
+  display: none;
+}
+
+.file-tree .folder.expanded > .children {
+  display: block;
+}
+
+.file-tree .children {
+  padding-left: 15px;
+}
+
+.folder-arrow {
+  font-size: 10px;
+  margin-right: 4px;
+  transition: transform 0.2s;
+}
+
+/* 右侧编辑区 */
+.editor-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 工具栏 */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 40px;
+  background: #3c3c3c;
+  border-bottom: 1px solid #2d2d2d;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* 路径和标签页容器（同一行） */
+.editor-header-bar {
+  display: flex;
+  align-items: stretch;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  flex-shrink: 0;
+}
+
+/* 文件信息栏（路径显示） */
+.editor-file-info {
+  display: flex;
+  align-items: center;
+  padding: 6px 15px;
+  background: #2d2d2d;
+  border-right: 1px solid #3c3c3c;
+  font-size: 12px;
+  color: #ccc;
+  flex-shrink: 0;
+  min-width: 220px;
+}
+
+.file-info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-info-item i {
+  color: #888;
+  font-size: 13px;
+}
+
+.file-info-item span {
+  color: #e0e0e0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+}
+
+/* 标签页区域 */
+.editor-tabs {
+  display: flex;
+  flex: 1;
+  background: #252526;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-height: 32px;
+}
+
+.editor-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.editor-tabs::-webkit-scrollbar-track {
+  background: #252526;
+}
+
+.editor-tabs::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 2px;
+}
+
+.editor-tab {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #2d2d2d;
+  color: #969696;
+  border-right: 1px solid #3c3c3c;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+  gap: 6px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.editor-tab:hover {
+  background: #333;
+}
+
+.editor-tab.active {
+  background: #1e1e1e;
+  color: #fff;
+  border-bottom: 2px solid #67c23a;
+}
+
+.editor-tab .tab-icon {
+  font-size: 13px;
+}
+
+.editor-tab .close-btn {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  font-size: 16px;
+  line-height: 1;
+  margin-left: 8px;
+  color: #969696;
+  cursor: pointer;
+}
+
+.editor-tab .close-btn:hover {
+  background: #555;
+}
+
+.editor-tab.modified .filename::after {
+  content: " \2022";
+  color: #e2c08d;
+  font-weight: bold;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: #3c3c3c;
+  color: #ccc;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.toolbar-btn:hover {
+  background: #505050;
+}
+
+.toolbar-btn.primary {
+  background: #67c23a;
+  color: #fff;
+}
+
+.toolbar-btn.primary:hover {
+  background: #85ce61;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: #555;
+  margin: 0 5px;
+}
+
+/* 编辑器区域 */
+.editor-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editor-content .CodeMirror {
+  height: 100%;
+  font-size: 14px;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.editor-content .CodeMirror-scroll {
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+/* CodeMirror 滚动条美化 */
+.editor-content .CodeMirror-vscrollbar::-webkit-scrollbar,
+.editor-content .CodeMirror-hscrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.editor-content .CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.editor-content .CodeMirror-hscrollbar::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.editor-content .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.editor-content .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.editor-content .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+.editor-content .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* 状态栏 */
+.editor-statusbar {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  height: 24px;
+  background: #333;
+  color: #ccc;
+  font-size: 12px;
+  gap: 20px;
+}
+
+.editor-statusbar .status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 搜索高亮 */
+.cm-searching {
+  background-color: rgba(255, 255, 0, 0.4);
+}
+
+/* CodeMirror 搜索对话框样式优化 */
+.editor-container .CodeMirror-dialog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #2d2d2d;
+  color: #ccc;
+  z-index: 15;
+  padding: 8px 10px;
+  overflow: hidden;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.editor-container .CodeMirror-dialog-top {
+  border-bottom: 1px solid #3c3c3c;
+  top: 0;
+}
+
+.editor-container .CodeMirror-dialog-bottom {
+  border-top: 1px solid #3c3c3c;
+  bottom: 0;
+}
+
+.editor-container .CodeMirror-dialog input {
+  border: 1px solid #3c3c3c;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  outline: none;
+  min-width: 200px;
+}
+
+.editor-container .CodeMirror-dialog input:focus {
+  border-color: #67c23a;
+  background: #252526;
+}
+
+.editor-container .CodeMirror-dialog button {
+  background: #3c3c3c;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 3px;
+  margin-left: 5px;
+}
+
+.editor-container .CodeMirror-dialog button:hover {
+  background: #505050;
+}
+
+.editor-container .CodeMirror-dialog span {
+  color: #ccc;
+  font-size: 13px;
+}
+
+/* 浅色主题 */
+.editor-container.light {
+  background: #fff;
+}
+
+.editor-container.light .editor-sidebar {
+  background: #f3f3f3;
+  border-color: #e0e0e0;
+}
+
+.editor-container.light .sidebar-header {
+  background: #e8e8e8;
+  color: #333;
+  border-color: #e0e0e0;
+}
+
+.editor-container.light .file-tree .tree-item {
+  color: #333;
+}
+
+.editor-container.light .file-tree .tree-item:hover {
+  background: #e8e8e8;
+}
+
+.editor-container.light .editor-toolbar {
+  background: #f3f3f3;
+  border-color: #e0e0e0;
+}
+
+.editor-container.light .editor-tabs {
+  background: #ececec;
+  border-color: #e0e0e0;
+}
+
+.editor-container.light .editor-tab {
+  background: #ececec;
+  color: #666;
+  border-color: #e0e0e0;
+}
+
+.editor-container.light .editor-tab.active {
+  background: #fff;
+  color: #333;
+}

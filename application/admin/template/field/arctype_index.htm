@@ -236,6 +236,7 @@
      */
     function copyToClipBoard(obj) {
         var fieldname = $(obj).attr('data-name');
+        var channel_id = 6;
         var dtype = $(obj).attr('data-dtype');
         var height = '250px';
 
@@ -248,52 +249,51 @@
                     height = '400px';
                     var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    <img src='{$"+fieldname+".image_url}' />\r\n    注释：{$"+fieldname+".intro}\r\n{/eyou:diyfield";
                     contentdiv += '<dd>列表/内容页：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:80px;">' + viewstr + '}</textarea></dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:720px;height:80px;">' + viewstr + '}</textarea></dd>';
                     var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        <img src='{$"+fieldname+".image_url}' />\r\n        注释：{$"+fieldname+".intro}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
                     contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:120px;">' + liststr + '}</textarea></dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:720px;height:120px;">' + liststr + '}</textarea></dd>';
                 }
                 break;
 
             case 'checkbox':
+            case 'checkboxs':
                 {
                     height = '400px';
                     var viewstr = "{eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyou.field."+fieldname+"'}\r\n    {$"+fieldname+".value}\r\n{/eyou:diyfield";
                     contentdiv += '<dd>列表/内容页：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:60px;">' + viewstr + '}</textarea></dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:720px;height:80px;">' + viewstr + '}</textarea></dd>';
                     var liststr = "{eyou:type typeid='$"+"field.typeid' id='eyoav'}\r\n    {eyou:diyfield type='"+dtype+"' id='"+fieldname+"' name='$"+"eyoav."+fieldname+"'}\r\n        {$"+fieldname+".value}\r\n    {/eyou:diyfield"+"}\r\n{/eyou:type";
                     contentdiv += '<dd>标签 arclist / list 内调用 <font color="red">(更多简洁调法请参考标签 arclist /list)</font>：</dd>';
-                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:470px;height:100px;">' + liststr + '}</textarea></dd>';
+                    contentdiv += '<dd><textarea rows="4" cols="60" style="width:720px;height:120px;">' + liststr + '}</textarea></dd>';
                 }
                 break;
 
             case 'datetime':
                 {
                     contentdiv += '<dd>列表/内容页：</dd>';
-                    contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>'
+                    contentdiv += '<dd><input type="text" style=" width:720px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>'
                     contentdiv += '<dd>标签 type / arclist / list 内调用：</dd>'
-                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>';
+                    contentdiv += '<dd><input type="text" style=" width:720px;" value="{$'+'field.'+fieldname+'|MyDate=\'Y-m-d H:i:s\',###}"></dd>';
                 }
                 break;
 
             default:
                 {
                     contentdiv += '<dd>列表/内容页：</dd>';
-                    contentdiv += '<dd><input type="text" style=" width:470px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>'
+                    contentdiv += '<dd><input type="text" style=" width:720px;margin-bottom:10px;" value="{$'+'eyou.field.'+fieldname+'}"></dd>'
                     contentdiv += '<dd>标签 type / arclist / list 内调用：</dd>'
-                    contentdiv += '<dd><input type="text" style=" width:470px;" value="{$'+'field.'+fieldname+'}"></dd>';
+                    contentdiv += '<dd><input type="text" style=" width:720px;" value="{$'+'field.'+fieldname+'}"></dd>';
                 }
                 break;
         }
-
         contentdiv += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将相应标签复制并粘贴到对应模板文件中！</dd></dl></div>';
-
         layer.open({
             shade: layer_shade,
             title: '标签调用',
             type: 1,
             skin: 'layui-layer-demo',
-            area: ['550px', height], //宽高
+            area: ['800px', height], //宽高
             content: contentdiv
         });
     }

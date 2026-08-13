@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -36,6 +36,8 @@ class View extends Base
     public function index($aid = '')
     {
         $seo_pseudo = config('ey_config.seo_pseudo');
+        $seo_dynamic_format = config('ey_config.seo_dynamic_format');
+
         /*URL上参数的校验*/
         if (3 == $seo_pseudo)
         {
@@ -45,7 +47,6 @@ class View extends Base
         }
         else if (1 == $seo_pseudo || (2 == $seo_pseudo && isMobile()))
         {
-            $seo_dynamic_format = config('ey_config.seo_dynamic_format');
             if (1 == $seo_pseudo && 2 == $seo_dynamic_format && stristr($this->request->url(), '&c=View&a=index&')) {
                 abort(404, '页面不存在');
             }
@@ -58,9 +59,6 @@ class View extends Base
                 abort(404, '页面不存在');
             }
             $map = array('a.htmlfilename' => $aid);
-            if (config('lang_switch_on') && !empty($this->home_lang)) {
-                $map['a.lang'] = $this->home_lang;
-            }
             /*为了兼容不同栏目可以存在相同自定义文档文件名，需要加上栏目ID的条件查询*/
             if (3 == $seo_pseudo) {
                 $pathinfo = $this->request->pathinfo();
@@ -94,6 +92,8 @@ class View extends Base
             $map = array('a.aid' => intval($aid));
         }
         $map['a.is_del'] = 0; // 回收站功能
+        if (config('lang_switch_on') && !empty($this->home_lang)) $map['a.lang'] = $this->home_lang;
+
         // 多城市站点
         $field        = 'a.aid, a.typeid, a.channel, a.users_price, a.users_free, a.province_id, a.city_id, a.area_id, b.nid, b.ctl_name, c.level_id, c.level_name, c.level_value';
         $archivesInfo = Db::name('archives')->field($field)
@@ -152,8 +152,12 @@ class View extends Base
         // }
         // 外部链接跳转
         if ($result['is_jump'] == 1) {
-            header('Location: ' . $result['jumplinks']);
-            exit;
+            $jumplinks = $result['jumplinks'];
+            // 安全验证：确保跳转链接格式正确，防止注入攻击
+            if (!empty($jumplinks) && (strpos($jumplinks, 'http://') === 0 || strpos($jumplinks, 'https://') === 0 || strpos($jumplinks, '/') === 0)) {
+                header('Location: ' . $jumplinks);
+                exit;
+            }
         }
         /*--end*/
 
@@ -244,6 +248,12 @@ class View extends Base
             empty($users['nickname']) && $users['nickname'] = $users['username'];
         }
 
+        /* AI创作声明 --- chenfy --- 2025.09.04*/
+        if (isset($result['content']) && !empty($result['editor_ai_create'])) {
+            $result['content'] .= '<div class="ai-statement">此内容由AI生成</div>';
+        }
+        /* END */
+
         $eyou = array(
             'type'  => $arctypeInfo,
             'field' => $result,
@@ -262,9 +272,12 @@ class View extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }
@@ -370,7 +383,7 @@ EOF;
             ->join('__ARCHIVES__ b', 'a.aid = b.aid', 'LEFT')
             ->where($map)
             ->find();
-
+        $result['file_url'] = trim($result['file_url']);
         $file_url_gbk = iconv("utf-8", "gb2312//IGNORE", $result['file_url']);
         $file_url_gbk = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $file_url_gbk);
         if (empty($result) || (!is_http_url($result['file_url']) && !file_exists('.' . $file_url_gbk))) {

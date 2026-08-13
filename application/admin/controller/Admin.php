@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -24,6 +24,15 @@ use app\admin\logic\AjaxLogic;
 class Admin extends Base {
 
     private $admin_info = [];
+
+    /**
+     * 暴力破解检测配置
+     */
+    private $bruteforceConfig = [
+        'timeWindow' => 300,    // 时间窗口（秒）
+        'maxAttempts' => 10,    // 最大尝试次数
+        'cachePrefix' => 'bruteforce_detection_', // 缓存前缀
+    ];
 
     public function _initialize() {
         parent::_initialize();
@@ -71,7 +80,7 @@ class Admin extends Base {
                 $val['role_name'] = !empty($val['parent_id']) ? '超级管理员' : '创始人';
             }
             // 是否被锁定
-            $login_lock_key = 'adminlogin_'.md5('login_lock_'.$val['user_name'].clientIP()); // 是否被锁定
+            $login_lock_key = 'adminlogin_'.md5('login_lock_'.$val['user_name'].$this->getSecureClientIP()); // 是否被锁定
             $val['is_locklogin'] = !empty($locklist[$login_lock_key]) ? 1 : 0;
 
             $list[$key] = $val;
@@ -207,34 +216,49 @@ class Admin extends Base {
 
             /*---------登录错误次数的限制 start----------*/
             $globalConfig = tpCache('global');
-            $web_login_lockopen = 0; // 是否开启登录失败锁定
-            if (!isset($globalConfig['web_login_lockopen']) || !empty($globalConfig['web_login_lockopen'])) {
-                $web_login_lockopen = 1;
+            $web_login_lockopen = 1; // 默认启用登录锁定
+            if (isset($globalConfig['web_login_lockopen']) && empty($globalConfig['web_login_lockopen'])) {
+                $web_login_lockopen = 0; // 只有明确设置为0才关闭
+            } else {
                 $admin_count = Db::name('admin')->where(['user_name'=>$user_name])->count();
-                if (!empty($admin_count)) {
-                    $loginErrtotal = !empty($globalConfig['web_login_errtotal']) ? intval($globalConfig['web_login_errtotal']) : config('login_errtotal'); // 登录错误最大次数
-                    $loginErrexpire = !empty($globalConfig['web_login_errexpire']) ? intval($globalConfig['web_login_errexpire']) : config('login_errexpire'); // 登录错误最大限制时间
-                    $clientIP = clientIP();
-                    $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
-                    $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
-                    $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP); // 是否被锁定
-                    $loginErrnum = (int)tpSetting('adminlogin.'.$login_errnum_key); // 登录错误次数
-                    $loginErrtime = tpSetting('adminlogin.'.$login_errtime_key); // 最后一次登录错误时间
-                    if ($loginErrnum >= $loginErrtotal) {
-                        if (getTime() < $loginErrtime + $loginErrexpire) {
-                            adminLog("登录失败(已被锁定，登录错误超限{$loginErrtotal}次)");
-                            $surplus_time = ($loginErrtime + $loginErrexpire) - getTime();
-                            if ($surplus_time <= 0) {
-                                $surplus_time = 1;
-                            }
-                            $this->error("多次登录失败，距离解锁还有".ceil($surplus_time/60)."分钟！");
-                        } else {
-                            // 重置登录错误次数
-                            $loginErrnum = $loginErrtime = $login_lock = 0;
-                            tpSetting('adminlogin', [$login_errnum_key => $loginErrnum]);
-                            tpSetting('adminlogin', [$login_errtime_key => $loginErrtime]);
-                            tpSetting('adminlogin', [$login_lock_key => $login_lock]);
+            }
+
+            if (!empty($admin_count) && !empty($web_login_lockopen)) {
+                $loginErrtotal = !empty($globalConfig['web_login_errtotal']) ? intval($globalConfig['web_login_errtotal']) : config('login_errtotal'); // 登录错误最大次数
+                $loginErrexpire = !empty($globalConfig['web_login_errexpire']) ? intval($globalConfig['web_login_errexpire']) : config('login_errexpire'); // 登录错误最大限制时间
+                $clientIP = $this->getSecureClientIP(); // 使用安全的IP获取方法
+                $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
+                $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
+                $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP); // 是否被锁定
+                $loginErrnum = (int)tpSetting('adminlogin.'.$login_errnum_key); // 登录错误次数
+                $loginErrtime = tpSetting('adminlogin.'.$login_errtime_key); // 最后一次登录错误时间
+
+                // 检测暴力破解攻击
+                if ($this->detectBruteForceAttack($clientIP)) {
+                    // 清理过期的暴力破解缓存
+                    $this->clearExpiredBruteforceCache();
+                    adminLog("检测到暴力破解攻击，IP已被自动封禁: {$clientIP}");
+                    $this->error("检测到异常登录行为，已被禁止！");
+                }
+
+                if ($loginErrnum >= $loginErrtotal) {
+                    if (getTime() < $loginErrtime + $loginErrexpire) {
+                        adminLog("登录失败(已被锁定，登录错误超限{$loginErrtotal}次)");
+                        $surplus_time = ($loginErrtime + $loginErrexpire) - getTime();
+                        if ($surplus_time <= 0) {
+                            $surplus_time = 1;
                         }
+                        // 清理过期的暴力破解缓存
+                        $this->clearExpiredBruteforceCache();
+                        $this->error("多次登录失败，距离解锁还有".ceil($surplus_time/60)."分钟！");
+                    } else {
+                        // 重置登录错误次数
+                        $adminloginData = [
+                            $login_errnum_key => 0, 
+                            $login_errtime_key => 0, 
+                            $login_lock_key => 0,
+                        ];
+                        tpSetting('adminlogin', $adminloginData);
                     }
                 }
             }
@@ -270,6 +294,8 @@ class Admin extends Base {
                             if (method_exists($ddosLogic, 'twofactor_login_open') && $ddosLogic->twofactor_login_open()) {
                                 $data = $ddosLogic->twofactor_login_logic('login_action_begin', $admin_info);
                                 if (isset($data['code']) && 0 === $data['code']) {
+                                    // 清理过期的暴力破解缓存
+                                    $this->clearExpiredBruteforceCache();
                                     $this->error($data['msg']);
                                 } else {
                                     $this->success('正在检测', $data['url']);
@@ -277,7 +303,15 @@ class Admin extends Base {
                             }
                         }
 
-                        $url = cookie('from_url') ? cookie('from_url') : $this->request->baseFile();
+                        $this->session_id = session_id();
+
+                        $from_url = cookie('from_url');
+                        $base_url = $this->request->baseFile();
+                        if (empty($from_url) || !stristr($from_url, $base_url)) {
+                            $url = $this->request->baseFile();
+                        } else {
+                            $url = $from_url;
+                        }
                         // 登录逻辑
                         $admin_info = adminLoginAfter($admin_info['admin_id'], $this->session_id);
 
@@ -296,18 +330,26 @@ class Admin extends Base {
                 }
             }
 
+            // 清理过期的暴力破解缓存
+            $this->clearExpiredBruteforceCache();
+            
             /*----------记录登录错误次数 start-----------*/
             if (!empty($admin_count) && !empty($web_login_lockopen)) {
                 // 清理管理员登录锁定的无效数据
                 adminlogin_lock_clear('default');
                 $login_errnum = $loginErrnum + 1;
                 $login_num = $loginErrtotal - $login_errnum;
-                tpSetting('adminlogin', [$login_errnum_key=>$login_errnum]);
-                tpSetting('adminlogin', [$login_errtime_key=>getTime()]);
+                $adminloginData = [
+                    $login_errnum_key=>$login_errnum,
+                    $login_errtime_key=>getTime(),
+                ];
                 if ($login_num > 0) {
+                    tpSetting('adminlogin', $adminloginData);
                     $this->error("用户名或密码错误，您还可以尝试[{$login_num}]次！");
                 } else {
-                    tpSetting('adminlogin', [$login_lock_key => 1]);
+                    $adminloginData[$login_lock_key] = 1;
+                    tpSetting('adminlogin', $adminloginData);
+                    adminLog("登录错误次数过多，账号被锁定: IP({$clientIP}) 用户({$user_name})");
                     $this->error("登录错误超限{$loginErrtotal}次，账号将被锁定".ceil($loginErrexpire/60)."分钟！");
                 }
             }
@@ -347,7 +389,9 @@ class Admin extends Base {
         
         session('admin_info', null);
         $viewfile = 'admin/login';
-        if (2 <= $this->php_servicemeal) {
+        if (5 <= $this->php_servicemeal) {
+            $viewfile = 'admin/login_ai';
+        } else if (2 <= $this->php_servicemeal) {
             $viewfile = 'admin/login_zy';
         }
 
@@ -442,14 +486,17 @@ class Admin extends Base {
             if (!empty($this->admin_info['parent_id']) || -1 != $this->admin_info['role_id']) {
                 $this->error('该功能仅限于创始人操作！');
             }
-            $clientIP = clientIP();
+            $clientIP = $this->getSecureClientIP(); // 使用安全的IP获取方法
             $user_name = Db::name('admin')->where(['admin_id'=>$admin_id])->value('user_name');
             $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
             $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
             $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP); // 是否被锁定
-            tpSetting('adminlogin', [$login_errnum_key => 0]);
-            tpSetting('adminlogin', [$login_errtime_key => 0]);
-            tpSetting('adminlogin', [$login_lock_key => 0]);
+            $adminloginData = [
+                $login_errnum_key => 0, 
+                $login_errtime_key => 0, 
+                $login_lock_key => 0,
+            ];
+            tpSetting('adminlogin', $adminloginData);
             adminLog('解除锁定：'.$user_name);
             $this->success('操作成功');
         }
@@ -502,7 +549,6 @@ class Admin extends Base {
             }
             $row = Db::name('users')->field('users_id')->where([
                     'username'  => $user_name,
-                    'lang'      => $this->admin_lang,
                 ])->find();
             if (!empty($row)) {
                 $this->error('已有相同会员名，将其转为系统账号？');
@@ -651,9 +697,11 @@ class Admin extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_list = Db::name('arctype')->where([
-            'is_del'    => 0,
-        ])->order("grade desc")->select();
+        $where = ['is_del'=>0];
+        if (empty($this->globalConfig['web_language_switch'])) {
+            $where['lang'] = $this->admin_lang;
+        }
+        $arctype_list = Db::name('arctype')->where($where)->order("grade desc")->select();
         $arctype_p_html = $arctype_child_html = "";
         $arctype_all = list_to_tree($arctype_list);
         foreach ($arctype_all as $key => $arctype) {
@@ -887,9 +935,11 @@ EOF;
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_list = Db::name('arctype')->where([
-                'is_del'    => 0,
-            ])->order("grade desc")->select();
+        $where = ['is_del'=>0];
+        if (empty($this->globalConfig['web_language_switch'])) {
+            $where['lang'] = $this->admin_lang;
+        }
+        $arctype_list = Db::name('arctype')->where($where)->order("grade desc")->select();
         $arctype_p_html = $arctype_child_html = "";
         $arctype_all = list_to_tree($arctype_list);
         foreach ($arctype_all as $key => $arctype) {
@@ -1052,7 +1102,7 @@ EOF;
                     adminLog('删除管理员：'.implode(',', $user_names));
 
                     /*同步删除管理员关联的前台会员*/
-                    Db::name('users')->where(['admin_id'=>['IN', $id_arr],'lang'=>$this->admin_lang])->delete();
+                    Db::name('users')->where(['admin_id'=>['IN', $id_arr]])->delete();
                     /*end*/
 
                     $this->success('删除成功');
@@ -1098,6 +1148,11 @@ EOF;
         $field  = input('field'); // 修改哪个字段
         $field = preg_replace('/([^\w\-])/i', '', $field);
         $field = str_replace(['password'], '', $field);
+        // 安全修复：禁止通过该接口修改权限/身份等敏感字段，防止低权限管理员越权提升为超级管理员
+        $denyFields = ['role_id', 'parent_id', 'admin_id', 'user_name', 'password'];
+        if (in_array(strtolower($field), $denyFields)) {
+            $this->error('不允许修改该字段');
+        }
         if (IS_POST && !empty($field)) {
             $value  = input('value', '', null); // 修改字段值  
             if (!empty($this->admin_info['admin_id'])) {
@@ -1153,7 +1208,6 @@ EOF;
     {
         $where_new = [
             'admin_id'  => $admin_info['admin_id'],
-            'lang'      => $this->admin_lang,
         ];
         $users_id = Db::name('users')->where($where_new)->getField('users_id');
         try {
@@ -1163,7 +1217,6 @@ EOF;
                     // 如果是创始人，强制将与会员名相同的改为管理员前台用户名
                     $usersInfo = Db::name('users')->field('users_id')->where([
                             'username'  => $admin_info['user_name'],
-                            'lang'      => $this->admin_lang,
                         ])->find();
                 }
                 if (!empty($usersInfo)) {
@@ -1222,7 +1275,6 @@ EOF;
                 ->join('__USERS_LEVEL__ b', 'a.level = b.level_id', 'LEFT')
                 ->where([
                     'a.users_id'        => $users_id,
-                    'a.lang'            => $this->admin_lang,
                     'a.is_activation'   => 1,
                 ])->find();
             if (!empty($users)) {
@@ -1631,7 +1683,7 @@ EOF;
             // 二维码图片完整目录
             $defaultAuthorizePic = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
             // 创建文件夹
-            @mkdir($defaultAuthorizePic, 0777, true);
+            @mkdir($defaultAuthorizePic, 0755, true);
             // 二维码图片完整链接
             $defaultAuthorizePic = $defaultAuthorizePic . md5($admin_id) . '.png';
             // 生成二维码
@@ -1689,5 +1741,102 @@ EOF;
             }
         }   
         $this->success("尚未关注", null, ['code' => 2]);
+    }
+
+    /**
+     * 获取安全的客户端IP地址
+     * @return string
+     */
+    private function getSecureClientIP() {
+        $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
+        foreach ($ipKeys as $key) {
+            if (!empty($_SERVER[$key])) {
+                $ips = explode(',', $_SERVER[$key]);
+                $ip = trim($ips[0]);
+                // 验证IP地址有效性，排除私有和保留地址
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+                // 如果是内网环境，允许私有地址
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+        return !empty($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+    }
+
+    /**
+     * 清理过期的暴力破解缓存
+     * @param bool $force 是否强制清理所有缓存
+     */
+    private function clearExpiredBruteforceCache($force = false)
+    {
+        try {
+            // 获取所有暴力破解相关的缓存
+            $pattern = $this->bruteforceConfig['cachePrefix'] . '*';
+            $keys = cache($pattern);
+            
+            if ($keys) {
+                $now = time();
+                foreach ($keys as $key) {
+                    // 获取缓存数据
+                    $data = cache($key);
+                    if ($data) {
+                        // 检查是否过期
+                        $isExpired = true;
+                        if (!$force) {
+                            foreach ($data as $timestamp) {
+                                if (($now - $timestamp) <= $this->bruteforceConfig['timeWindow']) {
+                                    $isExpired = false;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 如果强制清理或所有记录都过期了，删除这个缓存
+                        if ($force || $isExpired) {
+                            cache($key, null);
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // 记录错误日志
+            adminLog("清理暴力破解缓存失败：" . $e->getMessage());
+        }
+    }
+
+    /**
+     * 检测暴力破解攻击
+     * @param string $ip
+     * @return bool
+     */
+    private function detectBruteForceAttack($ip) {
+        $cacheKey = $this->bruteforceConfig['cachePrefix'] . $ip;
+        $attempts = cache($cacheKey);
+        if (!$attempts) {
+            $attempts = array();
+        }
+        $now = time();
+        
+        // 清理过期记录 - 兼容PHP 5.4的写法
+        $validAttempts = array();
+        foreach ($attempts as $timestamp) {
+            if (($now - $timestamp) <= $this->bruteforceConfig['timeWindow']) {
+                $validAttempts[] = $timestamp;
+            }
+        }
+        $attempts = $validAttempts;
+        
+        if (count($attempts) >= $this->bruteforceConfig['maxAttempts']) {
+            // 触发告警 - 可以在这里添加邮件通知或其他告警机制
+            adminLog("检测到暴力破解攻击 IP: {$ip}, 在{$this->bruteforceConfig['timeWindow']}秒内尝试{$this->bruteforceConfig['maxAttempts']}次登录");
+            return true;
+        }
+        
+        $attempts[] = $now;
+        cache($cacheKey, $attempts, $this->bruteforceConfig['timeWindow'] + 60); // 缓存时间稍长一些
+        return false;
     }
 }

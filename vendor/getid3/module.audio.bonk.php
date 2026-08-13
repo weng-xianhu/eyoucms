@@ -154,7 +154,7 @@ class getid3_bonk extends getid3_handler
 				$info['audio']['lossless']        = $thisfile_bonk_BONK['lossless'];
 				$info['audio']['codec']           = 'bonk';
 
-				$info['playtime_seconds'] = $thisfile_bonk_BONK['number_samples'] / ($thisfile_bonk_BONK['sample_rate'] * $thisfile_bonk_BONK['channels']);
+				$info['playtime_seconds'] = getid3_lib::SafeDiv($thisfile_bonk_BONK['number_samples'], $thisfile_bonk_BONK['sample_rate'] * $thisfile_bonk_BONK['channels']);
 				if ($info['playtime_seconds'] > 0) {
 					$info['audio']['bitrate'] = (($info['bonk']['dataend'] - $info['bonk']['dataoffset']) * 8) / $info['playtime_seconds'];
 				}
@@ -204,7 +204,7 @@ class getid3_bonk extends getid3_handler
 				// ID3v2 checking is optional
 				if (class_exists('getid3_id3v2')) {
 					$getid3_temp = new getID3();
-					$getid3_temp->openfile($this->getid3->filename);
+					$getid3_temp->openfile($this->getid3->filename, $this->getid3->info['filesize'], $this->getid3->fp);
 					$getid3_id3v2 = new getid3_id3v2($getid3_temp);
 					$getid3_id3v2->StartingOffset = $info['bonk'][' ID3']['offset'] + 2;
 					$info['bonk'][' ID3']['valid'] = $getid3_id3v2->Analyze();

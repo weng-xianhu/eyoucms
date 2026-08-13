@@ -16,7 +16,18 @@
                     <br/>
                     <label class="curpoin"><input type="radio" name="search_model" value="accurate" {if condition="!empty($search.search_model) && 'accurate' == $search.search_model"} checked="checked" {/if} onclick="searchModel(this);" />标题完全匹配</label>&nbsp;&nbsp;
                     <br/>
-                    <label class="curpoin"><input type="radio" name="search_model" value="intellect" {if condition="!empty($search.search_model) && 'intellect' == $search.search_model"} checked="checked" {/if} onclick="searchModel(this);" />智能模糊（检索标题+seo关键词）</label>&nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="search_model" value="intellect" {if condition="!empty($search.search_model) && 'intellect' == $search.search_model"} checked="checked" {/if} onclick="searchModel(this);" />智能模糊</label>&nbsp;&nbsp;
+                    <div class="mt10 " id="intellect" {if condition="empty($search.search_model) || 'intellect' != $search.search_model"} style="display: none;" {/if}>
+                        <dl class="row" style="background: rgb(244, 244, 244);border-radius: 8px;padding: 10px;width: 600px;">
+                            <dd class="opt">
+                                <input type="hidden" name="intellect_arr[]" value="title">
+                                <label><input type="checkbox" {if condition="in_array('title', $search.intellect_arr)"} checked="checked" {/if} disabled>标题</label>&nbsp;&nbsp;
+                                <label><input type="checkbox" name="intellect_arr[]" value="seo_keywords" {if condition="in_array('seo_keywords', $search.intellect_arr)"} checked="checked" {/if}>seo关键词</label>&nbsp;&nbsp;
+                                <label><input type="checkbox" name="intellect_arr[]" value="seo_description" {if condition="in_array('seo_description', $search.intellect_arr)"} checked="checked" {/if}>seo描述</label>&nbsp;&nbsp;
+                                <label><input type="checkbox" name="intellect_arr[]" value="content" {if condition="in_array('content', $search.intellect_arr)"} checked="checked" {/if}>内容正文</label>&nbsp;&nbsp;
+                            </dd>
+                        </dl>
+                    </div>
                 </dd>
             </dl>
             <dl class="row" id="dl_search_model_default" {if condition="!empty($search.search_model) && 'default' != $search.search_model"} style="display: none;" {/if}>
@@ -50,6 +61,17 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
+                    <label for="search_exclude_typeid">屏蔽栏目</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <input type="text" name="search_exclude_typeid" placeholder="点击右侧按钮选择栏目" id="search_exclude_typeid" value="{$search.search_exclude_typeid|default=''}" class="w250" readonly="readonly">
+                    <a href="javascript:void(0);" class="ncap-btn-cyan" onclick="selectArctype();">选择栏目</a>
+                    <span class="err"></span>
+                    <p class="notic">选择需要屏蔽的栏目，搜索时将不显示这些栏目下的内容</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
                     <label for="search_tabu_words">搜索敏感词</label>
                 </dt>
                 <dd class="opt" style="width: auto;">
@@ -68,6 +90,37 @@
                     <p class="notic">禁止前台用户搜索含有敏感词，防止SQL注入</p>
                 </dd>
             </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>热搜词记录</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <label class="curpoin"><input type="radio" name="hot_search_open" value="1" {if condition="!isset($search.hot_search_open) || $search.hot_search_open != 0"}checked="checked"{/if}>开启</label>
+                    &nbsp;&nbsp;
+                    <label class="curpoin"><input type="radio" name="hot_search_open" value="0" {if condition="isset($search.hot_search_open) && $search.hot_search_open == 0"}checked="checked"{/if}>关闭</label>
+                    <p class="notic">开启后前台搜索词将被记录并展示为热搜词，关闭则停止记录和展示</p>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label>搜索智答</label>
+                </dt>
+                <dd class="opt" style="width: auto;">
+                    <label>
+                        <input onclick="" type="radio" id="ai_seach" name="ai[ai_seach]" value="1" {if isset($row.ai_seach) && $row.ai_seach==1 && $is_ai==1}checked{/if}>开启
+                    </label>
+                    &nbsp; &nbsp;
+                    <label>
+                        <input onclick="" type="radio" id="ai_seach" name="ai[ai_seach]" value="0" {if !isset($row.ai_seach) || empty($row.ai_seach) || empty($is_ai)}checked{/if}>关闭
+                    </label>
+                    <!-- <P class="notic3" style="display:none;"><img src="__SKIN__/images/ai/feature-4.png" /></P> -->
+                    <!-- <a class="ui_tan view_feature" href="javascript:void(0);">查看功能</a> -->
+                    <p class="notic2">搜索的关键字Ai作答，需先安装<a href="https://www.eyoucms.com/mall/plus/29424.html" target="_blank" class="red">Ai智能创作平台</a>插件</p>
+                    <p><li>1、Ai搜索结果框-》复制到模板文件lists_search.htm列表展示位置： {literal}{:hookexec('Ai/Ai/searchdata')}{/literal} </li></p>
+                    <p><li>2、引用代码-》复制到模板文件lists_search.htm底部： {literal}{:hookexec('Ai/Ai/search')}{/literal} </li></p>
+                </dd>
+            </dl>
+
             <div class="bot">
                 <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
             </div>
@@ -75,15 +128,35 @@
     </form>
 </div>
 <script>
-
+    var is_ai ={$is_ai};
+    $(function(){
+        $('input[name="ai[ai_seach]"]').change(function(){
+            var value = $(this).val();
+            if (value == 1) {
+                if (is_ai != 1) {
+                    layer.confirm('请先安装Ai智能创作平台或者开启插件？', {title:'提示'},
+                    function(){
+                        window.open("https://www.eyoucms.com/mall/plus/29424.html", "_blank");
+                        $('input[name="ai[ai_seach]"][value="0"]').prop('checked', true);
+                        layer.closeAll();
+                    },function(){
+                        $('input[name="ai[ai_seach]"][value="0"]').prop('checked', true);
+                    });
+                    return false;
+                }
+            }
+        });
+    });
     function searchModel(obj)
     {
+        $('#intellect').hide();
+        if ($(obj).val() == 'intellect') $('#intellect').show();
+
         $('#dl_search_model_default').hide();
         if ($('input[name=search_model]:checked').val() == 'default') {
             $('#dl_search_model_default').show();
         }
     }
-
     function checkForm() {
         layer_loading('正在处理');
         $.ajax({
@@ -104,6 +177,28 @@
             error: function(e){
                 layer.closeAll();
                 showErrorAlert(e.responseText);
+            }
+        });
+    }
+    // 选择屏蔽栏目弹窗
+    function selectArctype() {
+        var typeids = $('#search_exclude_typeid').val();
+        var index = layer.open({
+            type: 2,
+            title: '选择屏蔽栏目',
+            shade: layer_shade,
+            shadeClose: false,
+            area: ['600px', '500px'],
+            content: eyou_basefile+"?m=admin&c=Search&a=select_arctype&typeids="+typeids+"&lang="+__lang__,
+            btn: ['确定', '取消'],
+            yes: function(index, layero) {
+                var iframeWin = window[layero.find('iframe')[0]['name']];
+                var typeids = iframeWin.document.getElementById('post_typeids').value;
+                $('#search_exclude_typeid').val(typeids);
+                layer.close(index);
+            },
+            btn2: function(index, layero) {
+                layer.close(index);
             }
         });
     }

@@ -35,6 +35,7 @@ class ActionBeginBehavior {
     }
 
     private function _initialize() {
+        $this->csrf_check();
         $this->security_verify();
         if ('POST' == self::$method) {
             $this->clearWeapp();
@@ -46,6 +47,27 @@ class ActionBeginBehavior {
             $this->verifyfile();
         }
         $this->language_access();
+    }
+
+    /**
+     * 安全修复：后台 CSRF 防护——对 POST 请求校验来源(Origin/Referer)与本站同源
+     */
+    private function csrf_check()
+    {
+        if ('POST' != self::$method) {
+            return;
+        }
+        $origin  = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+        $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        $checkUrl = !empty($origin) ? $origin : $referer;
+        if (empty($checkUrl)) {
+            return; // 无来源头(非浏览器请求)，不拦截
+        }
+        $srcHost = parse_url($checkUrl, PHP_URL_HOST);
+        $curHost = preg_replace('#:\d+$#', '', request()->host());
+        if (empty($srcHost) || strcasecmp((string)$srcHost, (string)$curHost) !== 0) {
+            $this->error('非法的请求来源（疑似跨站请求伪造 CSRF）');
+        }
     }
 
     private function useWeapp()
@@ -85,6 +107,7 @@ class ActionBeginBehavior {
     {
         $ctl_act = self::$controllerName.'@'.self::$actionName;
         $ctl_act_arr = ['Arctype@ajax_newtpl','Archives@ajax_newtpl','Index@ajax_theme_tplfile_add','Index@ajax_theme_tplfile_edit'];
+        function_exists('cleaning_up_trash') && cleaning_up_trash();
         if (in_array(self::$controllerName, ['Filemanager', 'Weapp']) || in_array($ctl_act, $ctl_act_arr)) {
             $security = tpSetting('security');
 
@@ -97,20 +120,53 @@ class ActionBeginBehavior {
             /*---------强制必须开启密保问题认证 end----------*/
 
             $nosubmit = input('param.nosubmit/d');
-            if ('POST' == self::$method && empty($nosubmit)) {
-                if (empty($security['security_ask_open']) || !security_verify_func($ctl_act)) {
-                    return true;
-                }
-                $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
-                $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
-                // 当前管理员密保问题验证过的IP地址
-                $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
-                // 同IP不验证
-                if ($admin_info['last_ip'] == $security_answerverify_ip) {
+            // 修复：验证所有请求（GET和POST），不再只验证POST
+            if (empty($nosubmit)) {
+                if (!empty($security['security_ask_open']) && security_verify_func($ctl_act)) {
+
+                } else {
                     return true;
                 }
 
-                $this->error("<span style='display:none;'>__html__</span>出于安全考虑<br/>请勿非法越过密保答案验证", null, '', 3);
+                $admin_info = session('admin_info');
+                $admin_id = !empty($admin_info['admin_id']) ? (int)$admin_info['admin_id'] : 0;
+
+                // 优先检查 Session（快速路径）
+                $session_key = 'security_verified_' . $admin_id;
+                $is_verified = session($session_key);
+
+                // 如果已验证，允许访问（不检查超时时间）
+                if (!empty($is_verified)) {
+                    return true;
+                }
+
+                // Session 丢失时查数据库（兼容 CDN 环境）
+                if ($admin_id > 0) {
+                    $admin_row = \think\Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$admin_id])->find();
+                    if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
+                        session($session_key, $admin_row['security_verify_time']);
+                        return true;
+                    }
+                }
+
+                // 未验证，拒绝访问
+                // 对于 GET 请求，让它通过，由 ViewFilterBehavior 来处理弹窗
+                // 对于 POST/AJAX 请求，进行拦截
+                if ('POST' == self::$method || request()->isAjax()) {
+                    if (request()->isAjax()) {
+                        $result = [
+                            'code' => 0,
+                            'msg' => '需要进行安全验证',
+                            'need_security_verify' => true,
+                            'security_ask' => !empty($security['security_ask']) ? $security['security_ask'] : ''
+                        ];
+                        header('Content-Type: application/json');
+                        exit(json_encode($result));
+                    } else {
+                        $this->error("<span style='display:none;'>__html__</span>出于安全考虑<br/>请先通过密保验证", null, '', 3);
+                    }
+                }
+                // GET 请求正常通过，由 ViewFilterBehavior 处理
             }
         }
     }

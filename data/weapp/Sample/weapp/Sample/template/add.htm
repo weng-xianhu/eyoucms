@@ -74,12 +74,9 @@
                     <label>新窗口打开</label>
                 </dt>
                 <dd class="opt">
-                    <div class="onoff">
-                        <label for="target1" class="cb-enable selected">是</label>
-                        <label for="target0" class="cb-disable ">否</label>
-                        <input id="target1" name="target" value="1" type="radio" checked="checked">
-                        <input id="target0" name="target" value="0" type="radio">
-                    </div>
+                    <label class="curpoin"><input type="radio" name="target" value="1" checked="checked">是</label>
+                    &nbsp;
+                    <label class="curpoin"><input type="radio" name="target" value="0">否</label>
                     <p class="notic">点击链接在新窗口打开</p>
                 </dd>
             </dl>
@@ -125,11 +122,17 @@
             success : function(res){
                 layer.closeAll();
                 if(res.code == 1){
-                    var _parent = parent;
-                    _parent.layer.close(parentObj);
-                    _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
-                        _parent.window.location.reload();
-                    });
+                    if (parentObj != '' && parentObj != undefined && parentObj != 'undefined') {
+                        var _parent = parent;
+                        _parent.layer.close(parentObj);
+                        _parent.layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            _parent.window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                            window.location.href = res.url;
+                        });
+                    }
                 }else{
                     showErrorMsg(res.msg);
                 }

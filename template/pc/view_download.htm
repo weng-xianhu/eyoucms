@@ -79,21 +79,17 @@
                         <div class="padding-big-top border-top height">
                             <div class="line">
                                 <div class="x12 xs10 xm10">
-                                    <!-- 上一篇 begin -->
                                     {eyou:prenext get='pre' titlelen='30'}
-                                    {eyou:lang name='sys11' /}：<a href="{$field.arcurl}" class="text-gray" title="{eyou:lang name='sys11' /}：{$field.title}">{$field.title}</a>
+                                    {eyou:lang name='sys11' /}：<a href="{$field.arcurl}" class="text-main" title="{eyou:lang name='sys11' /}：{$field.title}">{$field.title}</a>
                                     {eyou:else /}
-                                        {eyou:lang name='sys11' /}：{eyou:lang name='sys10' /}
+                                        {eyou:lang name='sys11' /}：<span class="text-gray">{eyou:lang name='sys10' /}</span>
                                     {/eyou:prenext}
-                                    <!-- 上一篇 end -->
                                     <div class="blank"></div>
-                                    <!-- 下一篇 begin -->
                                     {eyou:prenext get='next' titlelen='30'}
-                                    {eyou:lang name='sys12' /}：<a href="{$field.arcurl}" class="text-gray" title="{eyou:lang name='sys12' /}：{$field.title}">{$field.title}</a>
+                                    {eyou:lang name='sys12' /}：<a href="{$field.arcurl}" class="text-main" title="{eyou:lang name='sys12' /}：{$field.title}">{$field.title}</a>
                                     {eyou:else /}
-                                        {eyou:lang name='sys12' /}：{eyou:lang name='sys10' /}
+                                        {eyou:lang name='sys12' /}：<span class="text-gray">{eyou:lang name='sys10' /}</span>
                                     {/eyou:prenext}
-                                    <!-- 下一篇 end -->
                                 </div>
                                 <div class="x12 xs2 xm2 text-center">
                                     {eyou:type typeid="$eyou.field.typeid"}

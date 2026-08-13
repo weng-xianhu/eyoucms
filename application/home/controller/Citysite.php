@@ -50,9 +50,12 @@ class Citysite extends Base
         if (!empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }

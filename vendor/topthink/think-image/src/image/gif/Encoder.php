@@ -59,7 +59,9 @@ class Encoder
                 exit(0);
             }
             for ($j = (13 + 3 * (2 << (ord($this->BUF[$i][10]) & 0x07))), $k = true; $k; $j++) {
-                switch ($this->BUF[$i][$j]) {
+                // Use square brackets for string offsets (PHP 7.4+ compatibility)
+                $flag = $this->BUF[$i][$j];
+                switch ($flag) {
                     case "!":
                         if ((substr($this->BUF[$i], ($j + 3), 8)) == "NETSCAPE") {
                             printf("%s: %s ( %s source )!", $this->VER, $this->ERR['ERR03'], ($i + 1));

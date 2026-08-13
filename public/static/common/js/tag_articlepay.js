@@ -134,11 +134,11 @@ function ArticleBuyNow(aid){
             if (1 == res.code) {
                 layer.open({
                     type: 2,
-                    title: '选择支付方式',
+                    title: '产品购买',
                     shadeClose: false,
                     maxmin: false, //开启最大化最小化按钮
                     skin: 'WeChatScanCode_20191120',
-                    area: ['800px', '200px'],
+                    area: ['485px', '485px'],
                     content: res.url
                 });
             } else {

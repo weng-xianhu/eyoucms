@@ -99,6 +99,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_valid' => 
+  array (
+    'name' => 'is_valid',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sort_order' => 
   array (
     'name' => 'sort_order',

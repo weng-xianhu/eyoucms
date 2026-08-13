@@ -15,7 +15,7 @@
  */
 if (!defined("AOP_SDK_WORK_DIR"))
 {
-	define("AOP_SDK_WORK_DIR", "/tmp/");
+    define("AOP_SDK_WORK_DIR", "/tmp/");
 }
 /**
  * 是否处于开发模式
@@ -24,11 +24,54 @@ if (!defined("AOP_SDK_WORK_DIR"))
  */
 if (!defined("AOP_SDK_DEV_MODE"))
 {
-	define("AOP_SDK_DEV_MODE", false);
+    define("AOP_SDK_DEV_MODE", false);
 }
 /**
  * 定义常量结束
  */
+
+/**
+ * 检查支付宝配置是否存在
+ * 如果没有配置支付宝信息，则终止执行
+ */
+try {
+    if (class_exists('\\think\\Db')) {
+        if (isset($_REQUEST['c']) && $_REQUEST['c'] == 'PayApi' && isset($_REQUEST['a']) && $_REQUEST['a'] == 'save_pay_api_config') {
+
+        } else {
+            $PayConfig = \think\Db::name('pay_api_config')
+                ->where([
+                    'pay_mark' => 'alipay',
+                    'status' => 1
+                ])->getField('pay_info');
+            // 使用安全的反序列化，禁止对象实例化（兼容 PHP 5.4+）
+            if (function_exists('safe_unserialize')) {
+                $PayConfig = safe_unserialize($PayConfig);
+            } else {
+                if (PHP_VERSION_ID >= 70000) {
+                    $PayConfig = unserialize($PayConfig, ['allowed_classes' => false]);
+                } else {
+                    // PHP 5.4-5.6: 检查是否包含对象，如果包含则拒绝反序列化
+                    if (preg_match('/O:\d+:"/', $PayConfig) || preg_match('/[rR]:\d+;/', $PayConfig)) {
+                        $PayConfig = [];
+                    } else {
+                        $PayConfig = unserialize($PayConfig);
+                    }
+                }
+            }
+            if (!empty($PayConfig['is_open_alipay']) || empty($PayConfig['app_id']) || empty($PayConfig['merchant_private_key']) || empty($PayConfig['alipay_public_key'])) {
+                exit("请先配置支付宝信息，才能使用支付宝功能");
+                // 支付宝配置不存在，终止执行
+                return;
+            }
+        }
+    }
+} catch (\Exception $e) {
+    // 捕获异常，记录日志
+    exit("支付宝SDK初始化异常：" . $e->getMessage());
+    // 终止执行
+    return;
+}
 
 /**
  * 找到lotusphp入口文件，并初始化lotusphp

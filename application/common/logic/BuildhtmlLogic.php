@@ -63,8 +63,8 @@ class BuildhtmlLogic extends Model
         $seo_html_arcdir_old = !empty($globalConfig['seo_html_arcdir']) ? $globalConfig['seo_html_arcdir'] : '';
         /* end */
 
-        /*检测是否开启pathinfo模式*/
         try {
+            // 检测是否开启pathinfo模式
             if (3 == $seo_pseudo_new || (1 == $seo_pseudo_new && 2 == $param['seo_dynamic_format'])) {
                 $fix_pathinfo = ini_get('cgi.fix_pathinfo');
                 if (stristr(request()->host(), '.mylightsite.com')) {
@@ -73,15 +73,19 @@ class BuildhtmlLogic extends Model
                     $this->error('空间不支持伪静态，请开启pathinfo，或者在php.ini里修改cgi.fix_pathinfo=1');
                 }
             }
-            /* 生成静态页面代码 - URL模式切换时删掉根目录下的index.html静态文件 */
-            if(1 == $seo_pseudo_new || 3 == $seo_pseudo_new){
+            // 生成静态页面代码 - URL模式切换时删掉根目录下的index.html静态文件
+            if (2 != $seo_pseudo_new) {
+                $where = [
+                    'controller_name' => 'Seo',
+                    'action_name' => 'build',
+                ];
+                Db::name('admin_menu')->where($where)->delete(true);
+
                 if(file_exists('./index.html')){
                     @unlink('./index.html');
                 }
             }
-            /* end */
         } catch (\Exception $e) {}
-        /*--end*/
 
         /*强制去除index.php*/
         if (isset($param['seo_force_inlet'])) {

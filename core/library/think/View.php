@@ -42,7 +42,7 @@ class View
             $root = '/' . ltrim($root, '/');
         }
         /*兼容个别环境取不到子目录路径的情况 by 小虎哥*/
-        if (empty($root) && defined('ROOT_DIR')) {
+        if ((empty($root) || '/' == $root) && defined('ROOT_DIR')) {
             $root = ROOT_DIR;
             if (!empty($root)) {
                 $base = $root.$base;

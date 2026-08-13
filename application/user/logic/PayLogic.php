@@ -87,7 +87,7 @@ class PayLogic extends Model
                 }
             }
         }
-        $pay_alipay_config = unserialize($pay_alipay_config);
+        $pay_alipay_config = safe_unserialize($pay_alipay_config);
 
         // 新旧版处理
         switch ($pay_alipay_config['version']) {
@@ -119,7 +119,7 @@ class PayLogic extends Model
             case '1':
                 // 旧版获取MD5加密的sign
                 $Sign = $this->GetOldAliPayMd5Sign($data, $pay_alipay_config['code']);
-                if ($Sign == $data['sign']){
+                if (hash_equals((string)$Sign, (string)$data['sign'])){
                     $return = $this->OldAliPayProcessing($param);
                     if (!empty($param['is_notify']) && 1 == $param['is_notify']) {
                         echo $return; exit;
@@ -580,7 +580,7 @@ class PayLogic extends Model
         // 会员期限定义数组
         $limit_arr = Config::get('global.admin_member_limit_arr');
         // 查询会员升级级别
-        $MoneyDataCause = unserialize($MoneyData['cause']);
+        $MoneyDataCause = safe_unserialize($MoneyData['cause']);
         // 到期天数
         $maturity_days = $limit_arr[$MoneyDataCause['limit_id']]['maturity_days'];
         // 更新会员属性表的数组
@@ -653,6 +653,9 @@ class PayLogic extends Model
         unset($data['a']);
         unset($data['transaction_type']);
         unset($data['is_notify']);
+        if (isset($data['lang'])) {
+            unset($data['lang']);
+        }
         if (isset($data['referurl'])) {
             unset($data['referurl']);
         }
@@ -849,7 +852,7 @@ class PayLogic extends Model
             $WxPayOrderQuery->SetOut_trade_no($out_trade_no);
 
             // 处理微信配置数据
-            $PayInfo = unserialize($PayInfo);
+            $PayInfo = safe_unserialize($PayInfo);
             $ApiConfig['app_id'] = $PayInfo['appid'];
             $ApiConfig['mch_id'] = $PayInfo['mchid'];
             $ApiConfig['key']    = $PayInfo['key'];
@@ -928,7 +931,7 @@ class PayLogic extends Model
         $Return = false;
 
         // 查询会员升级类型
-        $CauseData = unserialize($MoneyData['cause']);
+        $CauseData = safe_unserialize($MoneyData['cause']);
         $UsersTypeData = $this->users_type_manage_db->where('type_id', $CauseData['type_id'])->find();
         if (!empty($UsersTypeData)) {
             // 更新数据

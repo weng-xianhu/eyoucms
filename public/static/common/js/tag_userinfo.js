@@ -48,7 +48,7 @@ function tag_userinfo_1608459452(result)
     if (window.jQuery) {
         $.ajax({
             type : 'POST',
-            url : result.root_dir+"/index.php?m=api&c=Diyajax&a=check_userinfo",
+            url : result.root_dir+"/index.php?m=api&c=Diyajax&a=check_userinfo&lang="+result.lang,
             data : {_ajax:1},
             dataType : 'json',
             success : function(res){
@@ -60,7 +60,7 @@ function tag_userinfo_1608459452(result)
         //步骤一:创建异步对象
         var ajax = new XMLHttpRequest();
         //步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
-        ajax.open("post", result.root_dir+"/index.php?m=api&c=Diyajax&a=check_userinfo", true);
+        ajax.open("post", result.root_dir+"/index.php?m=api&c=Diyajax&a=check_userinfo&lang="+result.lang, true);
         // 给头部添加ajax信息
         ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
         // 如果需要像 HTML 表单那样 POST 数据，请使用 setRequestHeader() 来添加 HTTP 头。然后在 send() 方法中规定您希望发送的数据：

@@ -30,7 +30,20 @@ if (!function_exists('security_verify_func'))
         }
 
         $security = tpSetting('security');
-        $ctl_act_arr = ['Filemanager@*','Arctype@ajax_newtpl','Archives@ajax_newtpl','Index@ajax_theme_tplfile_add','Index@ajax_theme_tplfile_edit'];
+        // 只验证危险操作，不验证查看操作
+        $ctl_act_arr = [
+            'Filemanager@index',             // 模板管理首页
+            'Filemanager@edit',              // 编辑文件
+            'Filemanager@editor',            // 专业级编辑器
+            'Filemanager@newfile',           // 新建文件
+            'Filemanager@ajax_save',         // 保存文件
+            'Filemanager@replace_img',       // 替换图片
+            'Filemanager@ajax_get_content',  // 获取文件内容
+            'Arctype@ajax_newtpl',
+            'Archives@ajax_newtpl',
+            'Index@ajax_theme_tplfile_add',
+            'Index@ajax_theme_tplfile_edit'
+        ];
         $security_verifyfunc = !empty($security['security_verifyfunc']) ? json_decode($security['security_verifyfunc'], true) : $ctl_act_arr;
         if (in_array($ctl_act, $ctl_act_arr)) {
             return true;
@@ -49,20 +62,34 @@ if (!function_exists('security_verify_func'))
 if (!function_exists('security_answer_verify')) 
 {
     /**
-     * 是否验证了密保答案
+     * 是否验证了密保答案（登录会话期间永久有效）
      */
     function security_answer_verify()
     {
         $security = tpSetting('security');
         if (!empty($security['security_ask_open'])) {
-            $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
-            $admin_info = \think\Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
-            // 当前管理员二次安全验证过的IP地址
-            $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
-            // 同IP不验证
-            if (empty($admin_info) || $admin_info['last_ip'] != $security_answerverify_ip) {
-                return false;
-            }  
+            $admin_info = session('admin_info');
+            $admin_id = !empty($admin_info['admin_id']) ? (int)$admin_info['admin_id'] : 0;
+
+            // 优先检查 Session（快速路径）
+            $session_key = 'security_verified_' . $admin_id;
+            $is_verified = session($session_key);
+
+            // 如果已验证，返回 true（不检查超时时间）
+            if (!empty($is_verified)) {
+                return true;
+            }
+
+            // Session 丢失时查数据库（兼容 CDN 环境）
+            if ($admin_id > 0) {
+                $admin_row = \think\Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$admin_id])->find();
+                if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
+                    session($session_key, $admin_row['security_verify_time']);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         return true;
@@ -254,6 +281,23 @@ if (!function_exists('is_check_access'))
         return $bool_flag;
     }
 }
+if (!function_exists('is_check_cud'))
+{
+    /**
+     * 检测是否拥有对应的操作权限（增/改/删/审核等）
+     * @param string $type add|edit|del|changetableval|rebackdraft
+     * @return int 1-有权限 0-无权限
+     */
+    function is_check_cud($type = '') {
+        $role_id = session('admin_info.role_id');
+        if (0 >= intval($role_id)) {
+            return 1; // 创始人/超级管理员默认拥有全部操作权限
+        }
+        $auth_role_info = session('admin_info.auth_role_info');
+        $cudArr = !empty($auth_role_info['cud']) ? $auth_role_info['cud'] : [];
+        return in_array($type, $cudArr) ? 1 : 0;
+    }
+}
 if (!function_exists('getAdminMenuList')){
     /**
      * 根据角色权限过滤菜单
@@ -300,8 +344,8 @@ if (!function_exists('getAdminMenuList')){
                 $ctl_all = $ctl.'@*';
                 if (in_array($ctl_act, $diff_auths) || in_array($ctl_all, $diff_auths)) {
                     unset($menuArr[$k]);//过滤菜单
-                }else if($val['menu_id'] == '2004021' && !is_check_access("Member@money_index") && !is_check_access("Member@money_index")){ //Member*money_index 会员订单入口； Shop*index 商城中心订单
-                    unset($menuArr[$k]);//Member*money_index 会员订单入口； Shop*index 商城中心订单都没有权限的清空下，关闭订单管理
+                }else if($val['menu_id'] == '2004021' && !is_check_access("Member@money_index") && !is_check_access("Shop@index")){ //Member@money_index 会员订单入口； Shop@index 商城中心订单
+                    unset($menuArr[$k]);//Member@money_index 会员订单入口； Shop@index 商城中心订单都没有权限的清空下，关闭订单管理
                 } else if ($val['menu_id'] == '2004') {
                     if ($auth_role_info['switch_map'] <= 0) {
                         unset($menuArr[$k]); // 功能地图入口
@@ -426,8 +470,10 @@ if (!function_exists('tpversion'))
 {
     function tpversion($timeout = 5)
     {
-        if(!empty($_SESSION['isset_push']))
+        if (!empty($_SESSION['isset_push']) || is_internal_network()) {
             return false;
+        }
+
         $_SESSION['isset_push'] = 1;
         error_reporting(0);//关闭所有错误报告
         $install_time = DEFAULT_INSTALL_DATE;
@@ -435,7 +481,7 @@ if (!function_exists('tpversion'))
 
         $constsant_path = APP_PATH.'admin/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('INSTALL_DATE') && $install_time = INSTALL_DATE;
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
@@ -729,7 +775,7 @@ if (!function_exists('menu_select'))
                     $select_html .= str_repeat('&nbsp;', $val['grade'] * 4);
                 }
                 $name = !empty($val['name']) ? $val['name'] : '默认';
-                $select_html .= htmlspecialchars_decode(addslashes($name)) . '</option>';
+                $select_html .= safe_htmlspecialchars_decode(addslashes($name)) . '</option>';
 
                 if (empty($val['child'])) {
                     continue;
@@ -745,7 +791,7 @@ if (!function_exists('menu_select'))
                     {
                         $select_html .= str_repeat('&nbsp;', $val2['grade'] * 4);
                     }
-                    $select_html .= htmlspecialchars_decode(addslashes($val2['name'])) . '</option>';
+                    $select_html .= safe_htmlspecialchars_decode(addslashes($val2['name'])) . '</option>';
 
                     if (empty($val2['child'])) {
                         continue;
@@ -761,56 +807,13 @@ if (!function_exists('menu_select'))
                         {
                             $select_html .= str_repeat('&nbsp;', $val3['grade'] * 4);
                         }
-                        $select_html .= htmlspecialchars_decode(addslashes($val3['name'])) . '</option>';
+                        $select_html .= safe_htmlspecialchars_decode(addslashes($val3['name'])) . '</option>';
                     }
                 }
             }
         }
 
         return $select_html;
-    }
-}
-
-if (!function_exists('schemaTable')) 
-{
-    /**
-     * 重新生成单个数据表缓存字段文件
-     */
-    function schemaTable($name)
-    {
-        $table = $name;
-        $prefix = \think\Config::get('database.prefix');
-        if (!preg_match('/^'.$prefix.'/i', $name)) {
-            $table = $prefix.$name;
-        }
-        /*调用命令行的指令*/
-        \think\Console::call('optimize:schema', ['--table', $table]);
-        /*--end*/
-    }
-}
-
-if (!function_exists('schemaAllTable')) 
-{
-    /**
-     * 重新生成全部数据表缓存字段文件
-     */
-    function schemaAllTable()
-    {
-        $db_type = config('database.type');
-        if ($db_type == 'dm') { // 达梦优化
-            $dbtables = \think\Db::query('SELECT TABLE_NAME FROM USER_TABLES');
-        } else {
-            $dbtables = \think\Db::query('SHOW TABLE STATUS');
-        }
-        $tableList = [];
-        foreach ($dbtables as $k => $v) {
-            $tablename = ($db_type == 'dm') ? $v['TABLE_NAME'] : $v['Name'];
-            if (preg_match('/^'.PREFIX.'/i', $tablename)) {
-                /*调用命令行的指令*/
-                \think\Console::call('optimize:schema', ['--table', $tablename]);
-                /*--end*/
-            }
-        }
     }
 }
 
@@ -886,13 +889,13 @@ if (!function_exists('showArchivesFlagStr'))
     {
         static $flagResult = null;
         if (null === $flagResult) {
-            $flagResult = \think\Db::name('archives_flag')->field('flag_name,flag_fieldname')->getAllWithIndex('flag_fieldname');
+            $flagResult = \think\Db::name('archives_flag')->field('flag_name,flag_fieldname')->where(['status'=>1,'flag_fieldname'=>['notin', ['is_litpic']]])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
         }
 
         $arr = [];
-        $flaglist = ['is_head','is_recom','is_special','is_b','is_jump','is_roll','is_slide','is_diyattr'];
-        foreach ($flaglist as $key => $fieldname) {
-            $flag_name = empty($flagResult[$fieldname]['flag_name']) ? '' : htmlspecialchars_decode($flagResult[$fieldname]['flag_name']);
+        foreach ($flagResult as $key => $val) {
+            $fieldname = $val['flag_fieldname'];
+            $flag_name = empty($val['flag_name']) ? '' : htmlspecialchars_decode($val['flag_name']);
             if (!empty($archivesInfo[$fieldname]) && !empty($flag_name)) {
                 if (in_array($flag_name, ['推荐','加推','标粗','有图']) || stristr($flag_name, '最')) {
                     $small_name = msubstr($flag_name, 1, 1);

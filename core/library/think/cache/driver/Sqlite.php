@@ -88,7 +88,19 @@ class Sqlite extends Driver
                 //启用数据压缩
                 $content = gzuncompress($content);
             }
-            return unserialize($content);
+            // 安全修复: 使用安全的反序列化（兼容 PHP 5.4+）
+            if (function_exists('safe_unserialize')) {
+                return safe_unserialize($content);
+            } else {
+                if (PHP_VERSION_ID >= 70000) {
+                    return unserialize($content, ['allowed_classes' => false]);
+                }
+                // PHP 5.4-5.6: 检查是否包含对象
+                if (preg_match('/O:\d+:"/', $content) || preg_match('/[rR]:\d+;/', $content)) {
+                    return $default;
+                }
+                return unserialize($content);
+            }
         }
         return $default;
     }

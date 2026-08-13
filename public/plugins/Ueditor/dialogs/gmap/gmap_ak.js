@@ -1,0 +1,1 @@
+var gmap_ak = '';

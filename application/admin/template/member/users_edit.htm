@@ -195,7 +195,12 @@
                                                     <div class="text">{$info.last_ip}</div>
                                                 </div>
                                             </div>
-                                            
+                                            <div class="users-form-item">
+                                                <label class="users-form-item-label">备注：</label>
+                                                <div class="users-form-item-content">
+                                                    <div class="text"><a href="javascript:void(0);" data-href="{:url('Member/users_notes', ['users_id' => $info.users_id])}" data-notes="{$info.users_notes}" onclick="usersNotesPrompt(this);">{notempty name="$info.users_notes"}编辑{else/}添加{/notempty}</a></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -445,7 +450,8 @@
             checkForm();
         }
     }
-    // 删除
+
+    // 会员删除
     function usersdel(obj){
         var admin_id = $(obj).data('admin_id');
         if (0 < admin_id) {
@@ -485,9 +491,57 @@
         }, function(index){
             layer.close(index);
         });
-        return false;
+    }
+
+    // 会员备注
+    function usersNotesPrompt(obj) {
+        layer.prompt({
+            formType: 2,
+            shade: layer_shade,
+            value: '',
+            title: '提示',
+            closeBtn: 3,
+            id: 'usersNotesID',
+            btnAlign:'r',
+            btn: ['确定'],
+            area: ['600px', '120px'],
+            success: function(layero, index) {
+                $("#usersNotesID").find('textarea').attr('placeholder', '请填写备注内容...');
+                $(".layui-layer-content").css('text-align', 'left');
+                var notes = $(obj).data('notes');
+                if (notes) $("#usersNotesID").find('textarea').val(notes);
+            },
+            yes: function(index, layero) {
+                // 手动关闭订单并退款
+                var users_notes = $("#usersNotesID").find("textarea").val();
+                /*if (!users_notes) {
+                    showErrorMsg('请填写备注内容...');
+                    $("#usersNotesID").find("textarea").focus();
+                    return false;
+                }*/
+                layer_loading('正在处理');
+                $.ajax({
+                    type: 'post',
+                    url : $(obj).data('href'),
+                    data: {users_notes: users_notes, _ajax: 1},
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.closeAll();
+                        if (res.code == 1) {
+                            showSuccessMsg(res.msg, 1500, function() {
+                                window.location.reload();
+                            });
+                        } else {
+                            showErrorMsg(res.msg);
+                        }
+                    },
+                    error: function (e) {
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                });
+            }
+        });
     }
 </script>
-
-
 {include file="public/footer" /}

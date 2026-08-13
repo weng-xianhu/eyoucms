@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -81,13 +81,9 @@ class Tools extends Base {
 
             /*多语言*/
             $tpCacheData = ['php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('php', $tpCacheData, $val['mark']); // n
-                }
-            } else { // 单语言
-                tpCache('php', $tpCacheData); // n
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('php', $tpCacheData, $val['mark']); // n
             }
             /*--end*/
 
@@ -194,6 +190,15 @@ class Tools extends Base {
                         return json(array('tab' => $tab, 'msg'=>'备份完成！', 'code'=>1, 'url'=>''));
                     }
                     else { //备份完成，清空缓存
+
+                        // 自动备份用于自动还原
+                        $sql_backup_path = DATA_PATH.'sql';
+                        if (file_exists($sql_backup_path)) {
+                            $srcfile = session('backup_config.path').session('backup_file.name').'-'.session('backup_file.part').'-'.session('backup_file.version').'.sql';
+                            $dstfile = $sql_backup_path.'/'.getVersion().'.sql';
+                            @copy($srcfile, $dstfile);
+                        }
+                        
                         @unlink(session('backup_config.path') . 'backup.lock');
                         session('backup_tables', null);
                         session('backup_file', null);
@@ -247,18 +252,31 @@ class Tools extends Base {
         }else {
             $table[] = input('tablename' , '');
         }
-    
+
         if (empty($table)) {
             $this->error('请选择数据表');
         }
 
-        $strTable = implode(',', $table);
+        // 安全修复: 表名白名单验证，防止 SQL 注入
+        $allowedTables = $this->getAllowedTables();
+        $safeTables = [];
+        foreach ($table as $t) {
+            $t = preg_replace('/[^\w\-]/', '', $t); // 只允许字母数字下划线、连接符
+            if (in_array($t, $allowedTables)) {
+                $safeTables[] = '`' . $t . '`';
+            }
+        }
+        if (empty($safeTables)) {
+            $this->error('无效的数据表');
+        }
+
+        $strTable = implode(',', $safeTables);
         if (!DB::query("OPTIMIZE TABLE {$strTable} ")) {
             $strTable = '';
         }
         adminLog('优化数据库：'.$strTable);
         $this->success("操作成功" . $strTable, url('Tools/index'));
-    
+
     }
     
     /**
@@ -273,18 +291,65 @@ class Tools extends Base {
         }else {
             $table[] = input('tablename' , '');
         }
-    
+
         if (empty($table)) {
             $this->error('请选择数据表');
         }
-    
-        $strTable = implode(',', $table);
-        if (!DB::query("REPAIR TABLE {$strTable} ")) {
-            $strTable = '';
+
+        // 安全修复: 表名白名单验证，防止 SQL 注入
+        $allowedTables = $this->getAllowedTables();
+        $safeTables = [];
+        foreach ($table as $t) {
+            $t = preg_replace('/[^\w\-]/', '', $t);
+            if (in_array($t, $allowedTables)) {
+                $safeTables[] = '`' . $t . '`';
+            }
+        }
+        if (empty($safeTables)) {
+            $this->error('无效的数据表');
+        }
+
+        $strTable = implode(',', $safeTables);
+        if (!in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓不支持REPAIR TABLE
+            if (!DB::query("REPAIR TABLE {$strTable} ")) {
+                $strTable = '';
+            }
         }
         adminLog('修复数据库：'.$strTable);
         $this->success("操作成功" . $strTable, url('Tools/index'));
-  
+
+    }
+
+    /**
+     * 安全修复: 获取允许操作的数据表白名单
+     * @return array
+     */
+    private function getAllowedTables()
+    {
+        static $tables = null;
+        if ($tables === null) {
+            $dbName = config('database.database');
+            if (config('database.type') == 'dm') { // 达梦优化
+                $result = Db::query("SELECT table_name FROM all_tables");
+                $tables = array();
+                foreach ($result as $row) {
+                    $tables[] = current($row);
+                }
+            } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+                $result = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+                $tables = array();
+                foreach ($result as $row) {
+                    $tables[] = current($row);
+                }
+            } else {
+                $result = Db::query("SHOW TABLES");
+                $tables = array();
+                foreach ($result as $row) {
+                    $tables[] = $row['Tables_in_' . $dbName];
+                }
+            }
+        }
+        return $tables;
     }
 
     /**
@@ -332,46 +397,6 @@ class Tools extends Base {
         $this->assign('filenum',$filenum);
         $this->assign('total',$total);
         return $this->fetch();
-    }
-
-    /**
-     * 上传sql文件
-     */
-    public function restoreUpload()
-    {
-        $this->error('该功能仅限技术人员使用！');
-        
-        $file = request()->file('sqlfile');
-        if(empty($file)){
-            $this->error('请上传sql文件');
-        }
-        // 移动到框架应用根目录/data/sqldata/ 目录下
-        $path = tpCache('global.web_sqldatapath');
-        $path = !empty($path) ? $path : config('DATA_BACKUP_PATH');
-        $path = trim($path, '/');
-        $image_upload_limit_size = intval(tpCache('basic.file_size') * 1024 * 1024);
-        $info = $file->validate(['size'=>$image_upload_limit_size,'ext'=>'sql,gz'])->move($path, $_FILES['sqlfile']['name']);
-        if ($info) {
-            //上传成功 获取上传文件信息
-            $file_path_full = $info->getPathName();
-            if (file_exists($file_path_full)) {
-                $sqls = Backup::parseSql($file_path_full);
-                if(Backup::install($sqls)){
-                    /*清除缓存*/
-                    delFile(RUNTIME_PATH);
-                    \think\Cache::clear();
-                    /*--end*/
-                    $this->success("执行sql成功", url('Tools/restore'));
-                }else{
-                    $this->error('执行sql失败');
-                }
-            } else {
-                $this->error('sql文件上传失败');
-            }
-        } else {
-            //上传错误提示错误信息
-            $this->error($file->getError());
-        }
     }
 
     /**
@@ -459,70 +484,210 @@ class Tools extends Base {
     }
 
     /**
-     * (新)执行还原数据库操作
-     * @param int $time
+     * (新)执行还原数据库操作，流式读取 + 断点续传，单卷可支持超大文件
+     * @param int  $time   备份时间戳
+     * @param null $part   当前卷号，为空表示初始化
+     * @param null $offset 当前卷内字节偏移
      */
-    public function new_import($time = 0)
+    public function new_import($time = 0, $part = null, $offset = null)
     {
         function_exists('set_time_limit') && set_time_limit(0);
         @ini_set('memory_limit','-1');
+        function_exists('ignore_user_abort') && ignore_user_abort(true);
 
-        if(is_numeric($time) && intval($time) > 0){
-            //获取备份文件信息
-            $name  = date('Ymd-His', $time) . '-*.sql*';
-            $path = tpCache('global.web_sqldatapath');
-            $path = !empty($path) ? $path : config('DATA_BACKUP_PATH');
-            $path = trim($path, '/');
-            $path  = realpath($path) . DS . $name;
-            $files = glob($path);
-            $list  = array();
-            foreach($files as $name){
-                $basename = basename($name);
-                $match    = sscanf($basename, '%4s%2s%2s-%2s%2s%2s-%d-%s');
-                $gz       = preg_match('/^\d{8,8}-\d{6,6}-\d+-v\d+\.\d+\.\d+(.*)\.sql.gz$/', $basename);
-                $list[$match[6]] = array($match[6], $name, $gz);
+        if (!is_numeric($time) || intval($time) <= 0) {
+            respose(array('code'=>0, 'msg'=>'参数有误'));
+        }
+
+        // 初始化：校验分卷完整性与版本，缓存卷列表
+        if (is_null($part) || is_null($offset)) {
+            $list = $this->getBackupVolumes($time);
+            if (empty($list)) {
+                respose(array('code'=>0, 'msg'=>'备份文件不存在，请检查！'));
             }
-            ksort($list);
-
-            //检测文件正确性
             $last = end($list);
-            $file_path_full = !empty($last[1]) ? $last[1] : '';
-            if (file_exists($file_path_full)) {
-                /*校验sql文件是否属于当前CMS版本*/
-                preg_match('/(\d{8,8})-(\d{6,6})-(\d+)-(v\d+\.\d+\.\d+(.*))\.sql/i', $file_path_full, $matches);
-                $version = getCmsVersion();
-                if ($matches[4] != $version) {
-                    $this->error('sql不兼容当前版本：'.$version, url('Tools/restore'));
-                }
-                /*--end*/
-                $new_path = tpCache('web.web_sqldatapath');
-                $sqls = Backup::parseSql($file_path_full);
-                if (Backup::install($sqls)) {
-                    //修改数据库备份目录为原来的目录
-                    $tpCacheData = ['web_sqldatapath'=>$new_path, 'php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
-                    if (is_language()) {
-                        $langRow = Db::name('language')->order('id asc')->select();
-                        foreach ($langRow as $key => $val) {
-                            tpCache('web', $tpCacheData, $val['mark']);
-                        }
-                    } else { // 单语言
-                        tpCache('web', $tpCacheData);
+            if (count($list) !== intval($last[0])) {
+                respose(array('code'=>0, 'msg'=>'备份文件可能已经损坏（分卷不完整），请检查！'));
+            }
+            /*校验sql文件是否属于当前CMS版本*/
+            preg_match('/(\d{8,8})-(\d{6,6})-(\d+)-(v\d+\.\d+\.\d+(.*))\.sql/i', $last[1], $matches);
+            $version = getCmsVersion();
+            if (empty($matches[4]) || $matches[4] != $version) {
+                respose(array('code'=>0, 'msg'=>'sql不兼容当前版本：'.$version));
+            }
+            /*--end*/
+            session('backup_list', $list);
+            session('backup_total_size', array_sum(array_column($list, 3)));
+            session('backup_sqldatapath', tpCache('web.web_sqldatapath'));
+            respose(array('code'=>1, 'msg'=>'初始化完成，准备还原第1卷...', 'rate'=>'0%', 'data'=>array('part'=>1, 'offset'=>0)));
+        }
+
+        $part   = intval($part);
+        $offset = intval($offset);
+        $list   = session('backup_list');
+        if (empty($list) || !isset($list[$part])) {
+            respose(array('code'=>0, 'msg'=>'还原进度已失效，请重新点击恢复！'));
+        }
+        $item = $list[$part];
+        if (empty($item[1]) || !file_exists($item[1])) {
+            respose(array('code'=>0, 'msg'=>"第{$part}卷文件不存在，请检查！"));
+        }
+
+        $gz = !empty($item[2]);
+        $fp = $gz ? @gzopen($item[1], 'r') : @fopen($item[1], 'rb');
+        if (false === $fp || null === $fp) {
+            respose(array('code'=>0, 'msg'=>"第{$part}卷文件无法读取，请检查目录权限！"));
+        }
+        if ($offset > 0) {
+            $gz ? gzseek($fp, $offset) : fseek($fp, $offset);
+        }
+
+        Db::execute("SET SESSION sql_mode = ''"); // 兼容备份数据中枚举字段的空值等宽松数据
+        Db::execute("SET FOREIGN_KEY_CHECKS = 0");
+
+        $prefix   = config('database.prefix');
+        $deadline = time() + 20; // 每次请求只执行约20秒，避免PHP与网关超时
+        $sql      = '';
+        $eof      = false;
+        $inTrans  = false;
+        $batch    = 0;
+        Db::execute("START TRANSACTION"); // 批量提交，避免逐条提交导致的极慢写入
+        $inTrans = true;
+        while (true) {
+            $line = $gz ? gzgets($fp) : fgets($fp);
+            if (false === $line || '' === $line) {
+                $eof = true;
+                break;
+            }
+            $line = trim($line);
+            if ('' === $sql && ('' === $line || '#' === substr($line, 0, 1) || '--' === substr($line, 0, 2) || '/*' === substr($line, 0, 2))) {
+                $offset = $gz ? gztell($fp) : ftell($fp);
+                continue;
+            }
+            $sql .= $line;
+            if (';' !== substr($line, -1)) {
+                continue;
+            }
+            $query = $this->prepareImportSql($sql, $prefix);
+            $sql   = '';
+            if ('' !== $query) {
+                $isDdl = preg_match('/^\s*(DROP|CREATE|ALTER|TRUNCATE|RENAME)\s/i', $query);
+                try {
+                    if ($isDdl && $inTrans) { // DDL会隐式提交，先显式收尾保持状态一致
+                        Db::execute("COMMIT");
+                        $inTrans = false;
+                        $batch = 0;
                     }
-                    delFile(RUNTIME_PATH); // 清除缓存
-                    \think\Cache::clear();
-                    adminLog('还原数据库');
-                    verify_authortoken();
-                    $this->success('操作成功', request()->baseFile(), '', 1, [], '_parent');
-                }else{
-                    $this->error('操作失败！', url('Tools/restore'));
+                    Db::execute($query);
+                    if (!$inTrans) {
+                        Db::execute("START TRANSACTION");
+                        $inTrans = true;
+                        $batch = 0;
+                    } elseif (++$batch >= 1000) {
+                        Db::execute("COMMIT");
+                        Db::execute("START TRANSACTION");
+                        $batch = 0;
+                    }
+                } catch (\Exception $e) {
+                    if ($inTrans) {
+                        Db::execute("ROLLBACK");
+                    }
+                    $gz ? gzclose($fp) : fclose($fp);
+                    respose(array('code'=>0, 'msg'=>"第{$part}卷还原出错：".$e->getMessage()));
                 }
             }
+            $offset = $gz ? gztell($fp) : ftell($fp);
+            if (time() >= $deadline) {
+                break;
+            }
         }
-        else 
-        {
-            $this->error("参数有误", url('Tools/restore'));
+        if ($inTrans) { // 本次请求的数据全部提交后才回报进度，中断可从上次进度安全续跑
+            Db::execute("COMMIT");
         }
-        exit;
+        $gz ? gzclose($fp) : fclose($fp);
+
+        /*计算整体进度*/
+        $finished = 0;
+        foreach ($list as $k => $v) {
+            if ($k < $part) {
+                $finished += $v[3];
+            }
+        }
+        $totalSize = intval(session('backup_total_size'));
+        $rate = $totalSize > 0 ? min(100, floor(100 * ($finished + $offset) / $totalSize)) : 0;
+        /*--end*/
+
+        if (!$eof) { // 当前卷未读完，继续
+            respose(array('code'=>1, 'msg'=>"正在还原第{$part}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$part, 'offset'=>$offset)));
+        }
+        if (isset($list[$part + 1])) { // 进入下一卷
+            $next = $part + 1;
+            respose(array('code'=>1, 'msg'=>"正在还原第{$next}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$next, 'offset'=>0)));
+        }
+
+        // 全部分卷还原完毕
+        //修改数据库备份目录为原来的目录
+        $tpCacheData = ['web_sqldatapath'=>session('backup_sqldatapath'), 'php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
+        if (is_language()) {
+            $langRow = Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $tpCacheData, $val['mark']);
+            }
+        } else { // 单语言
+            tpCache('web', $tpCacheData);
+        }
+        session('backup_list', null);
+        session('backup_total_size', null);
+        session('backup_sqldatapath', null);
+        delFile(RUNTIME_PATH); // 清除缓存
+        \think\Cache::clear();
+        adminLog('还原数据库');
+        verify_authortoken();
+        respose(array('code'=>1, 'msg'=>'还原完成！', 'rate'=>'100%', 'data'=>array('done'=>1)));
+    }
+
+    /**
+     * 获取某次备份的分卷文件列表，键为卷号，值为 [卷号, 完整路径, 是否压缩, 文件大小]
+     * @param int $time 备份时间戳
+     * @return array
+     */
+    private function getBackupVolumes($time)
+    {
+        $name = date('Ymd-His', $time) . '-*.sql*';
+        $path = tpCache('global.web_sqldatapath');
+        $path = !empty($path) ? $path : config('DATA_BACKUP_PATH');
+        $path = trim($path, '/');
+        $path = realpath($path) . DS . $name;
+        $files = glob($path);
+        $list  = array();
+        if (is_array($files)) {
+            foreach ($files as $filename) {
+                $basename = basename($filename);
+                $match = sscanf($basename, '%4s%2s%2s-%2s%2s%2s-%d-%s');
+                if (empty($match[6])) {
+                    continue;
+                }
+                $gz = preg_match('/\.sql\.gz$/i', $basename);
+                $list[intval($match[6])] = array(intval($match[6]), $filename, $gz, filesize($filename));
+            }
+        }
+        ksort($list);
+        return $list;
+    }
+
+    /**
+     * 还原前对单条SQL做表前缀与存储引擎的兼容处理
+     * @param string $sql
+     * @param string $prefix
+     * @return string
+     */
+    private function prepareImportSql($sql, $prefix)
+    {
+        if ('ey_' != $prefix) {
+            $sql = str_replace('`ey_', '`'.$prefix, $sql);
+        }
+        $sql = preg_replace("/TYPE=(InnoDB|MyISAM|MEMORY)( DEFAULT CHARSET=[^; ]+)?/", "ENGINE=\\1 DEFAULT CHARSET=utf8", $sql);
+        return rtrim(trim($sql), ';');
     }
 
     /**

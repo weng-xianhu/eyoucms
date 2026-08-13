@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.ebpp.pdeduct.sign.add request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 17:02:15
+ * @since 1.0, 2025-08-14 07:27:40
  */
 class AlipayEbppPdeductSignAddRequest
 {
@@ -24,11 +24,12 @@ PUBLICPLATFORM：服务窗
 	private $billKey;
 	
 	/** 
-	 * 业务类型。
-JF：缴水、电、燃气、固话宽带、有线电视、交通罚款费用
-WUYE：缴物业费
-HK：信用卡还款
-TX：手机充值
+	 * 业务类型。枚举支持：
+*JF：公共事业缴纳。
+*WUYE：物业缴费。
+*HK：信用卡还款。
+*TX：通讯缴费。
+*IND：保险缴费。
 	 **/
 	private $bizType;
 	
@@ -38,9 +39,27 @@ TX：手机充值
 	private $chargeInst;
 	
 	/** 
+	 * 代扣产品码。 缴费业务场景中，传入INST_DIRECT_DEDUCT。保险业务场景中, 传入INSURANCE_MERCHANT_DEDUCT。
+	 **/
+	private $deductProdCode;
+	
+	/** 
 	 * 签约类型可为空
 	 **/
 	private $deductType;
+	
+	/** 
+	 * 外部用户实名认证相关信息, 用于做签约时的实名校验。 
+注： 
+
+name: 姓名
+cert_type: 身份证：IDENTITY_CARD、护照：PASSPORT、军官证：OFFICER_CARD、士兵证：SOLDIER_CARD、户口本：HOKOU等
+cert_no: 证件号码
+need_check_info取值 T/F，只有为T时才做强制校验。
+mobile:手机号，目前暂不使用此字段做校验
+min_age: 允许的最小买家年龄,min_age为整数，必须大于等于0.
+	 **/
+	private $extUserInfo;
 	
 	/** 
 	 * 扩展字段
@@ -51,6 +70,11 @@ TX：手机充值
 	 * 通知方式设置，可为空
 	 **/
 	private $notifyConfig;
+	
+	/** 
+	 * 用户UserId在应用AppId下的唯一用户标识
+	 **/
+	private $openId;
 	
 	/** 
 	 * 外部产生的协议ID
@@ -68,12 +92,12 @@ TX：手机充值
 	private $payConfig;
 	
 	/** 
-	 * 用户签约时，跳转到支付宝独立密码校验页面，校验成功后会将token和对应的用户ID缓存下来，然后跳回到机构页面生成token带回给机构，机构签约时必须传入token
+	 * 支付密码鉴权token，需要用户首先处于登陆态，然后访问https://ebppprod.alipay.com/deduct/enterMobileicPayPassword.htm?cb=自己指定的回跳连接地址，访问页面后会进到独立密码校验页，用户输入密码校验成功后，会生成token回调到指定的回跳地址，如果设置cb=www.alipay.com则最后回调的内容是www.alipay.com?token=312314ADFDSFAS，然后签约时直接取得地址后token的值即可。
 	 **/
 	private $payPasswordToken;
 	
 	/** 
-	 * 商户ID
+	 * 商户id，商户在支付宝的唯一标识，以 2088 开头的 16 位纯数字组成。
 	 **/
 	private $pid;
 	
@@ -83,21 +107,28 @@ TX：手机充值
 	private $signExpireDate;
 	
 	/** 
-	 * 业务子类型。
-WATER：缴水费
-ELECTRIC：缴电费
-GAS：缴燃气费
-COMMUN：缴固话宽带
-CATV：缴有线电视费
-TRAFFIC：缴交通罚款
-WUYE：缴物业费
-HK：信用卡还款
-CZ：手机充值
+	 * 业务子类型。业务子类型是业务类型的下一级概念。枚举支持：
+*WATER：缴水费。
+*ELECTRIC：缴电费。
+*GAS：缴燃气费。
+*COMMUN：缴固话宽带费。
+*CATV：缴有线电视费。
+*TRAFFIC：缴交通罚款。
+*WUYE：缴物业费。
+*RC：定期还车贷代扣。
+*RH：定期还房贷代扣。
+*RR：定期还房租代扣。
+*RN：定期还网贷代扣。
+*CZ：手机充值代扣。
+*CAR：车险。
+*LIFE：寿险。
+*HEALTH：健康险。
+例如：WATER表示JF下面的水费。
 	 **/
 	private $subBizType;
 	
 	/** 
-	 * 用户ID
+	 * 用户 id，用户在支付宝的唯一标识，以 2088 开头的 16 位纯数字组成。
 	 **/
 	private $userId;
 
@@ -166,6 +197,17 @@ CZ：手机充值
 		return $this->chargeInst;
 	}
 
+	public function setDeductProdCode($deductProdCode)
+	{
+		$this->deductProdCode = $deductProdCode;
+		$this->apiParas["deduct_prod_code"] = $deductProdCode;
+	}
+
+	public function getDeductProdCode()
+	{
+		return $this->deductProdCode;
+	}
+
 	public function setDeductType($deductType)
 	{
 		$this->deductType = $deductType;
@@ -175,6 +217,17 @@ CZ：手机充值
 	public function getDeductType()
 	{
 		return $this->deductType;
+	}
+
+	public function setExtUserInfo($extUserInfo)
+	{
+		$this->extUserInfo = $extUserInfo;
+		$this->apiParas["ext_user_info"] = $extUserInfo;
+	}
+
+	public function getExtUserInfo()
+	{
+		return $this->extUserInfo;
 	}
 
 	public function setExtendField($extendField)
@@ -197,6 +250,17 @@ CZ：手机充值
 	public function getNotifyConfig()
 	{
 		return $this->notifyConfig;
+	}
+
+	public function setOpenId($openId)
+	{
+		$this->openId = $openId;
+		$this->apiParas["open_id"] = $openId;
+	}
+
+	public function getOpenId()
+	{
+		return $this->openId;
 	}
 
 	public function setOutAgreementId($outAgreementId)

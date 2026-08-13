@@ -54,6 +54,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'sort_order' => 
+  array (
+    'name' => 'sort_order',
+    'type' => 'int(10)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'lang' => 
   array (
     'name' => 'lang',

@@ -16,7 +16,7 @@
         {eyou:static file="/public/static/common/js/jquery.min.js"/}
         {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
         {eyou:static file="/public/static/common/js/tag_global.js"/}
-        {eyou:static file="/public/static/common/js/shop_address.js"/}
+        {eyou:static file="/public/static/common/js/shop_address.js?v=1.0.1"/}
         <style>
             .address-list span {
                 display: inline-block;
@@ -38,6 +38,14 @@
                 <div aria-modal="true" class="ey-dialog">
                     <div class="ey-dialog__body">
                         <div class="ey-dialog__inner">
+                            {if $weapp_ai !==false}
+                            <div class="h3-title">AI地址识别</div>
+                            <div class="address-add-ai">
+                                <textarea name="" id="weapp_ai_address" class="input-text" placeholder="「粘贴识别」或输入文本,智能拆分姓名,电话和地址"></textarea>
+                                <div class="identify"><button class="identify-btn" data-url="{:url('plugins/Ai/get_baidu_address')}" data-type="edit" data-frm="1">智能识别</button></div>
+                            </div>
+                            {/if}
+                            <div class="h3-title">联系人信息</div>
                             <div class="address-add">
                                 <input type="hidden" name="addr_id" value="{$eyou.field.addr_id}">
                                 <div class="item">

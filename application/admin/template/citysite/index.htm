@@ -175,7 +175,11 @@
                             </td>
                             <td class="">
                                 <div class="w160 tc">
-                                    {empty name='$parentInfo.name'}无{else/}{$parentInfo.name}{/empty}
+                                    {if condition="$is_search"}
+                                        {empty name='$vo.parent_name'}无{else/}{$vo.parent_name}{/empty}
+                                    {else /}
+                                        {empty name='$parentInfo.name'}无{else/}{$parentInfo.name}{/empty}
+                                    {/if}
                                 </div>
                             </td>
                             <td>
@@ -199,10 +203,18 @@
                                     <i></i>
                                     {/eq}
 
-                                    {if condition="$vo['level'] >= 3 || ($vo['level'] == 2 && preg_match('/(北京|天津|上海|重庆)/i', $parentInfo['name']))"}
-                                    <a href="javascript:void(0);" class="btn grey">查看下级</a>
+                                    {if condition="$is_search"}
+                                        {if condition="$vo['has_children']"}
+                                        <a href="{:url('Citysite/index',array('pid'=>$vo['id']))}" class="btn blue">查看下级</a>
+                                        {else /}
+                                        <a href="javascript:void(0);" class="btn grey">查看下级</a>
+                                        {/if}
                                     {else /}
-                                    <a href="{:url('Citysite/index',array('pid'=>$vo['id']))}" class="btn blue">查看下级</a>
+                                        {if condition="$vo['level'] >= 3 || ($vo['level'] == 2 && preg_match('/(北京|天津|上海|重庆)/i', $parentInfo['name']))"}
+                                        <a href="javascript:void(0);" class="btn grey">查看下级</a>
+                                        {else /}
+                                        <a href="{:url('Citysite/index',array('pid'=>$vo['id']))}" class="btn blue">查看下级</a>
+                                        {/if}
                                     {/if}
 <!--                                    <i></i>
  

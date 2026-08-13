@@ -54,7 +54,11 @@ class Driver
         );
         $upgradeLogic = new \app\admin\logic\UpgradeLogic;
         $upgradeLogic->GetKeyData($values);
-        $url = $upgradeLogic->getServiceUrl()."/index.php?m=api&c=Service&a=get_authortoken&".http_build_query($values);
+        $url = $upgradeLogic->getServiceUrl();
+        if (file_exists('./data/conf/agent_zan.txt')) {
+            $url = str_replace('service.', 'service.zan.', $url);
+        }
+        $url .= "/index.php?m=api&c=Service&a=get_authortoken&".http_build_query($values);
         $context = stream_context_set_default(array('http' => array('timeout' => 2,'method'=>'GET')));
         $response = @file_get_contents($url, false, $context);
         // $url = $upgradeLogic->getServiceUrl()."/index.php?m=api&c=Service&a=get_authortoken";

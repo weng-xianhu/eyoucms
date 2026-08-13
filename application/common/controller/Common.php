@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -52,7 +52,7 @@ class Common extends Controller {
         $assignData = [];
         
         // 解决PHP套用Iframe访问导致cookie跨域session失效
-        if (in_array($this->request->rootDomain(), ['kuaituiyun.cn'])) {
+        if (in_array($this->request->rootDomain(), ['kuaituiyun.cn','5fa.cn'])) {
             // IE浏览器cookie跨域
             header("P3P:CP=CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV");
             // Chrome等浏览器cookie跨域（一定要加上secure，否则SameSite无效）
@@ -70,7 +70,7 @@ class Common extends Controller {
         $global = tpCache('global');
 
         /*站点状态关闭时，所关闭的终端口(pc、mobile)*/
-        // $webClosePort = !empty($global['web_close_port']) ? unserialize($global['web_close_port']) : [];
+        // $webClosePort = !empty($global['web_close_port']) ? safe_unserialize($global['web_close_port']) : [];
         // $close = 0;
         // if (!empty($webClosePort)) {
         //     if (0 === intval($this->is_mobile) && in_array('pc', $webClosePort)) {
@@ -143,6 +143,8 @@ class Common extends Controller {
                 session('users_id', null);
                 session('users', null);
                 cookie('users_id', null);
+                // session('coze_session_name', null);
+                // cookie('coze_session_name', null);
             } else if ( session('?users_id') && ($times - $users_login_expire) < $users_login_expiretime ) {
                 session('users_login_expire', getTime()); // 登录有效期
             }
@@ -155,10 +157,42 @@ class Common extends Controller {
         $shop_force_use_wechat = getUsersConfigData('shop.shop_force_use_wechat');
         if (!empty($shop_force_use_wechat) && 1 == $shop_force_use_wechat  && !isWeixin() && in_array(MODULE_NAME, ['home'])) {
             $html = "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'>网站仅微信端可访问</div>";
-            $WeChatLoginConfig = getUsersConfigData('wechat.wechat_login_config') ? unserialize(getUsersConfigData('wechat.wechat_login_config')) : [];
+            $WeChatLoginConfig = getUsersConfigData('wechat.wechat_login_config') ? safe_unserialize(getUsersConfigData('wechat.wechat_login_config')) : [];
             if (!empty($WeChatLoginConfig['wechat_name'])) $html .= "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'>关注微信公众号：".$WeChatLoginConfig['wechat_name']."</div>";
             if (!empty($WeChatLoginConfig['wechat_pic'])) $html .= "<div style='text-align:center; font-size:20px; font-weight:bold; margin:50px 0px;'><img style='width: 400px; height: 400px;' src='".$WeChatLoginConfig['wechat_pic']."'></div>";
             die($html);
+        }
+        /*END*/
+
+        /*Wechatzv2插件 - 强制授权登录*/
+        if (is_dir('./weapp/Wechatzv2/') && 'home' == MODULE_NAME && isWeixin() && isMobile() && !session('?users_id')) {
+            $users_force_login = getUsersConfigData('users.users_force_login');
+            if (!empty($users_force_login) && 1 == $users_force_login) {
+                // 优先从系统自带微信配置读取
+                $appid = '';
+                $appsecret = '';
+                $WeChatLoginConfig = getUsersConfigData('wechat.wechat_login_config') ? safe_unserialize(getUsersConfigData('wechat.wechat_login_config')) : [];
+                if (!empty($WeChatLoginConfig['appid']) && !empty($WeChatLoginConfig['appsecret'])) {
+                    $appid = $WeChatLoginConfig['appid'];
+                    $appsecret = $WeChatLoginConfig['appsecret'];
+                } else {
+                    // 系统未配置，则尝试从该插件（微公众号设置）配置读取
+                    $pluginConfig = tpSetting("OpenMinicode.conf_wechat");
+                    if (!empty($pluginConfig)) {
+                        $pluginConfig = json_decode($pluginConfig, true);
+                        if (!empty($pluginConfig['appid']) && !empty($pluginConfig['appsecret'])) {
+                            $appid = $pluginConfig['appid'];
+                            $appsecret = $pluginConfig['appsecret'];
+                        }
+                    }
+                }
+                
+                if (!empty($appid) && !empty($appsecret)) {
+                    session('eyou_referurl', request()->url(true));
+                    $this->redirect(url('user/Users/ajax_wechat_login'));
+                    exit;
+                }
+            }
         }
         /*END*/
 
@@ -216,12 +250,6 @@ class Common extends Controller {
             }
         }
 
-        /*电脑版与手机版的切换*/
-        $v = I('param.v/s', 'pc');
-        $v = trim($v, '/');
-        $this->assign('v', $v);
-        /*--end*/
-
         /*多语言开关限制 - 不开某个语言情况下，报404 */
         if ($this->main_lang != $this->home_lang) {
             if (isset($global['web_language_switch']) && 1 != $global['web_language_switch']) {
@@ -237,6 +265,12 @@ class Common extends Controller {
                 }
             }
         }
+        /*--end*/
+
+        /*电脑版与手机版的切换*/
+        $v = I('param.v/s', 'pc');
+        $v = trim($v, '/');
+        $this->assign('v', $v);
         /*--end*/
         
         $assignName2 = $this->arrJoinStr(['cGhwX3Nlcn','ZpY2VtZWFs']);

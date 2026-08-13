@@ -56,9 +56,28 @@ class TagDiyfield extends Base
                     }
                     break;
                 
-                case 'radio': // 单选项
-                case 'select': // 下拉框
-                case 'checkbox': // 多选项
+                case 'cascade': // 联动选择
+                    {
+                        $list = [];
+                        $row = [];
+                        if (is_array($data)) {
+                            $row = $data;
+                        } else {
+                            $row = explode(',', $data);
+                        }
+                        foreach ($row as $key => $val) {
+                            $list[$key]['value'] = $val;
+                        }
+                        $data = $list;
+                    }
+                    break;
+
+                case 'radio': // 单选项[旧]
+                case 'radios': // 单选项
+                case 'select': // 下拉框[旧]
+                case 'selects': // 下拉框
+                case 'checkbox': // 多选项[旧]
+                case 'checkboxs': // 多选项
                     {
                         $list = [];
                         $row = [];

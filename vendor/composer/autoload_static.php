@@ -11,12 +11,20 @@ class ComposerStaticInitc94c02985840e0e24a4e6317fb9e1871
         array (
             'think\\' => 6,
         ),
+        'P' => 
+        array (
+            'PHPMailer\\PHPMailer\\' => 20,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'think\\' => 
         array (
             0 => __DIR__ . '/..' . '/topthink/think-image/src',
+        ),
+        'PHPMailer\\PHPMailer\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
     );
 

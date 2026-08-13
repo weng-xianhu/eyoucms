@@ -32,8 +32,8 @@
 5. 丰富的模版：易优拥有大量免费的漂亮模版，涵盖各行各业，任用户自由选择。
 
 #### 效果演示
-1. 在线浏览：https://demo.yiyocms.com
-2. 后台登录：https://demo.yiyocms.com/login.php
+1. 在线浏览：https://demo.5fa.cn
+2. 后台登录：https://demo.5fa.cn/login.php
 3. Demo下载：https://www.eyoucms.com
 4. 免费模板：https://www.eyoucms.com/moban/
 

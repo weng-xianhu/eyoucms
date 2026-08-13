@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -49,6 +49,14 @@ class Citysite extends Base
         "重庆"    => [],
     ];
 
+    // 省份固定的域名名称
+    private $provinceDomainArr = [
+        'beijing',  'tianjin',  'hebei',    'shanxi',       'neimenggu',    'liaoning',     'jilin',    'heilongjiang', 'shanghai',
+        'jiangsu',  'zhejiang', 'anhui',    'fujian',       'jiangxi',      'shandong',     'henan',    'hubei',        'hunan',
+        'guangdong','guangxi',  'hainan',   'chongqing',    'sichuan',      'guizhou',      'yunnan',   'xizang',       'shaanxi',
+        'gansu',    'qinghai',  'ningxia',  'xinjiang',     'taiwan',       'xianggang',    'aomen',    'haiwai',
+    ];
+
     private $web_citysite_open;
     // 禁用的目录名称
     private $disableDirname = [];
@@ -73,11 +81,13 @@ class Citysite extends Base
         $parent_id = input('pid/d', 0);
 
         // 应用搜索条件
+        $is_search = false; // 是否为搜索模式
         foreach (['keywords','pid'] as $key) {
             $param[$key] = addslashes(trim($param[$key]));
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
                     $condition['name'] = array('LIKE', "%{$param[$key]}%");
+                    $is_search = true; // 有关键词搜索时标记为搜索模式
                 } else if ($key == 'pid') {
                     $condition['parent_id'] = array('eq', $param[$key]);
                 } else {
@@ -89,14 +99,42 @@ class Citysite extends Base
         // 上一级区域名称
         $parentInfo = Db::name('citysite')->where(['id'=>$parent_id])->find();
         $parentLevel = !empty($parentInfo['level']) ? intval($parentInfo['level']) : 0;
-        $condition['level'] = $parentLevel + 1;
+        // 搜索模式下不限制级别，可搜索全部级别城市
+        if (!$is_search) {
+            $condition['level'] = $parentLevel + 1;
+        }
 
         $regionM =  Db::name('citysite');
         $count = $regionM->where($condition)->count('id');// 查询满足要求的总记录数
         $Page = $pager = new Page($count, config('paginate.list_rows'));// 实例化分页类 传入总记录数和每页显示的记录数
         $list = $regionM->where($condition)->order('sort_order asc, id asc')->limit($Page->firstRow.','.$Page->listRows)->select();
+
+        // 搜索模式下，获取每条记录的上级区域名称
+        if ($is_search && !empty($list)) {
+            $parent_ids = array_column($list, 'parent_id');
+            $parent_ids = array_unique(array_filter($parent_ids));
+            $parent_names = [];
+            if (!empty($parent_ids)) {
+                $parent_names = Db::name('citysite')->where(['id'=>['IN', $parent_ids]])->column('name', 'id');
+            }
+            // 查询每条记录是否有下级
+            $ids = array_column($list, 'id');
+            $has_children = [];
+            if (!empty($ids)) {
+                $children_counts = Db::name('citysite')->field('parent_id, COUNT(*) as cnt')->where(['parent_id'=>['IN', $ids]])->group('parent_id')->select();
+                foreach ($children_counts as $row) {
+                    $has_children[$row['parent_id']] = $row['cnt'] > 0;
+                }
+            }
+        }
+
         foreach ($list as $key => $val) {
             $val['siteurl'] = siteurl($val);
+            // 搜索模式下，添加上级区域名称和是否有下级
+            if ($is_search) {
+                $val['parent_name'] = !empty($val['parent_id']) && isset($parent_names[$val['parent_id']]) ? $parent_names[$val['parent_id']] : '';
+                $val['has_children'] = isset($has_children[$val['id']]) ? 1 : 0;
+            }
             $list[$key] = $val;
         }
 
@@ -105,6 +143,7 @@ class Citysite extends Base
         $this->assign('list',$list);// 赋值数据集
         $this->assign('pager',$pager);// 赋值分页对象
         $this->assign('parentInfo',$parentInfo);
+        $this->assign('is_search',$is_search);// 是否为搜索模式
 
         $set_is_open = (int)tpSetting('citysite.citysite_set_is_open', [], 'cn');
         $set_is_open = empty($set_is_open) ? 1 : 0;
@@ -240,7 +279,7 @@ class Citysite extends Base
                 }
                 $insert_name[] = $val;
                 $domain = preg_replace("/[^a-zA-Z0-9]+/", "", get_pinyin($val));
-                $domain = $this->rand_domain($domain,$level);
+                $domain = $this->rand_domain($domain, $level);
                 $addData[] = [
                     'name'  => $val,
                     'domain'  => $domain,
@@ -701,23 +740,17 @@ class Citysite extends Base
     /**
      * 生成随机子域名，确保唯一性
      */
-    private function rand_domain($domain = '',$level)
+    private function rand_domain($domain = '', $level = 0)
     {
         if (empty($domain)) {
             $domain = strtolower(get_rand_str(6, 0, 1));
         }
-        if (!$this->domain_unique($domain)) {
-            //20241118              
-            if($level==1){
-                $new_domain = $domain . mt_rand(1,9);
-                Db::name('citysite')->where(['domain'=>$domain,'level'=>['neq',1]])->update(['domain'=>$new_domain]);
-            }else{
-                $domain = $domain . mt_rand(1,9);
-            }
-            return $this->rand_domain($domain,$level);
-        }else{
-            return $domain;   
+        if (!$this->domain_unique($domain) || ($level > 1 && in_array($domain, $this->provinceDomainArr))) {
+            $domain = $domain . get_rand_str(3, 0, 2);
+            return $this->rand_domain($domain, $level);
         }
+
+        return $domain;
     }
 
     /*
@@ -732,13 +765,6 @@ class Citysite extends Base
         $this->assign($assign_data);
 
         return $this->fetch();
-    }
-
-    /*
-     * js获取region
-     */
-    public function ajaxGetOne($where = ""){
-        return Db::name('citysite')->where($where)->find();
     }
 
     /**
@@ -767,10 +793,18 @@ class Citysite extends Base
     /**
      * 获取区域的拼音
      */
-    public function ajax_get_name_pinyin($name = '')
+    public function ajax_get_name_pinyin($name = '', $province_id = 0, $city_id = 0)
     {
-        $pinyin = get_pinyin($name);
-        $this->success('提取成功', null, ['pinyin'=>$pinyin]);
+        if (!empty($city_id)) {
+            $level = 3;
+        } else if (!empty($province_id)) {
+            $level = 2;
+        } else {
+            $level = 1;
+        }
+        $domain = get_pinyin($name);
+        $domain = $this->rand_domain($domain, $level);
+        $this->success('提取成功', null, ['pinyin'=>$domain]);
     }
 
     /**
@@ -1421,13 +1455,13 @@ class Citysite extends Base
                 if (!empty($nameArr)) {
                     $addData = [];
                     foreach ($nameArr as $key => $val) {
-                        if($province_id==41877){
+                        if ($province_id == 41877) {
                             $domain = 'shaanxi';
-                        }else{  
+                        } else {
                             $domain = preg_replace("/[^a-zA-Z0-9]+/", "", get_pinyin($val));
                         }
                         if (in_array($domain, $domainArr)) {
-                           $domain = $this->rand_domain($domain,1);
+                            $domain = $this->rand_domain($domain, 1);
                         }
                         $addData[] = [
                             'name'  => $val,
@@ -1485,13 +1519,13 @@ class Citysite extends Base
                 }
                 if (!empty($nameArr)) {
                     $addData = [];
-                    //$domainArr = Db::name('citysite')->where(['id'=>['gt', 0]])->column('domain');
+                    $domainArr = Db::name('citysite')->where(['id'=>['gt', 0]])->column('domain');
                     foreach ($nameArr as $key => $val) {
                         $domain = preg_replace("/[^a-zA-Z0-9]+/", "", get_pinyin($val));
-                        //if (in_array($domain, $domainArr)) {
-                        $domain = $this->rand_domain($domain,2);
-                        //}
-                        $addData = [
+                        if (in_array($domain, $domainArr) || in_array($domain, $this->provinceDomainArr)) {
+                            $domain = $this->rand_domain($domain, 2);
+                        }
+                        $addData[] = [
                             'name'  => $val,
                             'domain'  => $domain,
                             'level' => 2,
@@ -1509,9 +1543,8 @@ class Citysite extends Base
                             'add_time'    => getTime(),
                             'update_time'    => getTime(),
                         ];
-                        $r = model('Citysite')->insert($addData);
-                        unset($domain,$r);
                     }
+                    $r = model('Citysite')->saveAll($addData);
                     if ($r === false) {
                         $err++; 
                     } else {
@@ -1563,13 +1596,13 @@ class Citysite extends Base
                     foreach ($nameArr as $key_tmp => $val_tmp) {
                         if (!empty($val_tmp)) {
                             $addData = [];
-                            //$domainArr = Db::name('citysite')->where(['id'=>['gt', 0]])->column('domain');                            
+                            $domainArr = Db::name('citysite')->where(['id'=>['gt', 0]])->column('domain');
                             foreach ($val_tmp as $key => $val) {
                                 $domain = preg_replace("/[^a-zA-Z0-9]+/", "", get_pinyin($val));
-                                //if (in_array($domain, $domainArr)) {
-                                $domain = $this->rand_domain($domain,3);
-                                //}
-                                $addData = [
+                                if (in_array($domain, $domainArr) || in_array($domain, $this->provinceDomainArr)) {
+                                    $domain = $this->rand_domain($domain, 3);
+                                }
+                                $addData[] = [
                                     'name'  => $val,
                                     'domain'  => $domain,
                                     'level' => 3,
@@ -1587,9 +1620,8 @@ class Citysite extends Base
                                     'add_time'    => getTime(),
                                     'update_time'    => getTime(),
                                 ];
-                                $r = model('Citysite')->insert($addData);
-                                unset($r,$domain);
                             }
+                            $r = model('Citysite')->saveAll($addData);
                             if ($r === false) {
                                 $err++; 
                             }

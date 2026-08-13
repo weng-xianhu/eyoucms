@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -326,7 +326,20 @@ class Canal extends Base
                     $qrcodeurl = UPLOAD_PATH.'allimg/20220515';
                     tp_mkdir($qrcodeurl);
                     $qrcodeurl = $qrcodeurl."/bd-{$appid}.png";
-                    if (@file_put_contents($qrcodeurl, base64_decode($params['data']['base64_str']))){
+                    // 验证Base64解码后的内容是否为真实图片
+                    $imgData = base64_decode($params['data']['base64_str']);
+                    $isValidImage = false;
+                    if (class_exists('finfo')) {
+                        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                        $mime = $finfo->buffer($imgData);
+                        $isValidImage = in_array($mime, array('image/jpeg', 'image/png', 'image/gif'));
+                    } elseif (function_exists('getimagesizefromstring')) {
+                        $isValidImage = @getimagesizefromstring($imgData) !== false;
+                    }
+                    if (!$isValidImage) {
+                        $this->error('返回的数据不是有效图片');
+                    }
+                    if (@file_put_contents($qrcodeurl, $imgData)){
                         $qrcodeurl = $this->root_dir.'/'.$qrcodeurl;
                         $this->success('生成小程序码成功', null, ['qrcodeurl'=>$qrcodeurl]);
                     } else {
@@ -344,6 +357,7 @@ class Canal extends Base
      */
     public function conf_wechat()
     {
+        $this->usersConfig = getUsersConfigData('all');
         if (IS_AJAX_POST) {
             $post = input('post.');
             $appid = trim($post['appid']);
@@ -374,7 +388,7 @@ class Canal extends Base
 
             // 兼容老数据的功能，同步保存一份到以前配置里
             $wechat_login_config = $this->usersConfig['wechat_login_config'];
-            $login_config = unserialize($wechat_login_config);
+            $login_config = safe_unserialize($wechat_login_config);
             $data['wechat_name'] = !empty($login_config['wechat_name']) ? trim($login_config['wechat_name']) : '';
             $data['wechat_pic'] = !empty($login_config['wechat_pic']) ? trim($login_config['wechat_pic']) : '';
             getUsersConfigData('wechat', ['wechat_login_config'=>serialize($data)]);
@@ -387,7 +401,7 @@ class Canal extends Base
         $data = tpSetting("OpenMinicode.conf_wechat", [], $this->main_lang);
         if (empty($data)) {
             $wechat_login_config = getUsersConfigData('wechat.wechat_login_config');
-            $login_config = unserialize($wechat_login_config);
+            $login_config = safe_unserialize($wechat_login_config);
             if (!empty($login_config)) {
                 $data = [];
                 $data['appid'] = !empty($login_config['appid']) ? trim($login_config['appid']) : '';
@@ -401,7 +415,7 @@ class Canal extends Base
         }
         $this->assign('data', $data);
         /*微站点配置*/
-        $login = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $login = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
         $this->assign('login', $login);
         /* END */
 
@@ -488,7 +502,20 @@ class Canal extends Base
                     $qrcodeurl = UPLOAD_PATH.'allimg/20220515';
                     tp_mkdir($qrcodeurl);
                     $qrcodeurl = $qrcodeurl."/tt-{$appid}.png";
-                    if (@file_put_contents($qrcodeurl, base64_decode($params['data']['img']))){
+                    // 验证Base64解码后的内容是否为真实图片
+                    $imgData = base64_decode($params['data']['img']);
+                    $isValidImage = false;
+                    if (class_exists('finfo')) {
+                        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                        $mime = $finfo->buffer($imgData);
+                        $isValidImage = in_array($mime, array('image/jpeg', 'image/png', 'image/gif'));
+                    } elseif (function_exists('getimagesizefromstring')) {
+                        $isValidImage = @getimagesizefromstring($imgData) !== false;
+                    }
+                    if (!$isValidImage) {
+                        $this->error('返回的数据不是有效图片');
+                    }
+                    if (@file_put_contents($qrcodeurl, $imgData)){
                         $qrcodeurl = $this->root_dir.'/'.$qrcodeurl;
                         $this->success('生成小程序码成功', null, ['qrcodeurl'=>$qrcodeurl]);
                     } else {
@@ -528,6 +555,7 @@ class Canal extends Base
         $notice_wechat_tpl = [
             1 => ['id' => '51345','keyword_name'=>['需求项目','需求时间']], // 留言表单成功通知
             9 => ['id' => '51617','keyword_name'=>['订单编号','产品名称','订单金额','支付时间']], // 订单支付成功通知
+            20 => ['id' => '42925','keyword_name'=>['工单名称','触发来源','更新时间']], // 问答回复提醒
         ];
 
         if (IS_POST) {
@@ -662,7 +690,7 @@ class Canal extends Base
         $assign_data['admin_id'] = session('admin_id');
         $assign_data['notice_wechat_tpl'] = $notice_wechat_tpl;
 
-        $list = Db::name('wechat_template')->where(['lang'=>$this->admin_lang])->select();
+        $list = Db::name('wechat_template')->where(['lang'=>$this->main_lang])->select();
         foreach ($list as $key => $val) {
             $val['tpl_data'] = !empty($val['tpl_data']) ? json_decode($val['tpl_data'], true) : [];
             $list[$key] = $val;

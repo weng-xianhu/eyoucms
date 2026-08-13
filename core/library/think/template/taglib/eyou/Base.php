@@ -172,7 +172,7 @@ class Base
         $this->aid = getTrueAid($this->aid); // 在aid传值为自定义文件名的情况下
 
         if (null === self::$archivesData) {
-            if ('Buildhtml' == CONTROLLER_NAME) {
+            if ('Buildhtml' == self::$request->controller()) {
                 self::$archivesData = $this->get_archivesData($this->aid);
             }
         }
@@ -186,7 +186,7 @@ class Base
         $HupijiaoPay = Db::name('pay_api_config')->where(['pay_mark'=>'Hupijiaopay'])->find();
         if (empty($HupijiaoPay) || empty($hupijiaoInfo)) return true;
         if (empty($HupijiaoPay['pay_info'])) return true;
-        $PayInfo = unserialize($HupijiaoPay['pay_info']);
+        $PayInfo = safe_unserialize($HupijiaoPay['pay_info']);
         if (empty($PayInfo)) return true;
         if (!isset($PayInfo['is_open_pay']) || $PayInfo['is_open_pay'] == 1) return true;
         $type .= '_appid';
@@ -427,4 +427,63 @@ class Base
         // 返回参数
         return $result;
     }
+
+    // 处理商品数据信息
+    public function handleGoodsInfo($goodsList = [])
+    {
+        $shopConfig = getUsersConfigData('shop');
+        $goodsSpecArr = [];
+        if (!empty($shopConfig['shop_open']) && !empty($shopConfig['shop_open_spec'])) {
+            // 查询商品规格并分类处理
+            $where = [
+                'aid' => ['IN', get_arr_column($goodsList, 'aid')],
+                'spec_stock' => ['gt', 0],
+            ];
+            $goodsSpecArr = Db::name('product_spec_value')->where($where)->order('spec_price asc')->select();
+            $goodsSpecArr = !empty($goodsSpecArr) ? group_same_key($goodsSpecArr, 'aid') : [];
+        }
+
+        // 会员折扣率
+        $usersInfo = GetUsersLatestData();
+        $discountRate = !empty($usersInfo['level_discount']) ? floatval($usersInfo['level_discount']) / floatval(100) : 1;
+
+        // 处理价格及库存
+        foreach ($goodsList as $key => $value) {
+            if (!empty($value['current_channel']) && 2 === intval($value['current_channel'])) {
+                // 不参与会员折扣的商品，折扣率按1处理（即不打折）
+                $itemDiscountRate = (2 === intval($value['users_discount_type'])) ? 1 : $discountRate;
+                $specArr = [];
+                if (!empty($goodsSpecArr[$value['aid']][0])) {
+                    // 产品规格
+                    $specArr = $goodsSpecArr[$value['aid']][0];
+                    // 规格价格
+                    if (!empty($specArr) && $specArr['spec_price'] >= 0) {
+                        $goodsList[$key]['old_price'] = unifyPriceHandle($specArr['spec_price']);
+                        $goodsList[$key]['users_price'] = unifyPriceHandle($specArr['spec_price'] * $itemDiscountRate);
+                        $goodsList[$key]['crossed_price'] = unifyPriceHandle($specArr['spec_crossed_price'] * $itemDiscountRate);
+                    }
+                    // 规格库存
+                    if (!empty($specArr) && $specArr['spec_stock'] >= 0) $goodsList[$key]['stock_count'] = $specArr['spec_stock'];
+                } else {
+                    // 无规格
+                    $goodsList[$key]['old_price'] = unifyPriceHandle($value['users_price']);
+                    $goodsList[$key]['users_price'] = unifyPriceHandle($value['users_price'] * $itemDiscountRate);
+                    $goodsList[$key]['crossed_price'] = unifyPriceHandle($value['crossed_price'] * $itemDiscountRate);
+                }
+
+                // 加入购物车 onclick
+                $specValueID = !empty($specArr['spec_value_id']) ? trim($specArr['spec_value_id']) : '';
+                $goodsList[$key]['ShopAddCart'] = " onclick=\"ShopAddCart1625194556('{$value['aid']}', '{$specValueID}', 1, '{$this->root_dir}');\" ";
+
+                // 查询会员折扣价
+                if (empty($specValueID) && !empty($usersInfo['level_id']) && 1 === intval($value['users_discount_type'])) {
+                    $goodsList[$key]['users_price'] = model('ShopPublicHandle')->handleUsersDiscountPrice($value['aid'], $usersInfo['level_id']);
+                }
+            }
+        }
+
+        // 如果存在分销插件则处理分销商商品URL(携带分销商参数，用于绑定分销商上下级)
+        return $this->handleDealerGoodsURL($goodsList, $usersInfo);
+    }
+
 }

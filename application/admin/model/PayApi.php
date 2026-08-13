@@ -442,7 +442,7 @@ class PayApi extends Model
         $serial_number = DEFAULT_SERIALNUMBER;
         $constsant_path = APP_PATH . MODULE_NAME . '/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
         return $serial_number;

@@ -68,7 +68,19 @@ class DownloadFile extends Model
         return $result;
     }
 
+    private function uhash( $file ) {
+        $fragment = 65536;
 
+        $rh = fopen($file, 'rb');
+        $size = filesize($file);
+
+        $part1 = fread( $rh, $fragment );
+        fseek($rh, $size-$fragment);
+        $part2 = fread( $rh, $fragment);
+        fclose($rh);
+
+        return md5( $part1.$part2 );
+    }
 
     /**
      * 保存下载文章的文件
@@ -83,6 +95,7 @@ class DownloadFile extends Model
             $sort_order = 0;
             foreach($fileupload['file_url'] as $key => $val)
             {
+                $val = trim($val);
                 if($val == null || empty($val))  continue;
                 $title     = !empty($post['title']) ? $post['title'] : '';
                 $file_size = isset($post['fileupload']['file_size'][$key]) ? $post['fileupload']['file_size'][$key] : 0;
@@ -92,6 +105,21 @@ class DownloadFile extends Model
                 $file_name   = isset($post['fileupload']['file_name'][$key]) ? $post['fileupload']['file_name'][$key] : '';
                 $file_ext   = isset($post['fileupload']['file_ext'][$key]) ? $post['fileupload']['file_ext'][$key] : '';
                 $server_name   = isset($post['fileupload']['server_name'][$key]) ? $post['fileupload']['server_name'][$key] : '';
+
+                if (empty($uhash) && empty($md5file)) {
+                    if (!is_http_url($val)) {
+                        $file_path = preg_replace('#^(/[/\w\-]+)?(/uploads/soft/)#i', '$2', $val);
+                        $file_path = '.' . $file_path;
+                        if (file_exists($file_path)) {
+                            $uhash = $this->uhash($file_path);
+                            $md5file = md5_file($file_path);
+                        }
+                    } else {
+                        $uhash = md5($val);
+                        $md5file = md5($val);
+                    }
+                }
+
                 ++$sort_order;
                 $data[] = array(
                     'aid'        => $aid,
@@ -118,6 +146,7 @@ class DownloadFile extends Model
             $sort_order = $sort_order;
             foreach($post['remote_file'] as $kkk => $vvv)
             {
+                $vvv = trim($vvv);
                 if($vvv == null || empty($vvv)) continue;
                 $server_name = !empty($post['server_name'][$kkk]) ? trim($post['server_name'][$kkk]) : '';
                 $extract_code = !empty($post['extract_code'][$kkk]) ? trim($post['extract_code'][$kkk]) : '';

@@ -31,6 +31,7 @@ define("EYOUCMS_VERSION", '20180101');
 date_default_timezone_set('PRC');
 error_reporting(E_ALL & ~E_NOTICE);
 header('Content-Type: text/html; charset=UTF-8');
+$install_dir = 'install';
 define('SITEDIR', _dir_path(substr(dirname(__FILE__), 0, -8)));
 define("SERVICE_URL", 'aHR0cDovL3NlcnZpY2UuNWZhLmNu');
 //define('SITEDIR2', substr(SITEDIR,0,-7));
@@ -42,7 +43,7 @@ $step = isset($_GET['step']) ? intval($_GET['step']) : 1;
 //数据库
 $sqlFile = 'eyoucms.sql';
 $configFile = 'config.php';
-if (!file_exists(SITEDIR . 'install/' . $sqlFile) || !file_exists(SITEDIR . 'install/' . $configFile)) {
+if (!file_exists(SITEDIR . $install_dir . '/' . $sqlFile) || !file_exists(SITEDIR . $install_dir . '/' . $configFile)) {
     echo "缺少必要的安装文件（{$sqlFile} 或 {$configFile}）!";
     exit;
 }
@@ -230,11 +231,24 @@ switch ($step) {
                 die(json_encode($arr));
             }
 
+            // PHP 8.1+ mysqli 默认抛出异常，需要设置为返回错误模式
+            if (function_exists('mysqli_report')) {
+                mysqli_report(MYSQLI_REPORT_OFF);
+            }
+
             $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);
             if (mysqli_connect_error()){
+                $connect_error = mysqli_connect_error();
+                // 尝试转换编码，如果失败则使用原始错误信息
+                if (function_exists('iconv')) {
+                    $converted = @iconv('gbk', 'utf-8//IGNORE', $connect_error);
+                    if ($converted !== false) {
+                        $connect_error = $converted;
+                    }
+                }
                 $arr = array(
                     'code'   => -1,
-                    'msg'   => "请检查数据库连接信息，".iconv('gbk', 'utf-8', mysqli_connect_error($conn)),
+                    'msg'   => "请检查数据库连接信息，".$connect_error,
                 );
                 die(json_encode($arr));
             }
@@ -250,8 +264,10 @@ switch ($step) {
                     die(json_encode($arr));
                 }
             }
-
-            if (!@mysqli_select_db($conn,$dbName)) {
+            
+            try {
+                mysqli_select_db($conn,$dbName);
+            } catch (\Exception $e) {
                 //创建数据时同时设置编码
                 if (!@mysqli_query($conn,"CREATE DATABASE IF NOT EXISTS `" . $dbName . "` DEFAULT CHARACTER SET utf8;")) {
                     $arr = array(
@@ -297,12 +313,25 @@ switch ($step) {
             $arr['msg'] = "请安装 mysqli 扩展!";
             echo json_encode($arr);
             exit;
-        }           
-        
+        }
+
+        // PHP 8.1+ mysqli 默认抛出异常，需要设置为返回错误模式
+        if (function_exists('mysqli_report')) {
+            mysqli_report(MYSQLI_REPORT_OFF);
+        }
+
         $conn = @mysqli_connect($dbHost, $dbUser, $dbPwd,NULL,$dbport);
         if (mysqli_connect_error()){
+            $connect_error = mysqli_connect_error();
+            // 尝试转换编码，如果失败则使用原始错误信息
+            if (function_exists('iconv')) {
+                $converted = @iconv('gbk', 'utf-8//IGNORE', $connect_error);
+                if ($converted !== false) {
+                    $connect_error = $converted;
+                }
+            }
             $arr['code'] = 0;
-            $arr['msg'] = "连接数据库失败!".mysqli_connect_error($conn);           
+            $arr['msg'] = "连接数据库失败!".$connect_error;
             echo json_encode($arr);
             exit;
         }
@@ -316,6 +345,7 @@ switch ($step) {
                 exit;
             }
         }
+            
 
         if (!@mysqli_select_db($conn,$dbName)) {
             //创建数据时同时设置编码
@@ -333,7 +363,7 @@ switch ($step) {
         $cms_version = file_get_contents(SITEDIR .'data/conf/version.txt');
 
         //读取数据文件
-        $sqldata = file_get_contents(SITEDIR . 'install/' . $sqlFile);
+        $sqldata = file_get_contents(SITEDIR . $install_dir . '/' . $sqlFile);
         $sqlFormat = sql_split($sqldata, $dbPrefix);
         //创建写入sql数据库文件到库中 结束
 
@@ -440,7 +470,7 @@ switch ($step) {
         $time = time();
 
         //读取配置文件，并替换真实配置数据1
-        $strConfig = file_get_contents(SITEDIR . 'install/' . $configFile);
+        $strConfig = file_get_contents(SITEDIR . $install_dir . '/' . $configFile);
         $strConfig = str_replace('#DB_HOST#', $dbHost, $strConfig);
         $strConfig = str_replace('#DB_NAME#', $dbName, $strConfig);
         $strConfig = str_replace('#DB_USER#', $dbUser, $strConfig);
@@ -501,7 +531,7 @@ switch ($step) {
             }
             if (empty($result2) || empty($result2->num_rows)) {
                 mysqli_query($conn, "truncate table `{$dbPrefix}users`"); // 清空users表
-                $rand_str = md5(uniqid(rand(), true));
+                $rand_str = md5(uniqid(mt_rand(), true));
                 $rand_str = substr($rand_str, 0, 23);
                 $auth_code = '$2y$11$'.$rand_str;  //30位盐
                 mysqli_query($conn, "UPDATE `{$dbPrefix}config` SET `value` = '$auth_code' WHERE name = 'system_crypt_auth_code' AND inc_type = 'system'");
@@ -509,7 +539,10 @@ switch ($step) {
             }
 
         } else {
-            mysqli_query($conn, "DELETE FROM `{$dbPrefix}admin` WHERE user_name = '$username'");
+            $stmt = mysqli_prepare($conn, "DELETE FROM `{$dbPrefix}admin` WHERE user_name = ?");
+            mysqli_stmt_bind_param($stmt, "s", $username);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
         }
 
         //插入管理员表ey_admin
@@ -521,7 +554,10 @@ switch ($step) {
         }
         $ip = get_client_ip();
         $ip = empty($ip) ? "0.0.0.0" : $ip;
-        mysqli_query($conn, " INSERT INTO `{$dbPrefix}admin` (`user_name`,`true_name`,`password`,`last_login`,`last_ip`,`login_cnt`,`status`,`add_time`) VALUES ('$username','$username','$password','0','$ip','1','1','$time')");
+        $stmt = mysqli_prepare($conn, "INSERT INTO `{$dbPrefix}admin` (`user_name`,`true_name`,`password`,`last_login`,`last_ip`,`login_cnt`,`status`,`add_time`) VALUES (?,?,?,'0',?,'1','1',?)");
+        mysqli_stmt_bind_param($stmt, "ssssi", $username, $username, $password, $ip, $time);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
 
         $url = $_SERVER['PHP_SELF']."?step=5";
 
@@ -541,6 +577,9 @@ switch ($step) {
         $cms_version = file_get_contents(SITEDIR .'data/conf/version.txt'); // 当前CMS版本
         $mt_rand_str = $create_date.sp_random_string(6);
         $service_ey = base64_decode(SERVICE_URL);
+        if (is_local(get_server_ip())) {
+            $service_ey = '';
+        }
         $ajax_url = 'L2luZGV4LnBocD9tPWFwaSZjPVNlcnZpY2UmYT11c2VyX3B1c2g=';
         $str_constant = "<?php".PHP_EOL."define('INSTALL_DATE', ".$time.");".PHP_EOL."define('SERIALNUMBER', '".$mt_rand_str."');";
         @file_put_contents(SITEDIR . 'application/admin/conf/constant.php', $str_constant);
@@ -664,13 +703,26 @@ function get_client_ip() {
 function get_server_ip()
 {
     // 会因为解析问题导致后台卡
-    if (!empty($_SERVER['SERVER_ADDR']) && !in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1'])) {
+    if (!empty($_SERVER['SERVER_ADDR']) && !preg_match('/127\.0\.\d{1,3}\.\d{1,3}/i', $_SERVER['SERVER_ADDR']) && !preg_match('/192\.168\.\d{1,3}\.\d{1,3}/i', $_SERVER['SERVER_ADDR'])) {
         $serviceIp = $_SERVER['SERVER_ADDR'];
     } else {
         $serviceIp = @gethostbyname($_SERVER["SERVER_NAME"]);
     }
     return $serviceIp;
-}  
+}
+
+/**
+ * 根据URL判断是否本地局域网访问
+ * @access public
+ */
+function is_local($ip){
+    $is_local = false;
+    if (preg_match('/127\.0\.\d{1,3}\.\d{1,3}/i', $ip) || preg_match('/192\.168\.\d{1,3}\.\d{1,3}/i', $ip) || 'localhost' == $ip) {
+        $is_local = true;
+    }
+
+    return $is_local;  
+}
 
 function dir_create($path, $mode = 0777) {
     if (is_dir($path))
@@ -861,7 +913,7 @@ function get_auth_code($conn, $dbPrefix)
     $encry_type = pwd_encry_type($conn, $dbPrefix);
 
     if ('bcrypt' == $encry_type) {
-        $rand_str = md5(uniqid(rand(), true));
+        $rand_str = md5(uniqid(mt_rand(), true));
         $rand_str = substr($rand_str, 0, 23);
         $auth_code = '$2y$11$'.$rand_str;  //30位盐
         $result = mysqli_query($conn, " SELECT value FROM `{$dbPrefix}config` WHERE name = 'system_crypt_auth_code' AND inc_type = 'system' LIMIT 1 ");

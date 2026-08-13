@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -779,11 +779,9 @@ class Arctype extends Model
             // 获取栏目空闲ID作为本次添加ID
             $idleID = $this->getArcTypeIdleID();
             if (!empty($idleID)) $data = array_merge(['id'=>$idleID], $data);
-            if (config('database.type') == 'dm') { // 达梦优化
-                if (isset($data['id'])) {
-                    unset($data['id']);
-                }
-            }
+            // 达梦、人大金仓数据库优化
+            if (in_array(config('database.type'), array('dm', 'kingbase')) && isset($data['id'])) unset($data['id']);
+
             // 添加栏目
             $insertId = Db::name('arctype')->insertGetId($data);
             if (!empty($insertId)) {
@@ -808,7 +806,7 @@ class Arctype extends Model
                     // $archivesData = array_merge($archivesData, $data);
                     $aid = Db::name('archives')->insertGetId($archivesData);
                     if ($aid) {
-                        Db::name('single_content')->where(['typeid'=>$insertId])->delete();
+                        Db::name('single_content')->where(['typeid'=>$insertId])->delete(true);
                         // ---------后置操作
                         if (!isset($data['addonFieldExt'])) {
                             $data['addonFieldExt'] = array(
@@ -953,6 +951,7 @@ class Arctype extends Model
                                 'typename'  => $typename,
                                 'channeltype'   => $val['channeltype'],
                                 'current_channel'   => $val['current_channel'],
+                                'topid' => intval($val['id']),
                                 'parent_id' => intval($val['id']),
                                 'dirname'   => $dirname,
                                 'dirpath'   => $dirpath,
@@ -1301,57 +1300,92 @@ class Arctype extends Model
     }
 
     //统计栏目文档数 只统计 未删除 的
-    public function hand_type_count($param = [])
+    public function hand_type_count($param = [], $channelType = '')
     {
-        $typeids = [];
-        if (!empty($param['aid']) || !empty($param['typeid'])) {
-            $typeids = $this->get_arc_type($param);
-        }
-        $where['is_del'] = 0;
-        // $where['arcrank'] = 0;
-        $where['channel'] = ['not in',[6,8]];
-        $where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
-        if (!empty($typeids)) $where['typeid'] = ['in', $typeids];
-        $arc_count = Db::name('archives')->where($where)->field('count(aid) as count,typeid')->group('typeid')->getAllWithIndex('typeid');
-//        if (empty($arc_count)) return true;
-        $channel_ids = Db::name('channeltype')->where('nid', 'in', ['single', 'ask'])->column('id');
-
-        $type_where['is_del'] = 0;
-        $type_where['weapp_code'] = '';
-        $type_where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
-        if (!empty($typeids)) $type_where['id'] = ['in', $typeids];
-        $type_count = Db::name('arctype')->where($type_where)->field('parent_id,topid,id,grade,typename,current_channel')->order('grade desc')->getAllWithIndex('id');
-        foreach ($type_count as $k => $v) {
-            $v['child'] = $type_count[$v['id']]['child'];
-            $v['child'][] = $v['id'];
-            if (!empty($v['child']) && !in_array($v['current_channel'], $channel_ids)) {
-                $sum = 0;
-                foreach ($v['child'] as $k1 => $v1) {
-                    $sum += !empty($arc_count[$v1]) ? $arc_count[$v1]['count'] : 0;
-                }
-                if ($sum > 0) {
-                    $type_count[$k]['sum'] = $sum;
-                }
-            }
-            if (!empty($v['parent_id'])) {
-                if (!empty($type_count[$v['parent_id']]['child'])) {
-                    $child = array_merge($type_count[$v['parent_id']]['child'], $v['child']);
-                    $type_count[$v['parent_id']]['child'] = array_unique($child);;
-                } else {
-                    $type_count[$v['parent_id']]['child'] = $v['child'];
-                }
-            }
-        }
-
         $saveAll = [];
-        foreach ($type_count as $k => $v) {
-            if (!empty($v['id'])) {
-                $saveAll[] = [
-                    'id' => $v['id'],
-                    'total_arc' => !empty($v['sum']) ? $v['sum'] : 0
+        if ('guestbook' == $channelType) {
+            if (!empty($param['typeid'])) {
+                $where = [
+                    'form_type' => 0,
+                    'typeid' => ['in', $param['typeid']],
+                    'channel' => 8,
+                    'lang' => !empty($param['lang']) ? $param['lang'] : get_admin_lang(),
+                ];
+                $arc_count = Db::name('guestbook')->where($where)->field('count(aid) as count,typeid')->group('typeid')->getAllWithIndex('typeid');
+                foreach ($arc_count as $key => $val) {
+                    $saveAll[] = [
+                        'id' => $val['typeid'],
+                        'total_arc' => $val['count']
+                    ];
+                }
+            }
+        } else {
+            $typeids = [];
+            if (!empty($param['aid']) || !empty($param['typeid'])) {
+                $typeids = $this->get_arc_type($param);
+            }
+            $where['is_del'] = 0;
+            // $where['arcrank'] = 0;
+            $where['channel'] = ['not in',[6,8]];
+            $where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
+            if (!empty($typeids)) $where['typeid'] = ['in', $typeids];
+            $arc_count = Db::name('archives')->where($where)->field('count(aid) as count,typeid')->group('typeid')->getAllWithIndex('typeid');
+    //        if (empty($arc_count)) return true;
+            $channel_ids = Db::name('channeltype')->where('nid', 'in', ['single', 'ask'])->column('id');
+
+            $type_where['is_del'] = 0;
+            $type_where['weapp_code'] = '';
+            $type_where['lang'] = !empty($param['lang']) ? $param['lang'] : get_admin_lang();
+            if (!empty($typeids)) $type_where['id'] = ['in', $typeids];
+            $type_count = Db::name('arctype')->where($type_where)->field('parent_id,topid,id,grade,typename,current_channel')->order('grade desc')->getAllWithIndex('id');
+            foreach ($type_count as $k => $v) {
+                $v['child'] = $type_count[$v['id']]['child'];
+                $v['child'][] = $v['id'];
+                if (!empty($v['child']) && !in_array($v['current_channel'], $channel_ids)) {
+                    $sum = 0;
+                    foreach ($v['child'] as $k1 => $v1) {
+                        $sum += !empty($arc_count[$v1]) ? $arc_count[$v1]['count'] : 0;
+                    }
+                    if ($sum > 0) {
+                        $type_count[$k]['sum'] = $sum;
+                    }
+                }
+                if (!empty($v['parent_id'])) {
+                    if (!empty($type_count[$v['parent_id']]['child'])) {
+                        $child = array_merge($type_count[$v['parent_id']]['child'], $v['child']);
+                        $type_count[$v['parent_id']]['child'] = array_unique($child);;
+                    } else {
+                        $type_count[$v['parent_id']]['child'] = $v['child'];
+                    }
+                }
+            }
+
+            foreach ($type_count as $k => $v) {
+                if (!empty($v['id'])) {
+                    $saveAll[$v['id']] = [
+                        'id' => $v['id'],
+                        'total_arc' => !empty($v['sum']) ? $v['sum'] : 0
+                    ];
+                }
+            }
+        }
+
+        // 后台清理缓存操作时执行
+        if ('guestbook' != $channelType && empty($param['typeid'])) {
+            $where = [
+                'form_type' => 0,
+                'channel' => 8,
+                'lang' => get_admin_lang(),
+            ];
+            $arcCountNew = Db::name('guestbook')->where($where)->field('count(aid) as count, typeid')->group('typeid')->getAllWithIndex('typeid');
+            foreach ($arcCountNew as $value) {
+                $saveAll[$value['typeid']] = [
+                    'id' => $value['typeid'],
+                    'total_arc' => $value['count']
                 ];
             }
         }
+
         if (!empty($saveAll)) {
             model('Arctype')->saveAll($saveAll);
             \think\Cache::clear("arctype");

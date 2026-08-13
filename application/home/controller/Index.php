@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -30,6 +30,8 @@ class Index extends Base
 
     public function index()
     {
+        $assign_data = [];
+
         $preview_templet = input('param.templet/s');
         /*处理多语言首页链接最后带斜杆，进行301跳转*/
         $lang = input('param.lang/s');
@@ -97,9 +99,12 @@ class Index extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }
@@ -112,6 +117,20 @@ class Index extends Base
         }
         
         $html = '';
+
+        // 多商家网站建设平台插件内置代码 start 
+        if (is_dir('./weapp/MultiSite/') && file_exists('./application/plugins/logic/MultiSiteLogic.php')) {
+            $multiSiteLogic = new \app\plugins\logic\MultiSiteLogic;
+            $multiSiteViewfile = $multiSiteLogic->setMultisiteHome($this->eyou, $assign_data);
+            if (!empty($multiSiteViewfile)) {
+                $this->assign('eyou', $this->eyou);
+                $this->assign($assign_data);
+                $html = $this->fetch($multiSiteViewfile);
+                return $html;
+            }
+        }
+        // 多商家网站建设平台插件内置代码 end
+
         // 招聘插件内置代码 start 
         if (file_exists('./weapp/Recruits/model/RecruitsModel.php')) {
             $recruitsModel = new \weapp\Recruits\model\RecruitsModel;
@@ -141,6 +160,8 @@ class Index extends Base
         // 获取回调的参数
         $inputXml = file_get_contents("php://input");
         if (!empty($inputXml)) {
+            // 禁止引用外部xml实体，防止XXE攻击
+            @libxml_disable_entity_loader(true);
             // 解析参数
             $jsonXml = json_encode(simplexml_load_string($inputXml, 'SimpleXMLElement', LIBXML_NOCDATA));
             // 转换数组
@@ -156,7 +177,7 @@ class Index extends Base
                         $config = model('ShopPublicHandle')->getSpecifyAppletsConfig(0, '', $attach[6]);
                     } else {
                         $config = Db::name('pay_api_config')->where('pay_mark', $attach[0])->value('pay_info');
-                        $config = !empty($config) ? unserialize($config) : [];
+                        $config = !empty($config) ? safe_unserialize($config) : [];
                     }
                     if (!empty($config) && !empty($config['appid']) || stristr($inputXml, "[{$config['appid']}]")) {
                         model('ShopPublicHandle')->getWeChatPayResult($attach[3], $jsonArr, $attach[2], $config, true, true);

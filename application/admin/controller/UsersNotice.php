@@ -219,6 +219,9 @@ class UsersNotice extends Base
         $this->assign('page', $pageStr); // 赋值分页输出
         $this->assign('pager', $pageObj); // 赋值分页对象
 
+        $open_id = input('param.open_id/d');
+        $this->assign('open_id', $open_id);
+
         return $this->fetch();
     }
 

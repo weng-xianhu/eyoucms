@@ -29,7 +29,7 @@ class Ueditor extends Base
     private $nowFileName = '';
     private $type_id = 0; // 图片分组
     private $compressConf = [];
-    private $admin_id = 0;
+    public $admin_id = 0;
 
     public function __construct()
     {
@@ -40,11 +40,21 @@ class Ueditor extends Base
         
         date_default_timezone_set("Asia/Shanghai");
         
-        $this->savePath = input('savepath','allimg').'/';
+        // 安全修复：验证savepath参数，防止路径穿越攻击
+        $savePath = input('savepath', 'allimg');
+        // 移除路径穿越字符和危险字符
+        $savePath = str_replace(array('..', '/', '\\', "\0", ':'), '', $savePath);
+        // 只允许字母、数字、下划线和中划线
+        $savePath = preg_replace('/[^a-zA-Z0-9_\-]/', '', $savePath);
+        // 如果过滤后为空，使用默认值
+        if (empty($savePath)) {
+            $savePath = 'allimg';
+        }
+        $this->savePath = $savePath . '/';
 
         $this->nowFileName = input('nowfilename', '');
         if (empty($this->nowFileName)) {
-            $this->nowFileName = md5(time().uniqid(mt_rand(), TRUE));
+            $this->nowFileName = secure_random_string(16, true);
         }
         
         error_reporting(E_ERROR | E_WARNING);
@@ -219,7 +229,7 @@ class Ueditor extends Base
     }
     
     //上传文件
-    private function upFile($fieldName) {
+    public function upFile($fieldName = 'file') {
         if (!IS_POST) {
             return json_encode(['state' =>'非法上传']);
         }
@@ -241,7 +251,10 @@ class Ueditor extends Base
         }
         $original = $file->getInfo('name');
 
+        // 获取配置的文件大小限制
         $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+
+        // 获取允许的文件类型
         $fileExt = '';
         $image_type = tpCache('basic.image_type');
         !empty($image_type) && $fileExt .= '|'.$image_type;
@@ -249,6 +262,8 @@ class Ueditor extends Base
         !empty($file_type) && $fileExt .= '|'.$file_type;
         $media_type = tpCache('basic.media_type');
         !empty($media_type) && $fileExt .= '|'.$media_type;
+        // 保存原始的附件类型配置，因为后面 $file_type 会被重新赋值
+        $file_type_config = $file_type;
         $fileExt = !empty($fileExt) ? str_replace('||', '|', $fileExt) : config('global.image_ext');
         $fileExt = str_replace('|', ',', trim($fileExt, '|'));
         $result = $this->validate(
@@ -256,15 +271,87 @@ class Ueditor extends Base
             ['file'=>'fileSize:'.$max_file_size.'|fileExt:'.$fileExt],
             ['file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$fileExt]
         );
-        // 文件后缀名
+
+        // 获取文件后缀
         $file_ext = pathinfo($original, PATHINFO_EXTENSION);
-        /*验证图片一句话木马*/
+        $file_ext = strtolower($file_ext);
+    
+        // 二次校验文件类型
+        if (in_array($file_ext, explode('|', $image_type))) {
+            // 使用getimagesize二次验证
+            $imageInfo = @getimagesize($file->getInfo('tmp_name'));
+            if (false === $imageInfo) {
+                return json_encode(['state' => '文件不是有效的图像']);
+            }
+            
+            // 使用imagecreatefromstring重新生成图片，去除恶意代码
+            $img = @imagecreatefromstring(file_get_contents($file->getInfo('tmp_name')));
+            if (false === $img) {
+                return json_encode(['state' => '图像文件已损坏']);
+            }
+            
+            $allowImageTypes = [];
+            if (defined('IMAGETYPE_GIF')) $allowImageTypes[IMAGETYPE_GIF] = 'gif';
+            if (defined('IMAGETYPE_JPEG')) $allowImageTypes[IMAGETYPE_JPEG] = 'jpeg';
+            if (defined('IMAGETYPE_PNG')) $allowImageTypes[IMAGETYPE_PNG] = 'png';
+            if (defined('IMAGETYPE_PSD')) $allowImageTypes[IMAGETYPE_PSD] = 'psd';
+            if (defined('IMAGETYPE_BMP')) $allowImageTypes[IMAGETYPE_BMP] = 'bmp';
+            if (defined('IMAGETYPE_JPC')) $allowImageTypes[IMAGETYPE_JPC] = 'jpc';
+            if (defined('IMAGETYPE_JP2')) $allowImageTypes[IMAGETYPE_JP2] = 'jp2';
+            if (defined('IMAGETYPE_JPX')) $allowImageTypes[IMAGETYPE_JPX] = 'jpx';
+            if (defined('IMAGETYPE_JB2')) $allowImageTypes[IMAGETYPE_JB2] = 'jb2';
+            if (defined('IMAGETYPE_IFF')) $allowImageTypes[IMAGETYPE_IFF] = 'iff';
+            if (defined('IMAGETYPE_WBMP')) $allowImageTypes[IMAGETYPE_WBMP] = 'wbmp';
+            if (defined('IMAGETYPE_XBM')) $allowImageTypes[IMAGETYPE_XBM] = 'xbm';
+            if (defined('IMAGETYPE_ICO')) $allowImageTypes[IMAGETYPE_ICO] = 'ico';
+            if (defined('IMAGETYPE_WEBP')) $allowImageTypes[IMAGETYPE_WEBP] = 'webp';
+            if (defined('IMAGETYPE_AVIF')) $allowImageTypes[IMAGETYPE_AVIF] = 'avif';
+    
+            $realImageType = $imageInfo[2];
+            if (empty($allowImageTypes[$realImageType])) {
+                imagedestroy($img);
+                return json_encode(['state' => '不支持的图片格式']);
+            }
+    
+            $type = $allowImageTypes[$realImageType];
+    
+            // 根据不同格式保存图片
+            if ($type == 'jpeg') {
+                // JPEG格式设置隔行扫描，提高加载体验
+                imageinterlace($img, true);
+                imagejpeg($img, $file->getInfo('tmp_name'), 100);
+            } elseif ($type == 'png') {
+                // PNG格式保存完整的alpha通道信息（透明度）
+                imagesavealpha($img, true);
+                // PNG质量范围0-9
+                imagepng($img, $file->getInfo('tmp_name'), 9);
+            } else {
+                // 其他格式使用动态函数调用
+                // 安全验证：只允许调用已知的图片处理函数
+                $allowedImageFunctions = array('imagegif', 'imagebmp', 'imagewbmp', 'imagexbm', 'imagewebp', 'imageavif');
+                $fun = 'image' . $type;
+                if (function_exists($fun) && in_array($fun, $allowedImageFunctions)) {
+                    $fun($img, $file->getInfo('tmp_name'));
+                } else {
+                    imagedestroy($img);
+                    return json_encode(['state' => '服务器不支持' . strtoupper($type) . '格式']);
+                }
+            }
+            
+            imagedestroy($img);
+        }
+
         if (in_array($file_ext, explode('|', $image_type))) {
             if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
-                $result = '疑似木马图片！';
+                $result = base64_decode(config('global.mm_tips'));
             }
         }
-        /*--end*/
+        else if (in_array($file_ext, explode('|', $file_type))) {
+            $this->savePath = preg_replace('/^allimg\//i', 'soft/', $this->savePath);
+        }
+        else if (in_array($file_ext, explode('|', $media_type))) {
+            $this->savePath = preg_replace('/^allimg\//i', 'media/', $this->savePath);
+        }
         
         if (true !== $result || empty($file)) {
             $state = "ERROR" . $result;
@@ -272,7 +359,17 @@ class Ueditor extends Base
         }
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = $this->savePath.getUploadSubDir();
+
+        // 检查上传目录权限
+        $uploadDir = UPLOAD_PATH . $this->savePath;
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        if (!is_dir($uploadDir) || !is_writable(UPLOAD_PATH)) {
+            return json_encode(array('state' => 'uploads目录没有写入权限'));
+        }
+
         // 使用自定义的文件保存规则
         $file_uploadname_open = (int)tpCache('global.file_uploadname_open');
         if ($file_uploadname_open == 1) { // by 小秋
@@ -286,6 +383,7 @@ class Ueditor extends Base
 
         if (!empty($info)) {
             $file_ext = pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
+            $file_ext = strtolower($file_ext); // 确保扩展名为小写
             $return_url = '/'.UPLOAD_PATH.$this->savePath.$info->getSaveName();
             $data = array(
                 'state' => 'SUCCESS',
@@ -295,6 +393,7 @@ class Ueditor extends Base
                 'time' => date("Y-m-d H:i:s"),
                 'type' => '.' . $info->getExtension(),
                 'size' => $info->getSize(),
+                'mime'     => $file->getInfo('type'),
             );
 
             //图片加水印
@@ -306,6 +405,19 @@ class Ueditor extends Base
                 $bucket_data = SynImageObjectBucket($data['url']);
                 $data = array_merge($data, $bucket_data);
                 /*end*/
+            } else {
+                // 非图片（视频/附件）也支持云存储同步
+                $unneed_syn = input('unneed_syn/d');
+                if (empty($unneed_syn)) {
+                    $relative_url = '/' . ltrim($return_url, '/');
+                    $bucket_data = SynImageObjectBucket($relative_url, [], $file);
+                    if (!empty($bucket_data) && is_array($bucket_data)) {
+                        $data = array_merge($data, $bucket_data);
+                        if (!empty($bucket_data['url'])) {
+                            $data['url'] = $bucket_data['url'];
+                        }
+                    }
+                }
             }
             
             /*-------------------------保存上传图片记录 start-----------------------*/
@@ -326,6 +438,7 @@ class Ueditor extends Base
                 $addData = [
                     'aid'         =>0,
                     'type_id'     =>$this->type_id,
+                    'group_code'  => 'image',
                     'image_url'   =>$data['url'],
                     'title'       => $data['original'],
                     'intro'       => '',
@@ -340,6 +453,52 @@ class Ueditor extends Base
                 ];
                 $img_id = Db::name('uploads')->insertGetId($addData);
                 $data['img_id'] = $img_id;
+                
+            } else if (in_array($file_ext, explode('|', $media_type))) {
+                $addData = [
+                    'aid'         =>0,
+                    'type_id'     =>$this->type_id,
+                    'group_code'  => 'video',
+                    'image_url'   =>$data['url'],
+                    'title'       => $data['original'],
+                    'intro'       => '',
+                    'width'       => 0,
+                    'height'      => 0,
+                    'filesize'    => $data['size'],
+                    'mime'        => $data['mime'],
+                    'users_id'    => (int)session('admin_info.syn_users_id'),
+                    'sort_order'  => 100,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
+                ];
+                Db::name('uploads')->insertGetId($addData);
+            } else if (!empty($file_type_config) && in_array($file_ext, explode('|', $file_type_config))) {
+                // 附件文件保存到数据库
+                $addData = [
+                    'aid'         =>0,
+                    'type_id'     =>$this->type_id,
+                    'group_code'  => 'file',
+                    'image_url'   =>$data['url'],
+                    'title'       => $data['original'],
+                    'intro'       => '',
+                    'width'       => 0,
+                    'height'      => 0,
+                    'filesize'    => $data['size'],
+                    'mime'        => $data['mime'],
+                    'users_id'    => (int)session('admin_info.syn_users_id'),
+                    'sort_order'  => 100,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
+                ];
+                try {
+                    $file_id = Db::name('uploads')->insertGetId($addData);
+                    if ($file_id) {
+                        $data['img_id'] = $file_id; // 为了兼容前端代码，也返回 img_id
+                    }
+                } catch (\Exception $e) {
+                    // 记录错误但不影响文件上传
+                    // \think\Log::write('附件保存到数据库失败: ' . $e->getMessage(), 'error');
+                }
             }
             /*-------------------------保存上传图片记录 end-----------------------*/
         } else {
@@ -349,11 +508,21 @@ class Ueditor extends Base
         if (1 == $this->editor['editor_select']) {
             return json_encode($data);
         } else if (2 == $this->editor['editor_select']) {
-            $CKEditorFuncNum = input('param.CKEditorFuncNum/d');
+            $CKEditorFuncNum = input('param.CKEditorFuncNum');
+            if ($CKEditorFuncNum === '' || $CKEditorFuncNum === null) {
+                // CKEditorFuncNum 为空时，返回 JSON 格式
+                return json_encode($data);
+            }
+            $CKEditorFuncNum = intval($CKEditorFuncNum);
             $message = '';
             $str = '<script type="text/javascript">window.parent.CKEDITOR.tools.callFunction('.$CKEditorFuncNum.', \''.$data['url'].'\', \''.$message.'\');</script>';
             exit($str);
         }
+    }
+
+    public function upFileAjax($fieldName = 'file') {
+        $result = $this->upFile($fieldName);
+        exit($result);
     }
 
     // 列出图片
@@ -434,8 +603,18 @@ class Ueditor extends Base
             );
             return json_encode($data);
         }
+
+        // 检查是否为内网 IP
+        $validateResult = validateRemoteUrl($imgUrl);
+        if ($validateResult['code'] == 0) {
+            $data = array(
+                'state' => $validateResult['msg'],
+            );
+            return json_encode($data);
+        }
+
         //获取请求头并检测死链
-        $heads = @get_headers($imgUrl, 1);
+        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
         if (empty($heads)) {
             $data=array(
                 'state' => '链接不可用',
@@ -465,17 +644,13 @@ class Ueditor extends Base
 
         //打开输出缓冲区并获取远程图片
         ob_start();
-        $context = stream_context_create(
-            array('http' => array(
-                'follow_location' => false // don't follow redirects
-            ))
-        );
+        $context = get_remote_stream_context($imgUrl);
         readfile($imgUrl,false,$context);
         $img = ob_get_contents();
         ob_end_clean();
         preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/",$imgUrl,$m);
 
-        $dirname = './'.UPLOAD_PATH.'ueditor/'.date('Ymd/');
+        $dirname = './'.UPLOAD_PATH.'ueditor/'.getUploadSubDir();
         $file['oriName'] = $m ? $m[1] : "";
         $file['filesize'] = strlen($img);
         $file['ext'] = strtolower(strrchr($config['oriName'],'.'));
@@ -492,7 +667,7 @@ class Ueditor extends Base
         }
 
         //创建目录失败
-        if(!file_exists($dirname) && !mkdir($dirname,0777,true)){
+        if(!file_exists($dirname) && !mkdir($dirname,0755,true)){
             $data=array(
                 'state' => '目录创建失败',
             );
@@ -533,6 +708,7 @@ class Ueditor extends Base
             $addData = [
                 'aid'         =>0,
                 'type_id'     =>$this->type_id,
+                'group_code'  => 'image',
                 'image_url'   =>$data['url'],
                 'title'       => $data['original'],
                 'intro'       => '',
@@ -566,7 +742,23 @@ class Ueditor extends Base
         $base64Data = $_POST[$fieldName];
         $img = base64_decode($base64Data);
 
-        $dirname = './'.UPLOAD_PATH.'ueditor/'.date('Ymd/');
+        // 验证Base64解码后的内容是否为真实图片，防止任意文件写入
+        $allowedMimes = array('image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp');
+        $detectedMime = false;
+        if (class_exists('finfo')) {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $detectedMime = $finfo->buffer($img);
+        } elseif (function_exists('getimagesizefromstring')) {
+            $imageInfo = @getimagesizefromstring($img);
+            if ($imageInfo !== false && isset($imageInfo['mime'])) {
+                $detectedMime = $imageInfo['mime'];
+            }
+        }
+        if ($detectedMime === false || !in_array($detectedMime, $allowedMimes)) {
+            return json_encode(array('state' => '非法文件类型，仅允许上传图片'));
+        }
+
+        $dirname = './'.UPLOAD_PATH.'ueditor/'.getUploadSubDir();
         $file['filesize'] = strlen($img);
         $file['oriName'] = $config['oriName'];
         $file['ext'] = strtolower(strrchr($config['oriName'],'.'));
@@ -583,7 +775,7 @@ class Ueditor extends Base
         }
 
         //创建目录失败
-        if(!file_exists($dirname) && !mkdir($dirname,0777,true)){
+        if(!file_exists($dirname) && !mkdir($dirname,0755,true)){
             $data=array(
                 'state' => '目录创建失败',
             );
@@ -660,11 +852,9 @@ class Ueditor extends Base
             $result = true;
         }
 
-        /*验证图片一句话木马*/
         if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
-            $result = '疑似木马图片！';
+            $result = base64_decode(config('global.mm_tips'));
         }
-        /*--end*/
 
         $return_url = '';
         if (true !== $result || empty($file)) {
@@ -678,8 +868,17 @@ class Ueditor extends Base
             } else if ('loginbgimg/' == $this->savePath) {
                 $savePath = 'public/static/admin/loginbg/';
             } else {
-                $savePath = UPLOAD_PATH . $this->savePath . date('Ymd/');
+                $savePath = UPLOAD_PATH . $this->savePath . getUploadSubDir();
             }
+
+            // 检查上传目录权限
+            if (!is_dir($savePath)) {
+                @mkdir($savePath, 0755, true);
+            }
+            if (!is_dir($savePath) || !is_writable(dirname($savePath))) {
+                respose(array('state' => 'uploads目录没有写入权限'), 'json');
+            }
+
             // 移动到框架应用根目录/public/uploads/ 目录下
             $file_uploadname_open = (int)tpCache('global.file_uploadname_open');
             if ($file_uploadname_open == 1) { // by 小秋
@@ -751,6 +950,7 @@ class Ueditor extends Base
         $addData = [
             'aid'         =>0,
             'type_id'     =>$this->type_id,
+            'group_code'  => 'image',
             'image_url'   =>$return_data['url'],
             'title'       => $original,
             'intro'       => '',
@@ -781,9 +981,14 @@ class Ueditor extends Base
         }
 
         $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
-        $path = UPLOAD_PATH.'soft/'.date('Ymd/');
-        if (!file_exists($path)) {
-            mkdir($path);
+        $path = UPLOAD_PATH.'soft/'.getUploadSubDir();
+
+        // 检查上传目录权限
+        if (!is_dir($path)) {
+            @mkdir($path, 0755, true);
+        }
+        if (!is_dir($path) || !is_writable(UPLOAD_PATH)) {
+            respose(array('state' => 'uploads目录没有写入权限'));
         }
 
         //$input_file  ['upfile'] = $info['Filedata'];  一个是上传插件里面来的, 另外一个是 文章编辑器里面来的
@@ -880,7 +1085,7 @@ class Ueditor extends Base
         /*--end*/
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = $this->savePath.getUploadSubDir();
         // 定义文件名
         $fileName    = $file->getInfo('name');
         // 提取文件名后缀
@@ -894,6 +1099,16 @@ class Ueditor extends Base
         // 中文转码
         $this->fileName = iconv("utf-8","gb2312//IGNORE",$fileName);
 
+        // 检查上传目录权限
+        $uploadDir = UPLOAD_PATH . $this->savePath;
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        if (!is_dir($uploadDir) || !is_writable(UPLOAD_PATH)) {
+            echo json_encode(array('msg' => 'uploads目录没有写入权限'));
+            exit;
+        }
+
         // 使用自定义的文件保存规则
         $file_uploadname_open = (int)tpCache('global.file_uploadname_open');
         if ($file_uploadname_open == 1) { // by 小秋
@@ -904,25 +1119,66 @@ class Ueditor extends Base
                 return $this->admin_id.'-'.dd2char(date("ymdHis").mt_rand(100,999)); // 使用自定义的文件保存规则
             })->move(UPLOAD_PATH.$this->savePath);
         }
-        
-        if($info){
-            // 拼装数据存入session
-            $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
-            $return_data = array(
-                'code'      => 1,
-                'msg'       => '上传成功',
-                'file_url'  => '/' . UPLOAD_PATH.$this->savePath.$info->getSaveName(),
-                'file_mime' => $file->getInfo('type'),
-                'file_name' => ($file_uploadname_open == 1) ? $info->getSaveName() : $fileName,
-                'file_ext'  => '.' . $file_ext,
-                'file_size' => $info->getSize(),
-                'uhash'     => $this->uhash($file_path),
-                'md5file'   => md5_file($file_path),
-            );
-        }else{
-            $return_data = array('msg' => $info->getError());
+        $aiEditor = input('aiEditor/d', 0);
+        if (1 === intval($aiEditor)) {
+            return [
+                'errorCode' => 0,
+                'data' => [
+                    'href' => ROOT_DIR . '/' . UPLOAD_PATH . $this->savePath . $info->getSaveName(),
+                    'fileName' => ($file_uploadname_open == 1) ? $info->getSaveName() : $fileName,
+                ],
+            ];
+        } else {
+            if ($info) {
+                // 拼装数据存入session
+                $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+                $file_url = '/' . UPLOAD_PATH.$this->savePath.$info->getSaveName();
+                
+                /* 同步到第三方对象存储空间（如七牛、OSS、COS、AWS S3） */
+                $unneed_syn = input('unneed_syn/d');
+                if (empty($unneed_syn)) {
+                    // 传入相对路径并携带文件对象，保持与图片上传一致
+                    $relative_url = '/' . ltrim($file_path, '/');
+                    $bucket_data = SynImageObjectBucket($relative_url, [], $file);
+                    if (!empty($bucket_data) && is_array($bucket_data)) {
+                        if (!empty($bucket_data['url'])) {
+                            $file_url = $bucket_data['url'];
+                        }
+                    }
+                }
+                /* end */
+                
+                // 兼容前端 getting-started.js 期望的数据格式
+                $return_data = array(
+                    'error' => array(
+                        'code'     => 0,
+                        'path'     => $file_url,
+                        'mime'     => $file->getInfo('type'),
+                        'uhash'    => $this->uhash($file_path),
+                        'md5file'  => md5_file($file_path),
+                    ),
+                    // 同时保留原有格式，以便其他调用方式兼容
+                    'code'      => 1,
+                    'msg'       => '上传成功',
+                    'file_url'  => $file_url,
+                    'file_mime' => $file->getInfo('type'),
+                    'file_name' => ($file_uploadname_open == 1) ? $info->getSaveName() : $fileName,
+                    'file_ext'  => '.' . $file_ext,
+                    'file_size' => $info->getSize(),
+                    'uhash'     => $this->uhash($file_path),
+                    'md5file'   => md5_file($file_path),
+                );
+            }else{
+                $return_data = array(
+                    'error' => array(
+                        'code' => 1,
+                        'msg'  => $info->getError()
+                    ),
+                    'msg' => $info->getError()
+                );
+            }
+            echo json_encode($return_data);
         }
-        echo json_encode($return_data);
     }
 
     //上传文件
@@ -963,11 +1219,20 @@ class Ueditor extends Base
         /*--end*/
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = "soft/" . date('Ymd/');
+        $this->savePath = "soft/" . getUploadSubDir();
         // 定义文件名
         $fileName = $file->getInfo('name');
         // 提取文件名后缀
         $file_ext = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        // 检查上传目录权限
+        $uploadDir = UPLOAD_PATH . $this->savePath;
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        if (!is_dir($uploadDir) || !is_writable(UPLOAD_PATH)) {
+            respose(array('code' => 0, 'msg' => 'uploads目录没有写入权限'));
+        }
 
         // 使用自定义的文件保存规则
         $file_uploadname_open = (int)tpCache('global.file_uploadname_open');
@@ -982,10 +1247,35 @@ class Ueditor extends Base
         if ($info) {
             // 拼装数据存入session
             $file_path = UPLOAD_PATH . $this->savePath . $info->getSaveName();
-            $return    = array(
+            $file_url = ROOT_DIR.'/' . UPLOAD_PATH . $this->savePath . $info->getSaveName();
+            
+            /* 同步到第三方对象存储空间（如七牛、OSS、COS、AWS S3） */
+            $unneed_syn = input('unneed_syn/d');
+            if (empty($unneed_syn)) {
+                // 传入相对路径并携带文件对象，保持与图片上传一致
+                $relative_url = '/' . ltrim($file_path, '/');
+                $bucket_data = SynImageObjectBucket($relative_url, [], $file);
+                if (!empty($bucket_data) && is_array($bucket_data)) {
+                    if (!empty($bucket_data['url'])) {
+                        $file_url = $bucket_data['url'];
+                    }
+                }
+            }
+            /* end */
+            
+            // 兼容前端 getting-started.js 期望的数据格式
+            $return = array(
+                'error' => array(
+                    'code'     => 0,
+                    'path'     => $file_url,
+                    'mime'     => $file->getInfo('type'),
+                    'uhash'    => $this->uhash($file_path),
+                    'md5file'  => md5_file($file_path),
+                ),
+                // 同时保留原有格式，以便其他调用方式兼容
                 'code'      => 1,
                 'msg'       => '上传成功',
-                'file_url'  => ROOT_DIR.'/' . UPLOAD_PATH . $this->savePath . $info->getSaveName(),
+                'file_url'  => $file_url,
                 'file_mime' => $file->getInfo('type'),
                 'file_name' => ($file_uploadname_open == 1) ? $info->getSaveName() : $fileName,
                 'file_ext'  => '.' . $file_ext,
@@ -994,7 +1284,14 @@ class Ueditor extends Base
                 'md5file'   => md5_file($file_path),
             );
         } else {
-            $res = ['code' => 0, 'msg' => $info->getError()];
+            $return = array(
+                'error' => array(
+                    'code' => 1,
+                    'msg'  => $file->getError()
+                ),
+                'code' => 0,
+                'msg'  => $file->getError()
+            );
         }
         respose($return);
     }
@@ -1003,26 +1300,26 @@ class Ueditor extends Base
     public function upVideo()
     {
         if (!IS_POST) {
-            return json_encode(['state' => '非法上传']);
+            respose(['state' => '非法上传']);
         }
 
         $file     = request()->file('file');
         if (empty($file)) {
             if (!@ini_get('file_uploads')) {
-                return json_encode(['state' => '请检查空间是否开启文件上传功能！']);
+                respose(['state' => '请检查空间是否开启文件上传功能！']);
             } else {
-                return json_encode(['state' => 'ERROR，空间限制上传大小！']);
+                respose(['state' => 'ERROR，空间限制上传大小！']);
             }
         }
         $error = $file->getError();
         if (!empty($error)) {
-            return json_encode(['state' => $error]);
+            respose(['state' => $error]);
         }
 
         $media_type                 = tpCache('basic.media_type');
         $media_type = !empty($media_type) ? str_replace('|', ',', $media_type) : config('global.media_ext');
         if (empty($media_type)) {
-            return json_encode(['state' => 'ERROR，请设置上传多媒体文件类型！']);
+            respose(['state' => 'ERROR，请设置上传多媒体文件类型！']);
         } else {
             $media_type = str_replace('|', ',', $media_type);
         }
@@ -1033,8 +1330,8 @@ class Ueditor extends Base
             ['file.fileSize' => '上传视频过大', 'file.fileExt' => '上传视频后缀名必须为' . $media_type]
         );
         if (true !== $result || empty($file)) {
-            $state = "ERROR" . $result;
-            return json_encode(['state' => $state]);
+            $state = "ERROR：" . $result;
+            respose(['state' => $state]);
         }
         // 定义文件名
         $fileName    = $file->getInfo('name');
@@ -1042,6 +1339,7 @@ class Ueditor extends Base
         $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
         // 过滤文件名.\/的特殊字符，防止利用上传漏洞
         $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
+
         //获取视频时长start
         vendor('getid3.getid3');
         // 实例化
@@ -1052,7 +1350,18 @@ class Ueditor extends Base
         //获取视频时长end
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = preg_replace('/^allimg\//i', 'media/', $this->savePath);
+        $this->savePath = $this->savePath.getUploadSubDir();
+
+        // 检查上传目录权限
+        $uploadDir = UPLOAD_PATH . $this->savePath;
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        if (!is_dir($uploadDir) || !is_writable(UPLOAD_PATH)) {
+            respose(array('state' => 'uploads目录没有写入权限'));
+        }
+
         // 使用自定义的文件保存规则
         $file_uploadname_open = (int)tpCache('global.file_uploadname_open');
         if ($file_uploadname_open == 1) { // by 小秋
@@ -1063,24 +1372,196 @@ class Ueditor extends Base
                 return $this->admin_id.'-'.dd2char(date("ymdHis").mt_rand(100,999)); // 使用自定义的文件保存规则
             })->move(UPLOAD_PATH.$this->savePath);
         }
-        if ($info) {
-            $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
-            $file_size = $info->getSize();
-            $data = array(
-                'state'    => 'SUCCESS',
-                'url'      => '/' . $file_path,
-                'time'     => $fileduration,
-                'title'    => $newfileName,
-                'original' => $info->getSaveName(),
-                'type'     => '.' . $info->getExtension(),
-                'size'     => $file_size,
-                'mime'     => $file->getInfo('type'),
-            );
-
-            $data['url'] = ROOT_DIR . $data['url']; // 支持子目录
+        $aiEditor = input('aiEditor/d', 0);
+        if (1 === intval($aiEditor)) {
+            return [
+                'errorCode' => 0,
+                'data' => [
+                    'src' => ROOT_DIR . '/' . UPLOAD_PATH . $this->savePath . $info->getSaveName(),
+                    'poster' => '',
+                ],
+            ];
         } else {
-            $data = json_encode(array('state' => 'ERROR' . $info->getError()));
+            if ($info) {
+                $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+                $data = array(
+                    'state'    => 'SUCCESS',
+                    'url'      => ROOT_DIR . '/' . $file_path,
+                    'time'     => $fileduration,
+                    'title'    => $newfileName,
+                    'original' => $info->getSaveName(),
+                    'type'     => '.' . $info->getExtension(),
+                    'size'     => $info->getSize(),
+                    'mime'     => $file->getInfo('type'),
+                    'width'    => 0,
+                    'height'   => 0,
+                );
+
+                /* 同步到第三方对象存储空间（如七牛） */
+                $unneed_syn = input('unneed_syn/d');
+                if (empty($unneed_syn)) {
+                    // 传入相对路径并携带文件对象，保持与图片上传一致
+                    $relative_url = '/' . ltrim($file_path, '/');
+                    $bucket_data = SynImageObjectBucket($relative_url, [], $file);
+                    if (!empty($bucket_data) && is_array($bucket_data)) {
+                        $data = array_merge($data, $bucket_data);
+                        if (!empty($bucket_data['url'])) {
+                            $data['url'] = $bucket_data['url'];
+                        }
+                    }
+                }
+                /* end */
+
+                $addData = [
+                    'aid'         =>0,
+                    'type_id'     =>$this->type_id,
+                    'group_code'  => 'video',
+                    'image_url'   =>$data['url'],
+                    'title'       => $data['original'],
+                    'intro'       => '',
+                    'width'       => $data['width'],
+                    'height'      => $data['height'],
+                    'filesize'    => $data['size'],
+                    'mime'        => $data['mime'],
+                    'users_id'    => (int)session('admin_info.syn_users_id'),
+                    'sort_order'  => 100,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
+                ];
+                Db::name('uploads')->insertGetId($addData);
+            } else {
+                $data = json_encode(array('state' => 'ERROR' . $info->getError()));
+            }
+            respose($data);
         }
-        return $data;
+    }
+
+    /**
+     * AI智能助手
+     * @return [type] [description]
+     */
+    public function ai_helper_check()
+    {
+        $driver = 'DeepSeek';
+        $api_key = $api_model = $api_url = '';
+        $api_option = [];
+        $promptText = input('param.promptText/s');
+        $promptText = htmlspecialchars_decode($promptText);
+
+        $row = Db::name('weapp')->where(['code'=>'Ai'])->find();
+        if (empty($row)) {
+            $this->error("请先安装插件[Ai智能创作平台]，且填写{$driver}的AI配置");
+        } else if ($row['status'] != 1) {
+            $this->error("请先启用插件[Ai智能创作平台]，且填写{$driver}的AI配置");
+        }
+
+        $aiLogic = new \weapp\Ai\logic\AiLogic;
+        $aiData = $aiLogic->getAiData();
+        if ('阿里云百炼' == $driver) {
+            $api_model = empty($aiData['aliyun_text_model']) ? '' : $aiData['aliyun_text_model'];
+            $api_key = empty($aiData['aliyun_api_key']) ? '' : $aiData['aliyun_api_key'];
+            $api_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+        } else if ('文心一言' == $driver) {
+            $api_model = empty($aiData['baidu_model']) ? '' : $aiData['baidu_model'];
+            $api_key = empty($aiData['baidu_api_key']) ? '' : $aiData['baidu_api_key'];
+            $secret_key = empty($aiData['baidu_secret_key']) ? '' : $aiData['baidu_secret_key'];
+            $access_token = $this->getContentAccessToken($api_key, $secret_key);
+            if (!empty($access_token)) {
+                $api_url = $this->baiduAiPortUrlArr($api_model, $access_token);
+            }
+            $api_option = [
+                'body' => [
+                    'model' => $api_model,
+                    'messages' => [
+                        ['role' => 'user', 'content' => $promptText]
+                    ],
+                    'stream' => true,
+                    'temperature' => !empty($aiData['baidu_temperature']) ? floatval($aiData['baidu_temperature']) : 0,
+                ],
+            ];
+        } else if ('豆包' == $driver) {
+            $api_model = empty($aiData['doubao_api_model']) ? '' : $aiData['doubao_api_model'];
+            $api_key = empty($aiData['doubao_api_key']) ? '' : $aiData['doubao_api_key'];
+            $api_url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+        } else if ('DeepSeek' == $driver) {
+            $api_model = 'deepseek-chat';
+            $api_key = empty($aiData['deepseek_api_key']) ? '' : $aiData['deepseek_api_key'];
+            $api_url = 'https://api.deepseek.com/chat/completions';
+        } else if ('ModStart' == $driver) {
+            $api_model = 'default';
+            $api_key = 'default';
+            $api_option = [
+                'body' => [
+                    'prompt' => $promptText,
+                ],
+            ];
+        }
+
+        if (empty($api_key) || empty($api_model) || empty($api_url)) {
+            $this->error("请在插件[Ai智能创作平台]填写{$driver}的AI配置");
+        }
+
+        $data = [
+            'ai_config' => [
+                'driver' => $driver,
+                'model' => $api_model,
+                'key' => $api_key,
+                'url' => $api_url,
+                'option' => $api_option,
+            ],
+        ];
+        $this->success('ok', null, $data);
+    }
+
+    // 获取百度AI验证token
+    private function getContentAccessToken($api_key, $secret_key)
+    {
+        // $contentAccessToken = \think\Cache::get('contentAccessToken');
+        if (true || empty($contentAccessToken)) {
+            // 请求access_token
+            $postData = [
+                'grant_type' => 'client_credentials',
+                'client_id' => $api_key,
+                'client_secret' => $secret_key
+            ];
+            $headers = ['Content-Type: application/json'];
+            $jsonData = httpRequest('https://aip.baidubce.com/oauth/2.0/token', 'POST', http_build_query($postData), $headers, 300000);
+            $jsonData = json_decode($jsonData, true);
+            // 请求失败
+            if (!empty($jsonData['error']) && 'invalid_request' == $jsonData['error']) $this->error('无效的请求<br/>' . $jsonData['error_description']);
+            if (!empty($jsonData['error']) && 'invalid_client' == $jsonData['error']) $this->error('接口返回信息<br/>' . $jsonData['error_description']);
+            // 空access_token则提示
+            if (empty($jsonData['access_token'])) $this->error('请在插件[Ai智能创作平台]填写文心一言的AI配置');
+            // 重置access_token
+            $contentAccessToken = $jsonData['access_token'];
+            // 存入缓存
+            // \think\Cache::set('contentAccessToken', $contentAccessToken, 86400);
+        }
+
+        return $contentAccessToken;
+    }
+
+    /**
+     * 文心一言的模型对应接口URL
+     * @param  string $baiduModel         [description]
+     * @param  string $contentAccessToken [description]
+     * @return [type]                     [description]
+     */
+    private function baiduAiPortUrlArr($baiduModel = '', $contentAccessToken = '')
+    {
+        $portUrlArr = [
+            // 文本接口--免费
+            'ERNIE-Lite-8K' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-lite-8k?access_token=' . $contentAccessToken,
+            'ERNIE-Speed-128K' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token=' . $contentAccessToken,
+            // 文本接口
+            'ERNIE-Bot' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=' . $contentAccessToken,
+            'ERNIE-Bot-turbo' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=' . $contentAccessToken,
+            'ERNIE-Bot 4.0' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=' . $contentAccessToken,
+            'Llama-2-13b-chat' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/llama_2_13b?access_token=' . $contentAccessToken,
+            'Llama-2-70b-chat' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/llama_2_70b?access_token=' . $contentAccessToken,
+            'ChatGLM2-6B-32K' => 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/chatglm2_6b_32k?access_token=' . $contentAccessToken,
+        ];
+
+        return !empty($baiduModel) && !empty($portUrlArr[$baiduModel]) ? $portUrlArr[$baiduModel] : '';
     }
 }

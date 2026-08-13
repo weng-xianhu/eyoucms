@@ -979,7 +979,17 @@ class Uiset extends Controller
     {
         $assign_data = [];
         $gourl = input('param.gourl/s');
-        $assign_data['murl'] = base64_decode($gourl).'&iframe=1';
+        $decodedUrl = base64_decode($gourl);
+        // 安全验证：只允许本站URL，防止开放重定向攻击
+        if (!empty($decodedUrl)) {
+            $parsedUrl = parse_url($decodedUrl);
+            $currentHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+            // 如果URL包含host且不是本站，则重置为空
+            if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
+                $decodedUrl = '';
+            }
+        }
+        $assign_data['murl'] = $decodedUrl . '&iframe=1';
 
         $webConfig = tpCache('web');
         $web_adminbasefile = !empty($webConfig['web_adminbasefile']) ? $webConfig['web_adminbasefile'] : $this->root_dir.'/login.php'; // 后台入口文件路径

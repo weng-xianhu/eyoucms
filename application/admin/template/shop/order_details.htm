@@ -126,6 +126,11 @@
                             {eq name="$OrderData.order_status" value="1"}
                             {if condition="$OrderData.logistics_type == 2"}
                             <span class="f-28" style="color: #2d8cf0;">待核销</span>
+                            {if condition="!empty($weappVerifyLog) && isset($weappVerifyLog['total_verify_times']) && isset($weappVerifyLog['used_verify_times'])"}
+                            <span style="font-size: 16px; color: #ff9900; margin-left: 8px;">
+                                (剩余{$weappVerifyLog.total_verify_times - $weappVerifyLog.used_verify_times}次)
+                            </span>
+                            {/if}
                             {else/}
                             <span class="f-28" style="color: #ff9900;">{$admin_order_status_arr[$OrderData.order_status]|default=''}</span>
                             {/if}
@@ -173,7 +178,10 @@
                             {/eq}
 
                             {if condition="0 == $OrderData.prom_type && 2 == $OrderData.order_status"}
-                            <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" onclick="orderMark('ysh','{$OrderData.order_id}','{$OrderData.users_id}');">确认收货</a>
+                                {if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/order_details_btn.htm')" /}
+                                    {include file="/weapp/Kdnwaybills/template/admin/shop/order_details_btn.htm" /}
+                                {/if}
+                                <a class="lumping-btn-big lumping-btn-green mr10" href="JavaScript:void(0);" onclick="orderMark('ysh','{$OrderData.order_id}','{$OrderData.users_id}');">确认收货</a>
                             {/if}
 
                             {eq name="$OrderData.order_status" value="0"}
@@ -275,6 +283,44 @@
                     <div class="lumping-content">
                         <div class="lumping-content-title">核销码：</div> <div class="lumping-content-text">{$weappVerifyLog.verify_code}</div>
                     </div>
+                    
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">核销类型：</div> 
+                        <div class="lumping-content-text">
+                            {if condition="$weappVerifyLog.verify_type eq 2 or $weappVerifyLog.total_verify_times > 1"}
+                                <span class="label label-warning">多次核销</span>
+                            {else /}
+                                <span class="label label-info">单次核销</span>
+                            {/if}
+                        </div>
+                    </div>
+                    
+                    
+                    {if condition="$weappVerifyLog.verify_expire_time > 0"}
+                    <div class="lumping-content">
+                        <div class="lumping-content-title">核销有效期：</div> 
+                        <div class="lumping-content-text">
+                            {if condition="$weappVerifyLog.verify_expire_time > time()"}
+                                <span style="color: #19be6b;">
+                                    {if condition="!empty($weappVerifyLog.verify_expire_desc)"}
+                                        {$weappVerifyLog.verify_expire_desc}
+                                    {else /}
+                                        {$weappVerifyLog.verify_expire_time|date='Y-m-d H:i'}
+                                    {/if}
+                                </span>
+                            {else /}
+                                <span style="color: #ed4014;">
+                                    {if condition="!empty($weappVerifyLog.verify_expire_desc)"}
+                                        {$weappVerifyLog.verify_expire_desc}（已过期）
+                                    {else /}
+                                        {$weappVerifyLog.verify_expire_time|date='Y-m-d H:i'}（已过期）
+                                    {/if}
+                                </span>
+                            {/if}
+                        </div>
+                    </div>
+                    {/if}
+                    
                     {/eq}
                     {if condition="$OrderData.prom_type == 0 && 1 == $OrderData.logistics_type"}
                     <div class="lumping-content">
@@ -568,27 +614,28 @@
                 });
                 return false;
             } else if ('sdtk' == status_name) {
-                layer.prompt({
-                    formType: 2,
-                    shade: layer_shade,
-                    value: ' ',
-                    title: '提示',
-                    closeBtn: 3,
-                    id: 'manualRefund',
-                    btnAlign:'r',
-                    btn: ['关闭并退款', '取消'],
-                    area: ['300px', '120px'],
-                    success: function(layero, index) {
-                        $("#manualRefund").find('textarea').attr('placeholder', '请填写关闭订单原因(非必填)');
-                        var msg = '<span class="f-16 mb5" style="display: block;">是否关闭订单并自行手动退款</span><span class="red f-12">此操作系统不会自动退款，需手动线下退款</span><br/><br/>';
-                        $("#manualRefund").prepend(msg);
-                        $(".layui-layer-content").css('text-align', 'left');
-                    }
-                }, function(value, index, elem) {
-                    // 手动关闭订单并退款
-                    manualRefund(order_id, value);
-                    layer.close(index);
-                });
+                openFullframe("{:url('Shop/order_manual_refund')}&order_id=" + order_id, '手动退款处理', '800px', '62%');
+                // layer.prompt({
+                //     formType: 2,
+                //     shade: layer_shade,
+                //     value: ' ',
+                //     title: '提示',
+                //     closeBtn: 3,
+                //     id: 'manualRefund',
+                //     btnAlign:'r',
+                //     btn: ['关闭并退款', '取消'],
+                //     area: ['300px', '120px'],
+                //     success: function(layero, index) {
+                //         $("#manualRefund").find('textarea').attr('placeholder', '请填写关闭订单原因(非必填)');
+                //         var msg = '<span class="f-16 mb5" style="display: block;">是否关闭订单并自行手动退款</span><span class="red f-12">此操作系统不会自动退款，需手动线下退款</span><br/><br/>';
+                //         $("#manualRefund").prepend(msg);
+                //         $(".layui-layer-content").css('text-align', 'left');
+                //     }
+                // }, function(value, index, elem) {
+                //     // 手动关闭订单并退款
+                //     manualRefund(order_id, value);
+                //     layer.close(index);
+                // });
                 return false;
             } else if ('ddsc' == status_name) {
                 var msg = '确认删除订单？';
@@ -724,4 +771,9 @@
         }
 
     </script>
+
+    {if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/order_details.js')" /}
+        <script type="text/javascript" src="__ROOT_DIR__/weapp/Kdnwaybills/template/admin/shop/order_details.js?v={:getTime()}"></script>
+    {/if}
+    
 {include file="public/footer" /}

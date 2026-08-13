@@ -28,7 +28,7 @@
                             </label>&nbsp;
                         {/volist}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 区域选项 end -->
@@ -43,7 +43,7 @@
                     <dd class="opt">
                         <input type="text" class="input-txt" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 单行文本框 end -->
@@ -58,14 +58,14 @@
                     <dd class="opt">          
                         <textarea rows="5" cols="60" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" style="height:60px;">{$vo.dfvalue|default=''}</textarea>
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 多行文本框 end -->
             {/case}
 
             {case value="checkbox"}
-                <!-- 复选框 start -->
+                <!-- 复选框[旧] start -->
                 <dl class="row">
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -76,7 +76,31 @@
                         {/volist}
                         <input type="hidden" name="{$vo.fieldArr}[{$vo.name}_eyempty]" value="{if condition="!empty($vo['trueValue'])"}1{else /}0{/if}">
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </dd>
+                </dl>
+                <script type="text/javascript">
+                    function func_{$vo.name}_eyempty()
+                    {
+                        var len = $("input[name='{$vo.fieldArr}[{$vo.name}][]']:checked").length;
+                        $("input[name='{$vo.fieldArr}[{$vo.name}_eyempty]']").val(len);
+                    }
+                </script>
+                <!-- 复选框[旧] end -->
+            {/case}
+            {case value="checkboxs"}
+                <!-- 复选框 start -->
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if} onclick="func_{$vo.name}_eyempty();">{$v2['name']}</label>&nbsp;
+                        {/volist}
+                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name}_eyempty]" value="{if condition="!empty($vo['trueValue'])"}1{else /}0{/if}">
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -90,7 +114,7 @@
             {/case}
 
             {case value="radio"}
-                <!-- 单选项 start -->
+                <!-- 单选项[旧] start -->
                 <dl class="row">
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -100,7 +124,24 @@
                         <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
                         {/volist}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </dd>
+                </dl>
+                <!-- 单选项[旧] end -->
+            {/case}
+
+            {case value="radios"}
+                <!-- 单选项 start -->
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2['name']}</label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 单选项 end -->
@@ -120,7 +161,7 @@
                             <input id="{$vo.fieldArr}_{$vo.name|default=''}0" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="0" type="radio" {if condition="0 == $vo['dfvalue']"}checked="checked"{/if}>
                         </div>
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -144,7 +185,7 @@
             {/case}
 
             {case value="select"}
-                <!-- 下拉框 start -->
+                <!-- 下拉框[旧] start -->
                 <dl class="row">
                     <dt class="tit">
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -156,7 +197,26 @@
                             {/volist}
                         </select>
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </dd>
+                </dl>
+                <!-- 下拉框[旧] end -->
+            {/case}
+
+            {case value="selects"}
+                <!-- 下拉框 start -->
+                <dl class="row">
+                    <dt class="tit">
+                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </dt>
+                    <dd class="opt"> 
+                        <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
+                            {volist name="$vo.dfvalue" id="v2"}
+                            <option value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2['name']}</option>
+                            {/volist}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 下拉框 end -->
@@ -169,7 +229,7 @@
                         <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                     </dt>
                     <dd class="opt">
-                        <div class="input-file-show div_{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="0"}style="display: none;"{/neq}>
+                        <div class="input-file-show">
                             <span class="show">
                                 <a id="img_a_{$vo.fieldArr}_{$vo.name|default=''}" target="_blank" class="nyroModal" rel="gal" href="{$vo[$vo['name'].'_eyou_local']|default='javascript:void(0);'}">
                                     <i id="img_i_{$vo.fieldArr}_{$vo.name|default=''}" class="fa fa-picture-o" {notempty name="$vo[$vo['name'].'_eyou_local']"}onmouseover="layer_tips=layer.tips('<img src={$vo[$vo['name'].'_eyou_local']} class=\'layer_tips_img\'>',this,{tips: [1, '#fff']});"{/notempty} onmouseout="layer.close(layer_tips);"></i>
@@ -182,11 +242,8 @@
                                      title="点击前方预览图可查看大图，点击按钮选择文件并提交表单后上传生效">
                             </span>
                         </div>
-                        <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_remote" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_remote]" value="{$vo[$vo['name'].'_eyou_remote']|default=''}" placeholder="http://" class="input-txt" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}style="display: none;"{/neq}>
-                        &nbsp;
-                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_is_remote]" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_is_remote" value="1" {eq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}checked="checked"{/eq} onClick="clickRemote(this, '{$vo.fieldArr}_{$vo.name|default=''}_eyou');">远程图片</label>
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -207,18 +264,15 @@
                     <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
                 </dt>
                 <dd class="opt">
-                    <div class="input-file-show div_{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="0"}style="display: none;"{/neq}>
+                    <div class="input-file-show">
                         <span class="type-file-box">
                             <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_local" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_local]" value="{$vo[$vo['name'].'_eyou_local']|default=''}" class="type-file-text" autocomplete="off">
                             <input type="button" name="button" id="button1" value="选择上传..." class="type-file-button">
                             <input class="type-file-file" type="file" onchange="upload_file_1585641738(this)" size="30" hidefocus="true" nc_type="change_site_{$vo.fieldArr}_{$vo.name|default=''}">
                         </span>
                     </div>
-                    <input type="text" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_remote" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_remote]" value="{$vo[$vo['name'].'_eyou_remote']|default=''}" placeholder="http://" class="input-txt" {neq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}style="display: none;"{/neq}>
-                    &nbsp;
-                    <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}_eyou_is_remote]" id="{$vo.fieldArr}_{$vo.name|default=''}_eyou_is_remote" value="1" {eq name="$vo[$vo['name'].'_eyou_is_remote']" value="1"}checked="checked"{/eq} onClick="clickRemote(this, '{$vo.fieldArr}_{$vo.name|default=''}_eyou');">远程文件</label>
                     <span class="err"></span>
-                    <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                    <p class="notic">{$vo.remark|default=''}</p>
                 </dd>
             </dl>
             <script type="text/javascript">
@@ -368,7 +422,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="只允许纯数字" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 整数类型 end -->
@@ -383,7 +437,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的数值" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 小数类型 end -->
@@ -398,7 +452,7 @@
                     <dd class="opt"> 
                         <input type="text" value="{$vo.dfvalue|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" placeholder="允许带有小数点的金额" class="input-txt" onkeyup="this.value=this.value.replace(/[^0-9\.]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9\.]/g,''));">&nbsp;{$vo.dfvalue_unit|default=''}
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <!-- 金额类型 end -->
@@ -416,7 +470,7 @@
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
                         </span> 
                         <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
+                        <p class="notic">{$vo.remark|default=''}</p>
                     </dd>
                 </dl>
                 <script type="text/javascript">
@@ -435,147 +489,154 @@
 
             {case value="htmltext"}
                 <!-- HTML文本 start -->
-                {eq name="$editor.editor_select" value="1"}
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
-                    </dt>
-                    <dd class="opt">
-                        {if condition="isset($vo['first']) AND 1 == $vo['first']"}
-                        <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
-                        <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
-                        {/if}
-                        <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
-                        <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
-                    </dd>
-                </dl>
+                {empty name="$AiEditorConfig.openEditor"}
+                    {eq name="$editor.editor_select" value="1"}
+                    <dl class="row">
+                        <dt class="tit">
+                            <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                        </dt>
+                        <dd class="opt">
+                            {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                            <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq}>远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                            <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq}>清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                            {/if}
+                            <textarea class="span12 ckeditor" id="{$vo.fieldArr}_{$vo.name|default=''}" data-func="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" title="">{$vo.dfvalue|default=''}</textarea>
+                            <span class="err"></span>
+                            <p class="notic">{$vo.remark|default=''}</p>
+                        </dd>
+                    </dl>
 
-                {if condition="isset($vo['first']) AND 1 == $vo['first']"}
-                <script type="text/javascript">
-                    // 打开多图选择及上传界面
-                    function OpenImagesList(e, obj) {
-                        var func = '';
-                        if (e.path && e.path[10] && e.path[10].id && undefined != e.path[10].id) {
-                            func = e.path[10].id;
-                        } else {
-                            func = $(obj).parent().parent().parent().parent().parent().parent().parent().parent().parent().attr('id');
-                        }
-                        if (func.indexOf('addonField_') == -1) {
-                            func = 'addonField_content';
-                        }
-                        var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
-                        OpenUrl += "&func=images_call_" + func;
-                        top.layer.open({
-                            type: 2,
-                            title: '图片上传',
-                            shade: layer_shade,
-                            maxmin: false,
-                            shadeClose: false,
-                            area: ['1000px', '625px'],
-                            content: OpenUrl
-                        });
-                    }
-                </script>
-                {/if}
-
-                <script type="text/javascript">
-                    var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
-                        serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
-                        zIndex: 999,
-                        initialFrameWidth: "100%", //初化宽度
-                        initialFrameHeight: 450, //初化高度
-                        focus: false, //初始化时，是否让编辑器获得焦点true或false
-                        maximumWords: 99999,
-                        removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
-                        pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
-                        autoHeightEnabled: false,
-                        toolbars: ueditor_toolbars
-                    });
-
-                    //必须在提交前渲染编辑器；
-                    function {$vo.fieldArr}_{$vo.name|default=''}() {
-                        //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
-                        if(UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").queryCommandState('source') != 0) {
-                            UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('source'); //切换到【设计】视图
-                        }
-                    }
-
-                    // 加载图片到编辑器指定位置
-                    function images_call_{$vo.fieldArr}_{$vo.name|default=''}(fileurl_tmp) {
-                        var addBody = '';
-                        $.each(fileurl_tmp, function(index, items) {
-                            addBody += '<p><img src="'+items+'"></p>';
-                        });
-                        UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('inserthtml', addBody);
-                    }
-
-                    // 自动远程图片本地化/自动清除非本站链接
-                    function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
-                        var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
-                        $.ajax({
-                            type: 'POST',
-                            url: "{:url('Archives/ajax_auto_editor')}",
-                            data: {local:local,link:link,body:body,_ajax:1},
-                            dataType: "JSON",
-                            async:false,
-                            success: function(res){
-                                if (res.code == 1) {
-                                    UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
-                                }
+                    {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                    <script type="text/javascript">
+                        // 打开多图选择及上传界面
+                        function OpenImagesList(e, obj) {
+                            var func = '';
+                            var path = e.path || (e.composedPath && e.composedPath()) || [];
+                            if (path[10] && path[10].id) {
+                                func = path[10].id;
+                            } else {
+                                func = $(obj).parents('[id^="addonField_"]').attr('id') || '';
                             }
+                            if (!func || func.indexOf('addonField_') == -1) {
+                                func = 'addonField_content';
+                            }
+                            var OpenUrl = "{:url('Uploadimgnew/upload', ['num'=>30, 'path'=>'allimg', 'is_water'=>1])}";
+                            OpenUrl += "&func=images_call_" + func;
+                            top.layer.open({
+                                type: 2,
+                                title: '图片上传',
+                                shade: layer_shade,
+                                maxmin: false,
+                                shadeClose: false,
+                                area: ['1000px', '625px'],
+                                content: OpenUrl
+                            });
+                        }
+                    </script>
+                    {/if}
+
+                    <script type="text/javascript">
+                        var ue_{$vo.fieldArr}_{$vo.name|default=''} = UE.getEditor('{$vo.fieldArr}_{$vo.name|default=''}',{
+                            serverUrl :"{:url('Ueditor/index',array('savepath'=>'allimg'))}",
+                            zIndex: 999,
+                            initialFrameWidth: "100%", //初化宽度
+                            initialFrameHeight: 450, //初化高度
+                            focus: false, //初始化时，是否让编辑器获得焦点true或false
+                            maximumWords: 99999,
+                            removeFormatAttributes: 'class,style,lang,width,height,align,hspace,valign',//允许的最大字符数 'fullscreen',
+                            pasteplain:false, //是否默认为纯文本粘贴。false为不使用纯文本粘贴，true为使用纯文本粘贴
+                            autoHeightEnabled: false,
+                            toolbars: ueditor_toolbars
                         });
-                    }
-                </script>
+
+                        //必须在提交前渲染编辑器；
+                        function {$vo.fieldArr}_{$vo.name|default=''}() {
+                            //判断编辑模式状态:0表示【源代码】HTML视图；1是【设计】视图,即可见即所得；-1表示不可用
+                            if(UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").queryCommandState('source') != 0) {
+                                UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('source'); //切换到【设计】视图
+                            }
+                        }
+
+                        // 加载图片到编辑器指定位置
+                        function images_call_{$vo.fieldArr}_{$vo.name|default=''}(fileurl_tmp) {
+                            var addBody = '';
+                            $.each(fileurl_tmp, function(index, items) {
+                                addBody += '<p><img src="'+items+'"></p>';
+                            });
+                            UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").execCommand('inserthtml', addBody);
+                        }
+
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
+                            var body = UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").getContent();
+                            $.ajax({
+                                type: 'POST',
+                                url: "{:url('Archives/ajax_auto_editor')}",
+                                data: {local:local,link:link,body:body,_ajax:1},
+                                dataType: "JSON",
+                                async:false,
+                                success: function(res){
+                                    if (res.code == 1) {
+                                        UE.getEditor("{$vo.fieldArr}_{$vo.name|default=''}").setContent(res.data.body);
+                                    }
+                                }
+                            });
+                        }
+                    </script>
+                    {else/}
+                    <dl class="row">
+                        <dt class="tit">
+                            <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                        </dt>
+                        <dd class="opt">
+                            {if condition="isset($vo['first']) AND 1 == $vo['first']"}
+                            <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq} >远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
+                            <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq} >清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
+                            {/if}
+                            <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]">{$vo.dfvalue|default=''}</textarea>
+                            <span class="err"></span>
+                            <p class="notic">{$vo.remark|default=''}</p>
+                        </dd>
+                    </dl>
+                    <script type="text/javascript">
+                        // 加载编辑器，若存在编辑器则先进行销毁
+                        try {
+                            var elemtid = "{$vo.fieldArr}_{$vo.name|default=''}";
+                            var editor = CKEDITOR.instances[elemtid];
+                            if (editor) editor.destroy(true);
+                        } catch(e) {}
+
+                        CKEDITOR.replace(elemtid, {
+                            filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                            filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
+                        });
+
+                        // 自动远程图片本地化/自动清除非本站链接
+                        function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
+                            var body = CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.getData();
+                            $.ajax({
+                                type: 'POST',
+                                url: "{:url('Archives/ajax_auto_editor')}",
+                                data: {local:local,link:link,body:body,_ajax:1},
+                                dataType: "JSON",
+                                async:false,
+                                success: function(res){
+                                    if (res.code == 1) {
+                                        CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.setData(res.data.body);
+                                    }
+                                }
+                            });
+                        }
+
+                    </script>
+                    {/eq}
                 {else/}
-                <dl class="row">
-                    <dt class="tit">
-                        <label>{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
-                    </dt>
-                    <dd class="opt">
-                        {if condition="isset($vo['first']) AND 1 == $vo['first']"}
-                        <label class="curpoin"><input type="checkbox" name="editor_remote_img_local" id="editor_remote_img_local" data-val="{$vo.editor.editor_remote_img_local}" value="1" {eq name="$vo.editor.editor_remote_img_local" value="1"} checked {/eq} >远程图片本地化</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(1);">[手动]</a>&nbsp; -->
-                        <label class="curpoin"><input type="checkbox" name="editor_img_clear_link" id="editor_img_clear_link" data-val="{$vo.editor.editor_img_clear_link}" value="1" {eq name="$vo.editor.editor_img_clear_link" value="1"} checked {/eq} >清除非本站链接</label>&nbsp;<!-- <a href="javascript:void(0);" onclick="editor_handle_210607(2);">[手动]</a>&nbsp; -->
-                        {/if}
-                        <textarea id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]">{$vo.dfvalue|default=''}</textarea>
-                        <span class="err"></span>
-                        <!-- <p class="notic">{$vo.remark|default=''}</p> -->
-                    </dd>
-                </dl>
-                <script type="text/javascript">
-                    // 加载编辑器，若存在编辑器则先进行销毁
-                    try {
-                        var elemtid = "{$vo.fieldArr}_{$vo.name|default=''}";
-                        var editor = CKEDITOR.instances[elemtid];
-                        if (editor) editor.destroy(true);
-                    } catch(e) {}
-
-                    CKEDITOR.replace(elemtid, {
-                        filebrowserBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
-                        filebrowserImageBrowseUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
-                        filebrowserUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
-                        filebrowserImageUploadUrl: "{:url('Ueditor/index', ['savepath'=>'allimg', 'action'=>'uploadimage'])}",
-                    });
-
-                    // 自动远程图片本地化/自动清除非本站链接
-                    function ajax_auto_editor_{$vo.fieldArr}_{$vo.name|default=''}(local,link) {
-                        var body = CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.getData();
-                        $.ajax({
-                            type: 'POST',
-                            url: "{:url('Archives/ajax_auto_editor')}",
-                            data: {local:local,link:link,body:body,_ajax:1},
-                            dataType: "JSON",
-                            async:false,
-                            success: function(res){
-                                if (res.code == 1) {
-                                    CKEDITOR.instances.{$vo.fieldArr}_{$vo.name|default=''}.setData(res.data.body);
-                                }
-                            }
-                        });
-                    }
-
-                </script>
-                {/eq}
+                    {if condition="file_exists(ROOT_PATH.'weapp/AiEditor/template/ai_editor.htm')" /}
+                        {include file="/weapp/AiEditor/template/ai_editor.htm" /}
+                    {/if}
+                {/empty}
                 <!-- HTML文本 end -->
             {/case}
         {/switch}
@@ -608,7 +669,8 @@
         }
 
         // 第一个自定义字段显示感汉号提示
-        var ganhaohtml = '<a class="ui_tips-ganhan" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic-ganhan-ico\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);"></a><p class="notic-ganhan-ico none">属于自定义字段。在“更多功能>栏目字段”里管理</p>';
+        // var ganhaohtml = '<a class="ui_tips-ganhan" href="javascript:void(0);" onmouseover="layer_tips = layer.tips($(this).parent().find(\'p.notic-ganhan-ico\').html(), this, {time:100000});" onmouseout="layer.close(layer_tips);"></a><p class="notic-ganhan-ico none">属于自定义字段。在“更多功能>栏目字段”里管理</p>';
+        var ganhaohtml = '<a href="{:url('Field/arctype_index')}">[字段管理]</a>';
         $($('#FieldAddonextitem').find('dl > dd').find('p.notic').get(0)).parent().append(ganhaohtml);
     });
 </script>

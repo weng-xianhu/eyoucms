@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -68,6 +68,18 @@ class TagArticlepay extends Base
             $pay_data = Db::name('article_pay')->field('part_free,free_content')->where('aid',$aid)->find();
             if (!empty($pay_data['part_free'])) {
                 $free_content = !empty($pay_data['free_content']) ? $pay_data['free_content'] : '';
+                if (3 == $pay_data['part_free']) {
+                    // 替换付费内容标签为隐藏提示
+                    $free_content = htmlspecialchars_decode($artData['content']);
+                    $free_content = free_taglib_handle($free_content, $artData, 'hide');
+                    $free_content = htmlspecialchars($free_content);
+                } else {
+                    // 移除付费内容标签
+                    // if (stripos($free_content, '[付费内容开始]') !== false && stripos($free_content, '[/付费内容结束]') !== false) {
+                    //     $pattern = '/\[付费内容开始\](.*?)\[\/付费内容结束\]/is';
+                    //     $free_content = preg_replace($pattern, '', $free_content);
+                    // }
+                }
             }
             /*end*/
             

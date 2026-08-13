@@ -730,20 +730,22 @@ i.ice_b{ background-position:-336px -214px;}
     top: 2px;
     left: 0;
 }
-.navboxs_bt{
+.navboxs_bt {
+    display: flex;
+    justify-content: center;
+}
+.navboxs_bt a {
     display: inline-block;
     height: 35px;
     line-height: 35px;
-    padding: 0 18px;
+    padding: 0 40px;
     background-color: #4fc0e8;
     color: #fff;
     white-space: nowrap;
     text-align: center;
     font-size: 14px;
     border: none;
-    border-radius: 2px;
     cursor: pointer;
-    margin-left: 30px;
     border-radius: 20px;
 }
-.navboxs_bt:hover { background-color: #3aa8cf; }
+.navboxs_bt a:hover { background-color: #3aa8cf; }

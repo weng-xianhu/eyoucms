@@ -13,12 +13,294 @@
         isModifyUploadVideo = false,
         uploadFile;
 
+    var useNewVideoLibrary = detectVideoLibraryContext();
+
     window.onload = function(){
         $focus($G("videoUrl"));
         initTabs();
         initVideo();
+        // 在初始化上传之前，先拦截文件选择按钮
+        interceptFilePicker();
         initUpload();
     };
+    
+    // 拦截文件选择按钮，在WebUploader创建之前就绑定事件
+    function interceptFilePicker() {
+        // 这个函数现在不需要了，因为我们在initUploader中处理
+        // 保留空函数避免错误
+    }
+
+    function detectVideoLibraryContext() {
+        try {
+            var topWin = window.top || window.parent || window;
+            var href = '';
+            try {
+                if (topWin && topWin.location) {
+                    href = topWin.location.href || '';
+                } else if (window.location) {
+                    href = window.location.href || '';
+                }
+            } catch (e) {
+                href = (window.location && window.location.href) || '';
+            }
+            if (href) {
+                var lowerHref = href.toLowerCase();
+                if (lowerHref.indexOf('/user/') !== -1 || lowerHref.indexOf('?m=user') !== -1 || lowerHref.indexOf('/index.php?m=user') !== -1) {
+                    return false;
+                }
+            }
+            var moduleName = '';
+            try {
+                if (topWin && topWin.module_name) {
+                    moduleName = String(topWin.module_name).toLowerCase();
+                } else if (window.module_name) {
+                    moduleName = String(window.module_name).toLowerCase();
+                }
+            } catch (err) {}
+            if (moduleName === 'user') {
+                return false;
+            }
+            if (topWin && topWin.APP_MODULE && String(topWin.APP_MODULE).toLowerCase() === 'user') {
+                return false;
+            }
+        } catch (err2) {}
+        return true;
+    }
+    
+    // 处理从视频列表选择的视频（全局函数，供回调使用）
+    function handleVideoSelection(fileurl_tmp, filename_tmp, filesize_tmp) {
+        var videoUrl = '';
+        var videoName = '';
+        var videoSize = 0;
+        
+        // 处理单个或多个视频URL
+        if (typeof fileurl_tmp === 'string') {
+            videoUrl = fileurl_tmp;
+        } else if (Array.isArray(fileurl_tmp) && fileurl_tmp.length > 0) {
+            videoUrl = fileurl_tmp[0];
+        }
+        
+        if (typeof filename_tmp === 'string') {
+            videoName = filename_tmp;
+        } else if (Array.isArray(filename_tmp) && filename_tmp.length > 0) {
+            videoName = filename_tmp[0];
+        }
+        
+        // 处理文件大小
+        if (typeof filesize_tmp === 'string') {
+            videoSize = parseInt(filesize_tmp, 10) || 0;
+        } else if (Array.isArray(filesize_tmp) && filesize_tmp.length > 0) {
+            videoSize = parseInt(filesize_tmp[0], 10) || 0;
+        } else if (typeof filesize_tmp === 'number') {
+            videoSize = filesize_tmp;
+        }
+        
+        if (!videoUrl) {
+            return;
+        }
+        
+        // 关闭视频列表弹窗
+        try {
+            var layerObj = window.parent.layer || window.top.layer;
+            if (layerObj && window._ueditorVideoLayerIndex !== undefined) {
+                layerObj.close(window._ueditorVideoLayerIndex);
+            }
+        } catch (e) {
+            console.error('关闭弹窗失败:', e);
+        }
+        
+        // 获取视频文件扩展名
+        var urlParts = videoUrl.split('.');
+        var ext = urlParts.length > 1 ? urlParts[urlParts.length - 1].toLowerCase().split('?')[0] : 'mp4';
+        
+        // 将视频添加到上传列表
+        // 创建一个虚拟的文件对象，模拟上传成功
+        var fakeFile = {
+            id: 'video_' + new Date().getTime(),
+            name: videoName || '视频文件',
+            url: videoUrl,
+            size: videoSize, // 使用从服务器获取的真实文件大小
+            ext: ext,
+            getStatus: function() { return 'complete'; }
+        };
+        
+        // 添加到上传视频列表
+        uploadVideoList.push({
+            'url': videoUrl,
+            'type': ext,
+            'original': videoName || '视频文件'
+        });
+        
+        // 创建文件视图（延迟执行，确保addFileFromUrl已定义）
+        setTimeout(function() {
+            if (typeof window.addFileFromUrl === 'function') {
+                window.addFileFromUrl(fakeFile, videoUrl);
+            } else {
+                // 如果addFileFromUrl还未定义，尝试直接操作DOM
+                var $queue = $('#queueList .filelist');
+                var $filePickerBlock = $queue.find('#filePickerBlock');
+                if ($queue.length > 0) {
+                    var $li = $('<li id="' + fakeFile.id + '">' +
+                            '<p class="title">' + fakeFile.name + '</p>' +
+                            '<p class="imgWrap"></p>' +
+                            '<p class="progress"><span></span></p>' +
+                            '</li>');
+                    var $wrap = $li.find('p.imgWrap');
+                    $wrap.empty().addClass('notimage').append('<i class="file-preview file-type-' + fakeFile.ext.toLowerCase() + '"></i>' +
+                        '<span class="file-title">' + fakeFile.name + '</span>');
+                    $li.find('p.progress span').css('width', '100%');
+                    $li.addClass('state-complete');
+                    $li.append('<span class="success"></span>');
+                    if ($filePickerBlock.length > 0) {
+                        $li.insertBefore($filePickerBlock);
+                    } else {
+                        $queue.append($li);
+                    }
+                }
+            }
+        }, 100);
+    }
+    
+    // 打开视频列表对话框
+    function openVideoListDialog() {
+        if (!useNewVideoLibrary) {
+            return false;
+        }
+        // 获取视频列表URL，优先从父页面获取，否则构建默认URL
+        var videoListUrl = '';
+        try {
+            // 尝试从父页面获取视频列表URL
+            if (window.parent && window.parent.uploadVideoSysLayerUrl) {
+                videoListUrl = window.parent.uploadVideoSysLayerUrl;
+            } else if (window.top && window.top.uploadVideoSysLayerUrl) {
+                videoListUrl = window.top.uploadVideoSysLayerUrl;
+            } else {
+                // 构建默认的视频列表URL（统一走后台入口文件，避免某些入口 302 重定向）
+                var langParam = '';
+                try {
+                    // 从上层窗口取语言参数
+                    if (window.top && window.top.__lang__) {
+                        langParam = window.top.__lang__;
+                    } else if (window.parent && window.parent.__lang__) {
+                        langParam = window.parent.__lang__;
+                    } else if (window.opener && window.opener.__lang__) {
+                        langParam = window.opener.__lang__;
+                    }
+                } catch (err) {}
+
+                // 优先使用系统定义的后台入口 eyou_basefile（如 login.php）
+                if (window.top && window.top.eyou_basefile) {
+                    videoListUrl = window.top.eyou_basefile
+                        + "?m=admin&c=Uploadvideonew&a=upload&func=ueditorVideoCallback&path=media&open_source=bendi&num=1";
+                } else {
+                    // 退化方案：根据当前路径大致推算后台入口
+                    var locationRef;
+                    try {
+                        locationRef = (window.top && window.top.location) ? window.top.location : window.location;
+                    } catch (err2) {
+                        locationRef = window.location;
+                    }
+                    var baseUrl = locationRef.origin + locationRef.pathname.replace(/\/[^\/]*$/, '');
+                    baseUrl = baseUrl.replace(/\/public\/plugins\/Ueditor\/dialogs\/video$/i, '');
+                    // 大多数环境下后台入口是 login.php 或 index.php，这里默认用 login.php，减少 302 概率
+                    videoListUrl = baseUrl + '/login.php?m=admin&c=Uploadvideonew&a=upload&func=ueditorVideoCallback&path=media&open_source=bendi&num=1';
+                }
+
+                // 追加语言参数（从父级/顶级窗口取），避免没有 lang 导致后台重定向
+                if (langParam && videoListUrl.indexOf('lang=') === -1) {
+                    videoListUrl += '&lang=' + encodeURIComponent(langParam);
+                }
+            }
+        } catch (e) {
+            console.error('获取视频列表URL失败:', e);
+        }
+        
+        if (!videoListUrl) {
+            alert('无法获取视频列表地址，请刷新页面后重试');
+            return false;
+        }
+        
+        // 打开视频列表弹窗
+        var layerObj = window.parent.layer || window.top.layer || (window.parent && window.parent.parent && window.parent.parent.layer);
+        if (!layerObj) {
+            // 尝试从不同层级获取layer
+            try {
+                if (window.top && window.top.layer) {
+                    layerObj = window.top.layer;
+                } else if (window.parent && window.parent.layer) {
+                    layerObj = window.parent.layer;
+                }
+            } catch (e) {
+                console.error('获取layer对象失败:', e);
+            }
+        }
+        
+        if (layerObj) {
+            // 创建全局回调函数，供视频列表页面调用
+            // 将回调函数注册到多个可能的window对象，以便视频列表页面能够调用
+            var callbackName = 'ueditorVideoCallback';
+            var parentWindow = window.parent;
+            var topWindow = window.top;
+            
+            // 定义回调函数
+            var callbackFunc = function(fileurl_tmp, filename_tmp, filesize_tmp) {
+                // 处理从视频列表选择的视频
+                handleVideoSelection(fileurl_tmp, filename_tmp, filesize_tmp);
+            };
+            
+            // 在多个window对象上注册回调函数，确保视频列表页面能够找到
+            try {
+                if (parentWindow) {
+                    parentWindow[callbackName] = callbackFunc;
+                }
+                if (topWindow && topWindow !== parentWindow) {
+                    topWindow[callbackName] = callbackFunc;
+                }
+                // 也在当前窗口注册，作为备用
+                window[callbackName] = callbackFunc;
+            } catch (e) {
+                console.error('注册回调函数失败:', e);
+            }
+            
+            // 在URL中添加回调函数名
+            if (videoListUrl.indexOf('func=') > -1) {
+                videoListUrl = videoListUrl.replace(/func=[^&]*/i, 'func=' + callbackName);
+            } else {
+                var separator = videoListUrl.indexOf('?') > -1 ? '&' : '?';
+                videoListUrl += separator + 'func=' + callbackName;
+            }
+            
+            layerObj.open({
+                type: 2,
+                title: '选择视频',
+                area: ['1000px', '625px'],
+                content: videoListUrl,
+                success: function(layero, index) {
+                    // 存储layer索引，用于关闭弹窗
+                    window._ueditorVideoLayerIndex = index;
+                },
+                end: function() {
+                    // 清理回调函数
+                    try {
+                        if (parentWindow && parentWindow[callbackName]) {
+                            delete parentWindow[callbackName];
+                        }
+                        if (topWindow && topWindow[callbackName] && topWindow !== parentWindow) {
+                            delete topWindow[callbackName];
+                        }
+                        if (window[callbackName]) {
+                            delete window[callbackName];
+                        }
+                        delete window._ueditorVideoLayerIndex;
+                    } catch (e) {
+                        console.error('清理回调函数失败:', e);
+                    }
+                }
+            });
+        } else {
+            alert('无法打开视频列表，请确保页面已加载layer组件');
+        }
+    }
 
     /* 初始化tab标签 */
     function initTabs(){
@@ -400,6 +682,234 @@
                 return;
             }
 
+            if (useNewVideoLibrary) {
+                // 不再创建隐藏元素，直接使用#filePickerReady，只拦截点击事件
+                
+                // 拦截文件选择按钮的点击事件，改为打开视频列表
+                // 在WebUploader创建之后，拦截其创建的按钮点击事件
+                // 使用MutationObserver监听DOM变化，当WebUploader创建按钮后立即拦截
+                var observer = new MutationObserver(function(mutations) {
+                    var $filePickerReady = $('#filePickerReady');
+                    if ($filePickerReady.length > 0) {
+                        // 查找WebUploader创建的按钮（通常是内部的input或button）
+                        var $pickerBtn = $filePickerReady.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible');
+                        if ($pickerBtn.length > 0) {
+                            // 拦截所有可能的点击事件
+                            $pickerBtn.off('click').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            
+                            // 也拦截父元素的点击
+                            $filePickerReady.off('click').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            
+                            // 使用原生事件在capture阶段拦截
+                            $pickerBtn.each(function() {
+                                this.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.stopImmediatePropagation();
+                                    openVideoListDialog();
+                                    return false;
+                                }, true);
+                            });
+                            
+                            observer.disconnect(); // 找到按钮后停止观察
+                        }
+                    }
+                });
+                
+                // 开始观察#filePickerReady元素的变化
+                var $filePickerReady = $('#filePickerReady');
+                if ($filePickerReady.length > 0) {
+                    observer.observe($filePickerReady[0], {
+                        childList: true,
+                        subtree: true,
+                        attributes: false
+                    });
+                    
+                    // 也直接拦截#filePickerReady的点击（作为备用）
+                    $filePickerReady.off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        openVideoListDialog();
+                        return false;
+                    });
+                    
+                    // 使用原生事件在capture阶段拦截
+                    $filePickerReady[0].addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        openVideoListDialog();
+                        return false;
+                    }, true);
+                }
+                
+                // 延迟检查，确保WebUploader已经创建了按钮
+                setTimeout(function() {
+                    var $filePickerReady = $('#filePickerReady');
+                    if ($filePickerReady.length > 0) {
+                        var $pickerBtn = $filePickerReady.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible, button, a');
+                        $pickerBtn.each(function() {
+                            $(this).off('click').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            this.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            }, true);
+                        });
+                    }
+                    observer.disconnect();
+                }, 500);
+            }
+            
+            // 从URL添加文件视图（暴露到全局作用域，供handleVideoSelection调用）
+            // 注意：这个函数在initUploader作用域内，可以直接访问fileCount、fileSize等变量
+            if (useNewVideoLibrary) {
+                window.addFileFromUrl = function(file, videoUrl) {
+                    var $li = $('<li id="' + file.id + '">' +
+                            '<p class="title">' + file.name + '</p>' +
+                            '<p class="imgWrap"></p>' +
+                            '<p class="progress"><span></span></p>' +
+                            '</li>'),
+                        $btns = $('<div class="file-panel">' +
+                            '<span class="cancel">' + lang.uploadDelete + '</span></div>').appendTo($li),
+                        $prgress = $li.find('p.progress span'),
+                        $wrap = $li.find('p.imgWrap'),
+                        $info = $('<p class="error"></p>').hide().appendTo($li);
+                    
+                    // 显示视频预览
+                    $wrap.empty().addClass('notimage').append('<i class="file-preview file-type-' + file.ext.toLowerCase() + '"></i>' +
+                        '<span class="file-title">' + file.name + '</span>');
+                    
+                    $prgress.css('width', '100%');
+                    $li.addClass('state-complete');
+                    $li.append('<span class="success"></span>');
+                    
+                    // 更新文件计数和大小（模拟文件已添加）
+                    fileCount++;
+                    // 如果文件有size属性，使用它；否则使用默认值
+                    // 注意：file.size可能是0，需要检查是否大于0
+                    var fileSizeValue = 0;
+                    if (file.size && file.size > 0) {
+                        fileSizeValue = parseInt(file.size, 10);
+                    } else {
+                        // 使用默认值，但每个文件使用不同的默认值以避免重复
+                        // 这里先使用一个合理的默认值，实际应该从服务器获取
+                        fileSizeValue = 5 * 1024 * 1024; // 默认5MB，更合理的视频文件大小
+                    }
+                    // 累加文件大小（直接访问作用域内的fileSize变量）
+                    // 确保fileSize是数字类型并正确累加
+                    if (typeof fileSize !== 'number' || isNaN(fileSize)) {
+                        fileSize = 0;
+                    }
+                    fileSize = fileSize + fileSizeValue;
+                    
+                    // 更新状态显示
+                    if (fileCount === 1) {
+                        $placeHolder.addClass('element-invisible');
+                        $statusBar.removeClass('element-invisible');
+                        $queue.removeClass('element-invisible');
+                    }
+                    
+                    // 更新进度和状态
+                    percentages[file.id] = [fileSizeValue, 1]; // 标记为已完成
+                    
+                    // 先更新状态，再更新总进度
+                    updateStatus();
+                    updateTotalProgress();
+                    
+                    // 删除按钮事件
+                    $btns.on('click', 'span.cancel', function() {
+                        var index = uploadVideoList.findIndex(function(item) {
+                            return item.url === videoUrl;
+                        });
+                        if (index > -1) {
+                            uploadVideoList.splice(index, 1);
+                        }
+                        // 更新文件计数和大小
+                        fileCount--;
+                        fileSize -= fileSizeValue;
+                        delete percentages[file.id];
+                        $li.remove();
+                        updateTotalProgress();
+                        updateStatus();
+                        // 如果没有文件了，恢复初始状态
+                        if (fileCount === 0) {
+                            $placeHolder.removeClass('element-invisible');
+                            $queue.addClass('element-invisible');
+                            $statusBar.addClass('element-invisible');
+                            setState('pedding');
+                        }
+                    });
+                    
+                    $li.on('mouseenter', function () {
+                        $btns.stop().animate({height: 30});
+                    });
+                    $li.on('mouseleave', function () {
+                        $btns.stop().animate({height: 0});
+                    });
+                    
+                    $li.insertBefore($filePickerBlock);
+                    setState('ready');
+                    
+                    // 确保继续添加按钮显示（延迟执行，确保DOM已更新）
+                    setTimeout(function() {
+                        var $filePickerBtn = $('#filePickerBtn');
+                        if ($filePickerBtn.length > 0) {
+                            // 如果按钮是空的，创建按钮
+                            if ($filePickerBtn.children().length === 0) {
+                                var continueAddBtn = $('<div class="webuploader-pick" style="display: inline-block; padding: 0 18px; border: 1px solid #cfcfcf; background: #ffffff; color: #565656; border-radius: 3px; margin-left: 10px; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center;">继续添加</div>');
+                                $filePickerBtn.append(continueAddBtn);
+                                
+                                // 绑定点击事件
+                                continueAddBtn.on('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.stopImmediatePropagation();
+                                    openVideoListDialog();
+                                    return false;
+                                });
+                            }
+                            $filePickerBtn.show().removeClass('element-invisible').css({
+                                'display': 'block',
+                                'visibility': 'visible'
+                            });
+                        }
+                        
+                        // 隐藏开始上传按钮
+                        var $uploadBtn = $('.uploadBtn');
+                        if ($uploadBtn.length > 0) {
+                            $uploadBtn.hide().css({
+                                'display': 'none',
+                                'visibility': 'hidden'
+                            });
+                        }
+                    }, 100);
+                };
+            } else {
+                window.addFileFromUrl = function() {};
+            }
+
             uploader = _this.uploader = WebUploader.create({
                 pick: {
                     id: '#filePickerReady',
@@ -412,15 +922,231 @@
                 fileSingleSizeLimit: fileMaxSize,
                 compress: false
             });
-            uploader.addButton({
-                id: '#filePickerBlock'
-            });
-            uploader.addButton({
-                id: '#filePickerBtn',
-                label: lang.uploadAddFile
-            });
+            if (!useNewVideoLibrary) {
+                uploader.addButton({
+                    id: '#filePickerBlock'
+                });
+                uploader.addButton({
+                    id: '#filePickerBtn',
+                    label: lang.uploadAddFile
+                });
+            }
+            // 不直接绑定WebUploader到filePickerBlock和filePickerBtn，而是拦截它们的点击事件
+            
+            // 手动创建"继续添加"按钮，因为WebUploader不再创建它
+            var $filePickerBtn = $('#filePickerBtn');
+            if (useNewVideoLibrary && $filePickerBtn.length > 0 && $filePickerBtn.children().length === 0) {
+                // 如果filePickerBtn是空的，手动创建按钮
+                var continueAddBtn = $('<div class="webuploader-pick" style="display: inline-block; padding: 0 18px; border: 1px solid #cfcfcf; background: #ffffff; color: #565656; border-radius: 3px; margin-left: 10px; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center;">' + (lang.uploadAddFile || '继续添加') + '</div>');
+                $filePickerBtn.append(continueAddBtn);
+                
+                // 绑定点击事件
+                continueAddBtn.on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                });
+                continueAddBtn[0].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                }, true);
+            }
+            
+            // 拦截filePickerBlock的点击事件
+            var $filePickerBlock = $('#filePickerBlock');
+            if (useNewVideoLibrary && $filePickerBlock.length > 0) {
+                // 使用MutationObserver监听DOM变化，当WebUploader创建按钮后立即拦截
+                var observerBlock = new MutationObserver(function(mutations) {
+                    var $blockBtn = $filePickerBlock.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible, button, a, div');
+                    if ($blockBtn.length > 0) {
+                        $blockBtn.each(function() {
+                            $(this).off('click').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            this.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            }, true);
+                        });
+                        observerBlock.disconnect();
+                    }
+                });
+                observerBlock.observe($filePickerBlock[0], {
+                    childList: true,
+                    subtree: true,
+                    attributes: false
+                });
+                
+                // 直接拦截filePickerBlock的点击
+                $filePickerBlock.off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                });
+                $filePickerBlock[0].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                }, true);
+            }
+            
+            // 拦截filePickerBtn（继续添加按钮）的点击事件
+            var $filePickerBtn = $('#filePickerBtn');
+            if (useNewVideoLibrary && $filePickerBtn.length > 0) {
+                // 使用MutationObserver监听DOM变化，当WebUploader创建按钮后立即拦截
+                var observerBtn = new MutationObserver(function(mutations) {
+                    var $btn = $filePickerBtn.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible, button, a, div');
+                    if ($btn.length > 0) {
+                        $btn.each(function() {
+                            $(this).off('click').on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            this.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            }, true);
+                        });
+                        observerBtn.disconnect();
+                    }
+                });
+                observerBtn.observe($filePickerBtn[0], {
+                    childList: true,
+                    subtree: true,
+                    attributes: false
+                });
+                
+                // 直接拦截filePickerBtn的点击
+                $filePickerBtn.off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                });
+                $filePickerBtn[0].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    openVideoListDialog();
+                    return false;
+                }, true);
+            }
+            
+            // 延迟检查，确保WebUploader已经创建了按钮
+            if (useNewVideoLibrary) {
+                setTimeout(function() {
+                    // 拦截filePickerBlock内的所有按钮
+                    var $blockBtn = $filePickerBlock.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible, button, a, div');
+                    $blockBtn.each(function() {
+                        $(this).off('click').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            openVideoListDialog();
+                            return false;
+                        });
+                        this.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            openVideoListDialog();
+                            return false;
+                        }, true);
+                    });
+                    
+                    // 拦截filePickerBtn内的所有按钮
+                    var $btn = $filePickerBtn.find('input[type="file"], .webuploader-pick, .webuploader-element-invisible, button, a, div');
+                    $btn.each(function() {
+                        $(this).off('click').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            openVideoListDialog();
+                            return false;
+                        });
+                        this.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            openVideoListDialog();
+                            return false;
+                        }, true);
+                    });
+                    
+                    observerBlock.disconnect();
+                    observerBtn.disconnect();
+                }, 500);
+            }
 
             setState('pedding');
+            
+            // 初始化时隐藏开始上传按钮，显示继续添加按钮
+            if (useNewVideoLibrary) {
+                setTimeout(function() {
+                    $upload.hide().css({
+                        'display': 'none',
+                        'visibility': 'hidden'
+                    });
+                    
+                    // 确保继续添加按钮存在并显示
+                    var $filePickerBtn = $('#filePickerBtn');
+                    if ($filePickerBtn.length > 0) {
+                        // 如果按钮是空的，创建按钮
+                        if ($filePickerBtn.children().length === 0) {
+                            var continueAddBtn = $('<div class="webuploader-pick" style="display: inline-block; padding: 0 18px; border: 1px solid #cfcfcf; background: #ffffff; color: #565656; border-radius: 3px; margin-left: 10px; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center;">继续添加</div>');
+                            $filePickerBtn.append(continueAddBtn);
+                            
+                            // 绑定点击事件
+                            continueAddBtn.on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            });
+                            continueAddBtn[0].addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                openVideoListDialog();
+                                return false;
+                            }, true);
+                        }
+                        $filePickerBtn.show().removeClass('element-invisible').css({
+                            'display': 'block',
+                            'visibility': 'visible'
+                        });
+                    }
+                }, 100);
+            } else {
+                $upload.show().css({
+                    'display': '',
+                    'visibility': ''
+                });
+            }
 
             // 当有文件添加进来时执行，负责view的创建
             function addFile(file) {
@@ -603,6 +1329,41 @@
                             $placeHolder.removeClass('element-invisible');
                             $progress.hide(); $info.hide();
                             uploader.refresh();
+                            if (useNewVideoLibrary) {
+                                // 确保继续添加按钮显示
+                                var $filePickerBtn = $('#filePickerBtn');
+                                if ($filePickerBtn.length > 0) {
+                                    // 如果按钮是空的，创建按钮
+                                    if ($filePickerBtn.children().length === 0) {
+                                        var continueAddBtn = $('<div class="webuploader-pick" style="display: inline-block; padding: 0 18px; border: 1px solid #cfcfcf; background: #ffffff; color: #565656; border-radius: 3px; margin-left: 10px; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center;">继续添加</div>');
+                                        $filePickerBtn.append(continueAddBtn);
+                                        
+                                        // 绑定点击事件
+                                        continueAddBtn.on('click', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.stopImmediatePropagation();
+                                            openVideoListDialog();
+                                            return false;
+                                        });
+                                    }
+                                    $filePickerBtn.show().removeClass('element-invisible').css({
+                                        'display': 'block',
+                                        'visibility': 'visible'
+                                    });
+                                }
+                                // 隐藏开始上传按钮
+                                $upload.hide().css({
+                                    'display': 'none',
+                                    'visibility': 'hidden'
+                                });
+                            } else {
+                                $upload.show().css({
+                                    'display': '',
+                                    'visibility': ''
+                                });
+                                $('#filePickerBtn').show().removeClass('element-invisible');
+                            }
                             break;
 
                         /* 可以开始上传 */
@@ -613,23 +1374,79 @@
                             $progress.hide(); $info.show();
                             $upload.text(lang.uploadStart);
                             uploader.refresh();
+                            if (useNewVideoLibrary) {
+                                // 确保继续添加按钮显示
+                                var $filePickerBtn = $('#filePickerBtn');
+                                if ($filePickerBtn.length > 0) {
+                                    // 如果按钮是空的，创建按钮
+                                    if ($filePickerBtn.children().length === 0) {
+                                        var continueAddBtn = $('<div class="webuploader-pick" style="display: inline-block; padding: 0 18px; border: 1px solid #cfcfcf; background: #ffffff; color: #565656; border-radius: 3px; margin-left: 10px; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center;">继续添加</div>');
+                                        $filePickerBtn.append(continueAddBtn);
+                                        
+                                        // 绑定点击事件
+                                        continueAddBtn.on('click', function(e) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            e.stopImmediatePropagation();
+                                            openVideoListDialog();
+                                            return false;
+                                        });
+                                    }
+                                    $filePickerBtn.show().removeClass('element-invisible').css({
+                                        'display': 'block',
+                                        'visibility': 'visible'
+                                    });
+                                }
+                                // 隐藏开始上传按钮
+                                $upload.hide().css({
+                                    'display': 'none',
+                                    'visibility': 'hidden'
+                                });
+                            } else {
+                                $upload.show().css({
+                                    'display': '',
+                                    'visibility': ''
+                                });
+                                $('#filePickerBtn').show().removeClass('element-invisible');
+                            }
                             break;
 
                         /* 上传中 */
                         case 'uploading':
                             $progress.show(); $info.hide();
                             $upload.text(lang.uploadPause);
+                            if (useNewVideoLibrary) {
+                                // 隐藏开始上传按钮，显示继续添加按钮
+                                $upload.hide();
+                                $('#filePickerBtn').show().removeClass('element-invisible').css('display', 'block');
+                            } else {
+                                $upload.show().css({'display':'', 'visibility':''});
+                            }
                             break;
 
                         /* 暂停上传 */
                         case 'paused':
                             $progress.show(); $info.hide();
                             $upload.text(lang.uploadContinue);
+                            if (useNewVideoLibrary) {
+                                // 隐藏开始上传按钮，显示继续添加按钮
+                                $upload.hide();
+                                $('#filePickerBtn').show().removeClass('element-invisible').css('display', 'block');
+                            } else {
+                                $upload.show().css({'display':'', 'visibility':''});
+                            }
                             break;
 
                         case 'confirm':
                             $progress.show(); $info.hide();
                             $upload.text(lang.uploadStart);
+                            if (useNewVideoLibrary) {
+                                // 隐藏开始上传按钮，显示继续添加按钮
+                                $upload.hide();
+                                $('#filePickerBtn').show().removeClass('element-invisible');
+                            } else {
+                                $upload.show().css({'display':'', 'visibility':''});
+                            }
 
                             stats = uploader.getStats();
                             if (stats.successNum && !stats.uploadFailNum) {
@@ -644,6 +1461,13 @@
                                 $upload.text(lang.uploadRetry);
                             } else {
                                 $upload.text(lang.uploadStart);
+                            }
+                            if (useNewVideoLibrary) {
+                                // 隐藏开始上传按钮，显示继续添加按钮
+                                $upload.hide();
+                                $('#filePickerBtn').show().removeClass('element-invisible');
+                            } else {
+                                $upload.show().css({'display':'', 'visibility':''});
                             }
                             break;
                     }
@@ -663,9 +1487,23 @@
 
             function updateStatus() {
                 var text = '', stats;
+                
+                // 从percentages对象计算总大小，确保与updateTotalProgress一致
+                var calculatedTotalSize = 0;
+                $.each(percentages, function (k, v) {
+                    calculatedTotalSize += v[0]; // v[0]是文件大小
+                });
+                
+                // 同时更新fileSize变量，保持同步
+                if (calculatedTotalSize > 0) {
+                    fileSize = calculatedTotalSize;
+                }
+                
+                // 确保fileSize是数字类型
+                var currentFileSize = typeof fileSize === 'number' && fileSize > 0 ? fileSize : calculatedTotalSize;
 
                 if (state === 'ready') {
-                    text = lang.updateStatusReady.replace('_', fileCount).replace('_KB', WebUploader.formatSize(fileSize));
+                    text = lang.updateStatusReady.replace('_', fileCount).replace('_KB', WebUploader.formatSize(currentFileSize));
                 } else if (state === 'confirm') {
                     stats = uploader.getStats();
                     if (stats.uploadFailNum) {
@@ -674,14 +1512,14 @@
                 } else {
                     stats = uploader.getStats();
                     text = lang.updateStatusFinish.replace('_', fileCount).
-                        replace('_KB', WebUploader.formatSize(fileSize)).
+                        replace('_KB', WebUploader.formatSize(currentFileSize)).
                         replace('_', stats.successNum);
 
                     if (stats.uploadFailNum) {
                         text += lang.updateStatusError.replace('_', stats.uploadFailNum);
                     }
                 }
-
+                
                 $info.html(text);
             }
 

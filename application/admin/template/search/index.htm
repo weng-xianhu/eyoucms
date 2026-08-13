@@ -144,6 +144,13 @@
                     </a>
                 </div>
                 {/eq}
+                {eq name="'Search@clearall'|is_check_access" value="1"}
+                <div class="fbutton">
+                    <a onclick="clearall();" href="javascript:void(0);" class="layui-btn layui-btn-primary">
+                        <span>一键清空</span>
+                    </a>
+                </div>
+                {/eq}
                 {include file="public/page" /}
             </div>
             <div style="clear:both"></div>
@@ -227,6 +234,41 @@
             location.href = location.href;
         });
     });
+
+    // 一键清空
+    function clearall() {
+        layer.confirm('此操作不可恢复，确认一键清空？', {
+            shade: layer_shade,
+            area: ['480px', '190px'],
+            move: false,
+            title: '提示',
+            btnAlign:'r',
+            closeBtn: 3,
+            success: function () {
+                  $(".layui-layer-content").css('text-align', 'left');
+              }
+        }, function () {
+            layer_loading('正在处理');
+            $.ajax({
+                type: "POST",
+                url: "{:url('Search/clearall')}",
+                data: {_ajax: 1},
+                dataType: 'json',
+                success: function (res) {
+                    layer.closeAll();
+                    if(res.code == 1) {
+                        window.location.reload();
+                    } else {
+                        layer.alert(res.msg, {icon: 2, title:false});
+                    }
+                },
+                error:function(e) {
+                    layer.closeAll();
+                    layer.alert(e.responseText, {icon: 2, title:false});
+                }
+            });
+        });
+    }
 </script>
 
 {include file="public/footer" /}

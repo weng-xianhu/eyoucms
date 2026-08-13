@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -417,25 +417,7 @@ class Arctype extends Base
         $this->assign($assign_data);
         return $this->fetch();
     }
-    /**
-     * 递归查新是否是子集
-     * Author: 非洲和尚
-     * @param  [type]  $fid [父id] $id [查询id]
-     */
-    private function _sonArctype($fid, $id)
-    {
-        // 查询当前id的直接子节点
-        $children = Db::name('arctype')->where('parent_id', $fid)->column('id');
-        if (in_array($id, $children)) {
-            return true;
-        }
-        foreach ($children as $child) {
-            if ($this->_sonArctype($child, $id)) {
-                return true;
-            }
-        }
-        return false;
-    }
+
     /**
      * 编辑
      */
@@ -471,16 +453,11 @@ class Arctype extends Base
                     $this->error('自己不能成为自己的上级栏目');
                 }
                 /*--end*/
-                $arctypeData = Db::name('arctype')->field('parent_id,topid')->where('id',$post['id'])->find();
-                if($arctypeData['parent_id']>0){
-                    if($this->_sonArctype($post['id'], $post['parent_id'])!==false){
-                       $this->error('上级不能成为自己下级的栏目');  
-                    }
-                }else{// 顶级                    
-                    if(Db::name('arctype')->where(['topid'=>$post['id'],'id'=>$post['parent_id']])->find()){
-                        $this->error('上级不能成为自己下级的栏目');   
-                    }  
-                }                      
+                // 当前栏目的id和所有子栏目id
+                $current_subtypeids = model('Arctype')->getHasChildren($post['id']);
+                if (0 < $post['parent_id'] && !empty($current_subtypeids[$post['parent_id']])) {
+                    $this->error('自己不能成为自己的下级栏目');
+                }
                 /*目录名称*/
                 $post['dirname'] = func_preg_replace([' ', '　'], '', $post['dirname']);
                 $dirname         = $this->arctypeLogic->get_dirname($post['typename'], $post['dirname'], $post['id']);
@@ -628,6 +605,8 @@ class Arctype extends Base
             $select_html = Db::name('arctype')->where('id', $info['parent_id'])->getField('typename');
             $select_html = !empty($select_html) ? $select_html : '顶级栏目';
         } else {
+            // 当前栏目的id和所有子栏目id
+            $current_subtypeids = model('Arctype')->getHasChildren($id);
             // 所属栏目
             $select_html       = '<option value="0" data-grade="-1" data-dirpath="">顶级栏目</option>';
             $selected          = $info['parent_id'];
@@ -643,9 +622,9 @@ class Arctype extends Base
                 }
                 $select_html .= ($selected == $var['id']) ? "selected='true'" : '';
                 $select_html .= ($id == $var['id'] || ($hierarchy + $var['grade'] > $arctype_max_level - 1)) ? "disabled='true' style='background-color:#f5f5f5;' " : '';
-                if($this->_sonArctype($id, $var['id'])!==false){
+                if (!empty($current_subtypeids[$var['id']])) {
                     $select_html .= "disabled='true' style='background-color:#f5f5f5;' ";
-                }                
+                }
                 $select_html .= '>';
                 if ($var['level'] > 0)
                 {
@@ -1208,7 +1187,7 @@ class Arctype extends Base
 
             $msg = '';
             if (!empty($nofileArr)) {
-                $msg = '<font color="red">该模型缺少模板文件：'.implode(' 和 ', $nofileArr).'</font>';
+                $msg = '<font color="red">提示：请先创建模板文件'.implode('、', $nofileArr).'，否则前台页面将无法正常显示</font>';
             }
 
             $templateList[$v1['id']] = array(
@@ -1429,7 +1408,11 @@ class Arctype extends Base
             $result = model('Arctype')->batchAddTopData($saveData, $post);
             if (!empty($result)) {
                 \think\Cache::clear('arctype');
-                $typenameArr = get_arr_column($result, 'typename');
+                $typenameArr = $_POST['typeids'] = array();
+                foreach ($result as $key => $val) {
+                    $typenameArr[] = $val['typename'];
+                    $_POST['typeids'][] = $val['id'];
+                }
                 $typenameStr = implode(',', $typenameArr);
                 adminLog('批量增加栏目：'.$typenameStr);
 
@@ -1506,7 +1489,11 @@ class Arctype extends Base
             $result = model('Arctype')->batchAddSubData($saveData);
             if (!empty($result)) {
                 \think\Cache::clear('arctype');
-                $typenameArr = get_arr_column($result, 'typename');
+                $typenameArr = $_POST['typeids'] = array();
+                foreach ($result as $key => $val) {
+                    $typenameArr[] = $val['typename'];
+                    $_POST['typeids'][] = $val['id'];
+                }
                 $typenameStr = implode(',', $typenameArr);
                 adminLog('批量增加栏目：'.$typenameStr);
 

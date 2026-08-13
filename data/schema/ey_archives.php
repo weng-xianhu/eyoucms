@@ -48,7 +48,7 @@ return array (
   'title' => 
   array (
     'name' => 'title',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -57,7 +57,16 @@ return array (
   'subtitle' => 
   array (
     'name' => 'subtitle',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'introduction' => 
+  array (
+    'name' => 'introduction',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -210,7 +219,7 @@ return array (
   'seo_title' => 
   array (
     'name' => 'seo_title',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -219,7 +228,7 @@ return array (
   'seo_keywords' => 
   array (
     'name' => 'seo_keywords',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -441,6 +450,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'users_score' => 
+  array (
+    'name' => 'users_score',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'is_del' => 
   array (
     'name' => 'is_del',
@@ -549,6 +567,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'removal_time' => 
+  array (
+    'name' => 'removal_time',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'no_vip_pay' => 
   array (
     'name' => 'no_vip_pay',
@@ -573,6 +600,15 @@ return array (
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '1',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'editor_ai_create' => 
+  array (
+    'name' => 'editor_ai_create',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),

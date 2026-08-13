@@ -132,6 +132,7 @@
                     if (init_runtype == 'files') {
                         $allscantotal = 0;
                         $('#div_scanlist', window.parent.document).hide();
+                        $('#scan_init_tips', window.parent.document).hide();
                         $('#scan_no_problem', window.parent.document).hide();
                         $('#scan_yes_problem', window.parent.document).hide();
                         $('#scan_problem_list', window.parent.document).hide();
@@ -199,6 +200,7 @@
                     doubtotal = parseInt(res.data.doubtotal);
                     if (doubtotal > 0) {
                         $('#div_scanlist', window.parent.document).show();
+                        $('#scan_init_tips', window.parent.document).hide();
                         $('#scan_no_problem', window.parent.document).hide();
                         $('#scan_yes_problem', window.parent.document).show();
                         $('#scan_yes_problem', window.parent.document).find('.scan_allpagetotal').text(allscantotal + allfilestotal);
@@ -254,6 +256,7 @@
                     if (init_runtype == 'attachment') {
                         $allscantotal = 0;
                         $('#div_scanlist', window.parent.document).hide();
+                        $('#scan_init_tips', window.parent.document).hide();
                         $('#scan_no_problem', window.parent.document).hide();
                         $('#scan_yes_problem', window.parent.document).hide();
                         $('#scan_problem_list', window.parent.document).hide();
@@ -321,6 +324,7 @@
                     doubtotal = parseInt(res.data.doubtotal);
                     if (doubtotal > 0) {
                         $('#div_scanlist', window.parent.document).show();
+                        $('#scan_init_tips', window.parent.document).hide();
                         $('#scan_no_problem', window.parent.document).hide();
                         $('#scan_yes_problem', window.parent.document).show();
                         $('#scan_yes_problem', window.parent.document).find('.scan_allpagetotal').text(allscantotal + allattachmentotal);

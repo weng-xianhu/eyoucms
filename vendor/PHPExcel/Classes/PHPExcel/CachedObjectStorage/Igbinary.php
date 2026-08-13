@@ -90,7 +90,7 @@ class PHPExcel_CachedObjectStorage_Igbinary extends PHPExcel_CachedObjectStorage
 
         //    Set current entry to the requested entry
         $this->currentObjectID = $pCoord;
-        $this->currentObject = igbinary_unserialize($this->cellCache[$pCoord]);
+        $this->currentObject = PHPExcel_CachedObjectStorageFactory::safeIgbinaryUnserialize($this->cellCache[$pCoord]);
         //    Re-attach this as the cell's parent
         $this->currentObject->attach($this);
 

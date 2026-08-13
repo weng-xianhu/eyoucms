@@ -1,5 +1,11 @@
+$(document).ready(function() {
+    $('#' + $('#service_type').val()).click();
+});
+
 function serviceTypeRadio(type) {
     $('#service_type').val(type);
+    $('#service-addr-div').show();
+    if (3 === parseInt(type)) $('#service-addr-div').hide();
 }
 
 // 上传多图回调函数
@@ -38,25 +44,29 @@ function uploadImgDel(obj, path) {
 
 // 提交申请
 function submitApply(obj) {
-    if ($("#service_type").val() == '') {
-        showLayerMsg('请选择服务类型');
+    var service_type = $("#service_type").val();
+    if (0 >= parseInt(service_type)) {
+        showErrorMsg('请选择服务类型');
         return false;
-    } else if ($.trim($("[name='content']").val()) == '') {
-        $("[name='content']").focus();
-        showLayerMsg('请填写问题描述');
+    } else if ($.trim($("#content").val()) == '') {
+        $("#content").focus();
+        showErrorMsg('请填写问题描述');
         return false;
-    } else if ($("#consignee").val() == '') {
-        $("[name='consignee']").focus();
-        showLayerMsg('请填写您的姓名');
-        return false;
-    } else if ($("#mobile").val() == '') {
-        $("[name='mobile']").focus();
-        showLayerMsg('请填写您的手机号码');
-        return false;
-    } else if ($("#address").val() == '') {
-        $("[name='address']").focus();
-        showLayerMsg('请填写您的收货地址');
-        return false;
+    }
+    if (3 !== parseInt(service_type)) {
+        if ($("#address").val() == '') {
+            $("#address").focus();
+            showErrorMsg('请填写您的收货地址');
+            return false;
+        } else if ($("#consignee").val() == '') {
+            $("#consignee").focus();
+            showErrorMsg('请填写您的姓名');
+            return false;
+        } else if ($("#mobile").val() == '') {
+            $("#mobile").focus();
+            showErrorMsg('请填写您的手机号码');
+            return false;
+        }
     }
 
     showLayerLoad();

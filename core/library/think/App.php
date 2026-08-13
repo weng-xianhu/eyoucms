@@ -330,13 +330,13 @@ class App
             if (is_file(CONF_PATH . $module . 'tags' . EXT)) {
                 Hook::import(include CONF_PATH . $module . 'tags' . EXT);
                 /*加载插件的行为扩展文件 by 小虎哥*/
-                $weappRow = \think\Db::name('weapp')->field('code')->where([
+                $weappRow = \think\Db::name('weapp')->field('code,is_valid')->where([
                     'status'    => 1,
                 ])->cache(true, null, "weapp")->order('sort_order asc, id asc')->select();
                 if (!empty($weappRow)) {
                     foreach ($weappRow as $key => $val) {
                         $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.$module.'tags' . EXT;
-                        if (is_file($file)) {
+                        if (is_file($file) && 1 == $val['is_valid']) {
                             try {
                                 $configFile = preg_replace('#^('.WEAPP_DIR_NAME.'\/)([^\/]+)(\/)(.*)$#i', '${1}${2}${3}config.php', str_replace('\\', '/', $file));
                                 if (file_exists($configFile)) {

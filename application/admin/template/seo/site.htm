@@ -103,8 +103,10 @@
     var achieve = channelachieve = articleachieve = 0;
     var type_index = 0;
     var msg = "";
+    var maxRetry = 2; // 并发请求失败时最大重试次数
     var timestamp1 = Date.parse(new Date());
-    function sendIndex(){
+    function sendIndex(retry){
+        if (typeof retry === 'undefined') retry = 0;
         $.ajax({
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndexAll&lang="+__lang__+"&_ajax=1",
              type:'GET',
@@ -135,12 +137,17 @@
                  }
              },
              error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
+                if (retry < maxRetry) {
+                    setTimeout(function(){ sendIndex(retry + 1); }, 2000);
+                } else {
+                    parent.layer.alert('首页生成失败('+(e.status||0)+')，已重试'+maxRetry+'次。请关闭后重试。', {icon: 5, title:false});
+                }
              }
         });
     }
 
-     function sendChannel(){
+     function sendChannel(retry){
+         if (typeof retry === 'undefined') retry = 0;
          $.ajax({
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id=0&index="+channel_index+"&findex="+articlefid+"&achieve="+channelachieve+"&_ajax=1",
              type:'GET',
@@ -177,50 +184,176 @@
                  sendChannel();
              },
              error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
+                if (retry < maxRetry) {
+                    setTimeout(function(){ sendChannel(retry + 1); }, 2000);
+                } else {
+                    // 重试用尽：跳过该栏目继续
+                    msg += '<span style="color:red">栏目下标'+articlefid+'生成失败('+(e.status||0)+')，已自动跳过</span><br>';
+                    sendChannelSkip();
+                }
+             }
+         });
+     }
+
+     function sendChannelSkip(){
+         $.ajax({
+             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id=0&index=0&findex="+articlefid+"&achieve="+channelachieve+"&skip=1&_ajax=1",
+             type:'GET',
+             dataType:'json',
+             timeout : 360000,
+             success:function(res){
+                 channel_index = res.data.index;
+                 articlefid = res.data.findex;
+                 channelachieve = res.data.achievepage;
+                 msg += res.msg;
+                 progress = (((achieve+channelachieve)/allpagetotal)*100).toFixed(1);
+                 $(".progress-bar").css('width',progress+'%');
+                 $(".percent").text(progress);
+                 if (channelachieve >= channelpagetotal){
+                     achieve = achieve + channelachieve;
+                     if (msg !== ""){ $("#error_msg").show(); $("#error_msg").prepend(msg); msg = ""; }
+                     sendArticle();
+                     return false;
+                 }
+                 sendChannel();
+             },
+             error:function(e){
+                 // 跳过请求都失败：本地强制推进，避免死循环
+                 articlefid += 1;
+                 channel_index = 0;
+                 channelachieve += 1;
+                 if (channelachieve >= channelpagetotal || articlefid > 100000){
+                     achieve = achieve + channelachieve;
+                     if (msg !== ""){ $("#error_msg").show(); $("#error_msg").prepend(msg); msg = ""; }
+                     sendArticle();
+                     return;
+                 }
+                 sendChannel();
              }
          });
      }
      
-     function sendArticle() {
+     // P5优化：并发文档生成
+     var art_concurrency = 3;
+     var art_activeRequests = 0;
+     var art_nextFindex = 0;
+     var art_totalAchieve = 0;
+     var art_batchSize = 100;
+     var art_isFinished = false;
+
+     function artBuildUrl(fi, ach, init) {
+         var u = __root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+fi+"&achieve="+ach+"&_ajax=1";
+         if (init) u += "&init=1";
+         return u;
+     }
+
+     function artUpdateProgress() {
+         if (art_isFinished || articlepagetotal <= 0) return;
+         var cur = art_totalAchieve;
+         if (cur > articlepagetotal) cur = articlepagetotal;
+         progress = (((achieve + cur) / allpagetotal) * 100).toFixed(1);
+         if (parseFloat(progress) > 100) progress = '100.0';
+         $("#title").html('成功创建文档数：');
+         $(".filepath").html(cur);
+         $(".progress-bar").css('width', progress + '%');
+         $(".percent").text(progress);
+     }
+
+     function artShowComplete() {
+         if (art_isFinished) return;
+         art_isFinished = true;
+         var timestamp2 = Date.parse(new Date());
+         var timestamp3 = (timestamp2 - timestamp1) / 1000;
+         if (timestamp3 < 1) timestamp3 = 1;
+         $(".finash").remove();
+         $(".progress-bar").css('width', '100%');
+         $(".progress").removeClass('progress-striped ').removeClass('active');
+         $(".success").html("生成完成，共耗时：<font color='red'>" + timestamp3 + "</font> 秒");
+         $('#a_close_pop').show();
+         if (msg !== "") {
+             $("#error_msg").show();
+             $("#error_msg").prepend(msg);
+             msg = "";
+         }
+     }
+
+     function artLaunchNext() {
+         while (art_activeRequests < art_concurrency && art_nextFindex < articlepagetotal && !art_isFinished) {
+             artSendBatch(art_nextFindex);
+             art_nextFindex += art_batchSize;
+         }
+     }
+
+     function artSendBatch(myFindex, retry) {
+         if (typeof retry === 'undefined') retry = 0;
+         art_activeRequests++;
          $.ajax({
-             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+channelfid+"&achieve="+articleachieve+"&_ajax=1",
-             type:'GET',
-             dataType:'json',
-             data:{},
-             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-             success:function(res){
-                 channelfid = res.data.findex;
-                 articleachieve = res.data.achievepage;
+             url: artBuildUrl(myFindex, myFindex),
+             type: 'GET',
+             dataType: 'json',
+             data: {},
+             timeout: 360000,
+             success: function(res) {
+                 art_activeRequests--;
+                 var batchCount = res.data.achievepage - myFindex;
+                 if (batchCount < 0) batchCount = 0;
+                 art_totalAchieve += batchCount;
                  msg += res.msg;
-                 progress = (((achieve+articleachieve)/allpagetotal)*100).toFixed(1);
-                 $("#title").html('成功创建文档数：');
-                 $(".filepath").html(channelfid);
-                 $(".progress-bar").css('width',progress+'%');
-                 $(".percent").text(progress);
-                 if (articleachieve >= articlepagetotal){
-                     var timestamp2 = Date.parse(new Date());
-                     var timestamp3 = (timestamp2 - timestamp1) / 1000;
-                     if (timestamp3 < 1) timestamp3 = 1;
-                     $(".finash").remove();
-                     $(".progress-bar").css('width','100%');
-                     $(".progress").removeClass('progress-striped ').removeClass('active');
-                     $(".success").html("生成完成，共耗时：<font color='red'>"+timestamp3+"</font> 秒");
-                     $('#a_close_pop').show();
-                     if (msg !== ""){
-                         $("#error_msg").show();
-                         $("#error_msg").prepend(msg);
-                         msg = "";
-                     }
-                     return false;
+                 artUpdateProgress();
+                 if (art_totalAchieve >= articlepagetotal) {
+                     if (art_activeRequests === 0) artShowComplete();
+                 } else {
+                     artLaunchNext();
                  }
-                 sendArticle();
              },
-             error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
+             error: function(e) {
+                 art_activeRequests--;
+                 if (!art_isFinished) {
+                     if (retry < maxRetry) {
+                         setTimeout(function(){ artSendBatch(myFindex, retry + 1); }, 1000);
+                     } else {
+                         artLaunchNext();
+                         // BugFix-4：死锁检测
+                         if (art_activeRequests === 0 && !art_isFinished) {
+                             artShowComplete();
+                         }
+                     }
+                 }
              }
          });
-    }
+     }
+
+     function sendArticle(retry) {
+         if (typeof retry === 'undefined') retry = 0;
+         // 仅初始化缓存与获取总数，不生成文档（避免大栏目首次请求超时）
+         $.ajax({
+             url: artBuildUrl(0, 0, 1),
+             type: 'GET',
+             dataType: 'json',
+             data: {},
+             timeout: 360000,
+             success: function(res) {
+                 art_batchSize = res.data.batchsize || 20;
+                 if (art_batchSize <= 0) art_batchSize = 20;
+                 art_totalAchieve = 0;
+                 art_nextFindex = 0;
+                 msg += res.msg || '';
+                 artUpdateProgress();
+                 if (articlepagetotal <= 0) {
+                     artShowComplete();
+                 } else {
+                     artLaunchNext();
+                 }
+             },
+             error: function(e) {
+                 if (retry < maxRetry) {
+                     setTimeout(function(){ sendArticle(retry + 1); }, 2000);
+                 } else {
+                     parent.layer.alert('文档初始化失败('+(e.status||0)+')，已重试'+maxRetry+'次。请关闭后重试。', {icon: 5, title: false});
+                 }
+             }
+         });
+     }
 
     var uphtmltype = {$uphtmltype|default=0}; // 更新选项
     var startid = 0; // 指定的文档起始ID
@@ -230,7 +363,8 @@
      * 指定文档生成全部(涉及栏目、首页)
      * @return {[type]} [description]
      */
-    function sendAppointAll(){
+    function sendAppointAll(retry){
+        if (typeof retry === 'undefined') retry = 0;
         $.ajax({
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildIndexAll&lang="+__lang__+"&uphtmltype="+uphtmltype+"&_ajax=1",
              type:'GET',
@@ -281,48 +415,135 @@
                  }
              },
              error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
+                if (retry < maxRetry) {
+                    setTimeout(function(){ sendAppointAll(retry + 1); }, 2000);
+                } else {
+                    parent.layer.alert('生成失败('+(e.status||0)+')，已重试'+maxRetry+'次。请关闭后重试。', {icon: 5, title:false});
+                }
              }
         });
     }
 
-    function sendAppointArticle(){
-         $.ajax({
-             url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+channelfid+"&achieve="+articleachieve+"&uphtmltype="+uphtmltype+"&startid="+startid+"&_ajax=1",
-             type:'GET',
-             dataType:'json',
-             data:{},
-             timeout : 360000, //超时时间设置，单位毫秒 设置了 1小时
-             beforeSend:function(){
-             },
-             success:function(res){
-                 channelfid = res.data.findex;
-                 articleachieve = res.data.achievepage;
-                 msg += res.msg;
-                 progress = (((achieve+articleachieve)/allpagetotal)*100).toFixed(1);
-                 $("#title").html('成功创建文档数：');
-                 $(".filepath").html(channelfid);
-                 $(".progress-bar").css('width',progress+'%');
-                 $(".percent").text(progress);
-                 if (articleachieve === articlepagetotal){
-                     achieve = achieve + articleachieve;
-                     if (msg !== ""){
-                         $("#error_msg").show();
-                         $("#error_msg").prepend(msg);
-                         msg = "";
-                     }
-                     sendAppointChannel();
-                     return false;
-                 }
-                 sendAppointArticle();
-             },
-             error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
-             }
-         });
+    // P5优化：指定文档并发生成
+    var appt_activeRequests = 0;
+    var appt_nextFindex = 0;
+    var appt_totalAchieve = 0;
+    var appt_batchSize = 100;
+    var appt_isFinished = false;
+
+    function apptBuildUrl(fi, ach, init) {
+        var u = __root_dir__+"/index.php?m=home&c=Buildhtml&a=buildArticle&lang="+__lang__+"&id=0&findex="+fi+"&achieve="+ach+"&uphtmltype="+uphtmltype+"&startid="+startid+"&_ajax=1";
+        if (init) u += "&init=1";
+        return u;
     }
 
-    function sendAppointChannel(){
+    function apptUpdateProgress() {
+        if (appt_isFinished || articlepagetotal <= 0) return;
+        var cur = appt_totalAchieve;
+        if (cur > articlepagetotal) cur = articlepagetotal;
+        progress = (((achieve + cur) / allpagetotal) * 100).toFixed(1);
+        if (parseFloat(progress) > 100) progress = '100.0';
+        $("#title").html('成功创建文档数：');
+        $(".filepath").html(cur);
+        $(".progress-bar").css('width', progress + '%');
+        $(".percent").text(progress);
+    }
+
+    function apptLaunchNext() {
+        while (appt_activeRequests < art_concurrency && appt_nextFindex < articlepagetotal && !appt_isFinished) {
+            apptSendBatch(appt_nextFindex);
+            appt_nextFindex += appt_batchSize;
+        }
+    }
+
+    function apptSendBatch(myFindex, retry) {
+        if (typeof retry === 'undefined') retry = 0;
+        appt_activeRequests++;
+        $.ajax({
+            url: apptBuildUrl(myFindex, myFindex),
+            type: 'GET',
+            dataType: 'json',
+            data: {},
+            timeout: 360000,
+            success: function(res) {
+                appt_activeRequests--;
+                var batchCount = res.data.achievepage - myFindex;
+                if (batchCount < 0) batchCount = 0;
+                appt_totalAchieve += batchCount;
+                msg += res.msg;
+                apptUpdateProgress();
+                if (appt_totalAchieve >= articlepagetotal) {
+                    if (appt_activeRequests === 0) {
+                        appt_isFinished = true;
+                        achieve = achieve + appt_totalAchieve;
+                        if (msg !== "") {
+                            $("#error_msg").show();
+                            $("#error_msg").prepend(msg);
+                            msg = "";
+                        }
+                        sendAppointChannel();
+                    }
+                } else {
+                    apptLaunchNext();
+                }
+            },
+            error: function(e) {
+                appt_activeRequests--;
+                if (!appt_isFinished) {
+                    if (retry < maxRetry) {
+                        setTimeout(function(){ apptSendBatch(myFindex, retry + 1); }, 1000);
+                    } else {
+                        apptLaunchNext();
+                        // BugFix-4：死锁检测
+                        if (appt_activeRequests === 0 && !appt_isFinished) {
+                            appt_isFinished = true;
+                            achieve = achieve + appt_totalAchieve;
+                            if (msg !== "") { $("#error_msg").show(); $("#error_msg").prepend(msg); msg = ""; }
+                            sendAppointChannel();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function sendAppointArticle(retry){
+        if (typeof retry === 'undefined') retry = 0;
+        // 仅初始化缓存与获取总数（避免大栏目首次请求超时）
+        $.ajax({
+            url: apptBuildUrl(0, 0, 1),
+            type: 'GET',
+            dataType: 'json',
+            data: {},
+            timeout: 360000,
+            success: function(res) {
+                appt_batchSize = res.data.batchsize || 20;
+                if (appt_batchSize <= 0) appt_batchSize = 20;
+                appt_totalAchieve = 0;
+                appt_nextFindex = 0;
+                msg += res.msg || '';
+                apptUpdateProgress();
+                if (articlepagetotal <= 0) {
+                    appt_isFinished = true;
+                    achieve = achieve + appt_totalAchieve;
+                    if (msg !== "") { $("#error_msg").show(); $("#error_msg").prepend(msg); msg = ""; }
+                    sendAppointChannel();
+                } else {
+                    apptLaunchNext();
+                }
+            },
+            error: function(e) {
+                if (retry < maxRetry) {
+                    setTimeout(function(){ sendAppointArticle(retry + 1); }, 2000);
+                } else {
+                    parent.layer.alert('文档初始化失败('+(e.status||0)+')，已重试'+maxRetry+'次。请关闭后重试。', {icon: 5, title: false});
+                }
+            }
+        });
+    }
+
+    function sendAppointChannel(retry){
+         if (typeof retry === 'undefined') retry = 0;
          $.ajax({
              url:__root_dir__+"/index.php?m=home&c=Buildhtml&a=buildChannel&lang="+__lang__+"&id=0&index="+channel_index+"&findex="+articlefid+"&type_index="+type_index+"&achieve=0&uphtmltype="+uphtmltype+"&typeids="+typeids+"&counts="+counts+"&_ajax=1",
              type:'GET',
@@ -366,7 +587,11 @@
                  sendAppointChannel();
              },
              error:function(e){
-                parent.layer.alert(e.responseText, {icon: 5, title:false});
+                if (retry < maxRetry) {
+                    setTimeout(function(){ sendAppointChannel(retry + 1); }, 2000);
+                } else {
+                    parent.layer.alert('栏目生成失败('+(e.status||0)+')，已重试'+maxRetry+'次。请关闭后重试。', {icon: 5, title:false});
+                }
              }
          });
     }

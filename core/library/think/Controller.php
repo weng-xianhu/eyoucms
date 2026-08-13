@@ -103,7 +103,7 @@ class Controller
         $this->request = $request;
         $this->root_dir = ROOT_DIR; // 子目录
         $this->website_host = $this->request->host();
-        if (stristr($this->website_host, 'localhost')) {
+        if (stristr($this->website_host, 'localhost') || preg_match('/127\.0\.\d{1,3}\.\d{1,3}/i', $this->website_host)) {
             $web_basehost = preg_replace('/^(([^\:\.]+):)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', config('tpcache.web_basehost'));
             if (!empty($web_basehost)) {
                 $host_port = !stristr($this->website_host, ':') ? '' : $request->port();
@@ -152,11 +152,12 @@ class Controller
             }
         }
 
-
         /*多语言*/
-        $this->home_lang = get_home_lang();
-        $this->admin_lang = get_admin_lang();
-        $this->main_lang = get_main_lang();
+        $this->main_lang = $this->home_lang = $this->admin_lang = get_main_lang();
+        if (config('lang_switch_on')) {
+            $this->home_lang = get_home_lang();
+            $this->admin_lang = get_admin_lang();
+        }
         /*多城市*/
         if (config('city_switch_on')) {
             $this->home_site = get_home_site();
@@ -297,6 +298,8 @@ class Controller
         $v = trim($v, '/');
         if ($v == 'mobile') {
             $this->is_mobile = 1;
+        } else if ('Buildhtml' == CONTROLLER_NAME) { // 支持在手机上生成静态，强制渲染pc页面
+            $this->is_mobile = 0;
         }
 
         if($this->is_mobile == 1 && file_exists(ROOT_PATH.'template/'.$this->tpl_theme.'mobile/index.htm')) {

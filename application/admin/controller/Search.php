@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -52,7 +52,10 @@ class Search extends Base
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "{$orderby} {$orderway}, id desc";
         } else {
             $orderby = "is_hot desc, id desc";
@@ -115,21 +118,51 @@ class Search extends Base
         $this->error('删除失败');
     }
 
+    public function clearall()
+    {
+        $prefix = config('database.prefix');
+        $result = @Db::execute("TRUNCATE TABLE `{$prefix}search_word`;");
+        if (false !== $result) {
+            \think\Cache::clear('search_word');
+            adminLog('清空搜索关键词');
+            $this->success('操作成功');
+        } else {
+            $this->error('操作失败');
+        }
+    }
+
     public function conf()
     {
         if (IS_POST) {
             $param = input('param.');
+            if(isset($param['ai']) && !empty($param['ai'])){
+                if (is_language()) {
+                    $langRow = \think\Db::name('language')->order('id asc')
+                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                        ->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('ai', $param['ai'], $val['mark']);
+                    }
+                } else {
+                    tpCache('ai', $param['ai']);
+                }
+            }
+            unset($param['ai']);
             $search_tabu_words = htmlspecialchars_decode($param['search_tabu_words']);
             $search_tabu_words = explode(PHP_EOL, $search_tabu_words);
             foreach ($search_tabu_words as $key => $val) {
                 $val = trim($val);
                 if (!empty($val)) {
-                    $search_tabu_words[$key] = $val;
+                    $search_tabu_words[$key] = strtolower($val);
                 } else {
                     unset($search_tabu_words[$key]);
                 }
             }
             $search_tabu_words = implode(PHP_EOL, $search_tabu_words);
+
+            // 处理屏蔽栏目ID
+            $search_exclude_typeid = isset($param['search_exclude_typeid']) ? trim($param['search_exclude_typeid']) : '';
+            $search_exclude_typeid = preg_replace('/[^0-9,]/', '', $search_exclude_typeid); // 只保留数字和逗号
 
             $data = [
                 'search_model'=>$param['search_model'],
@@ -138,17 +171,14 @@ class Search extends Base
                 'search_locking'=>intval($param['search_locking']),
                 'title_word_model'=>intval($param['title_word_model']),
                 'search_tabu_words'=>$search_tabu_words,
+                'intellect_arr' => !empty($param['intellect_arr']) ? json_encode($param['intellect_arr']) : "['title']",
+                'search_exclude_typeid'=>$search_exclude_typeid,
+                'hot_search_open'=>isset($param['hot_search_open']) ? intval($param['hot_search_open']) : 0,
             ];
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('search', $data, $val['mark']);
-                }
-            } else {
-                tpCache('search', $data);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('search', $data, $val['mark']);
             }
             /*--end*/
             $this->success('操作成功');
@@ -167,11 +197,23 @@ class Search extends Base
             $search_tabu_words = ['<','>','"',';',',','@','&'];
             $search['search_tabu_words'] = implode(PHP_EOL, $search_tabu_words);
         }
+        if (!isset($search['intellect_arr'])) {
+            $search['intellect_arr'] = ['title', 'seo_keywords'];
+        } else {
+            $search['intellect_arr'] = json_decode($search['intellect_arr'], true);
+        }
         $this->assign('search',$search);
 
         $foreign_is_status = tpSetting('foreign.foreign_is_status', [], 'cn');
         $this->assign('foreign_is_status',$foreign_is_status);
-
+        $is_ai = 0;
+        $aidata = Db::name('weapp')->field('status,data,tag_weapp')->where(['code'=>'Ai'])->find();
+        if(isset($aidata) && $aidata['status']==1){
+            $is_ai = 1;
+        }
+        $this->assign('is_ai',$is_ai);
+        $aiConfig = tpCache('ai');
+        $this->assign('row',$aiConfig);
         return $this->fetch();
     }
 
@@ -286,6 +328,50 @@ class Search extends Base
         }
     }
 
+    /**
+     * 选择屏蔽栏目弹窗
+     */
+    public function select_arctype()
+    {
+        $assign_data = [];
+        // 目录列表
+        $where = [];
+        $where['is_del'] = 0; // 回收站功能
+        $arctypeLogic = new \app\common\logic\ArctypeLogic;
+        $arctype_list = $arctypeLogic->arctype_list(0, 0, false, 0, $where, false);
+        $assign_data['arctype_list'] = $arctype_list;
+
+        /*获取所有有子栏目的栏目id*/
+        $parent_ids = Db::name('arctype')->where([
+                'parent_id' => ['gt', 0],
+                'is_del'    => 0,
+            ])->group('parent_id')->cache(true, EYOUCMS_CACHE_TIME, 'arctype')->column('parent_id');
+        $cookied_treeclicked = json_decode(cookie('searchtypeids-treeClicked-Arr'));
+        empty($cookied_treeclicked) && $cookied_treeclicked = [];
+        $all_treeclicked = cookie('searchtypeids-treeClicked_All');
+        empty($all_treeclicked) && $all_treeclicked = [];
+        $tree = [
+            'has_children'=>!empty($parent_ids) ? 1 : 0,
+            'parent_ids'=>json_encode($parent_ids),
+            'all_treeclicked'=>$all_treeclicked,
+            'cookied_treeclicked'=>$cookied_treeclicked,
+            'cookied_treeclicked_arr'=>json_encode($cookied_treeclicked),
+        ];
+        $assign_data['tree'] = $tree;
+        /* end */
+
+        // 分类
+        $typeids = input('param.typeids/s');
+        $typeids = trim($typeids, ',');
+        $typeids_arr = explode(',', $typeids);
+        $assign_data['typeids'] = $typeids;
+        $assign_data['typeids_arr'] = $typeids_arr;
+
+        $this->assign($assign_data);
+
+        return $this->fetch();
+    }
+
     private function PerformExport($ExcelData = [], $ExcelField = [], $ExcelTitle = [])
     {
         // 引入SDK
@@ -342,7 +428,7 @@ class Search extends Base
         // 保存前清空删除原先的excel
         delFile(UPLOAD_PATH . 'excel/', true);
         // 创建文件夹
-        @mkdir($ExcelPath, 0777, true);
+        @mkdir($ExcelPath, 0755, true);
         // excel文件路径
         $filePath = $ExcelPath . $FileName . '.xlsx';
         // 保存excel文件

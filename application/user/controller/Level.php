@@ -34,7 +34,7 @@ class Level extends Base
             'pay_mark' => 'wechat'
         ];
         $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
-        if (!empty($PayInfo)) $this->pay_wechat_config = unserialize($PayInfo);
+        if (!empty($PayInfo)) $this->pay_wechat_config = safe_unserialize($PayInfo);
 
         // 商城支付宝配置信息
         $this->pay_alipay_config = '';
@@ -43,7 +43,7 @@ class Level extends Base
             'pay_mark' => 'alipay'
         ];
         $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
-        if (!empty($PayInfo)) $this->pay_alipay_config = unserialize($PayInfo);
+        if (!empty($PayInfo)) $this->pay_alipay_config = safe_unserialize($PayInfo);
 
         // 判断PHP版本信息
         if (version_compare(PHP_VERSION,'5.5.0','<')) {
@@ -114,7 +114,7 @@ class Level extends Base
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (!empty($PayInfo)) {
-                $wechat = unserialize($PayInfo);
+                $wechat = safe_unserialize($PayInfo);
                 $is_open_wechat = !empty($wechat['is_open_wechat']) ? $wechat['is_open_wechat'] : 0;
             }
         }
@@ -131,7 +131,7 @@ class Level extends Base
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (!empty($PayInfo)) {
-                $alipay = unserialize($PayInfo);
+                $alipay = safe_unserialize($PayInfo);
                 $is_open_alipay = !empty($alipay['is_open_wechat']) ? $alipay['is_open_wechat'] : 0;
             }
         }
@@ -159,6 +159,8 @@ class Level extends Base
 
         // 跳转链接
         $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
+        // 安全修复: 验证重定向 URL，防止开放重定向攻击
+        $referurl = $this->validateRedirectUrl($referurl);
         if (empty($referurl)) {
             if (isset($_SERVER['HTTP_REFERER']) && stristr($_SERVER['HTTP_REFERER'], $this->request->host())) {
                 $referurl = $_SERVER['HTTP_REFERER'];

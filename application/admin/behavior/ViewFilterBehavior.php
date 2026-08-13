@@ -43,16 +43,32 @@ class ViewFilterBehavior {
         $ctl_act_arr = ['Arctype@ajax_newtpl','Archives@ajax_newtpl','Index@ajax_theme_tplfile_add','Index@ajax_theme_tplfile_edit'];
         if ('GET' == self::$method && (in_array(self::$controllerName, ['Filemanager', 'Weapp']) || in_array($ctl_act, $ctl_act_arr))) {
             $security = tpSetting('security');
-            if (empty($security['security_ask_open']) || !security_verify_func($ctl_act)) {
+            // 已设置密保问题，继续验证流程
+            if (!empty($security['security_ask_open']) && security_verify_func($ctl_act)) {
+
+            } else {
                 return true;
             }
-            $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
-            $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
-            // 当前管理员二次安全验证过的IP地址
-            $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
-            // 同IP不验证
-            if ($admin_info['last_ip'] == $security_answerverify_ip) {
+
+            $admin_info = session('admin_info');
+            $admin_id = !empty($admin_info['admin_id']) ? (int)$admin_info['admin_id'] : 0;
+
+            // 优先检查 Session（快速路径）
+            $session_key = 'security_verified_' . $admin_id;
+            $is_verified = session($session_key);
+
+            // 如果已验证，允许访问（不检查超时时间）
+            if (!empty($is_verified)) {
                 return true;
+            }
+
+            // Session 丢失时查数据库（兼容 CDN 环境）
+            if ($admin_id > 0) {
+                $admin_row = Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$admin_id])->find();
+                if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
+                    session($session_key, $admin_row['security_verify_time']);
+                    return true;
+                }
             }
 
             $security_ask = $security['security_ask'];

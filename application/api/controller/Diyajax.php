@@ -40,7 +40,11 @@ class Diyajax extends Base
                 $this->assign($assignData);
 
                 $viewfile = input('param.viewfile/s', '');
-                empty($viewfile) && $viewfile = 'users_info.htm';
+                if (empty($viewfile)) {
+                    $viewfile = 'users_info.htm';
+                } else if (!preg_match('/\.htm$/i', $viewfile)) {
+                    $viewfile .= '.htm';
+                }
                 $filename = "./template/".THEME_STYLE_PATH."/system/{$viewfile}";
                 if (file_exists($filename)) {
                     $html = $this->fetch($filename); // 渲染模板标签语法

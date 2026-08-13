@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -73,6 +73,19 @@ class Shop extends Base {
         if (IS_POST) {
             $post = input('post.');
             if (!empty($post)) {
+                if(isset($post['ai']) && !empty($post['ai'])){
+                    if (is_language()) {
+                        $langRow = \think\Db::name('language')->order('id asc')
+                            ->cache(true, EYOUCMS_CACHE_TIME, 'language')
+                            ->select();
+                        foreach ($langRow as $key => $val) {
+                            tpCache('ai', $post['ai'], $val['mark']);
+                        }
+                    } else {
+                        tpCache('ai', $post['ai']);
+                    }
+                }
+                unset($post['ai']);
                 $TestPass = $post['TestPass'];
                 unset($post['TestPass']);
                 if (0 == $TestPass) unset($post['shop']['shop_open_spec']);
@@ -104,7 +117,14 @@ class Shop extends Base {
         $file_type = !empty($file_type) ? $file_type : 'zip|gz|rar|iso|doc|xls|ppt|wps|docx|xlsx|pptx|pdf|pem';
         if (strpos($file_type, 'pem') === false) $file_type = $file_type . '|pem';
         $this->assign('file_type', $file_type);
-
+        $is_ai = 0;
+        $aidata = Db::name('weapp')->field('status,data,tag_weapp')->where(['code'=>'Ai'])->find();
+        if(isset($aidata) && $aidata['status']==1){
+            $is_ai = 1;
+        }
+        $this->assign('is_ai',$is_ai);
+        $aiConfig = tpCache('ai');
+        $this->assign('row',$aiConfig);
         // 系统最大上传文件的大小
         $this->assign('upload_max_filesize', upload_max_filesize());
         return $this->fetch('conf');
@@ -126,6 +146,9 @@ class Shop extends Base {
         // 积分商城插件
         $pointsShop = model('ShopPublicHandle')->getWeappPointsShop();
         $this->assign('pointsShop', $pointsShop);
+        // 拼团插件
+        $groupsShop = model('ShopPublicHandle')->getWeappGroupBuy();
+        $this->assign('groupsShop', $groupsShop);
 
         // 手机端后台管理插件特定使用参数
         $isMobile = input('param.isMobile/d', 0);
@@ -161,6 +184,7 @@ class Shop extends Base {
         if (1 === intval($act_type)) {
             if (!empty($seckill)) $where['a.is_seckill_order'] = 0;
             if (!empty($pointsShop)) $where['a.points_shop_order'] = 0;
+            if (!empty($groupsShop)) $where['a.groups_shop_order'] = 0;
         }
         // 秒杀插件订单
         else if (2 === intval($act_type) && !empty($seckill)) {
@@ -169,6 +193,10 @@ class Shop extends Base {
         // 积分商城插件订单
         else if (3 === intval($act_type) && !empty($pointsShop)) {
             $where['a.points_shop_order'] = 1;
+        }
+        // 拼团插件订单
+        else if (4 === intval($act_type) && !empty($groupsShop)) {
+            $where['a.groups_shop_order'] = 1;
         }
 
         //时间检索条件
@@ -250,15 +278,21 @@ class Shop extends Base {
             $value['status'] = !empty($value['status']) ? $value['status'] : 0;
             $value['status_name'] = !empty($value['status']) ? $OrderServiceStatus[$value['status']] : '';
             // 产品属性处理
-            $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+            $value['data'] = !empty($value['data']) ? safe_unserialize($value['data']) : [];
             $value['pointsGoodsBuyField'] = !empty($value['data']['pointsGoodsBuyField']) ? json_decode($value['data']['pointsGoodsBuyField'], true) : [];
-            $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
+            $value['data'] = htmlspecialchars_decode($value['data']['spec_value'], ENT_QUOTES);
             // 组合数据
             $value['data'] = explode('<br/>', $value['data']);
             $valueData = '';
             foreach ($value['data'] as $key_1 => $value_1) {
                 $delimiter = '';//!empty($isMobile) ? '；' : '';
-                if (!empty($value_1)) $valueData .= '<span>' . trim(strrchr($value_1, '：'),'：') . '</span>' . $delimiter;
+                if (!empty($value_1)) {
+                    // 使用 explode 分割，避免 strrchr 对多字节字符的处理问题
+                    $parts = explode('：', $value_1, 2);
+                    if (count($parts) == 2) {
+                        $valueData .= '<span>' . trim($parts[1]) . '</span>' . $delimiter;
+                    }
+                }
             }
             $value['data'] = $valueData;
             $value['arcurl'] = get_arcurl($ArchivesData[$value['product_id']]);
@@ -322,7 +356,15 @@ class Shop extends Base {
                 $list = $pointsShopLogic->pointsShopOrderDataHandle($list);
             }
         }
-
+            // 存在拼团订单则执行
+        $groupShopOrder = !empty($list) ? get_arr_column($list, 'groups_shop_order') : [];
+        if (!empty($groupShopOrder) && in_array(1, $groupShopOrder)) {
+            $weappInfo = model('ShopPublicHandle')->getWeappGroupBuy();
+            if (!empty($weappInfo)) {
+                $groupShopLogic = new \weapp\GroupBuy\logic\GroupBuyLogic();
+                $list = $groupShopLogic->groupsShopOrderDataHandle($list);
+            }
+        }
         // 查询订单被提醒发货次数
         if (!empty($OrderReminderID)) {
             $field = 'order_id, count(action_id) as action_count';
@@ -391,7 +433,7 @@ class Shop extends Base {
         $payApiConfig = Db::name('pay_api_config')->where($where)->select();
         $openWeChat = $openAliPay = 1;
         foreach ($payApiConfig as $key => $value) {
-            $payInfo = unserialize($value['pay_info']);
+            $payInfo = safe_unserialize($value['pay_info']);
             if (!empty($payInfo) && isset($payInfo['is_open_wechat']) && 0 === intval($payInfo['is_open_wechat'])) {
                 $openWeChat = 0;
             }
@@ -506,7 +548,7 @@ class Shop extends Base {
                     ];
                 } else {
                     // 解析原先的备注信息
-                    $adminNote = unserialize($adminNote);
+                    $adminNote = safe_unserialize($adminNote);
                     // 新的备注信息
                     $adminNoteNew = [
                         'times' => date('Y-m-d H:i:s'),
@@ -533,7 +575,7 @@ class Shop extends Base {
             'order_id' => intval($order_id)
         ];
         $remarksList = Db::name('shop_order')->where($where)->getField('admin_note');
-        $remarksList = !empty($remarksList) ? unserialize($remarksList) : [];
+        $remarksList = !empty($remarksList) ? safe_unserialize($remarksList) : [];
         krsort($remarksList);
         $this->assign('remarksList', $remarksList);
     
@@ -547,15 +589,18 @@ class Shop extends Base {
     {
         $order_id = input('param.order_id');
         if ($order_id) {
+            $assign_data = [];
             // 查询订单信息
             $this->GetOrderData($order_id);
+            $assign_data['express'] = $this->shop_express_db->where(['is_choose'=>1])->order('sort_order asc, express_id asc')->select();
 
-            $where = [
-                'is_choose' => 1,
-            ];
-            $express = $this->shop_express_db->where($where)->order('sort_order asc, express_id asc')->select();
-            $this->assign('express', $express);
+            // 快递鸟电子面单插件
+            if (is_dir('./weapp/Kdnwaybills/')) {
+                $kdnwaybillsModel = new \weapp\Kdnwaybills\model\KdnwaybillsModel;
+                $kdnwaybillsModel->shop_order_send($assign_data); 
+            }
 
+            $this->assign($assign_data);
             // 如果安装手机端后台管理插件并且在手机端访问时执行
             $isMobile = input('param.isMobile/d', 0);
             if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
@@ -579,13 +624,28 @@ class Shop extends Base {
             $post['prom_type'] = intval($post['prom_type']);
             $post['express_id'] = intval($post['express_id']);
 
-            // 需要物流时必须选择快递
-            if (isset($post['prom_type']) && 0 === $post['prom_type']) {
-                if (empty($post['express_id']) || empty($post['express_name']) || empty($post['express_code'])) {
-                    $this->error('请选择快递公司');
+            // 快递鸟电子面单插件
+            $is_Kdnwaybills = false;
+            if (is_dir('./weapp/Kdnwaybills/') && !empty($post['waybill_type'])) {
+                $kdnwaybillsModel = new \weapp\Kdnwaybills\model\KdnwaybillsModel;
+                $weapp_data = $kdnwaybillsModel->weapp_data();  
+                if (!empty($weapp_data['Kdnwaybills_open']) && 1 == $weapp_data['Kdnwaybills_open']) {
+                    $is_Kdnwaybills = true;
                 }
             }
 
+            if (true === $is_Kdnwaybills) { // 快递鸟电子面单插件
+                $kdnwaybillsModel = new \weapp\Kdnwaybills\model\KdnwaybillsModel;
+                $post = $kdnwaybillsModel->createOrderAction($post); 
+            } else {
+                // 需要物流时必须选择快递
+                if (isset($post['prom_type']) && 0 === $post['prom_type']) {
+                    if (empty($post['express_id']) || empty($post['express_name']) || empty($post['express_code'])) {
+                        $this->error('请选择快递公司');
+                    }
+                }
+            }
+            
             // 条件数组
             $Where = [
                 'order_id' => $post['order_id'],
@@ -702,6 +762,7 @@ class Shop extends Base {
             }
         }
     }
+
     // 订单更新收货地址
     public function order_address()
     {
@@ -822,6 +883,73 @@ class Shop extends Base {
         $this->error('操作失败');
     }
 
+    // 保存快递公司（新增/编辑）
+    public function express_save()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $express_id = !empty($post['express_id']) ? intval($post['express_id']) : 0;
+
+            // 验证必填字段
+            if (empty($post['express_name'])) $this->error('快递名称不能为空');
+            if (empty($post['express_code'])) $this->error('快递编码不能为空');
+
+            // 检查编码是否重复
+            $where = ['express_code' => $post['express_code']];
+            if ($express_id > 0) $where['express_id'] = ['NEQ', $express_id];
+            $exists = $this->shop_express_db->where($where)->count();
+            if ($exists > 0) $this->error('快递编码已存在');
+
+            $data = [
+                'express_name' => trim($post['express_name']),
+                'express_code' => trim($post['express_code']),
+                'express_lnitials' => !empty($post['express_lnitials']) ? trim($post['express_lnitials']) : '',
+                'wx_delivery_id' => !empty($post['wx_delivery_id']) ? trim($post['wx_delivery_id']) : '',
+                'sort_order' => !empty($post['sort_order']) ? intval($post['sort_order']) : 0,
+                'update_time' => getTime(),
+            ];
+
+            if ($express_id > 0) {
+                // 编辑
+                $result = $this->shop_express_db->where(['express_id' => $express_id])->update($data);
+                if ($result !== false) $this->success('编辑成功');
+            } else {
+                // 新增
+                $data['is_choose'] = 1;
+                $data['add_time'] = getTime();
+                $result = $this->shop_express_db->insert($data);
+                if ($result) $this->success('添加成功');
+            }
+        }
+        $this->error('操作失败');
+    }
+
+    // 获取快递公司信息（用于编辑）
+    public function express_edit()
+    {
+        if (IS_AJAX_POST) {
+            $express_id = input('post.express_id/d', 0);
+            if ($express_id > 0) {
+                $data = $this->shop_express_db->where(['express_id' => $express_id])->find();
+                if ($data) $this->success('获取成功', null, $data);
+            }
+        }
+        $this->error('获取失败');
+    }
+
+    // 删除快递公司
+    public function express_delete()
+    {
+        if (IS_AJAX_POST) {
+            $express_id = input('post.express_id/d', 0);
+            if ($express_id > 0) {
+                $result = $this->shop_express_db->where(['express_id' => $express_id])->delete();
+                if ($result) $this->success('删除成功');
+            }
+        }
+        $this->error('删除失败');
+    }
+
     /**
      *  管理员后台标记订单状态
      */
@@ -921,7 +1049,7 @@ class Shop extends Base {
                     if ('gbdd' == $post['status_name']) {
                         $UpWhere = $this->shop_order_details_db->where('order_id',$post['order_id'])->field('product_id as aid,num,data')->find();
                         // 读取规格值ID，拼装作为更新条件
-                        $UpWhere['spec_value_id'] = unserialize($UpWhere['data'])['spec_value_id'];
+                        $UpWhere['spec_value_id'] = safe_unserialize($UpWhere['data'])['spec_value_id'];
                         // 更新数据
                         $UpData['spec_stock']     = Db::raw('spec_stock+'.($UpWhere['num']));
                         $UpData['spec_sales_num'] = Db::raw('spec_sales_num-'.($UpWhere['num']));
@@ -977,53 +1105,114 @@ class Shop extends Base {
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
-            $OrderID = intval($post['order_id']);
-            $RefundNote = trim($post['refund_note']);
-            if (!empty($OrderID)) {
+            // dump($post);exit;
+            $orderID = intval($post['order_id']);
+            $refundNote = trim($post['refund_note']);
+            if (!empty($orderID)) {
+                // 微信申请退款前提查询，是否允许微信申请退款
+                $applyResult = [];
+                if (!empty($post['actual_price']) && 3 === intval($post['refund_way'])) {
+                    // 是否允许微信申请退款
+                    $applyResult = model('PayApi')->applyWeChatPayOrderRefund($post, 'verify');
+                    // 查询订单当前状态
+                    $currentStatus = $this->shop_order_db->where(['order_id' => $orderID])->getField('order_status');
+                }
+
+                // 更新订单状态为已取消
                 $update = [
-                    'order_id' => $OrderID,
+                    'order_id' => $orderID,
                     'order_status' => '-1',
                     'manual_refund' => 1,
-                    'refund_note' => $RefundNote,
+                    'refund_note' => $refundNote,
                     'update_time' => getTime(),
                 ];
-                $ResultID = $this->shop_order_db->update($update);
-                if (!empty($ResultID)) {
+                $resultID = $this->shop_order_db->update($update);
+                if (!empty($resultID)) {
+                    if (1 === intval($post['refund_way']) && !empty($post['actual_price'])) {
+                        // 退回会员余额
+                        $where = [
+                            'users_id' => intval($post['users_id'])
+                        ];
+                        $resultID = $this->users_db->where($where)->setInc('users_money', $post['actual_price']);
+                        // 添加余额记录
+                        if (!empty($resultID)) UsersMoneyRecording($post['order_code'], $post, $post['actual_price'], '订单手动退款到余额');
+                    }
+                    else if (3 === intval($post['refund_way']) && !empty($applyResult['data'])) {
+                        // 微信申请退款
+                        $submitResult = model('PayApi')->applyWeChatPayOrderRefund($applyResult['data'], 'submit');
+                        // 后续操作
+                        if (!empty($submitResult['return_code']) && 'FAIL' == $submitResult['return_code']) {
+                            // 更新订单回原状态
+                            $update['order_status'] = $currentStatus;
+                            $this->shop_order_db->update($update);
+                            // 申请失败提示
+                            $this->error($submitResult['return_msg']);
+                        }
+                    }
+
                     // 如果安装了秒杀插件则执行
                     if (is_dir('./weapp/Seckill/')) {
                         $SeckillRow = model('Weapp')->getWeappList('Seckill');
                         //is_seckill_order 只有安装了秒杀插件 shop_order表才会有这个字段
                         if (!empty($SeckillRow) && 1 == intval($SeckillRow['status']) && !empty($order['is_seckill_order'])) {
                             // 调用秒杀逻辑层方法
-                            $users_id = $this->shop_order_db->where('order_id',$OrderID)->value('users_id');
+                            $users_id = $this->shop_order_db->where('order_id',$orderID)->value('users_id');
                             $weappSeckillLogic = new \weapp\Seckill\logic\SeckillLogic;
-                            $weappSeckillLogic->cancelOrderHandle($OrderID, $users_id);
+                            $weappSeckillLogic->cancelOrderHandle($orderID, $users_id);
                         }
                     }
 
                     // 添加订单操作记录
-                    AddOrderAction($OrderID, 0, session('admin_id'), '-1', 0, 1, '关闭并退款', '管理员手动关闭订单并自行退款');
+                    $actionNote = '管理员手动关闭订单并自行退款';
+                    if (1 === intval($post['refund_way'])) {
+                        $actionNote = '管理员手动关闭订单并退款到余额，退款金额为: ' . floatval($post['actual_price']);
+                    }
+                    else if (3 === intval($post['refund_way'])) {
+                        $actionNote = '管理员手动关闭订单并使用原路退回(微信)进行退款，退款金额为: ' . floatval($post['actual_price']);
+                    }
+                    AddOrderAction($orderID, 0, session('admin_id'), '-1', 0, 1, '订单手动退款', $actionNote);
 
                     // 商品库存恢复
                     $where = [
-                        'order_id' => $OrderID,
+                        'order_id' => $orderID,
                     ];
-                    $shopOrder = $this->shop_order_db->where($where)->select();
-                    model('OrderPreHandle')->restoreGoodsStock($shopOrder);
+                    $shopOrder = $this->shop_order_db->where($where)->find();
+                    model('OrderPreHandle')->restoreGoodsStock([$shopOrder]);
 
                     // 加添订单售后信息
-                    $this->adminAddOrderService($OrderID, $RefundNote);
+                    $this->adminAddOrderService($orderID, $refundNote, $post['refund_code'], $post['actual_price']);
 
                     // 返回结束
                     $this->success('操作完成');
                 }
             }
         }
-        $this->error('非法访问！');
+
+        $order_id = input('param.order_id/d', 0);
+        if (empty($order_id)) $this->error('没有接收到订单ID，刷新重试~');
+        $this->GetOrderData($order_id);
+
+        // 退款单号
+        $this->assign('refund_code', 'TK' . getTime() . rand(10, 99));
+
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            $mbPage = input('param.p/d', 1);
+            $nullShow = intval($pageObj->totalPages) === intval($mbPage) ? 1 : 0;
+            $this->assign('nullShow', $nullShow);
+            if ($mbPage >= 2) {
+                return $this->display('shop/order_list');
+            } else {
+                return $this->display('shop/index');
+            }
+        } else {
+            return $this->fetch();
+        }
+        // $this->error('非法访问！');
     }
 
     // 加添订单售后信息
-    public function adminAddOrderService($orderID = 0, $refundNote = '')
+    public function adminAddOrderService($orderID = 0, $refundNote = '', $refundCode = '', $actualPrice = 0)
     {
         $where = [
             'order_id' => $orderID,
@@ -1040,7 +1229,7 @@ class Shop extends Base {
             $times = getTime();
             foreach ($details as $key => $value) {
                 // 商品规格信息
-                $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+                $value['data'] = !empty($value['data']) ? safe_unserialize($value['data']) : [];
                 $product_spec = !empty($value['data']['spec_value']) ? htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value'])) : '';
                 // 订单售后信息
                 $insert = [
@@ -1062,8 +1251,8 @@ class Shop extends Base {
                     'manual_refund'=> 1,
                     'manual_time'  => $times,
                     'refund_note'  => !empty($refundNote) ? $refundNote : '商家主动退款',
-                    'refund_price' => unifyPriceHandle($value['product_price']),
-                    'refund_code'  => 'TK' . $times . rand(10, 99),
+                    'refund_price' => unifyPriceHandle($actualPrice),
+                    'refund_code'  => !empty($refundCode) ? trim($refundCode) : 'TK' . $times . rand(10, 99),
                     'status'       => 7,
                     'add_time'     => $times,
                     'update_time'  => $times,
@@ -1183,10 +1372,14 @@ class Shop extends Base {
         $OrderData['express_time'] = !empty($OrderData['express_time']) ? date('Y-m-d H:i:s', $OrderData['express_time']) : 0;
         $OrderData['confirm_time'] = !empty($OrderData['confirm_time']) ? date('Y-m-d H:i:s', $OrderData['confirm_time']) : 0;
         $OrderData['order_terminal_name'] = '电脑端';
-        if (!empty($OrderData['order_terminal']) && 2 === intval($OrderData['order_terminal'])) {
-            $OrderData['order_terminal_name'] = '手机端';
-        } else if (!empty($OrderData['order_terminal']) && 3 === intval($OrderData['order_terminal'])) {
-            $OrderData['order_terminal_name'] = '微信小程序';
+        if (!empty($OrderData['order_terminal'])) {
+            if (2 === intval($OrderData['order_terminal'])) {
+                $OrderData['order_terminal_name'] = '手机端';
+            } else if (3 === intval($OrderData['order_terminal'])) {
+                $OrderData['order_terminal_name'] = '微信小程序';
+            } else if (12 === intval($OrderData['order_terminal'])) {
+                $OrderData['order_terminal_name'] = '支付宝小程序';
+            }
         }
 
         // 获取会员数据
@@ -1221,15 +1414,21 @@ class Shop extends Base {
                 $OrderData['prom_type_virtual'] = true;
             }
             // 产品属性处理
-            $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+            $value['data'] = !empty($value['data']) ? safe_unserialize($value['data']) : [];
             $DetailsData[$key]['pointsGoodsBuyField'] = !empty($value['data']['pointsGoodsBuyField']) ? json_decode($value['data']['pointsGoodsBuyField'], true) : [];
-            $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
+            $value['data'] = htmlspecialchars_decode($value['data']['spec_value']);
             // 组合数据
             $value['data'] = explode('<br/>', $value['data']);
             $valueData = '';
             foreach ($value['data'] as $key_1 => $value_1) {
                 $delimiter = '';//!empty($isMobile) ? '；' : '';
-                if (!empty($value_1)) $valueData .= '<span>' . trim(strrchr($value_1, '：'),'：') . '</span>' . $delimiter;
+                if (!empty($value_1)) {
+                    // 使用 explode 分割，避免 strrchr 对多字节字符的处理问题
+                    $parts = explode('：', $value_1, 2);
+                    if (count($parts) == 2) {
+                        $valueData .= '<span>' . trim($parts[1]) . '</span>' . $delimiter;
+                    }
+                }
             }
             $DetailsData[$key]['product_spec'] = $value['data'] = $valueData;
 
@@ -1265,7 +1464,7 @@ class Shop extends Base {
         }
         if (!empty($OrderData['is_seckill_order'])) $OrderData['prom_type_name'] = '秒杀订单';
         if (!empty($OrderData['points_shop_order'])) $OrderData['prom_type_name'] = '积分订单';
-
+        if (!empty($OrderData['groups_shop_order'])) $OrderData['prom_type_name'] = '拼团订单';
         // 移动端查询物流链接
         $MobileExpressUrl = "//m.kuaidi100.com/index_all.html?type=".$OrderData['express_code']."&postid=".$OrderData['express_order'];
         $this->assign('MobileExpressUrl', $MobileExpressUrl);
@@ -1273,7 +1472,7 @@ class Shop extends Base {
         $pcExpressUrl = "https://www.kuaidi100.com/chaxun?com=".$OrderData['express_code']."&nu=".$OrderData['express_order'];
         $this->assign('pcExpressUrl', $pcExpressUrl);
         // 管理员备注
-        $adminNoteCount = !empty($OrderData['admin_note']) ? count(unserialize($OrderData['admin_note'])) : 0;
+        $adminNoteCount = !empty($OrderData['admin_note']) ? count(safe_unserialize($OrderData['admin_note'])) : 0;
         $this->assign('adminNoteCount', $adminNoteCount);
 
         // 存在积分商城订单则执行
@@ -1286,8 +1485,18 @@ class Shop extends Base {
                 $pointsShopLogic->pointsShopOrderDataHandle([$list], $OrderData, $DetailsData);
             }
         }
-
+        // 存在拼团订单则执行
+        if (!empty($OrderData['groups_shop_order'])) {
+            $weappInfo = model('ShopPublicHandle')->getWeappGroupBuy();
+            if (!empty($weappInfo)) {
+                $list = !empty($OrderData) ? $OrderData : [];
+                $list['Details'] = !empty($DetailsData) ? $DetailsData : [];
+                $groupShopLogic = new \weapp\GroupBuy\logic\GroupBuyLogic();
+                $groupShopLogic->groupsShopOrderDataHandle([$list], $OrderData, $DetailsData);
+            }
+        }
         // 加载数据
+        $OrderData['order_amount'] = unifyPriceHandle($OrderData['order_amount']);
         $this->assign('OrderData', $OrderData);
         $this->assign('DetailsData', $DetailsData);
         $this->assign('UsersData', $UsersData);
@@ -1304,6 +1513,70 @@ class Shop extends Base {
             ];
             $weappVerifyLog = Db::name('weapp_verify')->where($where)->find();
             $weappVerifyLog['verify_time'] = !empty($weappVerifyLog['verify_time']) ? date('Y-m-d H:i:s', $weappVerifyLog['verify_time']) : 0;
+            
+            // 计算并更新核销有效期 - 使用插件设置的全局有效期天数
+            if (!empty($weappVerifyLog)) {
+                $weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
+                $verifyValidityDays = !empty($weappInfo['data']['verifyValidityDays']) ? intval($weappInfo['data']['verifyValidityDays']) : 0;
+                
+                // 如果数据库中的有效期为0且设置了有效期天数，则计算并更新
+                if (empty($weappVerifyLog['verify_expire_time']) && $verifyValidityDays > 0) {
+                    // 从订单支付时间开始计算有效期
+                    $payTimeStamp = !empty($OrderData['pay_time']) ? strtotime($OrderData['pay_time']) : 0;
+                    if ($payTimeStamp > 0) {
+                        $expireTime = $payTimeStamp + ($verifyValidityDays * 24 * 3600);
+                        
+                        // 更新数据库中的有效期
+                        Db::name('weapp_verify')->where('verify_id', $weappVerifyLog['verify_id'])->update([
+                            'verify_expire_time' => $expireTime,
+                            'update_time' => getTime()
+                        ]);
+                        
+                        // 更新当前数据
+                        $weappVerifyLog['verify_expire_time'] = $expireTime;
+                    }
+                }
+                
+                // 添加有效期计算说明 - 显示具体的截止时间
+                if (!empty($weappVerifyLog['verify_expire_time'])) {
+                    if ($verifyValidityDays > 0) {
+                        // 获取下单时间
+                        $addTimeStamp = !empty($OrderData['add_time']) ? strtotime($OrderData['add_time']) : 0;
+                        if ($addTimeStamp > 0) {
+                            // 计算截止时间：下单时间 + 有效期天数
+                            $expireTimeCalc = $addTimeStamp + ($verifyValidityDays * 24 * 3600);
+                            $weappVerifyLog['verify_expire_desc'] = date('Y-m-d H:i', $expireTimeCalc);
+                        }
+                    }
+                    // 如果没有计算出来，使用数据库中的有效期时间
+                    if (empty($weappVerifyLog['verify_expire_desc'])) {
+                        $weappVerifyLog['verify_expire_desc'] = date('Y-m-d H:i', $weappVerifyLog['verify_expire_time']);
+                    }
+                }
+                
+                // 补充核销数据：确保多次核销订单的数据正确
+                if (!empty($weappVerifyLog) && (empty($weappVerifyLog['total_verify_times']) || $weappVerifyLog['total_verify_times'] <= 1)) {
+                    // 从订单详情获取商品ID
+                    $orderDetail = Db::name('shop_order_details')->where('order_id', $OrderData['order_id'])->find();
+                    if (!empty($orderDetail['product_id'])) {
+                        // 从商品表获取正确的核销配置
+                        $productInfo = Db::name('archives')->where('aid', $orderDetail['product_id'])->field('verify_type,verify_times')->find();
+                        if (!empty($productInfo) && !empty($productInfo['verify_times']) && $productInfo['verify_times'] > 1) {
+                            // 更新核销表数据
+                            $updateData = [
+                                'total_verify_times' => intval($productInfo['verify_times']),
+                                'verify_type' => !empty($productInfo['verify_type']) ? intval($productInfo['verify_type']) : 2,
+                                'update_time' => getTime()
+                            ];
+                            Db::name('weapp_verify')->where('verify_id', $weappVerifyLog['verify_id'])->update($updateData);
+                            
+                            // 更新返回的数据
+                            $weappVerifyLog['total_verify_times'] = $updateData['total_verify_times'];
+                            $weappVerifyLog['verify_type'] = $updateData['verify_type'];
+                        }
+                    }
+                }
+            }
         }
         $this->assign('weappVerifyLog', $weappVerifyLog);
     }
@@ -1824,7 +2097,7 @@ class Shop extends Base {
             $HtmlTable = $SpecMarks = '';
             if (!empty($SpecIds)) {
                 // 删除废弃的规格值数据
-                Db::name('product_spec_data')->where('spec_id', 'IN', $SpecIds)->delete();
+                Db::name('product_spec_data')->where('spec_id', 'IN', $SpecIds)->delete(true);
                 if (1 == $DelIsSelect) {
                     session('spec_arr', null);
                     $SpecWhere = [
@@ -2171,7 +2444,7 @@ class Shop extends Base {
             $val['config']         = $config;
 
             if ($val['meal']){
-                $val['meal'] = unserialize($val['meal']);
+                $val['meal'] = safe_unserialize($val['meal']);
             }
             $val['install'] = 0;
             if (!empty($local[$val['weapp_code']])) {
@@ -2264,6 +2537,7 @@ EOF;
                     if (empty($val['needmoney'])) {
                         $btn_txt = "安装";
                     } else {
+                        continue;
                         $btn_txt = "购买";
                     }
                     $btn = "<a href=\"javascript:void(0);\" onclick=\"goPage(this);\" data-id=\"{$val['id']}\" data-weapp_code=\"{$val['weapp_code']}\"  data-min_version=\"{$val['min_version']}\" data-buy=\"{$val['buy']}\" data-needmoney=\"{$val['needmoney']}\">{$btn_txt}</a>";
@@ -2396,7 +2670,7 @@ EOF;
             $value['status'] = !empty($value['status']) ? $value['status'] : 0;
             $value['status_name'] = !empty($value['status']) ? $OrderServiceStatus[$value['status']] : '';
             // 产品属性处理
-            $value['data'] = unserialize($value['data']);
+            $value['data'] = safe_unserialize($value['data']);
             $value['data'] = htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value']));
             // 组合数据
             $value['data'] = explode('<br/>', $value['data']);
@@ -2462,14 +2736,19 @@ EOF;
     public function verify()
     {
         if (IS_AJAX_POST && !empty($this->weappInfo)) {
+         
             // 开启核销插件则执行
             if (!empty($this->weappInfo['status']) && 1 === intval($this->weappInfo['status'])) {
                 // 调用核销逻辑层方法
                 $post = input('post.');
                 $verifyLogic = new \weapp\Verify\logic\VerifyLogic;
+              
                 $verifyLogic->verifyOrderConfirmHandle($post, $this->weappInfo);
+                // 如果执行到这里说明核销成功，直接返回
+                return;
+            } else {
+                $this->error('请先开启核销插件');
             }
-            $this->error('请先开启核销插件');
         }
         $this->error('请先安装核销插件');
     }
@@ -2538,4 +2817,139 @@ EOF;
         }
         $this->error('请求错误!');
     }
+    
+    /**
+     * 手动执行过期核销订单自动完成
+     */
+    public function manualCompleteExpiredVerifyOrders()
+    {
+        // 检查管理员权限
+        if (!session('admin_id')) {
+            $this->error('请先登录管理后台');
+        }
+        
+        try {
+            // 检查核销插件是否启用
+            $weappInfo = Db::name('weapp')->where('code', 'Verify')->find();
+            if (empty($weappInfo) || $weappInfo['status'] != 1) {
+                $this->error('核销插件未启用');
+            }
+            
+            // 获取核销插件配置
+            $weappData = !empty($weappInfo['data']) ? unserialize($weappInfo['data']) : [];
+            if (empty($weappData['openVerify']) || $weappData['openVerify'] != 1) {
+                $this->error('核销功能未开启');
+            }
+            
+            $currentTime = time();
+            
+            // 查询所有过期的核销订单（包括多次核销订单）
+            $expiredVerifyOrders = Db::name('weapp_verify')
+                ->alias('v')
+                ->join('shop_order o', 'v.order_id = o.order_id')
+                ->where([
+                    'v.verify_expire_time' => ['>', 0],  // 有设置过期时间
+                    'v.verify_expire_time' => ['<', $currentTime],  // 已过期
+                    'o.order_status' => 1,  // 订单状态为已支付待核销
+                    'o.logistics_type' => 2  // 核销订单
+                ])
+                ->where(function($query) {
+                    // 条件1: 完全未核销的订单 (verify_status = 0)
+                    // 条件2: 多次核销但未完全核销的订单 (used_verify_times < total_verify_times)
+                    $query->where('v.verify_status', 0)
+                          ->whereOr(function($subQuery) {
+                              $subQuery->where('v.total_verify_times', '>', 1)
+                                       ->whereRaw('v.used_verify_times < v.total_verify_times');
+                          });
+                })
+                ->field('v.verify_id, v.order_id, v.users_id, v.verify_expire_time, v.total_verify_times, v.used_verify_times, v.verify_status, o.order_code')
+                ->select();
+            
+            if (empty($expiredVerifyOrders)) {
+                $this->success('没有需要处理的过期核销订单');
+            }
+            
+            $processedCount = 0;
+            $errorCount = 0;
+            $errorMessages = [];
+            
+            foreach ($expiredVerifyOrders as $verifyOrder) {
+                // 开启事务
+                Db::startTrans();
+                
+                try {
+                    // 更新核销记录状态为已完成（过期关闭）
+                    $verifyUpdateResult = Db::name('weapp_verify')
+                        ->where('verify_id', $verifyOrder['verify_id'])
+                        ->update([
+                            'verify_status' => 2,  // 2表示过期关闭
+                            'update_time' => $currentTime,
+                            'verify_time' => $currentTime,
+                            'admin_id' => session('admin_id')  // 管理员手动处理
+                        ]);
+                    
+                    // 更新订单状态为已完成
+                    $orderUpdateResult = Db::name('shop_order')
+                        ->where([
+                            'order_id' => $verifyOrder['order_id'],
+                            'logistics_type' => 2
+                        ])
+                        ->update([
+                            'order_status' => 3,  // 已完成
+                            'update_time' => $currentTime,
+                            'confirm_time' => $currentTime
+                        ]);
+                    
+                    if ($verifyUpdateResult !== false && $orderUpdateResult !== false) {
+                        // 添加订单操作记录
+                        AddOrderAction(
+                            $verifyOrder['order_id'], 
+                            session('admin_id'), 
+                            0, 
+                            3, 
+                            1, 
+                            1, 
+                            '核销过期手动关闭', 
+                            '管理员手动执行核销过期订单自动完成处理'
+                        );
+                        
+                        // 提交事务
+                        Db::commit();
+                        $processedCount++;
+                        
+                        // 记录日志
+                        $usedTimes = intval($verifyOrder['used_verify_times']);
+                        $totalTimes = intval($verifyOrder['total_verify_times']);
+                        $expireTimeStr = date('Y-m-d H:i:s', $verifyOrder['verify_expire_time']);
+                        error_log("管理员手动处理核销订单过期关闭 - 订单ID: {$verifyOrder['order_id']}, 订单号: {$verifyOrder['order_code']}, 过期时间: {$expireTimeStr}, 核销进度: {$usedTimes}/{$totalTimes}");
+                    } else {
+                        // 回滚事务
+                        Db::rollback();
+                        $errorCount++;
+                        $errorMessages[] = "订单 {$verifyOrder['order_code']} 处理失败：数据库更新失败";
+                    }
+                } catch (\Exception $e) {
+                    // 回滚事务
+                    Db::rollback();
+                    $errorCount++;
+                    $errorMessages[] = "订单 {$verifyOrder['order_code']} 处理异常：" . $e->getMessage();
+                }
+            }
+            
+            $message = "过期核销订单处理完成！总计: " . count($expiredVerifyOrders) . " 个，成功: {$processedCount} 个，失败: {$errorCount} 个";
+            if (!empty($errorMessages)) {
+                $message .= "\n失败详情：\n" . implode("\n", $errorMessages);
+            }
+            
+            if ($errorCount > 0) {
+                $this->error($message);
+            } else {
+                $this->success($message);
+            }
+            
+        } catch (\Exception $e) {
+            $this->error('处理异常：' . $e->getMessage());
+        }
+    }
+    
 }

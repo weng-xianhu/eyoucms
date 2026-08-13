@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -120,7 +120,10 @@ class Download extends Base
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.aid desc";
         } else {
             $orderby = "a.aid desc";
@@ -330,7 +333,11 @@ class Download extends Base
             if (isset($restricData['code']) && empty($restricData['code'])) {
                 $this->error($restricData['msg']);
             }
-
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // --存储数据
             $newData = array(
                 'typeid'=> empty($post['typeid']) ? 0 : $post['typeid'],
@@ -344,6 +351,7 @@ class Download extends Base
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
                 'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -358,6 +366,7 @@ class Download extends Base
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'  => strtotime($post['add_time']),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
 
@@ -449,7 +458,7 @@ class Download extends Base
         $assign_data['attr_field'] = $attr_field;
         $assign_data['servername_use'] = $servername_use;
 
-        $servername_arr = unserialize(tpCache('global.download_select_servername'));
+        $servername_arr = safe_unserialize(tpCache('global.download_select_servername'));
         $assign_data['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
         /*--end*/
 
@@ -661,7 +670,11 @@ class Download extends Base
             if (isset($restricData['code']) && empty($restricData['code'])) {
                 $this->error($restricData['msg']);
             }
-
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // --存储数据
             $newData = array(
                 'typeid'=> $typeid,
@@ -675,6 +688,7 @@ class Download extends Base
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
                 'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -685,6 +699,7 @@ class Download extends Base
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'     => getTime(),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
             $r = Db::name('archives')->where([
@@ -821,7 +836,7 @@ class Download extends Base
         $assign_data['attr_field'] = $attr_field;
         $assign_data['servername_use'] = $servername_use;
 
-        $servername_arr = unserialize(tpCache('global.download_select_servername'));
+        $servername_arr = safe_unserialize(tpCache('global.download_select_servername'));
         $assign_data['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
         /*--end*/
 
@@ -894,7 +909,7 @@ class Download extends Base
 
     public function select_servername()
     {
-        $servername_arr = unserialize(tpCache('global.download_select_servername'));
+        $servername_arr = safe_unserialize(tpCache('global.download_select_servername'));
         $param = input('param.');
         $assign_data['select_servername'] = $servername_arr;
         $assign_data['file_key'] = $param['file_key'];
@@ -932,7 +947,7 @@ class Download extends Base
             $this->success("更新成功！");
         }
 
-        $servername_arr = unserialize(tpCache('global.download_select_servername'));
+        $servername_arr = safe_unserialize(tpCache('global.download_select_servername'));
         $servername_arr = implode("\n",$servername_arr);
 
         $assign_data['servernames'] = $servername_arr;
@@ -946,14 +961,16 @@ class Download extends Base
             $post = input('param.');
             $keyword = $post['keyword'];
 
-            $servernames = unserialize(tpCache('global.download_select_servername'));
+            $servernames = safe_unserialize(tpCache('global.download_select_servername'));
 
             $search_data = $servernames;
             if (!empty($keyword)) {
                 $search_data = [];
                 if ($servernames) {
+                    // 转义正则特殊字符，防止正则表达式注入
+                    $keyword = preg_quote($keyword, '/');
                     foreach ($servernames as $k => $v) {
-                        if (preg_match("/$keyword/s", $v)) $search_data[] = $v;
+                        if (preg_match("/$keyword/si", $v)) $search_data[] = $v;
                     }
                 }
             }

@@ -18,7 +18,9 @@
             <input type="hidden" name="express_id" id="express_id">
             <input type="hidden" name="express_name" id="express_name">
             <input type="hidden" name="express_code" id="express_code">
-
+            {if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/order_send_form_hidden.htm')" /}
+                {include file="/weapp/Kdnwaybills/template/admin/shop/order_send_form_hidden.htm" /}
+            {/if}
             <div class="ncap-form-default">
                 {eq name="$OrderData.prom_type" value="0"}
                     <dl class="row">
@@ -35,10 +37,10 @@
                     </dl>
 
                     <dl class="row">
-                        <dt class="tit"> <label>发货方式</label> </dt>
+                        <dt class="tit"> <label>配送方式</label> </dt>
                         <dd class="opt" style="line-height: 30px;">
                             <label>
-                                <input type="radio" name="prom_type" value="0" {eq name="$OrderData.prom_type" value="0"}checked="checked"{/eq}>录入物流单号
+                                <input type="radio" name="prom_type" value="0" {eq name="$OrderData.prom_type" value="0"}checked="checked"{/eq}>物流配送
                             </label>
                             &nbsp;&nbsp;&nbsp;
                             <label>
@@ -51,33 +53,39 @@
                 {/eq}
 
                 <div class="{eq name='$OrderData.prom_type' value='1'}none{/eq}" id="ShippingInfo">
-                    <dl class="row">
-                        <dt class="tit"> <label><em>*</em>快递公司</label> </dt>
-                        <dd class="opt">
-                            <select id="select_express" style="width: 300px;" onchange="SelectExpress(this);">
-                                <option value="0">请选择</option>
+                    {if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/order_send_shipping_info.htm')" /}
+                        {include file="/weapp/Kdnwaybills/template/admin/shop/order_send_shipping_info.htm" /}
+                    {/if}
+                    <div class="{if condition="!empty($OrderData['waybill_type'])"}none{/if}" id="expressInfo2">
+                        <dl class="row">
+                            <dt class="tit"> <label><em>*</em>快递公司</label> </dt>
+                            <dd class="opt">
+                                <select id="select_express" style="width: 300px;" onchange="SelectExpress(this);">
+                                    <option value="0">请选择</option>
+                                    {volist name="$express" id="vo"}
+                                    <option value="{$vo.express_id}" code="{$vo.express_code}" name="{$vo.express_name}" {eq name="$vo.express_code" value="$OrderData.express_code"}selected{/eq}>{$vo.express_name}</option>
+                                    {/volist}
+                                </select>
+                               
+                                <div class="express-tag">
                                 {volist name="$express" id="vo"}
-                                <option value="{$vo.express_id}" code="{$vo.express_code}" name="{$vo.express_name}" {eq name="$vo.express_code" value="$OrderData.express_code"}selected{/eq}>{$vo.express_name}</option>
+                                    {if condition='$i <= 4'}
+                                    <span class="span_all span_{$vo.express_id} {eq name='$vo.express_code' value='$OrderData.express_code'} select-express {/eq}" data-id="{$vo.express_id}" data-code="{$vo.express_code}" data-name="{$vo.express_name}" data-i="{$i}" onclick="SpanSelectExpress(this);">{$vo.express_name}</span>
+                                    {/if}
                                 {/volist}
-                            </select>
-                            <div class="express-tag">
-                                {volist name="$express" id="vo"}
-                                {if condition='$i <= 4'}
-                                <span class="span_all span_{$vo.express_id} {eq name='$vo.express_code' value='$OrderData.express_code'} select-express {/eq}" data-id="{$vo.express_id}" data-code="{$vo.express_code}" data-name="{$vo.express_name}" data-i="{$i}" onclick="SpanSelectExpress(this);">{$vo.express_name}</span>
-                                {/if}
-                                {/volist}
-                            </div>
-                        </dd>
-                    </dl>
-                    <dl class="row">
-                        <dt class="tit"> <label>快递费用</label> </dt> <dd class="opt"> ￥{$OrderData.shipping_fee} </dd>
-                    </dl>
-                    <dl class="row">
-                        <dt class="tit"> <label><em>*</em>快递单号</label> </dt>
-                        <dd class="opt">
-                            <input type="text" value="{$OrderData.express_order}" name="express_order" id="express_order" class="input-txt">
-                        </dd>
-                    </dl>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl class="row">
+                            <dt class="tit"> <label>快递费用</label> </dt> <dd class="opt"> ￥{$OrderData.shipping_fee} </dd>
+                        </dl>
+                        <dl class="row" id="express_order_dl">
+                            <dt class="tit"> <label><em>*</em>快递单号</label> </dt>
+                            <dd class="opt">
+                                <input type="text" value="{$OrderData.express_order}" name="express_order" id="express_order" class="input-txt">
+                            </dd>
+                        </dl>
+                    </div>
                 </div>
 
                 <div class="{if condition='$OrderData.prom_type == 0 && $OrderData.prom_type_virtual == false'}none{/if}" id="VirtualDelivery">
@@ -274,3 +282,8 @@
         }
     }
 </script> 
+
+{if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/order_send.js')" /}
+    <script type="text/javascript" src="http://localhost:8000/cLodopfuncs.js"></script>
+    <script type="text/javascript" src="__ROOT_DIR__/weapp/Kdnwaybills/template/admin/shop/order_send.js?v={:getTime()}"></script>
+{/if}

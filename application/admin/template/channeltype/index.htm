@@ -207,6 +207,30 @@
     }
 
     function handleShow(obj){
+        var status = $(obj).attr('data-status');
+        if (0 == status) {
+            layer.confirm('关闭后，已关联的栏目不受影响，但无法新建该模型频道的栏目，是否继续关闭？', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'], //按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function () {
+                handleShowHide(obj);
+            }, function (index) {
+                layer.closeAll(index);
+            });
+        } else {
+            handleShowHide(obj);
+        }
+    }
+
+    function handleShowHide(obj){
         var title = $(obj).attr('data-title');
         var channel_id = $(obj).attr('data-id');
         var status = $(obj).attr('data-status');
@@ -216,9 +240,7 @@
             data : {id:channel_id,status:status, _ajax:1},
             dataType : 'json',
             success : function(res){
-
                 if (res.code == 1) {
-
                     if (0 == res.data.confirm) {
                         if (channel_id == 5){
                             if(status == 1){

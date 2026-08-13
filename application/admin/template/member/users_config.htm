@@ -134,6 +134,15 @@
                         <p class="notic">前台注册时禁止注册的用户名列表，以逗号(,)分隔开</p>
                     </dd>
                 </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">限制注册</label>
+                    </dt>
+                    <dd class="opt" style="line-height: 26px;">
+                        同一IP&nbsp;<input id="users_reg_limit_time" name="users[users_reg_limit_time]" value="{$usersConfig.users_reg_limit_time|default='24'}" autocomplete="off" type="text" style="width: 60px;" onkeypress="return event.charCode >= 48 && event.charCode <= 57" oninput="this.value = this.value.replace(/[^\d]/g, '')" />&nbsp;(小时内禁止注册)
+                        <p class="notic">前台会员注册时同一ip在规定时间内只能注册一次，为0时则不限制</p>
+                    </dd>
+                </dl>
             </div>
             <div class="hDiv htitx">
                 <div class="hDivBox">
@@ -195,6 +204,21 @@
                     <dd class="opt">
                         <input name="users[users_login_jump_url]" value="{$usersConfig.users_login_jump_url|default=''}" autocomplete="off" placeholder="http://" type="text" class="input-txt"/>
                         <p class="notic">请填写完整的链接</p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label for="username">手机快捷登录</label>
+                    </dt>
+                    <dd class="opt" style="line-height: 26px;">
+                        <label class="curpoin">
+                            <input type="radio" name="users[users_mobile_login_auto_reg]" value="1" {if condition="isset($usersConfig.users_mobile_login_auto_reg) && $usersConfig.users_mobile_login_auto_reg == 1"}checked="checked"{/if}/>开启
+                        </label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label class="curpoin">
+                            <input type="radio" name="users[users_mobile_login_auto_reg]" value="0" {if condition="!isset($usersConfig.users_mobile_login_auto_reg) || empty($usersConfig.users_mobile_login_auto_reg)"}checked="checked"{/if}/>关闭
+                        </label>
+                        <p class="notic">开启后，未注册的手机号通过验证码登录时将自动注册为新会员</p>
                     </dd>
                 </dl>
             </div>

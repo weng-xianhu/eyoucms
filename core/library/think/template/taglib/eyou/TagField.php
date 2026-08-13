@@ -49,7 +49,7 @@ class TagField extends Base
 
         $parseStr = '';
 
-        $archivesRow = Db::name('archives')->field('typeid,channel')->where(['aid'=>$aid])->find();
+        $archivesRow = Db::name('archives')->field('typeid,channel,lang')->where(['aid'=>$aid])->find();
         if (empty($archivesRow)) {
             return $parseStr;
         }
@@ -134,11 +134,26 @@ class TagField extends Base
 
                     }
                 }
+            } else if ('cascade' == $dtype) {
+                if (!empty($parseStr)) {
+                    $cascadeIds = explode(',', $parseStr);
+                    $cascadeNames = [];
+                    foreach ($cascadeIds as $_cid) {
+                        $_cid = intval($_cid);
+                        if ($_cid > 0) {
+                            $_cname = Db::name('field_cascade_data')->where('id', $_cid)->getField('name');
+                            if (!empty($_cname)) {
+                                $cascadeNames[] = $_cname;
+                            }
+                        }
+                    }
+                    $parseStr = implode(' ', $cascadeNames);
+                }
             } else if ('file' == $dtype) {
                 if (stristr($parseStr, '|')) {
                     $arr = explode('|', $parseStr);
-                    $parseStr = $arr[0];
-                    $parseStr = ROOT_DIR . "/index.php?m=home&c=View&a=custom_download_file&aid={$aid}&field=".mchStrCode($fieldname, 'ENCODE', $aid.get_auth_code());
+                    // $parseStr = $arr[0];
+                    $parseStr = ROOT_DIR . "/index.php?m=home&c=View&a=custom_download_file&aid={$aid}&field=".mchStrCode($fieldname, 'ENCODE', $aid.get_auth_code('bcrypt', $archivesRow['lang']))."&lang=".$archivesRow['lang'];
                 }
             }
         }

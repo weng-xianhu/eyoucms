@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -81,7 +81,7 @@ class ShopComment extends Base
             // 如果不存在商品数量则执行
             if (empty($Comment['product_num'])) $Comment['product_num'] = 1;
             // 评价上传的图片
-            $Comment['upload_img'] = !empty($Comment['upload_img']) ? explode(',', unserialize($Comment['upload_img'])) : [];
+            $Comment['upload_img'] = !empty($Comment['upload_img']) ? explode(',', safe_unserialize($Comment['upload_img'])) : [];
             foreach ($Comment['upload_img'] as $key => $value) {
                 if (empty($value)) {
                     unset($Comment['upload_img'][$key]);
@@ -100,9 +100,9 @@ class ShopComment extends Base
             // 评价转换星级评分，注释暂停使用，显示实际星评分
             // $Comment['total_score'] = GetScoreArray($Comment['total_score']);
             // 评价的内容
-            $Comment['content'] = !empty($Comment['content']) ? htmlspecialchars_decode(unserialize($Comment['content'])) : '';
+            $Comment['content'] = !empty($Comment['content']) ? htmlspecialchars_decode(safe_unserialize($Comment['content'])) : '';
             // 回复的内容
-            $adminReply = !empty($Comment['admin_reply']) ? unserialize($Comment['admin_reply']) : [];
+            $adminReply = !empty($Comment['admin_reply']) ? safe_unserialize($Comment['admin_reply']) : [];
             $adminReply['adminReply'] = !empty($adminReply['adminReply']) ? htmlspecialchars_decode($adminReply['adminReply']) : '';
             $Comment['admin_reply'] = $adminReply;
             // 会员信息
@@ -273,7 +273,10 @@ class ShopComment extends Base
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.aid desc";
         } else {
             $orderby = "a.aid desc";

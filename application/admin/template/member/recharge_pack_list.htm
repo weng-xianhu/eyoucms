@@ -16,14 +16,23 @@
     
                 <li>
                     <a {if condition="in_array($Request.action, ['recharge_pack_log'])"}class="current"{/if} href='{:url("Member/recharge_pack_log")}'>
-                        <span>领取记录</span>
+                        <span>购买记录</span>
+                    </a>
+                </li>
+                <li>
+                    <a {if condition="in_array($Request.action, ['recharge_rule'])"}class="current"{/if} href='{:url("Member/recharge_rule")}'>
+                        <span>充值规则</span>
                     </a>
                 </li>
             </ul>
         </div>
     </div>
     <div class="flexigrid">
-      
+        <div class="explanation">
+            <ul>
+                <li>此功能仅支持可视化小程序和原生小程序，暂不支持PC端和手机端</li>
+            </ul>
+        </div>
         <div class="mDiv mt10">
             <div class="ftitle">
                 <div class="fbutton">

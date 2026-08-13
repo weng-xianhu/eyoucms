@@ -206,7 +206,7 @@ class AlipayTradeService {
 		// 开启页面信息输出
 		$aop->debugInfo=true;
 
-		$result = $aop->Execute($request,'','',$admin_pay);
+		$result = $aop->Execute($request,'','','',$admin_pay);
 		return $result;
 	}
 

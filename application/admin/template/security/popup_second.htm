@@ -36,7 +36,7 @@
                     return false;
                 }
             } else {
-                if (security_answer !== '' || 0 <= security_ask) {
+                if (true || /*!ajax_isverify_answer() ||*/ security_answer !== '' || 0 <= security_ask) { // 只要保存都要验证原密保
                     var security_answer_old = $.trim($('input[name=security_answer_old]').val());
                     if (security_answer_old === '') {
                         showErrorMsg('密保答案不能为空！');

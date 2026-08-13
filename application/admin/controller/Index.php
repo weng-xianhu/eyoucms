@@ -34,34 +34,9 @@ class Index extends Base
     
     public function index()
     {
-        // diy_database_column();
-        // diy_source_filelist();
-
-        // $dbtables = Db::query('SHOW TABLE STATUS');
-        // $list = array();
-        // foreach ($dbtables as $k => $v) {
-        //     if (preg_match('/^'.PREFIX.'/i', $v['Name'])) {
-        //         $list[$k] = $v;
-        //     }
-        // }
-        // $str = '';
-        // foreach ($list as $_k => $_v) {
-        //     $table = $_v['Name'];
-        //     $str .= $table.'|';
-        //     $str2 = "|";
-        //     $fields = Db::table($table)->getTableFields();
-        //     foreach ($fields as $key => $value) {
-        //         if ($key == 0) {
-        //             $str .= "{$value}";
-        //         } else {
-        //             $str .= ",{$value}";
-        //             $str2 .= ";";
-        //         }
-        //     }
-        //     $str = $str . $str2 . "|". PHP_EOL . PHP_EOL;
-        // }
-        // echo($str);
-        // exit;
+        // wxh_database_column();
+        // wxh_source_filelist();
+        // wxh_handle_database();
 
         $language_db = Db::name('language');
         /*多语言列表*/
@@ -125,6 +100,7 @@ class Index extends Base
         $all_menu_tree = getAllMenu();
         $all_menu_list = tree_to_list($all_menu_tree,'child','id');
         $this->assign('all_menu_list',$all_menu_list);
+        function_exists('highlights_trash') && highlights_trash();
         //获取选中的权限
         $ajaxLogic = new \app\admin\logic\AjaxLogic;
         $ajaxLogic->admin_menu_clear();
@@ -214,23 +190,47 @@ class Index extends Base
         $assign_data['admin_login_pwdlevel'] = $admin_login_pwdlevel;
         $assign_data['system_explanation_welcome_2'] = $system_explanation_welcome_2;
         /*end*/
-
+        
         // 定期检查多久没有扫描
-        $system_explanation_welcome_3 = 0;
-        $ddos_scan_expire_day = 0;
         $ddos_scan_last_time = (int)tpSetting('ddos.ddos_scan_last_time', [], 'cn');
-        if (!empty($ddos_scan_last_time)) {
-            $ddos_scan_day = 30;
-            $ddos_scan_expire_time = getTime() - ($ddos_scan_last_time + ($ddos_scan_day * 86400));
-            if ($ddos_scan_expire_time < 0) {
-                $system_explanation_welcome_3 = 1;
-            } else {
-                $ddos_scan_expire_day = ceil($ddos_scan_expire_time / 86400);
+        $admin_info = session('admin_info');
+        if (!empty($admin_info['is_founder']) && $admin_info['login_cnt'] <= 3) { // 第一次安装登录后，默认已扫描
+            $ddos_scan_last_time = getTime();
+            tpSetting('ddos', ['ddos_scan_last_time'=>$ddos_scan_last_time], 'cn');
+            Db::name('ddos_log')->where(['id'=>['gt', 0]])->delete(true);
+            Db::name('ddos_whitelist')->where(['id'=>['gt', 0]])->delete(true);
+            $ddosLogic = new \app\admin\logic\DdosLogic;
+            $ddosLogic->ddos_setting('web.source_dirlist_total', 0);
+            // 删除地图
+            // $admin_logic_1758271813 = tpSetting('syn.admin_logic_1758271813', [], 'cn');
+            // if (empty($admin_logic_1758271813)) {
+            //     if (is_file('./sitemap.xml')) @unlink('./sitemap.xml');
+            //     if (is_file('./sitemap.txt')) @unlink('./sitemap.txt');
+            //     if (is_file('./sitemap.html')) @unlink('./sitemap.html');
+            //     if (is_file('./ai-content-index.html')) @unlink('./ai-content-index.html');
+            //     if (is_file('./llms.txt')) @unlink('./llms.txt');
+            //     tpSetting('syn', ['admin_logic_1758271813'=>1], 'cn');
+            // }
+        }
+        $ddos_scan_day = 15;
+        $system_explanation_welcome_4 = 1;
+        if (intval($ddos_scan_last_time) + ($ddos_scan_day * 86400) < getTime()) {
+            $system_explanation_welcome_4 = 0;
+        }
+        $assign_data['system_explanation_welcome_4'] = $system_explanation_welcome_4;
+        $assign_data['ddos_scan_last_time'] = $ddos_scan_last_time;
+
+        // 定期自动扫描发现风险
+        if (empty($system_explanation_welcome_4)) {
+            $system_explanation_welcome_5 = 1;
+        } else {
+            $system_explanation_welcome_5 = !empty($this->globalConfig['system_explanation_welcome_5']) ? $this->globalConfig['system_explanation_welcome_5'] : 0;
+            if (empty($system_explanation_welcome_5)) {
+                $ddos_logs = Db::name('ddos_log')->where(['admin_id' => (int)session('admin_id'), 'file_grade'=>['gt',0]])->count();
+                $system_explanation_welcome_5 = empty($ddos_logs) ? 1 : 0;
             }
         }
-        $assign_data['ddos_scan_last_time'] = $ddos_scan_last_time;
-        $assign_data['ddos_scan_expire_day'] = $ddos_scan_expire_day;
-        $assign_data['system_explanation_welcome_3'] = $system_explanation_welcome_3;
+        $assign_data['system_explanation_welcome_5'] = $system_explanation_welcome_5;
 
         /*代理贴牌功能限制-s*/
         $assign_data['upgrade'] = true;
@@ -271,6 +271,9 @@ class Index extends Base
         } else if (preg_match('/^(.*)\/welcome_taskflow$/i', $viewfile)) {
             // 任务流版欢迎页主题
             $this->eyouCmsLogic->welcome_taskflow($assign_data, $this->globalConfig, $this->usersConfig);
+        } else if (preg_match('/^(.*)\/welcome_ai$/i', $viewfile)) {
+            // AI版欢迎页主题
+            $this->eyouCmsLogic->welcome_ai($assign_data, $this->globalConfig, $this->usersConfig);
         } else {
             // 默认欢迎页主题
             $this->eyouCmsLogic->welcome_default($assign_data, $this->globalConfig, $this->usersConfig);
@@ -283,6 +286,53 @@ class Index extends Base
         if (file_exists('./weapp/PasswordRemind/model/PasswordRemindModel.php')) {
             $PasswordRemindModel = new \weapp\PasswordRemind\model\PasswordRemindModel;
             $html = $PasswordRemindModel->getInfo($html);
+        }
+
+        // 风险检测弹窗提示
+        // $detecting_domain_str = getVersion('detecting_domain_pop', '');
+        // $detecting_domain_arr = explode(',', $detecting_domain_str);
+        if (is_dir('./weapp/Systemdoctor/')/* && in_array(request()->rootDomain(), $detecting_domain_arr)*/) {
+            $pop_detecting_domain = tpSetting('pop.pop_detecting_domain', [], 'cn');
+            if (empty($pop_detecting_domain)) {
+                $set_pop_detecting_domain_url = url('Ajax/set_pop_detecting_domain');
+                $security_url = url('Security/index', ['pop_detecting_domain'=>1]);
+                $append_html =<<<EOF
+<script type="text/javascript">
+    pop_detecting_domain();
+    function pop_detecting_domain()
+    {
+        var msg = '贵站近期未进行安全检测，建议前往安全中心扫描';
+        layer.confirm(msg, {
+                title: '提示'
+                ,shade: layer_shade
+                ,area: ['400px','180px']
+                ,btn: ['立即前往'] //按钮
+                ,success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                    $(".layui-layer-content").css('height', 'auto');
+                }
+                ,cancel: function(index){
+                    $.getJSON("{$set_pop_detecting_domain_url}", {value:1,_ajax:1}, function(){});
+                    layer.close(index);
+                    return false;
+                }
+            }, function(){
+                layer_loading('正在前往');
+                window.location.href = "{$security_url}";
+                return false;
+            }, function(){
+                return false;
+            }
+        );
+    }
+</script>
+EOF;
+            }
+            if (stristr($html, '</body>')) {
+                $html = str_replace('</body>', $append_html.'</body>', $html);
+            } else if (stristr($html, '</head>')) {
+                $html = str_replace('</head>', $append_html.'</head>', $html);
+            }
         }
 
         return $html;
@@ -438,7 +488,7 @@ class Index extends Base
             }
             if (!empty($saveData)) {
                 $r = model('Quickentry')->saveAll($saveData);
-                if ($r) {
+                if ($r !== false) {
                     $this->success('操作成功', url('Index/welcome'));
                 }
             }
@@ -454,6 +504,14 @@ class Index extends Base
                 'status'    => 1,
             ])->order('sort_order asc, id asc')->select();
         $this->assign('totalList',$totalList);
+
+        // 最大选中数量
+        $max_selnum = input('param.max_selnum/d', 9);
+        $this->assign('max_selnum',$max_selnum);
+
+        // 页面类型
+        $welcome_type = input('param.welcome_type/s');
+        $this->assign('welcome_type',$welcome_type);
 
         return $this->fetch();
     }
@@ -482,14 +540,21 @@ class Index extends Base
             }
             if (!empty($saveData)) {
                 $r = model('Quickentry')->saveAll($saveData);
-                if ($r) {
+                if ($r !== false) {
                     $this->success('操作成功', url('Index/welcome'));
                 }
             }
             $this->error('操作失败');
         }
 
+        // 最大选中数量
+        $max_selnum = input('param.max_selnum/d', 1000);
+        $this->assign('max_selnum',$max_selnum);
+
+        // 页面类型
         $welcome_type = input('param.welcome_type/s');
+        $this->assign('welcome_type',$welcome_type);
+
         if ($welcome_type == 'shop') {
             $type = [11];
         } else {
@@ -523,6 +588,52 @@ class Index extends Base
                     unset($menuList[$key]);
                     continue;
                 }
+            }
+        }
+        $this->assign('menuList',$menuList);
+
+        return $this->fetch();
+    }
+
+    /**
+     * 常用功能
+     */
+    public function ajax_quickmenu_ai()
+    {
+        if (IS_AJAX_POST) {
+            $checkedids = input('post.checkedids/a', []);
+            $ids = input('post.ids/a', []);
+            $saveData = [];
+            foreach ($ids as $key => $val) {
+                if (in_array($val, $checkedids)) {
+                    $checked = 1;
+                } else {
+                    $checked = 0;
+                }
+                $saveData[$key] = [
+                    'id'            => $val,
+                    'checked'       => $checked,
+                    'sort_order'    => intval($key) + 1,
+                    'update_time'   => getTime(),
+                ];
+            }
+            if (!empty($saveData)) {
+                $r = model('Quickentry')->saveAll($saveData);
+                if ($r !== false) {
+                    $this->success('操作成功', url('Index/welcome'));
+                }
+            }
+            $this->error('操作失败');
+        }
+
+        // 最大选中数量
+        $max_selnum = input('param.max_selnum/d', 1000);
+        $this->assign('max_selnum',$max_selnum);
+
+        $menuList = model('Quickentry')->getMenuGroupList(['order'=>'sort_order asc, id asc']);
+        foreach ($menuList as $key => $val) {
+            if (empty($val['opt_access']) || empty($val['show_status'])) {
+                unset($menuList[$key]);
             }
         }
         $this->assign('menuList',$menuList);
@@ -565,6 +676,15 @@ class Index extends Base
         $where = ['status'=>1];
         $menuList = Db::name('weapp')->where($where)->order('quick_sort asc, id asc')->select();
         $this->assign('menuList',$menuList);
+
+        // 最大选中数量
+        $max_selnum = input('param.max_selnum/d', 9);
+        $this->assign('max_selnum',$max_selnum);
+
+        // 页面类型
+        $welcome_type = input('param.welcome_type/s');
+        $this->assign('welcome_type',$welcome_type);
+
         return $this->fetch();
     }
 
@@ -667,6 +787,101 @@ class Index extends Base
             $field    = input('param.field/s'); // 修改哪个字段
             $value    = input('param.value/s', '', null); // 修改字段值
             $value    = eyPreventShell($value) ? $value : strip_sql($value);
+
+            /* 安全校验：本接口仅用于后台列表的状态/排序等字段切换，
+               严格限制可操作的数据表与字段，防止越权修改任意表的任意字段 start */
+            // 表名、字段名、主键名只允许合法标识符
+            $identityArr = ['table' => $table, 'field' => $field, 'id_name' => $id_name];
+            foreach ($identityArr as $identityKey => $identityVal) {
+                if (!preg_match('/^[A-Za-z0-9_]+$/', $identityVal)) {
+                    $this->error('非法操作：参数 '.$identityKey.' 格式不合法！');
+                }
+            }
+            $checkTable = strtolower($table);
+            $checkField = strtolower($field);
+
+            // 敏感数据表：一律禁止通过本通用接口更新
+            $denyTables = [
+                'admin', 'auth_group', 'auth_group_access', 'auth_rule', 'auth_role', 'auth_role_user',
+                'config', 'users_money', 'users_score', 'users_oauth', 'users_session', 'sql_cache_table',
+            ];
+            if (in_array($checkTable, $denyTables)) {
+                $this->error('非法操作：禁止通过该接口更新此数据表！');
+            }
+
+            // 敏感字段：任何数据表都禁止通过本通用接口更新
+            $denyFields = [
+                'password', 'salt', 'level', 'money', 'score', 'is_admin', 'role_id', 'group_id',
+                'purview', 'username', 'admin_name', 'users_name', 'mobile', 'email',
+                'token', 'openid', 'unionid', 'session_id',
+            ];
+            if (in_array($checkField, $denyFields)) {
+                $this->error('非法操作：禁止通过该接口更新此字段！');
+            }
+
+            // 各数据表允许修改的字段白名单
+            $allowFields = [
+                'ad'                     => ['sort_order'],
+                'ad_position'            => ['status'],
+                'applets_template'       => ['is_open'],
+                'archives'               => ['arcrank', 'is_recom', 'sort_order'],
+                'archives_flag'          => ['flag_name', 'sort_order', 'status'],
+                'arctype'                => ['is_hidden', 'sort_order'],
+                'ask'                    => ['is_recom', 'is_review'],
+                'ask_answer'             => ['is_review'],
+                'ask_type'               => ['sort_order'],
+                'auth_modular'           => ['sort_order', 'status'],
+                'channelfield'           => ['sort_order'],
+                'citysite'               => ['name', 'sort_order'],
+                'discount_goods'         => ['sort_order', 'status'],
+                'diyminipro_page'        => ['is_home', 'sort_order', 'status'],
+                'faq_group'              => ['status'],
+                'foreign_pack'           => ['value'],
+                'form'                   => ['status'],
+                'guestbook_attribute'    => ['is_showlist', 'sort_order'],
+                'language'               => ['sort_order', 'status'],
+                'links'                  => ['sort_order', 'status'],
+                'links_group'            => ['sort_order', 'status'],
+                'memgift'                => ['sort_order', 'status'],
+                'nav_list'               => ['sort_order', 'status'],
+                'nav_position'           => ['sort_order'],
+                'product_attribute'      => ['sort_order'],
+                'search_word'            => ['is_hot'],
+                'sharp_active'           => ['status'],
+                'sharp_active_time'      => ['status'],
+                'sharp_goods'            => ['sort_order', 'status'],
+                'shop_coupon'            => ['sort_order', 'status'],
+                'shop_express'           => ['is_choose', 'sort_order'],
+                'shop_order_comment'     => ['is_show'],
+                'shop_product_attrlist'  => ['sort_order'],
+                'shop_shipping_template' => ['template_money'],
+                'sms_template'           => ['is_open', 'sms_sign', 'sms_tpl_code', 'tpl_content'],
+                'smtp_tpl'               => ['is_open', 'tpl_title'],
+                'tagindex'               => ['count', 'is_common'],
+                'users'                  => ['is_activation'],
+                'users_bottom_menu'      => ['display', 'icon', 'mca', 'sort_order', 'title'],
+                'users_level'            => ['ask_is_release', 'ask_is_review', 'down_count', 'posts_count'],
+                'users_list'             => ['is_hidden', 'is_required', 'sort_order'],
+                'users_menu'             => ['is_userpage', 'status'],
+                'users_notice_tpl'       => ['is_open', 'tpl_title'],
+                'users_parameter'        => ['is_hidden', 'is_required', 'sort_order'],
+                'users_recharge_pack'    => ['sort_order', 'status'],
+                'users_type_manage'      => ['activity', 'price', 'sort_order', 'type_name'],
+                'weapp'                  => ['status'],
+                'wechat_template'        => ['is_open'],
+            ];
+
+            if (isset($allowFields[$checkTable])) {
+                if (!in_array($checkField, $allowFields[$checkTable])) {
+                    $this->error('非法操作：该数据表不允许修改此字段！');
+                }
+            } else if (0 !== strpos($checkTable, 'weapp_')) {
+                // 非插件自建表（weapp_ 前缀）一律不允许通过本通用接口更新；
+                // 插件表的字段由插件自行定义，此处仅由上面的敏感字段黑名单兜底
+                $this->error('非法操作：禁止通过该接口更新此数据表！');
+            }
+            /* end */
+
             $_POST[$id_name] = $id_value;
             if ('archives' == $table && 'arcrank' == $field) {
                 $ScreeningTable = $table;
@@ -900,8 +1115,11 @@ class Index extends Base
                     break;
                 }
             }
+            $where = [
+                $id_name => $id_value
+            ];
             // 根据条件保存修改的数据
-            $r = Db::name($table)->where([$id_name => $id_value])->cache(true,null,$table)->save($savedata);
+            $r = Db::name($table)->where($where)->cache(true,null,$table)->save($savedata);
             if ($r !== false) {
                 if (!empty($ScreeningTable) && !empty($ScreeningField) && 'archives' == $ScreeningTable && 'arcrank' == $ScreeningField) {
                     $Result = model('SqlCacheTable')->ScreeningArchives($ScreeningAid, $ScreeningValue);
@@ -1022,6 +1240,120 @@ class Index extends Base
      */
     public function switch_map()
     {
+        $Prefix = config('database.prefix');
+        if (config('database.type') == 'dm') { // 达梦优化
+            $serviceTableInfo = Db::query("SELECT COLUMN_NAME,DATA_TYPE,DATA_DEFAULT,NULLABLE FROM ALL_TAB_COLS WHERE TABLE_NAME = '{$Prefix}quickentry'");
+            $serviceTableInfo = get_arr_column($serviceTableInfo, 'COLUMN_NAME');  
+            if (!empty($serviceTableInfo) && !in_array('menu_id', $serviceTableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `menu_id` INT DEFAULT 0;";                
+                if (@Db::execute($sql)) {
+                    $sql = "comment ON COLUMN `{$Prefix}quickentry`.`menu_id` IS '左侧菜单ID';";
+                    @Db::execute($sql);
+                }
+            }
+            if (!empty($serviceTableInfo) && !in_array('menu_group', $serviceTableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `menu_group` SMALLINT DEFAULT 0;";                
+                if (@Db::execute($sql)) {
+                    $sql = "comment ON COLUMN `{$Prefix}quickentry`.`menu_group` IS '菜单分组，0=欢迎页不归属；1=文档相关；2=高级扩展；3=商城模块；4=SEO模块';";
+                    @Db::execute($sql);
+                }
+            }
+            if (!empty($serviceTableInfo) && !in_array('is_lang', $serviceTableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `is_lang` TINYINT NULL DEFAULT 0;";                
+                if (@Db::execute($sql)) {
+                    $sql = "comment ON COLUMN `{$Prefix}quickentry`.`is_lang` IS '是否支持多语言，1=支持，0=不支持';";
+                    @Db::execute($sql);
+                }
+            }
+            if (!empty($serviceTableInfo) && !in_array('auth_role', $serviceTableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `auth_role` VARCHAR(500) NULL DEFAULT '';";                
+                if (@Db::execute($sql)) {
+                    $sql = "comment ON COLUMN `{$Prefix}quickentry`.`auth_role` IS '权限';";
+                    @Db::execute($sql);
+                }
+            }
+            if (!empty($serviceTableInfo) && !in_array('intro', $serviceTableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `intro` VARCHAR(500) NULL DEFAULT '';";                
+                if (@Db::execute($sql)) {
+                    $sql = "comment ON COLUMN `{$Prefix}quickentry`.`intro` IS '描述';";
+                    @Db::execute($sql);
+                }
+            }
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $serviceTableInfo = Db::query("SELECT column_name FROM information_schema.columns WHERE table_name = '{$Prefix}quickentry' AND table_schema = 'public'");
+            $serviceTableInfo = get_arr_column($serviceTableInfo, 'column_name');
+            if (!empty($serviceTableInfo) && !in_array('menu_id', $serviceTableInfo)) {
+                $sql = "ALTER TABLE \"{$Prefix}quickentry\" ADD COLUMN \"menu_id\" INT DEFAULT 0";
+                @Db::execute($sql);
+                $sql = "COMMENT ON COLUMN \"{$Prefix}quickentry\".\"menu_id\" IS '左侧菜单ID'";
+                @Db::execute($sql);
+            }
+            if (!empty($serviceTableInfo) && !in_array('menu_group', $serviceTableInfo)) {
+                $sql = "ALTER TABLE \"{$Prefix}quickentry\" ADD COLUMN \"menu_group\" SMALLINT DEFAULT 0";
+                @Db::execute($sql);
+                $sql = "COMMENT ON COLUMN \"{$Prefix}quickentry\".\"menu_group\" IS '菜单分组，0=欢迎页不归属；1=文档相关；2=高级扩展；3=商城模块；4=SEO模块'";
+                @Db::execute($sql);
+            }
+            if (!empty($serviceTableInfo) && !in_array('is_lang', $serviceTableInfo)) {
+                $sql = "ALTER TABLE \"{$Prefix}quickentry\" ADD COLUMN \"is_lang\" SMALLINT DEFAULT 0";
+                @Db::execute($sql);
+                $sql = "COMMENT ON COLUMN \"{$Prefix}quickentry\".\"is_lang\" IS '是否支持多语言，1=支持，0=不支持'";
+                @Db::execute($sql);
+            }
+            if (!empty($serviceTableInfo) && !in_array('auth_role', $serviceTableInfo)) {
+                $sql = "ALTER TABLE \"{$Prefix}quickentry\" ADD COLUMN \"auth_role\" VARCHAR(500) DEFAULT ''";
+                @Db::execute($sql);
+                $sql = "COMMENT ON COLUMN \"{$Prefix}quickentry\".\"auth_role\" IS '权限'";
+                @Db::execute($sql);
+            }
+            if (!empty($serviceTableInfo) && !in_array('intro', $serviceTableInfo)) {
+                $sql = "ALTER TABLE \"{$Prefix}quickentry\" ADD COLUMN \"intro\" VARCHAR(500) DEFAULT ''";
+                @Db::execute($sql);
+                $sql = "COMMENT ON COLUMN \"{$Prefix}quickentry\".\"intro\" IS '描述'";
+                @Db::execute($sql);
+            }
+        } else {
+            $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}quickentry");
+            $tableInfo = get_arr_column($tableInfo, 'Field');
+            // 字段新增处理
+            if (!empty($tableInfo) && !in_array('menu_id', $tableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `menu_id`  int(10) NULL DEFAULT 0 COMMENT '左侧菜单ID' AFTER `litpic`;";
+                @Db::execute($sql);
+            }
+            if (!empty($tableInfo) && !in_array('menu_group', $tableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `menu_group`  smallint(5) NULL DEFAULT 0 COMMENT '菜单分组，0=欢迎页不归属；1=文档相关；2=高级扩展；3=商城模块；4=SEO模块' AFTER `menu_id`;";
+                @Db::execute($sql);
+            }
+            if (!empty($tableInfo) && !in_array('is_lang', $tableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `is_lang`  tinyint(1) NULL DEFAULT 0 COMMENT '是否支持多语言，1=支持，0=不支持' AFTER `menu_group`;";
+                @Db::execute($sql);
+            }
+            if (!empty($tableInfo) && !in_array('auth_role', $tableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `auth_role`  varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '权限' AFTER `is_lang`;";
+                @Db::execute($sql);
+            }
+            if (!empty($tableInfo) && !in_array('intro', $tableInfo)) {
+                $sql = "ALTER TABLE `{$Prefix}quickentry` ADD COLUMN `intro`  varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '描述' AFTER `auth_role`;";
+                @Db::execute($sql);
+            }
+        }
+        schemaTable("quickentry");
+
+        // 提取数据
+        $list = '[{"title":"\u63d0\u8d27\u8bbe\u7f6e","laytext":"\u63d0\u8d27\u8bbe\u7f6e","type":15,"controller":"OrderVerify","action":"drive_list","vars":"","groups":0,"checked":0,"litpic":"\/public\/static\/admin\/images\/theme\/survey_ziti.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":13,"add_time":1569232484,"update_time":1746605307},{"title":"\u652f\u4ed8\u8bbe\u7f6e","laytext":"\u652f\u4ed8\u8bbe\u7f6e","type":15,"controller":"System","action":"api_conf","vars":"","groups":0,"checked":0,"litpic":"\/public\/static\/admin\/images\/theme\/survey_zhifu.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":7,"add_time":1569232484,"update_time":1746605307},{"title":"\u8fd0\u8d39\u6a21\u677f","laytext":"\u8fd0\u8d39\u6a21\u677f","type":15,"controller":"Shop","action":"shipping_template","vars":"","groups":0,"checked":0,"litpic":"\/public\/static\/admin\/images\/theme\/survey_yunfei.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":9,"add_time":1569232484,"update_time":1746605307},{"title":"\u4f18\u60e0\u5238","laytext":"\u4f18\u60e0\u5238","type":15,"controller":"Coupon","action":"index","vars":"","groups":0,"checked":0,"litpic":"\/public\/static\/admin\/images\/theme\/survey_youhuiquan.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":10,"add_time":1569232484,"update_time":1746605307},{"title":"\u552e\u540e\u7ef4\u6743","laytext":"\u552e\u540e\u7ef4\u6743","type":15,"controller":"ShopService","action":"after_service","vars":"","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_weiquan.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":4,"add_time":1569232484,"update_time":1746605307},{"title":"\u8bc4\u4ef7\u7ba1\u7406","laytext":"\u8bc4\u4ef7\u7ba1\u7406","type":15,"controller":"ShopComment","action":"comment_index","vars":"","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_pingjia.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":5,"add_time":1569232484,"update_time":1746605307},{"title":"\u4e3b\u9898\u98ce\u683c","laytext":"\u4e3b\u9898\u98ce\u683c","type":15,"controller":"Index","action":"theme_index","vars":"","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_pifu.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":11,"add_time":1569232484,"update_time":1746605307},{"title":"\u4f1a\u5458\u7ba1\u7406","laytext":"\u4f1a\u5458\u7ba1\u7406","type":15,"controller":"Member","action":"users_index","vars":"","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_huiyuan.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":6,"add_time":1569232484,"update_time":1746605307},{"title":"\u524d\u5f80\u53d1\u8d27","laytext":"\u524d\u5f80\u53d1\u8d27","type":15,"controller":"Shop","action":"index","vars":"order_status=1","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_fahuo.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":3,"add_time":1569232484,"update_time":1746605307},{"title":"\u53d1\u5e03\u5546\u54c1","laytext":"\u53d1\u5e03\u5546\u54c1","type":15,"controller":"ShopProduct","action":"add","vars":"firstrun=1","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_fabu.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":1,"add_time":1569232484,"update_time":1746605307},{"title":"\u8ba2\u5355\u67e5\u8be2","laytext":"\u8ba2\u5355\u67e5\u8be2","type":15,"controller":"Order","action":"index","vars":"","groups":0,"checked":1,"litpic":"\/public\/static\/admin\/images\/theme\/survey_dingdan.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":2,"add_time":1569232484,"update_time":1746605307},{"title":"\u5145\u503c\u8ba2\u5355","laytext":"\u5145\u503c\u8ba2\u5355","type":15,"controller":"Member","action":"money_index","vars":"status=2","groups":0,"checked":0,"litpic":"\/public\/static\/admin\/images\/theme\/survey_chongzhi.png","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":8,"add_time":1569232484,"update_time":1746605307},{"title":"\u680f\u76ee\u7ba1\u7406","laytext":"\u680f\u76ee\u7ba1\u7406","type":15,"controller":"Arctype","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-lanmuguanli","menu_id":1001,"menu_group":1,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":12,"add_time":1658910010,"update_time":1746605307},{"title":"\u5185\u5bb9\u7ba1\u7406","laytext":"\u5185\u5bb9\u7ba1\u7406","type":15,"controller":"Archives","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-neirongwendang","menu_id":1002,"menu_group":1,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":14,"add_time":1658910020,"update_time":1746605307},{"title":"\u5f85\u5ba1\u6587\u6863","laytext":"\u5f85\u5ba1\u6587\u6863","type":15,"controller":"Archives","action":"index_draft","vars":"","groups":0,"checked":0,"litpic":"iconfont e-tougao","menu_id":1004,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":15,"add_time":1658910030,"update_time":1746605307},{"title":"\u9000\u56de\u6587\u6863","laytext":"\u9000\u56de\u6587\u6863","type":15,"controller":"Archives","action":"index_reback","vars":"","groups":0,"checked":0,"litpic":"iconfont e-tougao","menu_id":1006,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":0,"sort_order":35,"add_time":1658910035,"update_time":1658917791},{"title":"\u5e7f\u544a\u7ba1\u7406","laytext":"\u5e7f\u544a\u7ba1\u7406","type":15,"controller":"AdPosition","action":"index","vars":"","groups":0,"checked":1,"litpic":"iconfont e-guanggao","menu_id":1003,"menu_group":1,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":16,"add_time":1658910040,"update_time":1746605307},{"title":"TAG\u7ba1\u7406","laytext":"TAG\u7ba1\u7406","type":15,"controller":"Tags","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-TAGguanli","menu_id":2004011,"menu_group":1,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":17,"add_time":1658910050,"update_time":1746605307},{"title":"\u641c\u7d22\u7ba1\u7406","laytext":"\u641c\u7d22\u7ba1\u7406","type":15,"controller":"Search","action":"conf","vars":"","groups":0,"checked":0,"litpic":"iconfont e-soguanjianci","menu_id":2004022,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":18,"add_time":1658910060,"update_time":1746605307},{"title":"\u680f\u76ee\u5b57\u6bb5","laytext":"\u680f\u76ee\u5b57\u6bb5","type":15,"controller":"Field","action":"arctype_index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-lanmuziduan","menu_id":2004004,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":19,"add_time":1658910070,"update_time":1746605307},{"title":"\u9891\u9053\u6a21\u578b","laytext":"\u9891\u9053\u6a21\u578b","type":15,"controller":"Channeltype","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-pindaomoxing","menu_id":2004007,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":20,"add_time":1658910080,"update_time":1746605307},{"title":"\u6587\u6863\u5c5e\u6027","laytext":"\u6587\u6863\u5c5e\u6027","type":15,"controller":"ArchivesFlag","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-wendangshuxing","menu_id":2004008,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":21,"add_time":1658910090,"update_time":1746605307},{"title":"\u56fe\u7247\u6c34\u5370","laytext":"\u56fe\u7247\u6c34\u5370","type":15,"controller":"System","action":"water","vars":"","groups":0,"checked":0,"litpic":"iconfont e-shuiyinpeizhi","menu_id":2004009,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":22,"add_time":1658910100,"update_time":1746605307},{"title":"\u7f29\u7565\u56fe\u8bbe\u7f6e","laytext":"\u7f29\u7565\u56fe\u8bbe\u7f6e","type":15,"controller":"System","action":"thumb","vars":"","groups":0,"checked":0,"litpic":"iconfont e-suolvetupeizhi","menu_id":2004010,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":23,"add_time":1658910110,"update_time":1746605307},{"title":"\u5bfc\u822a\u7ba1\u7406","laytext":"\u5bfc\u822a\u7ba1\u7406","type":15,"controller":"Navigation","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-daohangguanli","menu_id":2004013,"menu_group":1,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":24,"add_time":1658910120,"update_time":1746605307},{"title":"\u5b89\u5168\u4e2d\u5fc3","laytext":"\u5b89\u5168\u4e2d\u5fc3","type":15,"controller":"Security","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-anquan col-f3398cc","menu_id":2004017,"menu_group":2,"is_lang":0,"auth_role":"System@index","intro":"","statistics_type":0,"status":1,"sort_order":25,"add_time":1658910130,"update_time":1746605307},{"title":"\u57fa\u672c\u4fe1\u606f","laytext":"\u57fa\u672c\u4fe1\u606f","type":15,"controller":"System","action":"web","vars":"","groups":0,"checked":0,"litpic":"iconfont e-shezhi","menu_id":2001,"menu_group":2,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":26,"add_time":1658910140,"update_time":1746605307},{"title":"\u7ba1\u7406\u5458","laytext":"\u7ba1\u7406\u5458","type":15,"controller":"Admin","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-guanliyuan","menu_id":2004001,"menu_group":2,"is_lang":0,"auth_role":"Admin@admin_pwd","intro":"","statistics_type":0,"status":1,"sort_order":27,"add_time":1658910150,"update_time":1746605307},{"title":"\u56de\u6536\u7ad9","laytext":"\u56de\u6536\u7ad9","type":15,"controller":"RecycleBin","action":"archives_index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-huishouzhan","menu_id":2004006,"menu_group":2,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":28,"add_time":1658910160,"update_time":1746605307},{"title":"\u5907\u4efd\u8fd8\u539f","laytext":"\u5907\u4efd\u8fd8\u539f","type":15,"controller":"Tools","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-beifenhuanyuan","menu_id":2004002,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":29,"add_time":1658910170,"update_time":1746605307},{"title":"\u9a8c\u8bc1\u7801\u7ba1\u7406","laytext":"\u9a8c\u8bc1\u7801\u7ba1\u7406","type":15,"controller":"Vertify","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-yanzhengmaguanli","menu_id":2004015,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":30,"add_time":1658910180,"update_time":1746605307},{"title":"\u6a21\u677f\u7ba1\u7406","laytext":"\u6a21\u677f\u7ba1\u7406","type":15,"controller":"Filemanager","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-mobanguanli","menu_id":2004003,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":31,"add_time":1658910190,"update_time":1746605307},{"title":"\u4f1a\u5458\u4e2d\u5fc3","laytext":"\u4f1a\u5458\u4e2d\u5fc3","type":15,"controller":"Member","action":"users_index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-gerenzhongxin","menu_id":2006,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":32,"add_time":1658910200,"update_time":1746605307},{"title":"\u57ce\u5e02\u5206\u7ad9","laytext":"\u57ce\u5e02\u5206\u7ad9","type":15,"controller":"Citysite","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-chengshifenzhan","menu_id":2004019,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":33,"add_time":1658910210,"update_time":1746605160},{"title":"\u63d2\u4ef6\u5e94\u7528","laytext":"\u63d2\u4ef6\u5e94\u7528","type":15,"controller":"Weapp","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-chajian","menu_id":2005,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":33,"add_time":1658910220,"update_time":1746605307},{"title":"\u8ba2\u5355\u7ba1\u7406","laytext":"\u8ba2\u5355\u7ba1\u7406","type":15,"controller":"Order","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-dingdanguanli","menu_id":2004021,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":34,"add_time":1658910230,"update_time":1746605307},{"title":"\u53ef\u89c6\u7f16\u8f91","laytext":"\u53ef\u89c6\u7f16\u8f91","type":15,"controller":"Uiset","action":"ui_index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-keshihuabianji","menu_id":2002,"menu_group":2,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":35,"add_time":1658910240,"update_time":1746605307},{"title":"\u79ef\u5206\u5151\u6362","laytext":"\u79ef\u5206\u5151\u6362","type":15,"controller":"Memgift","action":"gift_exchange_list","vars":"","groups":0,"checked":0,"litpic":"iconfont e-lipinduihuan","menu_id":2004023,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":36,"add_time":1658910250,"update_time":1746605307},{"title":"\u7559\u8a00\u7ba1\u7406","laytext":"\u7559\u8a00\u7ba1\u7406","type":15,"controller":"Form","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-biaodanguanli","menu_id":2004018,"menu_group":2,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":37,"add_time":1658910260,"update_time":1746605307},{"title":"\u4e3b\u9898\u98ce\u683c","laytext":"\u4e3b\u9898\u98ce\u683c","type":15,"controller":"Index","action":"theme_index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-zhutifengge","menu_id":2004025,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":38,"add_time":1658910270,"update_time":1746605307},{"title":"\u5916\u8d38\u52a9\u624b","laytext":"\u5916\u8d38\u52a9\u624b","type":15,"controller":"Foreign","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-zhutifengge","menu_id":2004026,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":39,"add_time":1658910280,"update_time":1746605307},{"title":"\u667a\u80fd\u4e92\u8054","laytext":"\u667a\u80fd\u4e92\u8054","type":15,"controller":"Ai","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-aizhushou","menu_id":2004027,"menu_group":2,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":40,"add_time":1658910290,"update_time":1746605307},{"title":"\u5546\u57ce\u4e2d\u5fc3","laytext":"\u5546\u57ce\u4e2d\u5fc3","type":15,"controller":"Shop","action":"home","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shangcheng","menu_id":2008,"menu_group":3,"is_lang":0,"auth_role":"Shop@index","intro":"","statistics_type":0,"status":1,"sort_order":41,"add_time":1658910300,"update_time":1746605307},{"title":"\u6570\u636e\u7edf\u8ba1","laytext":"\u6570\u636e\u7edf\u8ba1","type":15,"controller":"Statistics","action":"index","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shujutongji","menu_id":2008001,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":42,"add_time":1658910310,"update_time":1746605307},{"title":"\u5546\u54c1\u7ba1\u7406","laytext":"\u5546\u54c1\u7ba1\u7406","type":15,"controller":"ShopProduct","action":"index","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shangpinguanli","menu_id":2008002,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":43,"add_time":1658910320,"update_time":1746605307},{"title":"\u5546\u54c1\u53c2\u6570","laytext":"\u5546\u54c1\u53c2\u6570","type":15,"controller":"ShopProduct","action":"attrlist_index","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shangpincanshu","menu_id":2008003,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":44,"add_time":1658910330,"update_time":1746605307},{"title":"\u5546\u54c1\u89c4\u683c","laytext":"\u5546\u54c1\u89c4\u683c","type":15,"controller":"Shop","action":"spec_index","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shangpinguige","menu_id":2008008,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":45,"add_time":1658910340,"update_time":1746605307},{"title":"\u5546\u57ce\u914d\u7f6e","laytext":"\u5546\u57ce\u914d\u7f6e","type":15,"controller":"Shop","action":"conf","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-shangchengpeizhi","menu_id":2008004,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":46,"add_time":1658910350,"update_time":1746605307},{"title":"\u8425\u9500\u529f\u80fd","laytext":"\u8425\u9500\u529f\u80fd","type":15,"controller":"Shop","action":"market_index","vars":"conceal=1","groups":0,"checked":0,"litpic":"iconfont e-yingxiaogongneng","menu_id":2008005,"menu_group":3,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":47,"add_time":1658910360,"update_time":1746605307},{"title":"SEO\u8bbe\u7f6e","laytext":"SEO\u8bbe\u7f6e","type":15,"controller":"Seo","action":"seo","vars":"","groups":0,"checked":0,"litpic":"iconfont e-seo","menu_id":2003,"menu_group":4,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":48,"add_time":1658910370,"update_time":1746605307},{"title":"html\u751f\u6210","laytext":"html\u751f\u6210","type":15,"controller":"Seo","action":"build","vars":"","groups":0,"checked":0,"litpic":"iconfont e-jingtaishengcheng","menu_id":2004016,"menu_group":4,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":49,"add_time":1658910380,"update_time":1746605307},{"title":"Sitemap","laytext":"Sitemap","type":15,"controller":"Sitemap","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-Sitemap","menu_id":2003002,"menu_group":4,"is_lang":0,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":50,"add_time":1658910390,"update_time":1746605307},{"title":"\u53cb\u60c5\u94fe\u63a5","laytext":"\u53cb\u60c5\u94fe\u63a5","type":15,"controller":"Links","action":"index","vars":"","groups":0,"checked":0,"litpic":"iconfont e-youqinglianjie1","menu_id":2003003,"menu_group":4,"is_lang":1,"auth_role":"","intro":"","statistics_type":0,"status":1,"sort_order":51,"add_time":1658910400,"update_time":1746605307},{"title":"\u6d4f\u89c8\u91cf","laytext":"\u603b\u6d4f\u89c8\u91cf","type":25,"controller":"","action":"","vars":"","groups":1,"checked":1,"litpic":"","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":1,"status":1,"sort_order":2,"add_time":1569232484,"update_time":1745972077},{"title":"\u6587\u7ae0\u6570","laytext":"\u6587\u7ae0\u603b\u6570","type":25,"controller":"Article","action":"index","vars":"","groups":1,"checked":1,"litpic":"","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":7,"status":1,"sort_order":3,"add_time":1569232484,"update_time":1745972077},{"title":"\u5546\u54c1\u6570","laytext":"\u5546\u54c1\u603b\u6570","type":25,"controller":"ShopProduct","action":"index","vars":"","groups":1,"checked":1,"litpic":"","menu_id":0,"menu_group":0,"is_lang":0,"auth_role":"","intro":"","statistics_type":6,"status":1,"sort_order":3,"add_time":1569232484,"update_time":1745972077}]';
+        $list = !empty($list) ? json_decode($list, true) : [];
+        if (!empty($list)) {
+            $quickentry = Db::name('quickentry')->field('type, controller, action, menu_group')->where(['type' => ['IN', [15, 25]]])->select();
+            foreach ($quickentry as $key => $value) {
+                if (!empty($value)) $quickentry[$key] = implode('_', $value);
+            }
+            foreach ($list as $k => $v) {
+                $a = implode('_',['type' => $v['type'], 'controller' => $v['controller'], 'action' => $v['action'], 'menu_group' => $v['menu_group']]);
+                if (in_array($a, $quickentry)) unset($list[$k]);
+            }
+            if (!empty($list)) Db::name('quickentry')->insertAll($list);
+        }
+
         /*权限控制 by 小虎哥*/
         $auth_role_info = session('admin_info.auth_role_info');
         if(0 < intval(session('admin_info.role_id')) && ! empty($auth_role_info) && intval($auth_role_info['switch_map']) <= 0){
@@ -1274,6 +1606,10 @@ class Index extends Base
             $this->success($msg, null, $data);
         }
 
+        $menuGroupList = model('Quickentry')->getMenuGroupList(['order'=>'menu_group asc, add_time asc, id asc']);
+        $menuGroupList = group_same_key($menuGroupList, 'menu_group');
+        $this->assign('menuGroupList', $menuGroupList);
+
         /*代理贴牌功能限制-s*/
         $weapp_switch = true;
         if (function_exists('checkAuthRule')) {
@@ -1282,11 +1618,6 @@ class Index extends Base
         }
         $this->assign('weapp_switch', $weapp_switch);
         /*代理贴牌功能限制-e*/
-
-        if (file_exists('./data/conf/memgift_open.txt')) {
-            $this->usersConfig['memgift_open'] = 1;
-            $this->assign('usersConfig',$this->usersConfig);
-        }
 
         $is_online = 0;
         if (is_realdomain()) {
@@ -1336,15 +1667,6 @@ class Index extends Base
         $admin_menu_id_arr = [];  //在“当前导航”栏目显示菜单集合
         foreach ($admin_menu_list as $key=>$val){
             $admin_menu_id_arr[] = $val['menu_id'];
-            
-            // 其他语言不显示留言管理
-            /*if ($this->admin_lang != $this->main_lang) {
-                foreach ([2004018] as $_k => $_v) {
-                    if ($_v == $val['menu_id']) {
-                        unset($admin_menu_list[$key]);
-                    }
-                }
-            }*/
         }
         //用户手动关闭的权限集合
         $this->assign('admin_menu_id_arr', $admin_menu_id_arr);
@@ -1360,12 +1682,6 @@ class Index extends Base
         $this->assign('module_default_menu',$global['module_default_menu']);
         $this->assign('module_reverse_menu',$global['module_reverse_menu']);
 
-        // 可视编辑入口
-        $is_show_uiset = 0;
-        if (file_exists(ROOT_PATH.'template/'.TPL_THEME.'pc/uiset.txt') || file_exists(ROOT_PATH.'template/'.TPL_THEME.'mobile/uiset.txt')) {
-            $is_show_uiset = 1;
-        }
-        $this->assign('is_show_uiset', $is_show_uiset);
         //创始人才有权限控制
         $admin_info = session('admin_info');
         $is_founder = !empty($admin_info['is_founder']) ? $admin_info['is_founder'] : 0;
@@ -1373,17 +1689,6 @@ class Index extends Base
 
         $security_ask_open = (int)tpSetting('security.security_ask_open');
         $this->assign('security_ask_open', $security_ask_open);
-
-        $shopLogic = new \app\admin\logic\ShopLogic;
-        // 列出营销功能里已使用的模块
-        $marketFunc = $shopLogic->marketLogic();
-        $this->assign('marketFunc', $marketFunc);
-        // 列出功能地图里已使用的模块
-        $useFunc = $shopLogic->useFuncLogic();
-        $this->assign('useFunc', $useFunc);
-
-        $foreign_authorize = tpSetting('foreign.foreign_authorize', [], 'cn');
-        $this->assign('foreign_authorize', $foreign_authorize);
 
         return $this->fetch();
     }
@@ -1425,7 +1730,12 @@ class Index extends Base
         $this->assign('login_tplist', $login_tplist);
 
         // 欢迎页主题风格
-        $welcome_list = Db::name('admin_theme')->where(['theme_type'=>2])->order('is_system desc, sort_order asc, theme_id asc')->select();
+        $where = [];
+        $where['theme_type'] = 2;
+        if (5 > $this->php_servicemeal) {
+            $where['welcome_tplname'] = ['neq', 'welcome_ai.htm'];
+        }
+        $welcome_list = Db::name('admin_theme')->where($where)->order('is_system desc, sort_order asc, theme_id asc')->select();
         foreach ($welcome_list as $key => $val) {
             $val['disabled'] = $val['disabled_tips'] = '';
             if ($val['welcome_tplname'] == 'welcome_shop.htm') {
@@ -1459,6 +1769,7 @@ class Index extends Base
             $image_ext = config('global.image_ext');
             $image_ext_arr = explode(',', $image_ext);
             foreach ($post as $key => $val) {
+                $org_key = $key;
                 $val = trim($val);
                 if (in_array($key, ['admin_logo','login_logo','login_bgimg','web_ico'])) { // 后台LOGO/登录LOGO
                     $source = preg_replace('#^'.$this->root_dir.'#i', '', $val); // 支持子目录
@@ -1483,28 +1794,25 @@ class Index extends Base
                     $key = 'web_assist_color';
                 } else if ('admin_logo' == $key) {
                     $key = 'web_adminlogo';
-                } else if ('login_tplname' == $key) {
+                } else if ('login_tplname' == $key) { // 登录页设置
                     $key = 'web_theme_login_tplname';
+                } else if ('welcome_tplname' == $key) { // 欢迎页设置
+                    $key = 'web_theme_welcome_tplname';
                 }
                 $webData[$key] = $val;
+                if ($org_key != $key) {
+                    unset($webData[$org_key]);
+                }
             }
             $webData['web_theme_style_uptime'] = getTime();
-            if (!empty($webData)) {
-                /*多语言*/
-                if (is_language()) {
-                    $langRow = \think\Db::name('language')->order('id asc')
-                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                        ->select();
-                    foreach ($langRow as $key => $val) {
-                        tpCache('web', $webData, $val['mark']);
-                    }
-                } else {
-                    tpCache('web', $webData);
-                }
-                /*--end*/
-                $ajaxLogic = new \app\admin\logic\AjaxLogic;
-                $ajaxLogic->admin_update_theme_css();
+            /*多语言*/
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $webData, $val['mark']);
             }
+            /*--end*/
+            $ajaxLogic = new \app\admin\logic\AjaxLogic;
+            $ajaxLogic->admin_update_theme_css();
 
             $is_change = 0;
             // $theme_info = Db::name('admin_theme')->field('theme_title,theme_pic,add_time,update_time', true)->where(['theme_id'=>$post['theme_id']])->find();
@@ -1536,15 +1844,9 @@ class Index extends Base
             $post = input('post.');
             $webData = ['web_theme_welcome_tplname'=>$post['welcome_tplname']];
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', $webData, $val['mark']);
-                }
-            } else {
-                tpCache('web', $webData);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $webData, $val['mark']);
             }
             /*--end*/
             $this->success('操作成功');
@@ -1557,6 +1859,7 @@ class Index extends Base
      */
     public function theme_add_login()
     {
+        $this->error('出于安全考虑已禁用，请使用ftp或易优助手插件修改模板');
         if (IS_POST) {
             $post = input('post.');
             $post['theme_title'] = trim($post['theme_title']);
@@ -1577,15 +1880,9 @@ class Index extends Base
             $theme_id = Db::name('admin_theme')->insertGetId($newData);
             if ($theme_id !== false) {
                 /*多语言*/
-                if (is_language()) {
-                    $langRow = \think\Db::name('language')->order('id asc')
-                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                        ->select();
-                    foreach ($langRow as $key => $val) {
-                        tpCache('web', ['web_theme_styleid'=>$theme_id], $val['mark']);
-                    }
-                } else {
-                    tpCache('web', ['web_theme_styleid'=>$theme_id]);
+                $langRow = \think\Db::name('language')->order('id asc')->select();
+                foreach ($langRow as $key => $val) {
+                    tpCache('web', ['web_theme_styleid'=>$theme_id], $val['mark']);
                 }
                 /*--end*/
                 $this->success('操作成功，需刷新后台看效果！');
@@ -1634,103 +1931,6 @@ class Index extends Base
     public function ajax_theme_tplfile_add()
     {
         $this->error('出于安全考虑已禁用，请使用ftp或易优助手插件修改模板');
-        $type = input('param.type/s', '');
-        $view_suffix = config('template.view_suffix');
-        $tpldirpath = '';
-        if ('welcome' == $type) {
-            $select_input_id = 'welcome_tplname';
-            $tpldirpath = '/application/admin/template/theme';
-        } else if ('login' == $type) {
-            $select_input_id = 'login_tplname';
-            $tpldirpath = '/application/admin/template/theme';
-        }
-
-        if (IS_POST) {
-            $post = input('post.', '', null);
-            $content = input('post.content', '', null);
-            $post['filename'] = trim($post['filename']);
-            $post['theme_title'] = empty($post['theme_title']) ? '' : trim($post['theme_title']);
-            if ('welcome' == $post['type']) {
-                if (empty($post['theme_title'])) {
-                    $this->error('模板名称不能为空！');
-                }
-            }
-            if (!empty($post['filename'])) {
-                if (!preg_match("/^[\w\-\_]{1,}$/u", $post['filename'])) {
-                    $this->error('文件名称只允许字母、数字、下划线、连接符的任意组合！');
-                }
-                $filename = "{$type}_{$post['filename']}.{$view_suffix}";
-            } else {
-                $this->error('文件名称不能为空！');
-            }
-
-            if (file_exists(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename)) {
-                $this->error('文件名称已经存在，请重新命名！', null, ['focus'=>'filename']);
-            }
-
-            $nosubmit = input('param.nosubmit/d');
-            if (1 == $nosubmit) {
-                $this->success('检测通过');
-            }
-
-            if (empty($content)) {
-                $this->error('HTML代码不能为空！');
-            }
-
-            $filemanagerLogic = new \app\admin\logic\FilemanagerLogic;
-            $file = ROOT_PATH.trim($tpldirpath, '/').'/'.$filename;
-            if (!is_writable(dirname($file))) {
-                $this->error("请把以下目录设置为可写入权限<br/>{$tpldirpath}");
-            }
-            $ext = preg_replace('/^(.*)\.([^\.]+)$/i', '${2}', $filename);
-            if ('htm' == $ext) {
-                $content = htmlspecialchars_decode($content, ENT_QUOTES);
-                if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
-                    $this->error('模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。');
-                }
-                foreach ($filemanagerLogic->disableFuns as $key => $val) {
-                    $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);
-                    $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
-                }
-            }
-            $fp = fopen($file, "w");
-            fputs($fp, $content);
-            fclose($fp);
-
-            $theme_id = 0;
-            if ('welcome' == $post['type']) {
-                $newData = [
-                    'theme_type'=>2,
-                    'theme_title'=>$post['theme_title'],
-                    'theme_pic'=>ROOT_DIR."/public/static/admin/images/theme/theme_pic_default.png",
-                    'welcome_tplname'=>$filename,
-                    'is_system' => 0,
-                    'sort_order' => 100,
-                    'add_time' => getTime(),
-                    'update_time' => getTime(),
-                ];
-                $theme_id = Db::name('admin_theme')->insertGetId($newData);
-            }
-            $data = [
-                'filename'=>$filename,
-                'type'=>$type,
-                'select_input_id'=>$select_input_id,
-                'theme_id'=>$theme_id,
-                'theme_title'=>$post['theme_title'],
-            ];
-            $this->success('操作成功', null, $data);
-        }
-
-        $content = '';
-        if ('welcome' == $type) {
-            $content = file_get_contents(APP_PATH.'admin/template/index/welcome.htm');
-        } else if ('login' == $type) {
-            $content = file_get_contents(APP_PATH.'admin/template/admin/login.htm');
-        }
-        $this->assign('content', $content);
-        $this->assign('type', $type);
-        $this->assign('tpldirpath', $tpldirpath);
-        return $this->fetch('theme_tplfile_add');
     }
 
     /**
@@ -1740,129 +1940,6 @@ class Index extends Base
     public function ajax_theme_tplfile_edit()
     {
         $this->error('出于安全考虑已禁用，请使用ftp或易优助手插件修改模板');
-        $type = input('param.type/s', '');
-        if ('welcome' == $type) {
-            $select_input_id = 'welcome_tplname';
-        } else if ('login' == $type) {
-            $select_input_id = 'login_tplname';
-        }
-        $tpldirpath = '/application/admin/template/theme';
-        $view_suffix = config('template.view_suffix');
-
-        if (IS_POST) {
-            $post = input('post.', '', null);
-            if (!empty($post['theme_id'])) {
-                $content = input('post.content', '', null);
-                $post['filename'] = trim($post['filename']);
-                $post['theme_title'] = empty($post['theme_title']) ? '' : trim($post['theme_title']);
-                if ('welcome' == $post['type']) {
-                    if (empty($post['theme_title'])) {
-                        $this->error('模板名称不能为空！');
-                    }
-                }
-                if (!empty($post['filename'])) {
-                    if (!preg_match("/^[\w\-\_]{1,}$/u", $post['filename'])) {
-                        $this->error('文件名称只允许字母、数字、下划线、连接符的任意组合！');
-                    }
-                    $filename = "{$type}_{$post['filename']}.{$view_suffix}";
-                } else {
-                    $this->error('文件名称不能为空！');
-                }
-
-                if ($filename != $post['welcome_tplname'] && file_exists(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename)) {
-                    $this->error('文件名称已经存在，请重新命名！', null, ['focus'=>'filename']);
-                }
-
-                $nosubmit = input('param.nosubmit/d');
-                if (1 == $nosubmit) {
-                    $this->success('检测通过');
-                }
-
-                if (empty($content)) {
-                    $this->error('HTML代码不能为空！');
-                }
-
-                $filemanagerLogic = new \app\admin\logic\FilemanagerLogic;
-                $file = ROOT_PATH.trim($tpldirpath, '/').'/'.$filename;
-                if (!is_writable(dirname($file))) {
-                    $this->error("请把以下目录设置为可写入权限<br/>{$tpldirpath}");
-                }
-                $ext = preg_replace('/^(.*)\.([^\.]+)$/i', '${2}', $filename);
-                if ('htm' == $ext) {
-                    $content = htmlspecialchars_decode($content, ENT_QUOTES);
-                    if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
-                        $this->error('模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。');
-                    }
-                    foreach ($filemanagerLogic->disableFuns as $key => $val) {
-                        $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);
-                        $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
-                    }
-                }
-                $fp = fopen($file, "w");
-                if ($fp != false && fwrite($fp, $content)) {
-                    fclose($fp);
-                    if ($filename != $post['welcome_tplname']) {
-                        rename(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$post['welcome_tplname'], ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename);
-                    }
-                }
-
-                if ('welcome' == $post['type']) {
-                    $newData = [
-                        'theme_type'=>2,
-                        'theme_title'=>$post['theme_title'],
-                        'theme_pic'=>ROOT_DIR."/public/static/admin/images/theme/theme_pic_default.png",
-                        'welcome_tplname'=>$filename,
-                        'is_system' => 0,
-                        'update_time' => getTime(),
-                    ];
-                    Db::name('admin_theme')->where(['theme_id'=>$post['theme_id']])->update($newData);
-                }
-                $data = [
-                    'filename'=>$filename,
-                    'type'=>$type,
-                    'select_input_id'=>$select_input_id,
-                    'theme_id'=>$post['theme_id'],
-                    'theme_title'=>$post['theme_title'],
-                ];
-                $this->success('操作成功', null, $data);
-            }
-            $this->error('操作失败');
-        }
-
-        $theme_id = input('param.theme_id/d', 0);
-        $info = Db::name('admin_theme')->where(['theme_id'=>$theme_id])->find();
-        if (empty($info)) {
-            $this->error('数据不存在，请联系管理员！');
-            exit;
-        }
-        if (!empty($info['is_system'])) {
-            $this->error('内置模板禁止编辑，系统更新会覆盖');
-        }
-
-        $is_default_theme = 0;
-        if (!empty($info['is_system']) && empty($info['welcome_tplname'])) {
-            $is_default_theme = 1;
-            if ('welcome' == $type) {
-                $content = file_get_contents(APP_PATH."admin/template/index/{$type}.{$view_suffix}");
-                $info['welcome_tplname'] = "welcome.{$view_suffix}";
-            } else if ('login' == $type) {
-                $viewfile = 'login';
-                if (2 <= $this->php_servicemeal) {
-                    $viewfile = 'login_zy';
-                }
-                $content = file_get_contents(APP_PATH."admin/template/admin/{$viewfile}.{$view_suffix}");
-                $info['welcome_tplname'] = "{$viewfile}.{$view_suffix}";
-            }
-        } else {
-            $content = file_get_contents(APP_PATH."admin/template/theme/{$info['welcome_tplname']}");
-        }
-        $info['filename'] = preg_replace('/^'.$type.'(_([^\.]+))?\.'.$view_suffix.'$/i', '${2}', $info['welcome_tplname']);
-        $this->assign('content', $content);
-        $this->assign('type', $type);
-        $this->assign('tpldirpath', $tpldirpath);
-        $this->assign('is_default_theme', $is_default_theme);
-        $this->assign('info', $info);
-        return $this->fetch('theme_tplfile_edit');
     }
 
     /**

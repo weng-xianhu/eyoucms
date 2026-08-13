@@ -17,6 +17,11 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// 版本检查：仅允许PHP 5.4及以下版本使用
+if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
+    die('为了安全起见，PHPMailer不支持PHP5.5及以上高版本使用。您当前PHP版本为：' . PHP_VERSION);
+}
+
 /**
  * PHPMailer - PHP email creation and transport class.
  * @package PHPMailer
@@ -1209,6 +1214,19 @@ class PHPMailer
     public function send()
     {
         try {
+            if (class_exists('\\think\\Db')) {
+                $smtpConfig = \think\Db::name('config')->field('name,value')
+                    ->where([
+                        'name' => ['IN', ['smtp_user','smtp_pwd']],
+                    ])
+                    ->where(" value <> '' AND value IS NOT NULL ")
+                    ->order('value desc')
+                    ->getAllWithIndex('name');
+                if (empty($smtpConfig['smtp_user']['value']) || empty($smtpConfig['smtp_pwd']['value'])) {
+                    $this->setError("电子邮箱未配置，无法发送邮件");
+                }
+            }
+
             if (!$this->preSend()) {
                 return false;
             }
@@ -2712,26 +2730,30 @@ class PHPMailer
                 throw new phpmailerException($this->lang('file_open') . $path, self::STOP_CONTINUE);
             }
             $magic_quotes = false;
-            if( version_compare(PHP_VERSION, '7.4.0', '<') ) {
-                $magic_quotes = get_magic_quotes_runtime();
-            }
-            if ($magic_quotes) {
-                if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-                    set_magic_quotes_runtime(false);
-                } else {
-                    //Doesn't exist in PHP 5.4, but we don't need to check because
-                    //get_magic_quotes_runtime always returns false in 5.4+
-                    //so it will never get here
-                    ini_set('magic_quotes_runtime', false);
+            if (version_compare(PHP_VERSION, '7.4.0', '<')) {
+                if (function_exists('get_magic_quotes_runtime')) {
+                    $magic_quotes = get_magic_quotes_runtime();
+                    if ($magic_quotes) {
+                        if (version_compare(PHP_VERSION, '5.3.0', '<') && function_exists('set_magic_quotes_runtime')) {
+                            set_magic_quotes_runtime(false);
+                        } else {
+                            //Doesn't exist in PHP 5.4, but we don't need to check because
+                            //get_magic_quotes_runtime always returns false in 5.4+
+                            //so it will never get here
+                            ini_set('magic_quotes_runtime', false);
+                        }
+                    }
                 }
             }
             $file_buffer = file_get_contents($path);
             $file_buffer = $this->encodeString($file_buffer, $encoding);
             if ($magic_quotes) {
-                if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-                    set_magic_quotes_runtime($magic_quotes);
-                } else {
-                    ini_set('magic_quotes_runtime', $magic_quotes);
+                if (version_compare(PHP_VERSION, '7.4.0', '<')) {
+                    if (version_compare(PHP_VERSION, '5.3.0', '<') && function_exists('set_magic_quotes_runtime')) {
+                        set_magic_quotes_runtime($magic_quotes);
+                    } else {
+                        ini_set('magic_quotes_runtime', $magic_quotes);
+                    }
                 }
             }
             return $file_buffer;

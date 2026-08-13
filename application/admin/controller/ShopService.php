@@ -87,7 +87,7 @@ class ShopService extends Base {
         $payApiConfig = Db::name('pay_api_config')->where($where)->select();
         $openWeChat = $openAliPay = 1;
         foreach ($payApiConfig as $key => $value) {
-            $payInfo = unserialize($value['pay_info']);
+            $payInfo = safe_unserialize($value['pay_info']);
             if (!empty($payInfo) && isset($payInfo['is_open_wechat']) && 0 === intval($payInfo['is_open_wechat'])) {
                 $openWeChat = 0;
             }
@@ -368,7 +368,7 @@ class ShopService extends Base {
         $payApiConfig = Db::name('pay_api_config')->where($where)->select();
         $openWeChat = $openAliPay = 1;
         foreach ($payApiConfig as $key => $value) {
-            $payInfo = unserialize($value['pay_info']);
+            $payInfo = safe_unserialize($value['pay_info']);
             if (!empty($payInfo) && isset($payInfo['is_open_wechat']) && 0 === intval($payInfo['is_open_wechat'])) {
                 $openWeChat = 0;
             }

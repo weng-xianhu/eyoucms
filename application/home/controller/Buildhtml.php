@@ -25,6 +25,14 @@ class Buildhtml extends Base
     public function _initialize()
     {
         parent::_initialize();
+        // 标记正在生成静态页面（在所有方法执行前定义）
+        // 排除前端筛选请求（有筛选标识参数）
+        $url_screen_var = config('global.url_screen_var');
+        $is_screen = input('param.'.$url_screen_var);
+        $is_screen = !empty($is_screen);
+        if (!$is_screen) {
+            defined('EYOUCMS_BUILDING_HTML') or define('EYOUCMS_BUILDING_HTML', true);
+        }
         @ini_set('memory_limit','-1');
         $this->php_sessid = !empty($_COOKIE['PHPSESSID']) ? $_COOKIE['PHPSESSID'] : '';
         if (!session('?admin_id')) {
@@ -61,6 +69,7 @@ class Buildhtml extends Base
      */
     public function buildIndexAll()
     {
+        defined('EYOUCMS_BUILDING_HTML') or define('EYOUCMS_BUILDING_HTML', true);
         \think\Session::pause(); // 暂停session，防止session阻塞机制
         $this->clearCache();
 
@@ -146,6 +155,7 @@ class Buildhtml extends Base
      */
     public function buildIndex()
     {
+        defined('EYOUCMS_BUILDING_HTML') or define('EYOUCMS_BUILDING_HTML', true);
         \think\Session::pause(); // 暂停session，防止session阻塞机制
 
         $param = input('param.');
@@ -338,13 +348,41 @@ class Buildhtml extends Base
      */
     public function buildArticle()
     {
+        defined('EYOUCMS_BUILDING_HTML') or define('EYOUCMS_BUILDING_HTML', true);
         function_exists('set_time_limit') && set_time_limit(0);
         \think\Session::pause(); // 暂停session，防止session阻塞机制
         $typeid      = input("param.id/d", 0); // 栏目ID
         $findex         = input("param.findex/d", 0);
         $achievepage = input("param.achieve/d", 0); // 已完成文档数
-        if (empty($findex) && empty($achievepage)){
+        $isInit      = input("param.init/d", 0); // 初始化模式：仅建缓存不生成文档
+        if ($isInit) {
             $this->clearCache();
+            $startid = 0;
+            $endid   = 0;
+            $uphtmltype = input('param.uphtmltype/d');
+            if (!empty($uphtmltype)) {
+                $startid = input('param.startid/d');
+                empty($startid) && $startid = !empty($this->eyou['global']['seo_startid']) ? intval($this->eyou['global']['seo_startid']) : 0;
+                $endid = !empty($this->eyou['global']['seo_endid']) ? intval($this->eyou['global']['seo_endid']) : 0;
+            }
+            $result = $this->getArticleAidData($typeid, $startid, $endid);
+            $batchSize = !empty($this->eyou['global']['seo_pagesize']) ? intval($this->eyou['global']['seo_pagesize']) : 20;
+            cache("buildhtml_init_flag_" . $this->php_sessid, 1, 600, 'buildhtml');
+            $data = [
+                'allpagetotal' => $result['pagetotal'],
+                'achievepage'  => 0,
+                'findex'       => 0,
+                'batchsize'    => $batchSize,
+            ];
+            $this->success('', null, $data);
+        }
+        if (empty($findex) && empty($achievepage)){
+            $initFlag = cache("buildhtml_init_flag_" . $this->php_sessid);
+            if (empty($initFlag)) {
+                $this->clearCache();
+            } else {
+                cache("buildhtml_init_flag_" . $this->php_sessid, null);
+            }
         }
         $data = $this->handelBuildArticleList($typeid, $findex, $achievepage,true,20);
 
@@ -383,13 +421,29 @@ class Buildhtml extends Base
         $data['achievepage']  = $achievepage;
         $data['pagetotal']    = 0;
         if ($batch && $pagetotal > $achievepage) {
+            // P0-1优化：批量预加载本批次所有文档数据，减少DB查询次数
+            $batch_aids = [];
+            $temp_nextid = $nextid;
+            $temp_limit = $limit;
+            while ($temp_limit && isset($aid_arr[$temp_nextid])) {
+                $batch_aids[] = $aid_arr[$temp_nextid];
+                $temp_limit--;
+                $temp_nextid++;
+            }
+            $batchArchives = getAllArchives($this->home_lang, 0, $batch_aids);
+            $batchInfoMap = [];
+            foreach ($batchArchives['info'] as $item) {
+                $batchInfoMap[$item['aid']] = $item;
+            }
+            $arctypeRow = $batchArchives['arctypeRow'];
+
             while ($limit && isset($aid_arr[$nextid])) {
-                $archives = getAllArchives($this->home_lang, 0, $aid_arr[$nextid]);
                 try{
-                    $row = $archives['info'][0];
-                    $arctypeRow = $archives['arctypeRow'];
-                    $attrInfo = getOneAttrInfo($allAttrInfo, $aid_arr[$nextid]);
-                    $msg                 .= $msg_temp = $this->createArticle($row, $globalConfig, $arctypeRow, $allTags, $has_children_Row, $attrInfo);
+                    $row = isset($batchInfoMap[$aid_arr[$nextid]]) ? $batchInfoMap[$aid_arr[$nextid]] : null;
+                    if (!empty($row)) {
+                        $attrInfo = getOneAttrInfo($allAttrInfo, $aid_arr[$nextid]);
+                        $msg .= $this->createArticle($row, $globalConfig, $arctypeRow, $allTags, $has_children_Row, $attrInfo);
+                    }
                 }catch (\Exception $e){}
                 $data['achievepage'] += 1;
                 $limit--;
@@ -397,12 +451,21 @@ class Buildhtml extends Base
             }
             $data['findex'] = $nextid;
         } else if (!$batch) {
+            // P0-1优化：非批次模式也批量预加载
+            $all_aids = array_values($aid_arr);
+            $allArchives = getAllArchives($this->home_lang, 0, $all_aids);
+            $allInfoMap = [];
+            foreach ($allArchives['info'] as $item) {
+                $allInfoMap[$item['aid']] = $item;
+            }
+            $arctypeRow = $allArchives['arctypeRow'];
+
             foreach ($aid_arr as $key => $val) {
-                $archives = getAllArchives($this->home_lang, 0, $val);
-                $row = $archives['info'][0];
-                $arctypeRow = $archives['arctypeRow'];
-                $attrInfo = getOneAttrInfo($allAttrInfo, $val);
-                $msg                 .= $msg_temp = $this->createArticle($row, $globalConfig, $arctypeRow, $allTags, $has_children_Row, $attrInfo);
+                $row = isset($allInfoMap[$val]) ? $allInfoMap[$val] : null;
+                if (!empty($row)) {
+                    $attrInfo = getOneAttrInfo($allAttrInfo, $val);
+                    $msg .= $this->createArticle($row, $globalConfig, $arctypeRow, $allTags, $has_children_Row, $attrInfo);
+                }
                 $data['achievepage'] += 1;
                 $data['findex']         = $key;
             }
@@ -443,12 +506,12 @@ class Buildhtml extends Base
             cache("article_tags_serialize".$this->php_sessid, serialize($allTags), null, 'buildhtml');
             cache("article_children_row_serialize".$this->php_sessid, serialize($has_children_Row), null, 'buildhtml');
         }else{
-            $aid_arr          = unserialize($aid_arr_serialize);
+            $aid_arr          = safe_unserialize($aid_arr_serialize);
             $channel_arr      = cache("channel_arr_serialize".$this->php_sessid);
-            $channel_arr      = unserialize($channel_arr);
+            $channel_arr      = safe_unserialize($channel_arr);
             $pagetotal        = cache("article_page_total_serialize".$this->php_sessid);
-            $allTags          = unserialize(cache("article_tags_serialize".$this->php_sessid));
-            $has_children_Row = unserialize(cache("article_children_row_serialize".$this->php_sessid));
+            $allTags          = safe_unserialize(cache("article_tags_serialize".$this->php_sessid));
+            $has_children_Row = safe_unserialize(cache("article_children_row_serialize".$this->php_sessid));
         }
 
         return [
@@ -495,11 +558,11 @@ class Buildhtml extends Base
             cache("article_attr_info_serialize".$this->php_sessid, serialize($allAttrInfo), null, 'buildhtml');
             cache("article_children_row_serialize".$this->php_sessid, serialize($has_children_Row), null, 'buildhtml');
         } else {
-            $data             = unserialize($info_serialize);
+            $data             = safe_unserialize($info_serialize);
             $pagetotal        = cache("article_page_total_serialize".$this->php_sessid);
-            $allTags          = unserialize(cache("article_tags_serialize".$this->php_sessid));
-            $allAttrInfo      = unserialize(cache("article_attr_info_serialize".$this->php_sessid));
-            $has_children_Row = unserialize(cache("article_children_row_serialize".$this->php_sessid));
+            $allTags          = safe_unserialize(cache("article_tags_serialize".$this->php_sessid));
+            $allAttrInfo      = safe_unserialize(cache("article_attr_info_serialize".$this->php_sessid));
+            $has_children_Row = safe_unserialize(cache("article_children_row_serialize".$this->php_sessid));
         }
 
         return ['data' => $data, 'pagetotal' => $pagetotal, 'allTags' => $allTags, 'allAttrInfo' => $allAttrInfo, 'has_children_Row' => $has_children_Row];
@@ -575,23 +638,28 @@ class Buildhtml extends Base
             return false;
         }
         /*--end*/
-        $arctypeInfo = model('Arctype')->parentAndTopInfo($result['typeid'], $arctypeInfo);
-        /*自定义字段的数据格式处理*/
-        $arctypeInfo = $this->fieldLogic->getTableFieldList($arctypeInfo, config('global.arctype_channel_id'));
-        /*是否有子栏目，用于标记【全部】选中状态*/
-        $arctypeInfo['has_children'] = !empty($has_children_Row[$result['typeid']]) ? 1 : 0;
-        /*--end*/
+        // P6优化：按typeid缓存 parentAndTopInfo + 字段处理 + type前缀，避免每篇重复计算
+        static $arctypeProcessedCache = [];
+        $tid = $result['typeid'];
+        if (!isset($arctypeProcessedCache[$tid])) {
+            $arctypeInfo = model('Arctype')->parentAndTopInfo($tid, $arctypeInfo);
+            /*自定义字段的数据格式处理*/
+            $arctypeInfo = $this->fieldLogic->getTableFieldList($arctypeInfo, config('global.arctype_channel_id'));
+            /*是否有子栏目，用于标记【全部】选中状态*/
+            $arctypeInfo['has_children'] = !empty($has_children_Row[$tid]) ? 1 : 0;
+            /*给没有type前缀的字段新增一个带前缀的字段，并赋予相同的值*/
+            foreach ($arctypeInfo as $key => $val) {
+                if (!preg_match('/^type/i', $key)) {
+                    $key_new = 'type' . $key;
+                    !array_key_exists($key_new, $arctypeInfo) && $arctypeInfo[$key_new] = $val;
+                }
+            }
+            $arctypeProcessedCache[$tid] = $arctypeInfo;
+        } else {
+            $arctypeInfo = $arctypeProcessedCache[$tid];
+        }
         // 文档模板文件，不指定文档模板，默认以栏目设置的为主
         empty($result['tempview']) && $result['tempview'] = $arctypeInfo['tempview'];
-
-        /*给没有type前缀的字段新增一个带前缀的字段，并赋予相同的值*/
-        foreach ($arctypeInfo as $key => $val) {
-            if (!preg_match('/^type/i', $key)) {
-                $key_new = 'type' . $key;
-                !array_key_exists($key_new, $arctypeInfo) && $arctypeInfo[$key_new] = $val;
-            }
-        }
-        /*--end*/
 
         $result = array_merge($arctypeInfo, $result);
 
@@ -616,18 +684,27 @@ class Buildhtml extends Base
         $result = view_logic($aid, $result['channel'], $result, $allAttrInfo); // 模型对应逻辑
         $result = $this->fieldLogic->getChannelFieldList($result, $result['channel']); // 自定义字段的数据格式处理
 
+        // P1-1优化：static缓存用户信息，避免逐条重复查询
+        static $usersCache = [];
         if (!empty($result['users_id'])){
             $users_where['a.users_id'] = $result['users_id'];
+            $users_cache_key = 'u_'.$result['users_id'];
         }elseif (!empty($result['admin_id'])){
             $users_where['a.admin_id'] = $result['admin_id'];
+            $users_cache_key = 'a_'.$result['admin_id'];
         }else {
             $users_where['a.admin_id'] = ['>',0];
+            $users_cache_key = 'a_default';
         }
-        $users = Db::name('users')->alias('a')->field('a.username,a.nickname,a.head_pic,b.level_name,b.level_value')->where($users_where)->join('users_level b','a.level = b.level_id','left')->find();
-        if (!empty($users)) {
-            $users['head_pic']  = get_default_pic($users['head_pic']);
-            empty($users['nickname']) && $users['nickname'] = $users['username'];
+        if (!isset($usersCache[$users_cache_key])) {
+            $users = Db::name('users')->alias('a')->field('a.username,a.nickname,a.head_pic,b.level_name,b.level_value')->where($users_where)->join('users_level b','a.level = b.level_id','left')->find();
+            if (!empty($users)) {
+                $users['head_pic']  = get_default_pic($users['head_pic']);
+                empty($users['nickname']) && $users['nickname'] = $users['username'];
+            }
+            $usersCache[$users_cache_key] = $users;
         }
+        $users = $usersCache[$users_cache_key];
 
         $eyou       = array(
             'type'  => $arctypeInfo,
@@ -678,6 +755,14 @@ class Buildhtml extends Base
      */
     public function buildChannel()
     {
+        // 判断是否为前端筛选请求
+        // 筛选请求有筛选标识参数，静态生成请求有 achieve 参数
+        $url_screen_var = config('global.url_screen_var');
+        $is_screen = input('param.'.$url_screen_var);
+        $is_screen = !empty($is_screen);
+        if (!$is_screen && isset($_GET['achieve'])) {
+            defined('EYOUCMS_BUILDING_HTML') or define('EYOUCMS_BUILDING_HTML', true);
+        }
         function_exists('set_time_limit') && set_time_limit(0);
         \think\Session::pause(); // 暂停session，防止session阻塞机制
         $id          = input("param.id/d", 0); // 选中栏目ID（需要生成静态的栏目，需要生成全部时候为0）
@@ -685,6 +770,7 @@ class Buildhtml extends Base
         $index = input("param.index/d", 0);   //本栏目本次执行下标
         $achievepage = input("param.achieve/d", 0);  //已经执行完成的条数
         $type_index = input("param.type_index/d", 0);   //指定时间或者指定ID更新模式下，栏目集合的下标
+        $skip = input("param.skip/d", 0);   //跳过失败栏目模式
         $parent = true;
         if (empty($findex) && empty($achievepage)){
             $this->clearCache();
@@ -700,6 +786,27 @@ class Buildhtml extends Base
             $count = $count_arr[$type_index];    //预计本栏目的页数
             $findex = 0;
             $parent = false;
+        }
+        // 跳过失败栏目：仅推进 findex 并把该栏目页数加入完成计数，不实际生成
+        if ($skip) {
+            $cdata = $this->getChannelData($id, $parent);
+            $cinfo = array_values($cdata['info']);
+            $row = !empty($cinfo[$findex]) ? $cinfo[$findex] : [];
+            $skipped_pages = !empty($row['pagetotal']) ? intval($row['pagetotal']) : 1;
+            $result = [
+                'index'        => 0,
+                'findex'       => $findex + 1,
+                'achievepage'  => $achievepage + $skipped_pages,
+                'allpagetotal' => $cdata['pagetotal'],
+                'pagetotal'    => 1,
+                'typeid'       => !empty($row['typeid']) ? $row['typeid'] : 0,
+                'typename'     => !empty($row['typename']) ? $row['typename'] : '',
+            ];
+            if (!empty($uphtmltype)){
+                $result['type_index'] = $type_index + 1;
+                $result['uphtmltype'] = $uphtmltype;
+            }
+            $this->success('已跳过失败栏目<br>', null, $result);
         }
         $data = $this->handleBuildChannelList($id, $findex, $achievepage,true,$parent,$index);
         $result = $data[1];
@@ -757,9 +864,9 @@ class Buildhtml extends Base
             cache("channel_info_serialize".$this->php_sessid, serialize($info), null, 'buildhtml');
             cache("has_children_Row_serialize".$this->php_sessid, serialize($has_children_Row), null, 'buildhtml');
         } else {
-            $info             = unserialize($info_serialize);
+            $info             = safe_unserialize($info_serialize);
             $pagetotal        = cache("channel_page_total_serialize".$this->php_sessid);
-            $has_children_Row = unserialize(cache("has_children_Row_serialize".$this->php_sessid));
+            $has_children_Row = safe_unserialize(cache("has_children_Row_serialize".$this->php_sessid));
         }
 
         return ['info' => $info, 'pagetotal' => $pagetotal, 'has_children_Row' => $has_children_Row];

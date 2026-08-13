@@ -3,7 +3,7 @@
  * ALIPAY API: koubei.marketing.data.activity.bill.download request
  *
  * @author auto create
- * @since 1.0, 2016-11-11 19:58:38
+ * @since 1.0, 2022-06-27 11:32:12
  */
 class KoubeiMarketingDataActivityBillDownloadRequest
 {

@@ -44,14 +44,16 @@
   
   <script>
   $(function(){
-      $.ajax({
-          type: "POST",
-          url: "<?php echo $service_ey.base64_decode($ajax_url);?>",
-          data: {domain:'<?php echo $host;?>',last_domain:'<?php echo $host;?>',key_num:'<?php echo $cms_version;?>',install_time:'<?php echo $time;?>',serial_number:'<?php echo $mt_rand_str;?>',ip:'<?php echo $ip;?>',phpv:'<?php echo $phpv;?>',web_server:'<?php echo $web_server;?>'},
-          dataType: 'jsonp',
-          jsonp: "jsonpCallback",//服务端用于接收callback调用的function名的参数 
-          success: function(){}
-      });
+      <?php if (!empty($service_ey)) { ?>
+          $.ajax({
+              type: "POST",
+              url: "<?php echo $service_ey.base64_decode($ajax_url);?>",
+              data: {domain:'<?php echo $host;?>',last_domain:'<?php echo $host;?>',key_num:'<?php echo $cms_version;?>',install_time:'<?php echo $time;?>',serial_number:'<?php echo $mt_rand_str;?>',ip:'<?php echo $ip;?>',phpv:'<?php echo $phpv;?>',web_server:'<?php echo $web_server;?>'},
+              dataType: 'jsonp',
+              jsonp: "jsonpCallback",//服务端用于接收callback调用的function名的参数 
+              success: function(){}
+          });
+      <?php } ?>
       $('#next_submit').focus();
   });
   </script>

@@ -28,7 +28,7 @@ class Vertify extends Base
     public function index()
     {
         // 获取插件数据
-        $row = tpSetting('system.system_vertify');
+        $row = tpSetting('system.system_vertify', [], 'cn');
         if (IS_POST) {
             // 获取post参数
             $inc_type = input('inc_type/s', 'admin_login');
@@ -51,7 +51,7 @@ class Vertify extends Base
             }
             // 转json赋值
             $row = json_encode($config);
-            $r = tpSetting('system',['system_vertify'=>$row]);
+            $r = tpSetting('system',['system_vertify'=>$row], 'cn');
 
             if ($r !== false) {
                 adminLog('编辑验证码配置'); // 写入操作日志

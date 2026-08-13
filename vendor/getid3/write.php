@@ -144,8 +144,8 @@ class getid3_writetags
 			return false;
 		}
 
-		if (!is_array($this->tagformats)) {
-			$this->errors[] = 'tagformats must be an array in getid3_writetags';
+		if (count($this->tagformats) === 0) {
+			$this->errors[] = 'tagformats is empty in getid3_writetags';
 			return false;
 		}
 		// prevent duplicate tag formats
@@ -285,8 +285,8 @@ class getid3_writetags
 		}
 
 		// Validation of supplied data
-		if (!is_array($this->tag_data)) {
-			$this->errors[] = '$this->tag_data is not an array in WriteTags()';
+		if (count($this->tag_data) === 0) {
+			$this->errors[] = '$this->tag_data is empty in WriteTags()';
 			return false;
 		}
 		// convert supplied data array keys to upper case, if they're not already
@@ -576,6 +576,7 @@ class getid3_writetags
 	public function FormatDataForID3v2($id3v2_majorversion) {
 		$tag_data_id3v2 = array();
 
+		$ID3v2_text_encoding_lookup    = array();
 		$ID3v2_text_encoding_lookup[2] = array('ISO-8859-1'=>0, 'UTF-16'=>1);
 		$ID3v2_text_encoding_lookup[3] = array('ISO-8859-1'=>0, 'UTF-16'=>1);
 		$ID3v2_text_encoding_lookup[4] = array('ISO-8859-1'=>0, 'UTF-16'=>1, 'UTF-16BE'=>2, 'UTF-8'=>3);
@@ -669,6 +670,7 @@ class getid3_writetags
 								if (!$ID3v2_tag_data_converted && ($this->tag_encoding == 'UTF-8')) {
 									do {
 										// if UTF-8 string does not include any characters above chr(127) then it is identical to ISO-8859-1
+										$value = (string) $value; // prevent warnings/errors if $value is a non-string (e.g. integer,float)
 										for ($i = 0; $i < strlen($value); $i++) {
 											if (ord($value[$i]) > 127) {
 												break 2;
@@ -677,7 +679,7 @@ class getid3_writetags
 										$tag_data_id3v2[$ID3v2_framename][$key]['encodingid'] = 0;
 										$tag_data_id3v2[$ID3v2_framename][$key]['data']       = $value;
 										$ID3v2_tag_data_converted = true;
-									} while (false);
+									} while (false); // @phpstan-ignore-line
 								}
 								if (!$ID3v2_tag_data_converted) {
 									$tag_data_id3v2[$ID3v2_framename][$key]['encodingid'] = 1;
@@ -753,6 +755,7 @@ class getid3_writetags
 	 * @return array
 	 */
 	public function FormatDataForReal() {
+		$tag_data_real              = array();
 		$tag_data_real['title']     = getid3_lib::iconv_fallback($this->tag_encoding, 'ISO-8859-1', implode(' ', (isset($this->tag_data['TITLE']    ) ? $this->tag_data['TITLE']     : array())));
 		$tag_data_real['artist']    = getid3_lib::iconv_fallback($this->tag_encoding, 'ISO-8859-1', implode(' ', (isset($this->tag_data['ARTIST']   ) ? $this->tag_data['ARTIST']    : array())));
 		$tag_data_real['copyright'] = getid3_lib::iconv_fallback($this->tag_encoding, 'ISO-8859-1', implode(' ', (isset($this->tag_data['COPYRIGHT']) ? $this->tag_data['COPYRIGHT'] : array())));

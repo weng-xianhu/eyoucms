@@ -459,7 +459,7 @@
         var seo_startid = $('input[name=seo_startid]').val(); // 文档ID开始
         var seo_endid = $('input[name=seo_endid]').val(); // 文档ID结束
         var seo_pagesize = $('input[name=seo_pagesize]').val(); // 每页生成文件
-        var url = eyou_basefile+"?m=admin&c=Seo&a=article&uphtmltype=1&typeid="+typeid+"&is_buildhtml=1&seo_startid="+seo_startid+"&seo_endid="+seo_endid+"seo_pagesize="+seo_pagesize+"&lang="+__lang__;
+        var url = eyou_basefile+"?m=admin&c=Seo&a=article&uphtmltype=1&typeid="+typeid+"&is_buildhtml=1&seo_startid="+seo_startid+"&seo_endid="+seo_endid+"&seo_pagesize="+seo_pagesize+"&lang="+__lang__;
         var index = layer.open({type: 2,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
     });
 </script>

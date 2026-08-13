@@ -14,7 +14,9 @@
             overflow: hidden;
         }
     </style>
-    <script type="text/javascript" src="bdmap_ak.js"></script>
+    <script type="text/javascript">
+        document.write(unescape("%3Cscript src='bdmap_ak.js?t="+new Date().getTime()+"' type='text/javascript'%3E%3C/script%3E"));
+    </script>
     <script type="text/javascript">
         document.write(unescape("%3Cscript src='https://api.map.baidu.com/api?v=2.0&ak="+bdmap_ak+"' type='text/javascript'%3E%3C/script%3E"));
     </script>

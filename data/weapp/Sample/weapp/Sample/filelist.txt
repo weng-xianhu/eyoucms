@@ -1,0 +1,5 @@
+application/plugins/controller/Sample.php
+application/plugins/logic/SampleLogic.php
+application/plugins/model/Sample.php
+template/plugins/sample
+weapp/Sample

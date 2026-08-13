@@ -204,9 +204,10 @@
 
     });
 
+    var restore_layer_index = null;
+
     $(".db-import").click(function(){
         var url = $(this).attr('data-url');
-        $('#form_tmp').attr('action', url);
         layer.confirm('恢复数据不可逆，确定执行？', {
             shade: layer_shade,
             area: ['480px', '190px'],
@@ -219,14 +220,68 @@
                 $(".layui-layer-content").css('text-align', 'left');
             }
         }, function () {
-            layer_loading('正在处理');
-            $('#form_tmp').submit();
+            layer.closeAll();
+            restore_start(url);
             return false;
         }, function (index) {
             layer.closeAll();
             return false;
         });
     });
+
+    // 分卷断点续传方式还原，避免大文件单次请求超时
+    function restore_start(url)
+    {
+        var html = '<div style="padding:20px 25px;">'
+                 + '<div id="restore_msg">正在初始化...</div>'
+                 + '<div style="margin-top:12px;height:16px;background:#eee;border-radius:8px;overflow:hidden;">'
+                 + '<div id="restore_bar" style="width:0;height:16px;background:#009688;"></div></div>'
+                 + '<div id="restore_rate" style="margin-top:8px;text-align:center;">0%</div></div>';
+        restore_layer_index = layer.open({
+            type: 1,
+            title: '正在还原数据库',
+            closeBtn: 0,
+            shade: layer_shade,
+            area: ['460px', '210px'],
+            move: false,
+            content: html
+        });
+        restore_step(url, {});
+    }
+
+    function restore_step(url, data)
+    {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            timeout: 0,
+            success: function(res){
+                if (!res || res.code != 1) {
+                    layer.close(restore_layer_index);
+                    showErrorMsg((res && res.msg) ? res.msg : '还原失败，请重试！');
+                    return false;
+                }
+                $('#restore_msg').text(res.msg);
+                if (res.rate) {
+                    $('#restore_bar').css('width', res.rate);
+                    $('#restore_rate').text(res.rate);
+                }
+                if (res.data && res.data.done) {
+                    layer.close(restore_layer_index);
+                    showSuccessMsg(res.msg);
+                    setTimeout(function(){ location.href = location.href; }, 1500);
+                    return false;
+                }
+                restore_step(url, {part: res.data.part, offset: res.data.offset});
+            },
+            error: function(){
+                layer.close(restore_layer_index);
+                showErrorMsg('请求中断，还原已暂停，可重新点击恢复继续。');
+            }
+        });
+    }
 </script>
 
 {include file="public/footer" /}

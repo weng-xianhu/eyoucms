@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -29,7 +29,7 @@ class ApiLogic extends Model
         'apiAdv','apiAd','apiFlink','apiGlobal','apiCollect','apiDiscount','apiLikearticle','apiLike','apiForm',
         'apiCommentlist','apiChannellist','apiDownloadpayList','apiSpecnode','apiNavigation','apiUsersTypeManage',
         'apiMediaOrderList','apiMediaOrderDetails','apiPlayList','apiUpgradeLevelOrderList',
-        'apiWeappSeckillList','apiWeappSeckillView','apiCouponList','apiCouponGoodList','apiHotSearch'];
+        'apiWeappSeckillList','apiWeappSeckillView','apiCouponList','apiCouponGoodList','apiHotSearch','apiTagIndex','apiTagList','apiArticleTags'];
 
     /**
      * 析构函数
@@ -228,8 +228,11 @@ class ApiLogic extends Model
                 $code = !empty($parse['code']) ? intval($parse['code']) : '';
                 $is_list = !empty($parse['is_list']) ? intval($parse['is_list']) : 0;
                 $addfields = !empty($parse['addfields']) ? $parse['addfields'] : '';
+                $page = !empty($parse['page']) ? intval($parse['page']) : 1;
+                $pagesize = !empty($parse['pagesize']) ? intval($parse['pagesize']) : 10;
+                $orderby = !empty($parse['orderby']) ? $parse['orderby'] : '';
                 $tagSpecnode = new \think\template\taglib\api\TagSpecnode;
-                $result[$key][$ekey] = $tagSpecnode->getSpecnode($aid,$title, $code,'',$is_list,$addfields);
+                $result[$key][$ekey] = $tagSpecnode->getSpecnode($aid,$title, $code,'',$is_list,$addfields,$page,$pagesize,$orderby);
             }
             else if($key == 'apiNavigation'){  //获取导航列表
                 $position_id = !empty($parse['position_id']) ? intval($parse['position_id']) : null;
@@ -312,6 +315,38 @@ class ApiLogic extends Model
                 $keyword = !empty($parse['keyword']) ? $parse['keyword'] : '';
                 $tagList = new \think\template\taglib\api\TagSearch;
                 $result[$key][$ekey] = $tagList->apiHotSearch($pagesize, $keyword);
+            }else if ($key == 'apiTagIndex') { // 标签索引列表
+                if (!empty($parse['limit'])) {
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? trim($parse['limit']) : 10;
+                } else {
+                    $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
+                }
+                $orderby = !empty($parse['orderby']) ? $parse['orderby'] : 'sort_order asc, id asc';
+                $tagTagIndex = new \think\template\taglib\api\TagTagIndex;
+                $result[$key][$ekey] = $tagTagIndex->getTagIndex($limit, $orderby);
+            }else if ($key == 'apiTagList') { // 根据标签ID获取文章列表
+                $tag_id = !empty($parse['tag_id']) ? intval($parse['tag_id']) : 0;
+                if (!empty($parse['limit'])) {
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? trim($parse['limit']) : 10;
+                } else {
+                    $limit = !empty($parse['row']) ? intval($parse['row']) : 10;
+                }
+                $orderby = !empty($parse['orderby']) ? $parse['orderby'] : 'sort_order asc, aid desc';
+                $tagTagList = new \think\template\taglib\api\TagTagList;
+                $result[$key][$ekey] = $tagTagList->getTagList($tag_id, $limit, $orderby);
+            }else if ($key == 'apiArticleTags') { // 根据文章ID获取关联标签
+                $aid = !empty($parse['aid']) ? intval($parse['aid']) : 0;
+                if (!empty($parse['limit'])) {
+                    $parse['limit'] = preg_replace('/[^\d\,]/i', '', str_replace('，', ',', $parse['limit']));
+                    $limit = !empty($parse['limit']) ? trim($parse['limit']) : 50;
+                } else {
+                    $limit = !empty($parse['row']) ? intval($parse['row']) : 50;
+                }
+                $orderby = !empty($parse['orderby']) ? $parse['orderby'] : 'sort_order asc, id asc';
+                $tagArticleTags = new \think\template\taglib\api\TagArticleTags;
+                $result[$key][$ekey] = $tagArticleTags->getArticleTags($aid, $limit, $orderby);
             }
         }
 

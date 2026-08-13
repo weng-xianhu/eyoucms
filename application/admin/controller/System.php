@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -101,19 +101,24 @@ class System extends Base
 
             // 浏览器地址图标
             if (!empty($param['web_ico']) && !is_http_url($param['web_ico'])) {
-                $source = realpath(preg_replace('#^'.$this->root_dir.'/#i', '', $param['web_ico']));
-                $destination = realpath('favicon.ico');
-                if (empty($destination) || $source == $destination) {
+                $rel_path = ltrim(preg_replace('#^'.$this->root_dir.'/#i', '', $param['web_ico']), '/');
+                $source = realpath('./'.$rel_path);
+                $source_ext = strtolower(pathinfo((string)$source, PATHINFO_EXTENSION));
+                if (!empty($source_ext) && !in_array($source_ext, ['ico', 'png', 'jpg', 'jpeg', 'webp'])) {
+                    $this->error('地址栏图标必须是ico、png、jpg或webp格式的图片');
+                }
+                $dest_abs = './favicon.ico';
+                $destination = file_exists($dest_abs) ? realpath($dest_abs) : null;
+                if (!empty($destination) && $source == $destination) {
                     unset($param['web_ico']);
-                } else {
-                    /*修复copy一句话图片木马漏洞*/
-                    $source_ext = pathinfo($source, PATHINFO_EXTENSION);
-                    if (!empty($source_ext) && !in_array($source_ext, ['ico'])) {
-                        $this->error('地址栏图标必须是扩展名为ico的图片');
+                } else if (!empty($source) && file_exists($source)) {
+                    if ('ico' == $source_ext) {
+                        $result = @copy($source, $dest_abs);
+                    } else {
+                        $result = $this->convertImageToIco($source, $dest_abs);
                     }
-                    /*end*/
-                    if (file_exists($source) && @copy($source, $destination)) {
-                        $param['web_ico'] = $this->root_dir.'/favicon.ico';
+                    if ($result) {
+                        $param['web_ico'] = $this->root_dir . '/favicon.ico';
                     }
                 }
             }
@@ -172,7 +177,7 @@ class System extends Base
         /*--end*/
 
         // 站点状态关闭时，所关闭的终端口(pc、mobile)
-        // $config['web_close_port'] = !empty($config['web_close_port']) ? unserialize($config['web_close_port']) : ['pc', 'mobile'];
+        // $config['web_close_port'] = !empty($config['web_close_port']) ? safe_unserialize($config['web_close_port']) : ['pc', 'mobile'];
 
         $this->assign('config',$config);//当前配置项
         $this->assign('seo_pseudo', tpCache('global.seo_pseudo')); // URL模式
@@ -557,9 +562,16 @@ class System extends Base
 
             // 编辑器选项配置
             if (!empty($param['editor_select'])) {
+                if (1.5 == $param['editor_select']) {
+                    $editor_bd_style = '_default';
+                } else {
+                    $editor_bd_style = '';
+                }
                 $editor_arr = [
-                    'editor_select' => $param['editor_select'],
-                    'editor_bdmap_ak' => $param['editor_bdmap_ak'],
+                    'editor_select' => intval($param['editor_select']),
+                    'editor_bd_style' => $editor_bd_style,
+                    'editor_bdmap_ak' => empty($param['editor_bdmap_ak']) ? '' : $param['editor_bdmap_ak'],
+                    'editor_gmap_ak' => empty($param['editor_gmap_ak']) ? '' : $param['editor_gmap_ak'],
                     'editor_remote_img_local' => $param['editor_remote_img_local'],
                     'editor_img_clear_link' => $param['editor_img_clear_link'],
                 ];
@@ -570,12 +582,18 @@ class System extends Base
                         ->select();
                     foreach ($langRow as $key => $val) {
                         tpSetting('editor', $editor_arr, $val['mark']);
+                        tpCache('editor', ['editor_bd_style'=>$editor_bd_style], $val['mark']);
                     }
                 } else {
                     tpSetting('editor',$editor_arr);
+                    tpCache('editor', ['editor_bd_style'=>$editor_bd_style]);
                 }
+                $bd_style_js =  ROOT_PATH.'public/plugins/Ueditor/ueditor.style.js';
+                file_put_contents($bd_style_js,"var editor_bd_style = '".$editor_bd_style."';");
                 $bdmap_ak_js =  ROOT_PATH.'public/plugins/Ueditor/dialogs/map/bdmap_ak.js';
                 file_put_contents($bdmap_ak_js,"var bdmap_ak = '{$editor_arr['editor_bdmap_ak']}';");
+                $gmap_ak_js =  ROOT_PATH.'public/plugins/Ueditor/dialogs/gmap/gmap_ak.js';
+                file_put_contents($gmap_ak_js,"var gmap_ak = '{$editor_arr['editor_gmap_ak']}';");
             }
 
             $this->success('操作成功', url('System/basic'));
@@ -724,7 +742,7 @@ class System extends Base
             $param = input('post.');
             $tabase = input('post.tabase/d');
             unset($param['tabase']);
-            if (is_http_url($param['mark_img'])){
+            if ('img' == $param['mark_type'] && is_http_url($param['mark_img'])){
                 $this->error('仅支持本地图片');
 //                if (preg_match('/^\/\//i',$param['mark_img'])){
 //                    $param['mark_img'] = request()->scheme().':'.$param['mark_img'];
@@ -858,7 +876,7 @@ class System extends Base
         /*支付接口*/
         $pay_api_list = Db::name('pay_api_config')->where('status', 1)->order('pay_id asc')->select();
         foreach ($pay_api_list as $key => $val) {
-            $val['pay_info'] = !empty($val['pay_info']) ? unserialize($val['pay_info']) : [];
+            $val['pay_info'] = !empty($val['pay_info']) ? safe_unserialize($val['pay_info']) : [];
             if (1 === intval($val['system_built'])) {
                 $val['litpic'] = $this->root_dir . "/public/static/admin/images/{$val['pay_mark']}.png";
             } else {
@@ -1185,7 +1203,7 @@ class System extends Base
         }
 
         /*微站点配置*/
-        $login = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $login = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
         $this->assign('login', $login);
         /* END */
 
@@ -1239,6 +1257,53 @@ class System extends Base
 
         $this->assign('row',$row);
         return $this->fetch();
+    }
+
+    /**
+     * 将png/jpg/webp等图片转换为ico格式（内嵌PNG的ICO，兼容现代浏览器）
+     * @param string $source 源图片绝对路径
+     * @param string $dest 目标ico文件路径
+     * @return bool
+     */
+    private function convertImageToIco($source, $dest)
+    {
+        if (!function_exists('imagecreatefromstring')) {
+            return @copy($source, $dest);
+        }
+        $data = @file_get_contents($source);
+        if (empty($data)) {
+            return false;
+        }
+        $im = @imagecreatefromstring($data);
+        if (!$im) {
+            return @copy($source, $dest);
+        }
+        $w = imagesx($im);
+        $h = imagesy($im);
+        $images = [];
+        foreach ([16, 32, 48] as $size) {
+            $canvas = imagecreatetruecolor($size, $size);
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefilledrectangle($canvas, 0, 0, $size, $size, $transparent);
+            imagecopyresampled($canvas, $im, 0, 0, 0, 0, $size, $size, $w, $h);
+            ob_start();
+            imagepng($canvas);
+            $images[$size] = ob_get_clean();
+            imagedestroy($canvas);
+        }
+        imagedestroy($im);
+        $count = count($images);
+        $ico = pack('vvv', 0, 1, $count);
+        $offset = 6 + 16 * $count;
+        $body = '';
+        foreach ($images as $size => $png) {
+            $ico .= pack('CCCCvvVV', $size >= 256 ? 0 : $size, $size >= 256 ? 0 : $size, 0, 0, 1, 32, strlen($png), $offset);
+            $offset += strlen($png);
+            $body .= $png;
+        }
+        return false !== @file_put_contents($dest, $ico . $body);
     }
 
     /**
@@ -1582,8 +1647,30 @@ class System extends Base
             $this->error('管理员邮箱格式不正确');
         }
 
-        $title = '演示标题';
-        $content = '演示一串随机数字：' . mt_rand(1000,9999);
+        $title = '邮箱配置测试';
+        $code = mt_rand(1000,9999);
+        $web_name = tpCache('web.web_name') ?: '网站';
+        $year = date('Y');
+
+        // 美化测试邮件模板
+        $content = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Microsoft YaHei,Arial;">
+<table width="100%" style="background:#f5f5f5;padding:30px 0;"><tr><td align="center">
+<table width="600" style="background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+<tr><td style="background:linear-gradient(135deg,#667eea,#764ba2);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+<h1 style="color:#fff;margin:0;font-size:24px;">邮箱配置测试</h1></td></tr>
+<tr><td style="padding:40px 30px;color:#333;font-size:14px;line-height:1.8;">
+<p style="margin-bottom:20px;">您好，管理员：</p>
+<p>这是一封测试邮件，用于验证您的邮箱配置是否正确。</p>
+<div style="text-align:center;margin:30px 0;">
+<div style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:32px;font-weight:bold;letter-spacing:8px;padding:15px 40px;border-radius:8px;">'.$code.'</div>
+</div>
+<p style="color:#999;font-size:12px;">如果您收到此邮件，说明邮箱配置成功。</p>
+</td></tr>
+<tr><td style="background:#f8f9fa;padding:20px;border-radius:0 0 8px 8px;border-top:1px solid #eee;text-align:center;color:#999;font-size:12px;">
+&copy;'.$year.' '.$web_name.' 版权所有</td></tr>
+</table></td></tr></table></body></html>';
+
         $res = send_email($smtp_from_eamil, $title, $content, 0, $smtp_config);
         if (intval($res['code']) == 1) {
             unset($smtp_config['tpl_id']);
@@ -1785,7 +1872,7 @@ class System extends Base
             ->where([
                 'b.is_del'  => 0,
             ])
-            ->order('a.attr_id asc')
+            ->order('a.sort_order asc, a.attr_id asc')
             ->limit($pageObj->firstRow.','.$pageObj->listRows)
             ->select();
         $config_type = Db::name('config_type')->field('id, type_name')->order('sort_order asc')->getAllWithIndex('id');
@@ -1845,6 +1932,7 @@ class System extends Base
                         'type_id'=>$post['type_id'],
                         'attr_name'=>$post['attr_name'],
                         'attr_input_type'=>$post['attr_input_type'],
+                        'sort_order' => intval($post['sort_order']),
                         'update_time'=>getTime(),
                     ]);
                 $c = tpCache('web', [$post['attr_var_name']=>$post['attr_value']]);
@@ -1884,6 +1972,7 @@ class System extends Base
                     $attr_value = isset($post['attr_value'][$key]) ? $post['attr_value'][$key] : '';
                     $attr_var_name = isset($post['attr_var_name'][$key]) ? $post['attr_var_name'][$key] : '';
                     $type_id = isset($post['attr_type_id'][$key]) ? $post['attr_type_id'][$key] : '';
+                    $sort_order = intval($post['sort_order'][$key]);
                     if (empty($post['attr_id'][$key])) {
                         if ($this->admin_lang == $this->main_lang) {
                             $addData[] = [
@@ -1893,6 +1982,7 @@ class System extends Base
                                 'attr_value' => $attr_value,
                                 'type_id' => $type_id,
                                 'lang' => $this->admin_lang,
+                                'sort_order' => $sort_order,
                                 'add_time' => getTime(),
                                 'update_time' => getTime(),
                             ];
@@ -1908,6 +1998,7 @@ class System extends Base
                             'attr_value' => $attr_value,
                             'type_id' => $type_id,
                             'lang' => $this->admin_lang,
+                            'sort_order' => $sort_order,
                             'update_time' => getTime(),
                         ];
                     }
@@ -2098,11 +2189,12 @@ $msg = <<<EOF
 {$space}thumb_img=###,宽度,高度,生成方式<br/>
 <br/>
 【指定宽高度的调用】<br/>
-{$space}列表页/内容页：{\$eyou.field.litpic|thumb_img=###,500,500<br/>
-{$space}标签arclist/list里：{\$field.litpic|thumb_img=###,500,500<br/>
+{$space}列表页/内容页：{\$eyou.field.litpic|thumb_img=###,500,500}<br/>
+{$space}标签arclist/list里：{\$field.litpic|thumb_img=###,500,500}<br/>
 <br/>
 【指定生成方式的调用】<br/>
 {$space}生成方式：1 = 拉伸；2 = 留白；3 = 截减；<br/>
+{$space}<span style="color:red">注意：模板标签里改动了生成方式，一定要清空缩略图目录（/uploads/thumb/）才会生效</span><br/>
 {$space}以标签arclist为例：<br/>
 {$space}缩略图拉伸：{\$field.litpic|thumb_img=###,500,500,1}<br/>
 {$space}缩略图留白：{\$field.litpic|thumb_img=###,500,500,2}<br/>
@@ -2215,4 +2307,90 @@ EOF;
             tpSetting('system', ['system_never_again_prompt' => $neverAgainPrompt]);
         }
     }
+
+    // 检测是否支持 utf8mb4 编码
+    public function checkSupportUtf8mb4()
+    {
+        if (IS_AJAX_POST) {
+            // 查询是否已执行过 [一键支持特殊字符]
+            $specialCharIndex_1752204109 = tpSetting('syn.admin_system_specialCharIndex_1752204109');
+            if (!empty($specialCharIndex_1752204109)) $this->error('已处理过，不需要再次处理');
+
+            // 检测版本是否支持 utf8mb4 编码
+            $mysqlinfo = Db::query("SELECT VERSION() as version");
+            $mysql_version = isset($mysqlinfo[0]['version']) ? trim($mysqlinfo[0]['version']) : '';
+            if (trim($mysql_version) < trim('5.5.3')) $this->error('当前MySQL数据库版本低于5.5.3，不支持utf8mb4编码，请先升级MySQL版本，建议版本5.7.26');
+
+            // 检测字符集是否支持 utf8mb4 编码
+            $result = Db::query("SHOW CHARACTER SET LIKE 'utf8mb4'");
+            if (empty($result[0]['Charset']) || 'utf8mb4' !== trim($result[0]['Charset'])) $this->error('当前MySQL数据库不支持utf8mb4编码');
+
+            // 成功返回
+            $this->success('检测成功', url('System/specialCharIndex'));
+        }
+    }
+
+    public function specialCharIndex()
+    {
+        if (IS_AJAX_POST) {            
+            $Prefix = config('database.prefix');
+            // 文档附表
+            $allow_release_channel = config('global.allow_release_channel');
+            $channeltype_list = Db::name('channeltype')->where(['id'=>['IN',$allow_release_channel]])->order('id asc')->select();
+
+            //读取数据库配置文件，替换数据库编码
+            $databaseConfig = @file_get_contents(APP_PATH . 'database.php');
+            if (empty($databaseConfig)) {
+                $this->error("可能存在以下问题：<br/>1.检查 application/database.php 的权限是否为755<br/>2.检查php环境是否支持file_get_contents函数");
+            }
+            $databaseConfig = str_ireplace(["'utf8'",'"utf8"'], "'utf8mb4'", $databaseConfig);           
+            @chmod(APP_PATH . 'database.php', 0755); //配置文件的地址
+            $rd = @file_put_contents(APP_PATH . 'database.php', $databaseConfig); //配置文件的地址
+
+            $r = true;
+            // 达梦、人大金仓数据库不支持 MODIFY COLUMN 和 utf8mb4 字符集
+            if (!in_array(config('database.type'), array('dm', 'kingbase'))) {
+                // 文档主表
+                $sql = "ALTER TABLE `{$Prefix}archives` MODIFY COLUMN `title`  varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '标题';";
+                $r = @Db::execute($sql);
+                $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}archives");
+                $tableInfo = get_arr_column($tableInfo, 'Field');
+                if (!empty($tableInfo) && in_array('subtitle', $tableInfo)) {
+                    $sql = "ALTER TABLE `{$Prefix}archives` MODIFY COLUMN `subtitle`  varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '副标题';";
+                    $r = @Db::execute($sql);
+                }
+
+                // 文档附表
+                foreach ($channeltype_list as $key => $val) {
+                    $table = $val['table'];
+                    if ('ask' == $table) {
+                        continue;
+                    }
+                    $tableInfo = Db::query("SHOW COLUMNS FROM {$Prefix}{$table}_content");
+                    $tableInfo = get_arr_column($tableInfo, 'Field');
+                    if (!empty($tableInfo)) {
+                        if (in_array('content', $tableInfo)) {
+                            $sql = "ALTER TABLE `{$Prefix}{$table}_content` MODIFY COLUMN `content`  longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '内容详情';";
+                            $r = @Db::execute($sql);
+                        }
+                        if (in_array('content_ey_m', $tableInfo)){
+                            $sql = "ALTER TABLE `{$Prefix}{$table}_content` MODIFY COLUMN `content_ey_m`  longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '手机端内容详情';";
+                            $r = @Db::execute($sql);
+                        }
+                    }
+                }
+            }
+
+            if ($r !== false) {
+                if ($rd === false) {
+                    $this->success('数据表处理完成，数据库文件修改失败<br/>请<a href="https://www.eyoucms.com/uploads/system/20210615/20230320173508.png" target="_blank" style="color:red;">查看教程</a>修改文件 application/database.php ');
+                }
+                // 记录已操作完成
+                tpSetting('syn', ['admin_system_specialCharIndex_1752204109' => 1], 'cn');
+                $this->success('操作成功');
+            }
+            $this->error('操作失败');
+        }
+    }
+
 }

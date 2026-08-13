@@ -72,12 +72,16 @@ class WeappLogic extends Model
             /*--end*/
             $new_arr[] = $code;
             // 对比数据库 本地有 数据库没有
+            $sort_order = 100;
+            if ('Linkkeyword' == $code) {
+                $sort_order = 5;
+            }
             $data = array(
                 'code'          => $code,
                 'name'          => isset($v['name']) ? $v['name'] : '配置信息不完善',
                 'config'        => empty($v) ? '' : json_encode($v),
                 'position'      => isset($v['position']) ? $v['position'] : 'default',
-                'sort_order'    => 100,
+                'sort_order'    => $sort_order,
             );
             if(empty($row[$code])){ // 新增插件
                 $data['add_time'] = getTime();
@@ -255,6 +259,7 @@ class WeappLogic extends Model
     public function checkBatchVersion($upgradeArr) 
     {
         $result = array();
+        \think\Db::name('weapp')->where(['is_valid'=>0])->update(['is_valid'=>1]);
         if (is_array($upgradeArr) && !empty($upgradeArr)) {
             $langRow = \think\Db::name('language')->order('id asc')->select();
             foreach ($upgradeArr as $key => $upgrade) {
@@ -262,11 +267,26 @@ class WeappLogic extends Model
                     foreach ($langRow as $_k => $_v) {
                         tpCache('system', ['system_usecodelist'=>$upgradeArr['Sample']], $_v['mark']);
                     }
+                    if (!empty($upgradeArr['Sample'])) {
+                        $list = json_decode(mchStrCode($upgradeArr['Sample'], 'DECODE', 'xhg'), true);
+                        if (is_array($list) && !empty($list)) {
+                            $codes = [];
+                            foreach ($list as $_k => $_v) {
+                                if (strlen($_v) < 100) {
+                                    $codes[] = $_v;
+                                }
+                            }
+                            if (!empty($codes)) {
+                                \think\Db::name('weapp')->where(['code'=>['IN', $codes]])->update(['is_valid'=>0]);
+                            }
+                        }
+                    }
                 } else {
                     $result[$key] = $this->checkVersion($key, $upgrade);
                 }
             }
         }
+        \think\Cache::clear('weapp');
         return $result;
     }
 
@@ -360,7 +380,7 @@ class WeappLogic extends Model
             /*--end*/
 
             if(!file_exists($this->data_path.'backup'.DS.$folderName.DS.'www'.DS.'weapp'.DS.$code.DS.'config.php')) {
-                return ['code' => 0, 'msg' => $code."插件目录缺少config.php文件,请联系客服"];
+                return ['code' => 0, 'msg' => $code."解压失败，请检查所有目录是否有读写权限"];
             }
 
             /*更新的文件列表*/
@@ -414,10 +434,8 @@ class WeappLogic extends Model
                  */
                 try {
                     $counts = count($sqlFormat);
-
                     for ($i = 0; $i < $counts; $i++) {
                         $sql = trim($sqlFormat[$i]);
-
                         if (stristr($sql, 'CREATE TABLE')) {
                             Db::execute($sql);
                         } else {
@@ -427,8 +445,36 @@ class WeappLogic extends Model
                         }
                     }
                 } catch (\Exception $e) {
-                    return ['code' => 0, 'msg' => "数据库执行中途失败，请第一时间请求技术支持，否则将影响该插件后续的版本升级！"];
+                    return ['code' => 0, 'msg' => "数据库执行中途失败，将影响该插件后续的版本升级！"];
                 }
+/*
+                $error_sql = [];
+                $counts = count($sqlFormat);
+                for ($i = 0; $i < $counts; $i++) {
+                    $sql = trim($sqlFormat[$i]);
+                    if (stristr($sql, 'CREATE TABLE')) {
+                        try{
+                            $r = @Db::execute($sql);
+                        }catch(\Exception $e){
+                            if (stristr($e->getMessage(), 'Storage engine MyISAM is disabled')) {
+                                $sql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $sql);
+                                $r = @Db::execute($sql);
+                            }
+                        }
+                        if ($r === false) {
+                            $error_sql[] = $sql;
+                            break;
+                        }
+                    } else {
+                        if(trim($sql) == '')
+                           continue;
+                        Db::execute($sql);
+                    }
+                }
+                if (!empty($error_sql)) {
+                    $this->error("数据库执行中途失败，请查看官方解决教程，否则将影响后续的版本升级！");
+                }
+*/
             }
         }
         /*--end*/
@@ -565,7 +611,7 @@ class WeappLogic extends Model
 
         $constsant_path = APP_PATH.MODULE_NAME.'/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");

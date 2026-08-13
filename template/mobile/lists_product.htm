@@ -58,13 +58,13 @@
         </div>
 
         <div class="layout bg-gray">
-            <!-- 筛选功能 begin -->
             <div class="blank"></div>
+            {eyou:screening id='field' currentstyle='active' }
+            <!-- 筛选功能 begin -->
             <div class="container-layout">
                 <div class="line">
                     <div class="filter-box bg-white">
                         <div class="padding-big">
-                            {eyou:screening id='field' currentstyle='active' }
                             {eyou:volist name='$field.list' id='vo'}
                             <dl class="clearfix">
                                 <dt class="text-main">{$vo.title}：</dt>
@@ -79,13 +79,13 @@
                                 </dd>
                             </dl>
                             {/eyou:volist}
-                            {$field.hidden}
-                            {/eyou:screening}
                         </div>
                     </div>
                 </div>
             </div>
             <!-- 筛选功能 end -->
+            {$field.hidden}
+            {/eyou:screening}
             <div class="blank"></div>
             <div class="container-layout">
                 <div class="line-big">

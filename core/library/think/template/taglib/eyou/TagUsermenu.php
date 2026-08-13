@@ -103,7 +103,12 @@ class TagUsermenu extends Base
         foreach ($menuRow as $key => $val) {
             if (7 != $val['type']){
                 $val['url'] = url($val['mca']);
-                if ($val['active_url']) $val['active_url'] = explode('|', $val['active_url']);
+
+                if (!empty($val['active_url'])) {
+                    $val['active_url'] = explode('|', $val['active_url']);
+                } else {
+                    $val['active_url'] = [];
+                }
 
                 if (in_array(MODULE_NAME.'/'.CONTROLLER_NAME.'/'.ACTION_NAME,$val['active_url'])) {
                     $val['currentclass'] = $val['currentstyle'] = $currentclass;

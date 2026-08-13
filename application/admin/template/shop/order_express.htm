@@ -27,6 +27,17 @@
                 </div>
             </form>
         </div>
+        <div class="mDiv">
+            <div class="ftitle">
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="addExpress();">
+                        <div class="add">
+                            <span><i class="layui-icon layui-icon-addition"></i>添加快递公司</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
@@ -47,17 +58,14 @@
                             <th abbr="article_time" axis="col6" class="w150">
                                 <div class="tc">快递标识</div>
                             </th>
-                            {eq name="$select" value="1"}
                             <th axis="col1" class="w80">
                                 <div class="tc">选中</div>
                             </th>
-                            {else/}
-                            <th axis="col1" class="w80">
-                                <div class="tc">操作</div>
-                            </th>
-                            {/eq}
                             <th axis="col1" class="w80">
                                 <div class="tc">排序</div>
+                            </th>
+                            <th axis="col1" class="w80">
+                                <div class="tc">操作</div>
                             </th>
                         </tr>
                     </thead>
@@ -88,7 +96,6 @@
                             <td class="">
                                 <div class="w150 tc">{$vo.express_code}</div>
                             </td>
-                            {eq name="$select" value="1"}
                             <td>
                                 <div class="w80 tc">
                                     {if condition="$vo['is_choose'] eq 1"}
@@ -98,18 +105,25 @@
                                     {/if}
                                 </div>
                             </td>
-                            {else/}
+                            
+                            
+                            <td>
+                                <div class="w80 tc">
+                                    <input class="tc" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('shop_express','express_id','{$vo.express_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                </div>
+                            </td>
                             <td>
                                 <div class="w80 tc">
                                     <input type="hidden" id="express_name_{$vo.express_id}" value="{$vo.express_name}" />
                                     <input type="hidden" id="express_code_{$vo.express_id}" value="{$vo.express_code}" />
-                                    <a class="btn blue" href="javascript:void(0);" onClick="parent.express(this, {$vo.express_id});"><i class="fa fa-location-arrow"></i>选择</a>
-                                </div>
-                            </td>
-                            {/eq}
-                            <td>
-                                <div class="w80 tc">
-                                    <input class="tc" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onchange="changeTableVal('shop_express','express_id','{$vo.express_id}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    
+                                {eq name="$select" value="1"}
+                                    <a class="btn" href="javascript:void(0);" onClick="editExpress({$vo.express_id});"><i class="fa fa-edit"></i>编辑</a>
+                                    <a class="btn red" href="javascript:void(0);" onClick="deleteExpress({$vo.express_id});"><i class="fa fa-trash"></i>删除</a>
+                                {else /}
+                                    <a class="btn" href="javascript:void(0);" onClick="editExpress({$vo.express_id});"><i class="fa fa-edit"></i>编辑</a>
+                                    <a class="btn red" href="javascript:void(0);" onClick="deleteExpress({$vo.express_id});"><i class="fa fa-trash"></i>删除</a>
+                                    {/eq}
                                 </div>
                             </td>
                         </tr>
@@ -138,6 +152,150 @@
             location.href = location.href;
         });
     });
+
+    // 添加快递公司
+    function addExpress() {
+        layer.open({
+            type: 1,
+            title: '添加快递公司',
+            area: ['550px', '450px'],
+            content: '<div style="padding:30px 20px;"><form id="expressForm">' +
+                '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                    '<label style="width:90px;text-align:right;margin-right:10px;"><span style="color:red;">*</span> 快递名称：</label>' +
+                    '<input type="text" name="express_name" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" placeholder="请输入快递名称" required />' +
+                '</div>' +
+                '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                    '<label style="width:90px;text-align:right;margin-right:10px;"><span style="color:red;">*</span> 快递编码：</label>' +
+                    '<input type="text" name="express_code" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" placeholder="请输入快递编码" required />' +
+                '</div>' +
+                '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                    '<label style="width:90px;text-align:right;margin-right:10px;">首字母：</label>' +
+                    '<input type="text" name="express_lnitials" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" placeholder="选填，如：SF" />' +
+                '</div>' +
+                '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                    '<label style="width:90px;text-align:right;margin-right:10px;">微信编码：</label>' +
+                    '<input type="text" name="wx_delivery_id" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" placeholder="选填" />' +
+                '</div>' +
+                '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                    '<label style="width:90px;text-align:right;margin-right:10px;">排序：</label>' +
+                    '<input type="text" name="sort_order" style="width:100px;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;text-align:center;" value="0" onkeyup="this.value=this.value.replace(/[^\\d]/g,\'\');" onpaste="this.value=this.value.replace(/[^\\d]/g,\'\');" />' +
+                    '<span style="margin-left:10px;color:#999;font-size:12px;">数值越小越靠前</span>' +
+                '</div>' +
+                '</form></div>',
+            btn: ['确定', '取消'],
+            yes: function(index) {
+                var formData = $('#expressForm').serialize();
+                $.ajax({
+                    url: "{:url('Shop/express_save')}",
+                    data: formData + '&_ajax=1',
+                    type: 'post',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code == 1) {
+                            layer.msg(res.msg, {time: 1500}, function() {
+                                layer.close(index);
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.msg(res.msg, {time: 2000});
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // 编辑快递公司
+    function editExpress(express_id) {
+        $.ajax({
+            url: "{:url('Shop/express_edit')}",
+            data: {express_id: express_id, _ajax: 1},
+            type: 'post',
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    var data = res.data;
+                    layer.open({
+                        type: 1,
+                        title: '编辑快递公司',
+                        area: ['550px', '450px'],
+                        content: '<div style="padding:30px 20px;"><form id="expressEditForm">' +
+                            '<input type="hidden" name="express_id" value="' + data.express_id + '" />' +
+                            '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                                '<label style="width:90px;text-align:right;margin-right:10px;"><span style="color:red;">*</span> 快递名称：</label>' +
+                                '<input type="text" name="express_name" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" value="' + data.express_name + '" required />' +
+                            '</div>' +
+                            '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                                '<label style="width:90px;text-align:right;margin-right:10px;"><span style="color:red;">*</span> 快递编码：</label>' +
+                                '<input type="text" name="express_code" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" value="' + data.express_code + '" required />' +
+                            '</div>' +
+                            '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                                '<label style="width:90px;text-align:right;margin-right:10px;">首字母：</label>' +
+                                '<input type="text" name="express_lnitials" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" value="' + data.express_lnitials + '" />' +
+                            '</div>' +
+                            '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                                '<label style="width:90px;text-align:right;margin-right:10px;">微信编码：</label>' +
+                                '<input type="text" name="wx_delivery_id" style="flex:1;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;" value="' + data.wx_delivery_id + '" />' +
+                            '</div>' +
+                            '<div style="margin-bottom:20px;display:flex;align-items:center;">' +
+                                '<label style="width:90px;text-align:right;margin-right:10px;">排序：</label>' +
+                                '<input type="text" name="sort_order" style="width:100px;height:32px;line-height:32px;padding:0 10px;border:1px solid #ddd;border-radius:3px;text-align:center;" value="' + data.sort_order + '" onkeyup="this.value=this.value.replace(/[^\\d]/g,\'\');" onpaste="this.value=this.value.replace(/[^\\d]/g,\'\');" />' +
+                                '<span style="margin-left:10px;color:#999;font-size:12px;">数值越小越靠前</span>' +
+                            '</div>' +
+                            '</form></div>',
+                        btn: ['确定', '取消'],
+                        yes: function(index) {
+                            var formData = $('#expressEditForm').serialize();
+                            $.ajax({
+                                url: "{:url('Shop/express_save')}",
+                                data: formData + '&_ajax=1',
+                                type: 'post',
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code == 1) {
+                                        layer.msg(res.msg, {time: 1500}, function() {
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.msg(res.msg, {time: 2000});
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    layer.msg(res.msg, {time: 2000});
+                }
+            }
+        });
+    }
+
+    // 删除快递公司
+    function deleteExpress(express_id) {
+        layer.confirm('确定要删除该快递公司吗？', {
+            shade: layer_shade,
+            title: '提示',
+            btn: ['确定', '取消']
+        }, function(index) {
+            $.ajax({
+                url: "{:url('Shop/express_delete')}",
+                data: {express_id: express_id, _ajax: 1},
+                type: 'post',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code == 1) {
+                        layer.msg(res.msg, {time: 1500}, function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        layer.msg(res.msg, {time: 2000});
+                    }
+                }
+            });
+            layer.close(index);
+        });
+    }
 
     // 全部选中/全部取消
     function allSelect(is_choose) {

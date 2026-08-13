@@ -175,9 +175,24 @@ class SmsLogic extends Model
             }
             if (!empty($resp['status']) && $resp['status'] == 1) {
                 try{
-                    !empty($smsData) && Db::name('sms_log')->insertAll($smsData);
-                }catch (\Exception $e){
-                }
+                    if (!empty($smsData)) {
+                        $rdata = model('SmsLog')->saveAll($smsData);
+                        if ($rdata !== false) {
+                            if (30 == $source) {
+                                foreach ($rdata as $k1 => $v1) {
+                                    $id_new = $v1->getData('id');
+                                    $mobile_new = $v1->getData('mobile');
+                                    $where = [
+                                        'source' => $source,
+                                        'mobile' => $mobile_new,
+                                        'id' => ['NEQ', $id_new],
+                                    ];
+                                    Db::name('sms_log')->where($where)->update(['is_use'=>1]);
+                                }
+                            }
+                        }
+                    }
+                }catch (\Exception $e){}
                 // 修改发送状态为成功
                 Db::name('sms_log')->where(['mobile'=>['IN', $sender_arr], 'update_time'=>$time])->save(['status'=>1, 'update_time'=>getTime()]);
                 // 只保留最近1小时没使用的短信日志
@@ -186,13 +201,28 @@ class SmsLogic extends Model
                     Db::name('sms_log')->where([
                         'update_time'  => ['lt', $mtime],
                         'status' => 1,
-                        ])->delete();
+                        ])->delete(true);
                 } catch (\Exception $e) {}
             } else {
                 try{
-                    !empty($smsData) && Db::name('sms_log')->insertAll($smsData);
-                }catch (\Exception $e){
-                }
+                    if (!empty($smsData)) {
+                        $rdata = model('SmsLog')->saveAll($smsData);
+                        if ($rdata !== false) {
+                            if (30 == $source) {
+                                foreach ($rdata as $k1 => $v1) {
+                                    $id_new = $v1->getData('id');
+                                    $mobile_new = $v1->getData('mobile');
+                                    $where = [
+                                        'source' => $source,
+                                        'mobile' => $mobile_new,
+                                        'id' => ['NEQ', $id_new],
+                                    ];
+                                    Db::name('sms_log')->where($where)->update(['is_use'=>1]);
+                                }
+                            }
+                        }
+                    }
+                }catch (\Exception $e){}
                 // 发送失败, 将发送失败信息保存数据库
                 Db::name('sms_log')->where(['mobile'=>['IN', $sender_arr], 'update_time'=>$time])->update(['error_msg'=>$resp['msg'], 'update_time'=>getTime()]);
                 // 删除发送失败的记录
@@ -201,7 +231,7 @@ class SmsLogic extends Model
                     Db::name('sms_log')->where([
                         'update_time'  => ['lt', $mtime],
                         'status' => 0,
-                        ])->delete();
+                        ])->delete(true);
                 } catch (\Exception $e) {}
             }
             return $resp;
@@ -287,14 +317,57 @@ class SmsLogic extends Model
         //$request->setOutId("1234");
         
         //发起访问请求
-        $resp = $acsClient->getAcsResponse($request);
+        try {
+            $resp = $acsClient->getAcsResponse($request);
+        } catch (\Exception $e) {
+            $errCode = method_exists($e, 'getErrorCode') ? $e->getErrorCode() : '';
+            return array('status' => -1, 'msg' => $this->aliyunSmsErrorMsg($errCode, $e->getMessage()));
+        }
         
         //短信发送成功返回True，失败返回false
         if ($resp && $resp->Code == 'OK') {
             return array('status' => 1, 'msg' => $resp->Code);
         } else {
-            return array('status' => -1, 'msg' => $resp->Message . '. Code: ' . $resp->Code);
+            return array('status' => -1, 'msg' => $this->aliyunSmsErrorMsg($resp->Code, $resp->Message));
         }
+    }
+
+    /**
+     * 将阿里云短信错误码转换为易懂的中文提示
+     * @param string $code 阿里云返回的错误码
+     * @param string $message 阿里云返回的原始错误信息
+     * @return string 中文提示
+     */
+    private function aliyunSmsErrorMsg($code, $message = '')
+    {
+        $map = array(
+            'InvalidAccessKeyId.NotFound'      => 'AccessKey ID 不存在，请检查【平台appkey】是否填写正确，或该密钥是否已被删除/禁用',
+            'InvalidAccessKeyId'               => 'AccessKey ID 无效，请检查【平台appkey】是否填写正确',
+            'SignatureDoesNotMatch'            => 'AccessKey Secret 不正确，请检查【平台secretKey】是否填写正确',
+            'isv.SMS_SIGNATURE_ILLEGAL'        => '短信签名不合法或未审核通过，请检查短信模板中的签名设置',
+            'isv.SMS_TEMPLATE_ILLEGAL'         => '短信模板不存在或未审核通过，请检查模板Code是否正确',
+            'isv.ACCOUNT_NOT_EXISTS'           => '阿里云短信账户不存在，请确认已开通短信服务',
+            'isv.ACCOUNT_ABNORMAL'             => '阿里云短信账户异常，请登录阿里云控制台查看',
+            'isv.AMOUNT_NOT_ENOUGH'            => '阿里云账户余额不足，请充值后重试',
+            'isv.OUT_OF_SERVICE'               => '短信服务已停机（余额不足），请充值后重试',
+            'isv.BUSINESS_LIMIT_CONTROL'       => '发送频率超限，请稍后再试',
+            'isv.MOBILE_NUMBER_ILLEGAL'        => '手机号码格式错误，请检查接收号码',
+            'isv.DAY_LIMIT_CONTROL'            => '当日发送量已达上限，请明天再试',
+            'isv.TEMPLATE_MISSING_PARAMETERS'  => '短信模板变量缺失，请检查模板内容与变量设置',
+            'isv.INVALID_PARAMETERS'           => '参数异常，请检查签名、模板和变量设置',
+            'isp.RAM_PERMISSION_DENY'          => '该 AccessKey 没有短信发送权限，请在阿里云 RAM 中授权 AliyunDysmsFullAccess',
+            'Forbidden.AccessKeyDisabled'      => 'AccessKey 已被禁用，请到阿里云控制台启用或更换密钥',
+        );
+        if (!empty($code) && isset($map[$code])) {
+            return $map[$code] . '（错误码：' . $code . '）';
+        }
+        if (empty($message) && !empty($code)) {
+            return '短信发送失败（错误码：' . $code . '）';
+        }
+        if (strpos($message, 'Specified access key is not found') !== false) {
+            return 'AccessKey ID 不存在，请检查【平台appkey】是否填写正确，或该密钥是否已被删除/禁用（错误码：InvalidAccessKeyId.NotFound）';
+        }
+        return '短信发送失败：' . $message . (!empty($code) ? '（错误码：' . $code . '）' : '');
     }
 
     /**
@@ -336,7 +409,33 @@ class SmsLogic extends Model
         if ($resp && $resp['errmsg'] == 'OK') {
             return array('status' => 1, 'msg' => $resp['errmsg']);
         } else {
-            return array('status' => -1, 'msg' => $resp['errmsg']);
+            return array('status' => -1, 'msg' => $this->tencentSmsErrorMsg($resp['errmsg']));
         }
+    }
+
+    /**
+     * 将腾讯云短信错误信息转换为易懂的中文提示
+     * @param string $errmsg 腾讯云返回的原始错误信息
+     * @return string 中文提示
+     */
+    private function tencentSmsErrorMsg($errmsg)
+    {
+        $errmsg = (string)$errmsg;
+        $map = array(
+            'sdkappid'                 => 'SDK AppID 不正确，请检查【平台appid】是否填写正确',
+            'sig'                      => 'App Key 验证失败，请检查【平台appkey】是否填写正确',
+            'template'                 => '短信模板不存在、未审核通过或变量不匹配，请检查模板ID与模板内容',
+            'sign'                     => '短信签名不合法或未审核通过，请检查签名设置',
+            'tel format error'         => '手机号码格式错误，请检查接收号码',
+            'fee not enough'           => '腾讯云短信套餐包余量不足，请充值后重试',
+            'over frequency limit'     => '发送频率超限，请稍后再试',
+            'timeout'                  => '请求腾讯云接口超时，请稍后重试',
+        );
+        foreach ($map as $key => $val) {
+            if (stripos($errmsg, $key) !== false) {
+                return $val . '（原始信息：' . $errmsg . '）';
+            }
+        }
+        return '短信发送失败：' . $errmsg;
     }
 } 

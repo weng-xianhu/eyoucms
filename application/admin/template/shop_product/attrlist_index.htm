@@ -44,6 +44,9 @@
                             <th class="sign w10 none" axis="col0">
                                 <div class="tc"></div>
                             </th>
+                            <th abbr="article_show" axis="col5" class="w60">
+                                <div class="tc">参数ID</div>
+                            </th>
                             <th abbr="article_time" axis="col6" class="w200">
                                 <div class="text-l10">参数名称</div>
                             </th>
@@ -90,7 +93,11 @@
                                     <td class="sign none">
                                         <div class="tc w10"><input type="hidden" name="list_id[]" value="{$vo.list_id}"></div>
                                     </td>
-
+                                    <td class="sort">
+                                        <div class="w60 tc">
+                                            {$vo.list_id}
+                                        </div>
+                                    </td>
                                     <td>
                                         <div class="w200 ml10">
                                             <input type="text" name="list_name[]" value="{$vo.list_name}">
@@ -189,7 +196,7 @@
 <script type="text/javascript">
     $(function(){
         try{
-            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            if (typeof window.is_conceal_1649209614 === "function" && window.is_conceal_1649209614()){
                 $(".page").css("margin-left","10px");
                 $(".page").css("min-width","");
             }else{

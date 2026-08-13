@@ -57,9 +57,7 @@ class ArchivesFlag extends Base
                         'id' => ['IN', $id_arr], 'ifsystem' => 0
                     ])->delete();
                 if($r !== false){
-                    \think\Cache::clear('archives_flag');
-                    $post['flag_fieldname'] = $result['flag_fieldname'];
-                    model('ArchivesFlag')->afterSave($id_arr, $post, 'del');
+                    model('ArchivesFlag')->afterSave($result, 'del');
                     adminLog('删除文档属性：'.$result['flag_name']);
                     $this->success('删除成功');
                 }
@@ -74,39 +72,52 @@ class ArchivesFlag extends Base
     public function add(){
         if (IS_POST) {
             $post = input('post.');
+            $flag_name = str_replace(['"','\'',';','@','?','？','$','&',' ','*','#'], '', trim($post['flag_name']));
             if(empty($post['flag_name'])){
-                $this->error('请输入名称','','',2);
+                $this->error('请输入属性名称');
+            } else if(empty($flag_name)){
+                $this->error('属性名称禁止含有特殊符号');
+            } else if(Db::name('archivesFlag')->where(['flag_name'=>$flag_name])->find()){
+                $this->error('属性名称已存在');
             }
-            if(Db::name('archivesFlag')->where(['flag_name'=>trim($post['flag_name'])])->find()){
-                $this->error('名称已存在','','',2);
-            }
-            if($this->validateFieldA($post['flag_attr'])==false){
-                $this->error('属性值至少2个及以上小写字母','','',2);
-            }
-            if(Db::name('archivesFlag')->where(['flag_attr'=>trim($post['flag_attr'])])->find()){
-                $this->error('属性值已存在','','',2);
-            }            
-            if (strpos($post['flag_attr'], 'is_') !== false) {                
+            $post['flag_name'] = $flag_name;
+
+            $post['flag_attr'] = strtolower(trim($post['flag_attr']));
+            if(empty($post['flag_attr'])){
+                $this->error('请输入属性值');
+            } else if($this->validateFieldA($post['flag_attr'])==false){
+                $this->error('属性值至少2个及以上小写字母');
+            } else if(Db::name('archivesFlag')->where(['flag_attr'=>$post['flag_attr']])->find()){
+                $this->error('属性值已存在');
+            }  
+
+            if (preg_match('/^is_(.+)$/i', $post['flag_attr'])) {
+                $post['flag_fieldname'] = $post['flag_attr'];
             } else {
-               $post['flag_fieldname'] = 'is_'.$post['flag_attr'];
+                $post['flag_fieldname'] = 'is_'.$post['flag_attr'];
             }
-            $post['flag_attr'] = strtolower($post['flag_attr']);
-            $post['flag_fieldname'] = strtolower($post['flag_fieldname']);
+
+            /*检测字段是否存在于主表与附加表中*/
+            $fieldLogic = new \app\admin\logic\FieldLogic;
+            $channeltype = Db::name('channeltype')->field('id,table')->where(['id'=>['not in',[8,51]]])->select();
+            foreach ($channeltype as $key => $val) {
+                $table = PREFIX . $val['table'] . '_content';
+                if (true == $fieldLogic->checkChannelFieldList($table, $post['flag_fieldname'], $val['id'])) {
+                    $this->error("属性值 " . $post['flag_attr'] . " 与系统字段冲突！");
+                }
+            }
+            /*--end*/
+
             $post['status'] = 1;
-            $post['lang'] = $this->admin_lang;
-            $post['add_time'] = time();
-            $post['update_time'] = time();
+            $post['add_time'] = getTime();
+            $post['update_time'] = getTime();
             $lastid = Db::name('archivesFlag')->insertGetId($post);
             if ($lastid) {
-                \think\Cache::clear('hooks');
-                \think\Cache::clear('archives_flag');                                
-                delFile(RUNTIME_PATH);
-                schemaAllTable();
-                model('ArchivesFlag')->afterSave($lastid, $post, 'add');
-                adminLog('新增：文档属性'); // 写入操作日志
-                $this->success("操作成功!");
+                model('ArchivesFlag')->afterSave($post, 'add');
+                adminLog('新增文档属性：'.$post['flag_name']); // 写入操作日志
+                $this->success("操作成功");
             }
-            $this->error('新增失败');
+            $this->error('操作失败');
         }                        
         return $this->fetch();
     }

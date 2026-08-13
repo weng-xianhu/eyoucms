@@ -30,6 +30,15 @@ class Ask extends Model
         // 需要调用`Model`的`initialize`方法
         parent::initialize();
 
+        static $ask_result = null;
+        if (is_null($ask_result)) {
+            $ask_result = Db::name('channeltype')->where(['nid'=>'ask','is_del'=>1])->find();
+            if (!empty($ask_result)) {
+                die('内置问答模型已废弃');
+            }
+            $ask_result = true;
+        }
+
         $this->users_db           = Db::name('users'); // 会员表
         $this->ask_db             = Db::name('ask'); // 问题表
         $this->ask_answer_db      = Db::name('ask_answer'); // 答案表
@@ -562,8 +571,8 @@ class Ask extends Model
         $info['head_pic'] = get_head_pic($info['head_pic']);
         // 时间友好显示处理
         $info['add_time'] = friend_date($info['add_time']);
-        // 处理格式
-        $info['content'] = htmlspecialchars_decode($info['content']);
+        // 处理格式 - 使用安全的 HTML 解码函数防止 XSS 攻击
+        $info['content'] = safe_html_decode($info['content']);
         // seo信息
         $info['seo_title'] = $info['ask_title'].' - '.$info['type_name'];
         $info['seo_keywords'] = $info['ask_title'];
@@ -637,8 +646,8 @@ class Ask extends Model
         foreach ($RepliesData as $key => $value) {
             // 友好显示时间
             $value['add_time'] = friend_date($value['add_time']);
-            // 处理格式
-            $value['content'] = htmlspecialchars_decode($value['content']);
+            // 处理格式 - 使用安全的 HTML 解码函数防止 XSS 攻击
+            $value['content'] = safe_html_decode($value['content']);
             // 头像处理
             $value['head_pic'] = get_head_pic($value['head_pic']);
             // 个人主页URL

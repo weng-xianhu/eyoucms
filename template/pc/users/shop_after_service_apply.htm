@@ -63,14 +63,21 @@
                                         <div class="item-from-row">
                                             <div class="from-row-l" style="width: 12%;"> <span class="red">*</span> 服务类型：</div>
                                             <div class="from-row-r">
-                                                <label class="radio-label">
+                                                {if condition="1 != $eyou.field.order_status && 0 == $eyou.field.prom_type"}
+                                                <label class="radio-label" onclick="serviceTypeRadio(1);">
                                                     <span>我要换货</span>
-                                                    <input type="radio" class="radio" id="service_type" name="service_type" value="1" checked="checked">
+                                                    <input type="radio" class="radio" id="service_type" name="service_type" value="1">
                                                     <span class="check-mark"></span>
                                                 </label>
-                                                <label class="radio-label">
+                                                <label class="radio-label" onclick="serviceTypeRadio(2);">
                                                     <span>我要退货</span>
                                                     <input type="radio" class="radio" id="service_type" name="service_type" value="2">
+                                                    <span class="check-mark"></span>
+                                                </label>
+                                                {/if}
+                                                <label class="radio-label" onclick="serviceTypeRadio(3);">
+                                                    <span>仅退款</span>
+                                                    <input type="radio" class="radio" id="service_type" name="service_type" value="3">
                                                     <span class="check-mark"></span>
                                                 </label>
                                             </div>
@@ -97,39 +104,40 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <span id="service-addr-div" {if condition="1 != $eyou.field.order_status && 0 == $eyou.field.prom_type"} style="display: block;" {else/} style="display: none;" {/if}>
+                                        <div class="order-progress-tit2"> <div class="order-progress-titL">商家收货地址</div> </div>
+                                        <div class="order-progress-con">
+                                            <div class="item-from-row">
+                                                <div class="from-row-l" style="width: 12%;"> 联系人：</div>
+                                                <div class="from-row-r"> {$eyou.maddr.addr_contact_person} </div>
+                                            </div>
+                                            <div class="item-from-row">
+                                                <div class="from-row-l" style="width: 12%;"> 联系号码：</div>
+                                                <div class="from-row-r"> {$eyou.maddr.addr_contact_phone} </div>
+                                            </div>
+                                            <div class="item-from-row">
+                                                <div class="from-row-l" style="width: 12%;"> 商家地址：</div>
+                                                <div class="from-row-r"> {$eyou.maddr.addr_shipping_addr} </div>
+                                            </div>
+                                        </div>
 
-                                    <div class="order-progress-tit2"> <div class="order-progress-titL">商家收货地址</div> </div>
-                                    <div class="order-progress-con">
-                                        <div class="item-from-row">
-                                            <div class="from-row-l" style="width: 12%;"> 联系人：</div>
-                                            <div class="from-row-r"> {$eyou.maddr.addr_contact_person} </div>
+                                        <div class="order-progress-tit2"> <div class="order-progress-titL">会员收货地址</div> </div>
+                                        <div class="order-progress-con">
+                                            <div class="item-from-row">
+                                                <div class="from-row-l" style="width: 12%;"> 联系人：</div>
+                                                <div class="from-row-r"> <input type="text" name="consignee" value="{$eyou.field.consignee}" id="consignee" class="el-input__inner w500"> </div>
+                                            </div>
+                                            <div class="item-from-row">
+                                                <div class="from-row-l" style="width: 12%;"> 联系号码：</div>
+                                                <div class="from-row-r"> <input type="text" name="mobile" value="{$eyou.field.mobile}" id="mobile" class="el-input__inner w500"> </div>
+                                            </div>
+                                            <div class="item-from-row">
+                                                <input type="hidden" name="addrinfo" value="{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}">
+                                                <div class="from-row-l" style="width: 12%;"> 会员地址：</div>
+                                                <div class="from-row-r"> {$eyou.field.province} {$eyou.field.city} {$eyou.field.district} <input type="text" name="address" value="{$eyou.field.address}" id="address" class="el-input__inner w500"> </div>
+                                            </div>
                                         </div>
-                                        <div class="item-from-row">
-                                            <div class="from-row-l" style="width: 12%;"> 联系号码：</div>
-                                            <div class="from-row-r"> {$eyou.maddr.addr_contact_phone} </div>
-                                        </div>
-                                        <div class="item-from-row">
-                                            <div class="from-row-l" style="width: 12%;"> 商家地址：</div>
-                                            <div class="from-row-r"> {$eyou.maddr.addr_shipping_addr} </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="order-progress-tit2"> <div class="order-progress-titL">会员收货地址</div> </div>
-                                    <div class="order-progress-con">
-                                        <div class="item-from-row">
-                                            <div class="from-row-l" style="width: 12%;"> 联系人：</div>
-                                            <div class="from-row-r"> <input type="text" name="consignee" value="{$eyou.field.consignee}" id="consignee" class="el-input__inner w500"> </div>
-                                        </div>
-                                        <div class="item-from-row">
-                                            <div class="from-row-l" style="width: 12%;"> 联系号码：</div>
-                                            <div class="from-row-r"> <input type="text" name="mobile" value="{$eyou.field.mobile}" id="mobile" class="el-input__inner w500"> </div>
-                                        </div>
-                                        <div class="item-from-row">
-                                            <input type="hidden" name="addrinfo" value="{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}">
-                                            <div class="from-row-l" style="width: 12%;"> 会员地址：</div>
-                                            <div class="from-row-r"> {$eyou.field.province} {$eyou.field.city} {$eyou.field.district} <input type="text" name="address" value="{$eyou.field.address}" id="address" class="el-input__inner w500"> </div>
-                                        </div>
-                                    </div>
+                                    </span>
 
                                     <div class="order-progress-tit2"> <div class="order-progress-titL">提交申请</div> </div>
                                     <div class="order-progress-con">

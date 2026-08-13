@@ -4,9 +4,9 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="order/left" /}
-<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0px;">
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin">
-        <div class="header-bar">
+        <div class="header-bar mb20">
             <div class="more">
                 <div class="search">
                     <div class="content">
@@ -142,9 +142,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="page" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin" style=" padding-right: 1px; ">
         <div class="tableDiv  bubbleInfo">
             <table cellspacing="0" cellpadding="0" style="width: 100%;">
@@ -182,6 +179,7 @@
                                             {/notempty}
                                         {/notempty}
                                         {notempty name="$vo.points_shop_order"}<i class="iconfont e-wodejifen f-18 orange mr5"></i>{/notempty}
+                                        {notempty name="$vo.groups_shop_order"}<i class="iconfont e-pintuan1 f-18 orange mr5"></i>{/notempty}
                                         <i class="iconfont e-shijian"></i>
                                         <span class="mr15">{$vo.add_time}</span>
                                         <span class="mr15">
@@ -233,9 +231,26 @@
                                     <p>
                                         <span class="zt {eq name='$vo.order_status' value='0'}show{else/}none{/eq}" style="color: #ff1f2c">待付款</span>
                                         {eq name="$vo.logistics_type" value="2"}
-                                        <span class="zt {eq name='$vo.order_status' value='1'}show{else/}none{/eq}" style="color: #2d8cf0;">待核销</span>
+                                        {if condition="!empty($weappVerify['data']['enableMultiVerify']) and $vo.verify_type eq 2"}
+                                        <span class="zt {eq name='$vo.order_status' value='1'}show{else/}none{/eq}" style="color: #2d8cf0;">核销进度：{$vo.used_verify_times|default='0'}/{$vo.total_verify_times|default='1'}</span>
                                         {else /}
-                                        <span class="zt {eq name='$vo.order_status' value='1'}show{else/}none{/eq}" style="color: #ff9900">待发货</span>
+                                        <span class="zt {eq name='$vo.order_status' value='1'}show{else/}none{/eq}" style="color: #2d8cf0;">待核销</span>
+                                        {/if}
+                                        {else /} 
+                                            {eq name="$vo.groups_shop_order" value="1"}
+                                            {php}
+                                            $__group_weapp_open = \think\Db::name('weapp')->where(['code'=>'GroupBuy','status'=>1])->value('id');
+                                            $__team_status = null;
+                                            if($__group_weapp_open && !empty($vo['group_id'])){
+                                                $__team_status = \think\Db::name('weapp_groupbuy_team')->where('id',$vo['group_id'])->value('status');
+                                            }
+                                            {/php}
+                                            <span class="zt {if condition='$vo.order_status == 1 && !empty($vo.group_id) && $__team_status === 0'}show{else/}none{/if}" style="color: #ff1f2c;">拼团中</span>
+                                            <span class="zt {if condition='$vo.order_status == 1 && !empty($vo.group_id) && $__team_status === 1'}show{else/}none{/if}" style="color: #19be6b;">拼团成功·待发货</span>
+                                            <span class="zt {if condition='$vo.order_status == 1 && !empty($vo.group_id) && $__team_status === 2'}show{else/}none{/if}" style="color: #939799;">拼团失败</span>
+                                            {else /}
+                                            <span class="zt {eq name='$vo.order_status' value='1'}show{else/}none{/eq}" style="color: #ff9900">待发货</span>
+                                            {/eq}
                                         {/eq}
                                         <span class="zt {eq name='$vo.order_status' value='2'}show{else/}none{/eq}" style="color: #2d8cf0;">已发货</span>
                                         <span class="zt {eq name='$vo.order_status' value='3'}show{else/}none{/eq}" style="color: #19be6b;">已完成</span>
@@ -330,12 +345,14 @@
                                         {/eq}
                                         <!-- 订单待发货时出现 -->
                                         <a class="bt" href="javascript:void(0);" onclick="OrderMark('sdtk', '{$vo.order_id}');">手动退款</a>
-                                        
                                         {/if}
 
                                         {if condition="2 == $vo.order_status"}
                                         <!-- 订单已发货时出现 -->
                                         <a class="bt" href="javascript:void(0);" onclick="OrderMark('sdtk', '{$vo.order_id}');">手动退款</a>
+                                        {if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/index_btn.htm')" /}
+                                            {include file="/weapp/Kdnwaybills/template/admin/shop/index_btn.htm" /}
+                                        {/if}
                                         <a href="JavaScript:void(0);" onclick="OrderMark('ysh','{$vo.order_id}','{$vo.users_id}');" class="bt">确认收货</a>
                                         <input type="hidden" id="beizhu-url" value="{:url('Shop/update_note')}">
 										<a class="bt" href="javascript:void(0);" data-href="{:url('shop/order_remarks', ['order_id'=>$vo.order_id])}" onclick="openFullframe(this, '商家备注', '600px', '55%');" title="订单备注">订单备注</a>
@@ -535,29 +552,30 @@
             });
             return false;
         } else if ('sdtk' == status_name) {
-            layer.prompt({
-                formType: 2,
-                shade: layer_shade,
-                value: '',
-                title: '提示',
-                closeBtn: 3,
-                id: 'manualRefund',
-                btnAlign:'r',
-                btn: ['关闭并退款', '取消'],
-                area: ['300px', '120px'],
-                success: function(layero, index) {
-                    $("#manualRefund").find('textarea').attr('placeholder', '请填写关闭订单原因(非必填)');
-                    var msg = '<span class="f-16 mb5" style="display: block;">是否关闭订单并自行手动退款</span><span class="red f-12">此操作系统不会自动退款，需手动线下退款</span><br/><br/>';
-                    $("#manualRefund").prepend(msg);
-                    $(".layui-layer-content").css('text-align', 'left');
-                },
-                yes: function(index, layero) {
-                    // 手动关闭订单并退款
-                    var value = $("#manualRefund").find("textarea").val();
-                    ManualRefund(order_id, value);
-                    layer.close(index);
-                }
-            });
+            openFullframe("{:url('Shop/order_manual_refund')}&order_id=" + order_id, '手动退款处理', '800px', '62%');
+            // layer.prompt({
+            //     formType: 2,
+            //     shade: layer_shade,
+            //     value: '',
+            //     title: '提示',
+            //     closeBtn: 3,
+            //     id: 'manualRefund',
+            //     btnAlign:'r',
+            //     btn: ['关闭并退款', '取消'],
+            //     area: ['300px', '120px'],
+            //     success: function(layero, index) {
+            //         $("#manualRefund").find('textarea').attr('placeholder', '请填写关闭订单原因(非必填)');
+            //         var msg = '<span class="f-16 mb5" style="display: block;">是否关闭订单并自行手动退款</span><span class="red f-12">此操作系统不会自动退款，需手动线下退款</span><br/><br/>';
+            //         $("#manualRefund").prepend(msg);
+            //         $(".layui-layer-content").css('text-align', 'left');
+            //     },
+            //     yes: function(index, layero) {
+            //         // 手动关闭订单并退款
+            //         var value = $("#manualRefund").find("textarea").val();
+            //         ManualRefund(order_id, value);
+            //         layer.close(index);
+            //     }
+            // });
             return false;
         } else if ('ddsc' == status_name) {
             var msg = '确认删除订单？';
@@ -593,6 +611,7 @@
             layer.closeAll(index);
         });
     }
+
 
     // 订单备注
     function OrderNote(order_id, admin_note) {
@@ -748,5 +767,9 @@
         });
     }
 </script>
+
+{if condition="file_exists(ROOT_PATH.'weapp/Kdnwaybills/template/admin/shop/index.js')" /}
+    <script type="text/javascript" src="__ROOT_DIR__/weapp/Kdnwaybills/template/admin/shop/index.js?v={:getTime()}"></script>
+{/if}
 
 {include file="public/footer" /}

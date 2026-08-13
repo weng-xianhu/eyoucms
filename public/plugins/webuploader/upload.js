@@ -867,9 +867,9 @@ $(function() {
 
                     ext = ext[ext.length - 1];
 
-                    file = '<div class="img" title="' + t.name + '"><img width="100%" src="' + t.url + '" /><span class="icon"></span></div>';
+                    file = '<div class="img" title="' + t.name + '"><img src="' + t.url + '" /><span class="icon"></span></div>';
 
-                    if(!/png|jpg|jpeg|gif|bmp/.test(ext)) file = '<div class="img file-global file-' + ext + '" title="' + t.name + '"><span class="icon"></span></div>';
+                    if(!/png|jpg|jpeg|webp|gif|bmp/.test(ext)) file = '<div class="img file-global file-' + ext + '" title="' + t.name + '"><span class="icon"></span></div>';
                     
                     $li = $('<li class="file"><div class="file-panel"><span class="cancel">删除</span></div>' + file + '<div class="desc">' + t.name + '</div></li>');
 

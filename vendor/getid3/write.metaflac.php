@@ -71,7 +71,7 @@ class getid3_write_metaflac
 					$picture_typeid = (!empty($picturedetails['picturetypeid']) ? $this->ID3v2toFLACpictureTypes($picturedetails['picturetypeid']) : 3); // default to "3:Cover (front)"
 					$picture_mimetype = (!empty($picturedetails['mime']) ? $picturedetails['mime'] : ''); // should be auto-detected
 					$picture_width_height_depth = '';
-					$this->pictures[] = $picture_typeid.'|'.$picture_mimetype.'|'.preg_replace('#[^\x20-\x7B\x7D-\x7F]#', '', $picturedetails['description']).'|'.$picture_width_height_depth.'|'.$temppicturefilename;
+					$this->pictures[] = $picture_typeid.'|'.$picture_mimetype.'|'.preg_replace('#[^\x20-\x7B\x7D-\x7F]#', '', (string) $picturedetails['description']).'|'.$picture_width_height_depth.'|'.$temppicturefilename;
 				} else {
 					$this->errors[] = 'failed to open temporary tags file, tags not written - fopen("'.$temppicturefilename.'", "wb")';
 					return false;
@@ -110,7 +110,7 @@ class getid3_write_metaflac
 
 				// On top of that, if error messages are not always captured properly under Windows
 				// To at least see if there was a problem, compare file modification timestamps before and after writing
-				clearstatcache();
+				clearstatcache(true, $this->filename);
 				$timestampbeforewriting = filemtime($this->filename);
 
 				$commandline  = GETID3_HELPERAPPSDIR.'metaflac.exe --no-utf8-convert --remove-all-tags --import-tags-from='.escapeshellarg($tempcommentsfilename);
@@ -118,10 +118,10 @@ class getid3_write_metaflac
 					$commandline .= ' --import-picture-from='.escapeshellarg($picturecommand);
 				}
 				$commandline .= ' '.escapeshellarg($this->filename).' 2>&1';
-				$metaflacError = `$commandline`;
+				$metaflacError = shell_exec($commandline);
 
 				if (empty($metaflacError)) {
-					clearstatcache();
+					clearstatcache(true, $this->filename);
 					if ($timestampbeforewriting == filemtime($this->filename)) {
 						$metaflacError = 'File modification timestamp has not changed - it looks like the tags were not written';
 					}
@@ -138,7 +138,7 @@ class getid3_write_metaflac
 				$commandline .= ' --import-picture-from='.escapeshellarg($picturecommand);
 			}
 			$commandline .= ' '.escapeshellarg($this->filename).' 2>&1';
-			$metaflacError = `$commandline`;
+			$metaflacError = shell_exec($commandline);
 
 		}
 
@@ -173,14 +173,14 @@ class getid3_write_metaflac
 
 			if (file_exists(GETID3_HELPERAPPSDIR.'metaflac.exe')) {
 				// To at least see if there was a problem, compare file modification timestamps before and after writing
-				clearstatcache();
+				clearstatcache(true, $this->filename);
 				$timestampbeforewriting = filemtime($this->filename);
 
 				$commandline = GETID3_HELPERAPPSDIR.'metaflac.exe --remove-all-tags "'.$this->filename.'" 2>&1';
-				$metaflacError = `$commandline`;
+				$metaflacError = shell_exec($commandline);
 
 				if (empty($metaflacError)) {
-					clearstatcache();
+					clearstatcache(true, $this->filename);
 					if ($timestampbeforewriting == filemtime($this->filename)) {
 						$metaflacError = 'File modification timestamp has not changed - it looks like the tags were not deleted';
 					}
@@ -193,7 +193,7 @@ class getid3_write_metaflac
 
 			// It's simpler on *nix
 			$commandline = 'metaflac --remove-all-tags "'.$this->filename.'" 2>&1';
-			$metaflacError = `$commandline`;
+			$metaflacError = shell_exec($commandline);
 
 		}
 

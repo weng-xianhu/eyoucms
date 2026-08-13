@@ -180,29 +180,42 @@ class Field extends Base
             if (!is_string($post['dtype'])) {
                 $this->error("数据类型不正确！");
             }
-
+            if (in_array($post['dtype'], ['checkboxs','radios','selects'])) {
+                if (empty($post['mcheck'])) {
+                    $this->error("选项参数至少填一项");
+                }
+                $post['dfvalue'] = '';
+            }
+            // 联动选择类型
+            if ('cascade' == $post['dtype']) {
+                $post['dfvalue'] = '';
+            }
             // 字段类型是否具备筛选功能
             if (empty($post['IsScreening_status'])) {
                 $post['is_screening'] = 0;
             }
+            if (empty($post['is_multiselect']) || !in_array($post['dtype'], ['checkbox','select','checkboxs'])) {
+                $post['is_multiselect'] = 0;
+            }
 
-            /*去除中文逗号，过滤左右空格与空值、以及单双引号*/
-            $dfvalue    = str_replace('，', ',', $post['dfvalue']);
+            $dfvalue    = $post['dfvalue'];
+            /*去除中文逗号，过滤左右空格与空值*/
             if (in_array($post['dtype'], ['radio','checkbox','select','region'])) {
+                $dfvalue    = str_replace('，', ',', $dfvalue);
                 $pattern    = ['"', '\'', ';', '&', '?', '='];
                 $dfvalue    = func_preg_replace($pattern, '', $dfvalue);
-            }
-            $dfvalueArr = explode(',', $dfvalue);
-            foreach ($dfvalueArr as $key => $val) {
-                $tmp_val = trim($val);
-                if (empty($tmp_val)) {
-                    unset($dfvalueArr[$key]);
-                    continue;
+                $dfvalueArr = explode(',', $dfvalue);
+                foreach ($dfvalueArr as $key => $val) {
+                    $tmp_val = trim($val);
+                    if (empty($tmp_val)) {
+                        unset($dfvalueArr[$key]);
+                        continue;
+                    }
+                    $dfvalueArr[$key] = $tmp_val;
                 }
-                $dfvalueArr[$key] = $tmp_val;
+                $dfvalueArr = array_unique($dfvalueArr);
+                $dfvalue = implode(',', $dfvalueArr);
             }
-            $dfvalueArr = array_unique($dfvalueArr);
-            $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
             if ('region' == $post['dtype']) {
@@ -280,6 +293,34 @@ class Field extends Base
                 $field_id = Db::name('channelfield')->getLastInsID();
                 /*--end*/
 
+                // 多选项、单选项、下拉框
+                if (in_array($post['dtype'], ['checkboxs','radios','selects'])){
+                    $mdatas = [];
+                    foreach ($post['mcheck'] as $val) {
+                        $mdatas[] = [
+                            'field_id'=>$field_id,
+                            'dfvalue'=>trim($val['dfvalue']),
+                            'name'=>trim($post['name']),
+                            'sort_order'=>intval($val['sort_order']),
+                            'add_time'=>getTime(),
+                            'update_time'=>getTime(),
+                            'dtype'=>$post['dtype'],
+                            'channel_id'=>$channel_id,
+                        ];
+                    }
+                    if (!empty($mdatas)) {
+                        Db::name('field_custom_param')->insertAll($mdatas);
+                    }
+                }
+
+                // 联动选择选项数据
+                if ('cascade' == $post['dtype'] && !empty($post['cascade_data'])) {
+                    $cascadeItems = json_decode($post['cascade_data'], true);
+                    if (!empty($cascadeItems) && is_array($cascadeItems)) {
+                        $this->saveCascadeData($cascadeItems, $field_id, $channel_id, 0, 1);
+                    }
+                }
+
                 /*保存栏目与字段绑定的记录*/
                 $typeids = $post['typeids'];
                 if (!empty($typeids)) {
@@ -293,7 +334,8 @@ class Field extends Base
                             'attr_name'  => ['IN', $attr_name_arr],
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
-                        !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        // !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        if (!empty($new_typeid_arr)) $typeids = array_unique(array_merge($typeids, $new_typeid_arr));
                     }
                     /*--end*/
                     $addData = [];
@@ -325,7 +367,7 @@ class Field extends Base
         }
 
         /*字段类型列表*/
-        $assign_data['fieldtype_list'] = model('Field')->getFieldTypeAll('name,title,ifoption');
+        $assign_data['fieldtype_list'] = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         /*--end*/
 
         /*允许发布文档列表的栏目*/
@@ -401,6 +443,72 @@ class Field extends Base
     }
 
     /**
+     * 递归保存联动选择选项数据
+     */
+    private function saveCascadeData($items, $field_id, $channel_id, $parent_id = 0, $level = 1)
+    {
+        foreach ($items as $sort => $item) {
+            $name = trim($item['name']);
+            if (empty($name)) continue;
+            $insertId = Db::name('field_cascade_data')->insertGetId([
+                'field_id'   => $field_id,
+                'channel_id' => $channel_id,
+                'parent_id'  => $parent_id,
+                'name'       => $name,
+                'level'      => $level,
+                'sort_order' => $sort + 1,
+                'add_time'   => getTime(),
+                'update_time'=> getTime(),
+            ]);
+            if (!empty($item['children']) && is_array($item['children']) && $level < 3) {
+                $this->saveCascadeData($item['children'], $field_id, $channel_id, $insertId, $level + 1);
+            }
+        }
+    }
+
+    /**
+     * 将扁平数据构建为树形结构
+     */
+    private function buildCascadeTree($data, $parent_id = 0)
+    {
+        $tree = [];
+        foreach ($data as $item) {
+            if ($item['parent_id'] == $parent_id) {
+                $children = $this->buildCascadeTree($data, $item['id']);
+                $node = [
+                    'id'   => $item['id'],
+                    'name' => $item['name'],
+                ];
+                if (!empty($children)) {
+                    $node['children'] = $children;
+                }
+                $tree[] = $node;
+            }
+        }
+        return $tree;
+    }
+
+    /**
+     * AJAX获取联动选择子级选项（内容编辑表单用）
+     */
+    public function ajax_get_cascade_data()
+    {
+        $parent_id = input('param.parent_id/d', 0);
+        $field_id  = input('param.field_id/d', 0);
+        $list = Db::name('field_cascade_data')->field('id,name')
+            ->where(['field_id' => $field_id, 'parent_id' => $parent_id])
+            ->order('sort_order ASC, id ASC')
+            ->select();
+        $html = '';
+        if (!empty($list)) {
+            foreach ($list as $v) {
+                $html .= "<option value='{$v['id']}'>{$v['name']}</option>";
+            }
+        }
+        echo json_encode(['code' => 1, 'html' => $html, 'list' => $list]);
+    }
+
+    /**
      * 编辑-模型字段
      */
     public function channel_edit()
@@ -416,10 +524,23 @@ class Field extends Base
             $post = input('post.', '', 'trim');
             $post['id'] = intval($post['id']);
             $post['title'] = htmlspecialchars($post['title']);
+            // 判断是否存在|杠
+            $IsData = strstr($post['dfvalue'], '|');
+            if (!empty($IsData)) {
+                $this->error("不可输入 | 杠");
+            }
 
-            if ('checkbox' == $post['old_dtype'] && in_array($post['dtype'], ['radio', 'select'])) {
+            $err = false;
+            if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radios', 'selects', 'checkboxs'])) {
+                $err = true;
+            } else if (in_array($post['old_dtype'], ['radios', 'selects', 'checkboxs']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
+                $err = true;
+            } else if ('checkbox' == $post['old_dtype'] && in_array($post['dtype'], ['radio', 'select'])) {
+                $err = true;
+            }
+            if (true === $err) {
                 $fieldtype_list = model('Field')->getFieldTypeAll('name,title', 'name');
-                $this->error("{$fieldtype_list['checkbox']['title']}不能更改为{$fieldtype_list[$post['dtype']]['title']}！");
+                $this->error("{$fieldtype_list[$post['old_dtype']]['title']}不能更改为{$fieldtype_list[$post['dtype']]['title']}！");
             }
 
             if (empty($post['dtype']) || empty($post['title']) || empty($post['name'])) {
@@ -437,7 +558,16 @@ class Field extends Base
             if (!is_string($post['dtype'])) {
                 $this->error("数据类型不正确！");
             }
-
+            if (in_array($post['dtype'], ['checkboxs','radios','selects'])) {
+                if (empty($post['mcheck'])) {
+                    $this->error("选项参数至少填一项");
+                }
+                $post['dfvalue'] = '';
+            }
+            // 联动选择类型
+            if ('cascade' == $post['dtype']) {
+                $post['dfvalue'] = '';
+            }
             $info = model('Channelfield')->getInfo($post['id'], 'ifsystem');
             if (!empty($info['ifsystem'])) {
                 $this->error('系统字段不允许更改！');
@@ -447,25 +577,29 @@ class Field extends Base
             if (empty($post['IsScreening_status'])) {
                 $post['is_screening'] = 0;
             }
+            if (empty($post['is_multiselect']) || !in_array($post['dtype'], ['checkbox','select','checkboxs'])) {
+                $post['is_multiselect'] = 0;
+            }
 
             $old_name = $post['old_name'];
+            $dfvalue    = $post['dfvalue'];
             /*去除中文逗号，过滤左右空格与空值*/
-            $dfvalue    = str_replace('，', ',', $post['dfvalue']);
             if (in_array($post['dtype'], ['radio','checkbox','select','region'])) {
+                $dfvalue    = str_replace('，', ',', $dfvalue);
                 $pattern    = ['"', '\'', ';', '&', '?', '='];
                 $dfvalue    = func_preg_replace($pattern, '', $dfvalue);
-            }
-            $dfvalueArr = explode(',', $dfvalue);
-            foreach ($dfvalueArr as $key => $val) {
-                $tmp_val = trim($val);
-                if (empty($tmp_val)) {
-                    unset($dfvalueArr[$key]);
-                    continue;
+                $dfvalueArr = explode(',', $dfvalue);
+                foreach ($dfvalueArr as $key => $val) {
+                    $tmp_val = trim($val);
+                    if (empty($tmp_val)) {
+                        unset($dfvalueArr[$key]);
+                        continue;
+                    }
+                    $dfvalueArr[$key] = $tmp_val;
                 }
-                $dfvalueArr[$key] = $tmp_val;
+                $dfvalueArr = array_unique($dfvalueArr);
+                $dfvalue = implode(',', $dfvalueArr);
             }
-            $dfvalueArr = array_unique($dfvalueArr);
-            $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
             if ('region' == $post['dtype']) {
@@ -532,6 +666,7 @@ class Field extends Base
                 Db::name($tableName)->where($whereStr)->update([$post['name']=>$new_dfvalue]);
             }
             /*end*/
+
             if ("checkbox" == $post['dtype']){
                 $dfvalue = explode(',', $dfvalue);
                 if (64 < count($dfvalue)){
@@ -539,6 +674,7 @@ class Field extends Base
                 }
                 $dfvalue = implode(',', $dfvalue);
             }
+
             /*组装完整的SQL语句，并执行编辑字段*/
             $fieldinfos = $this->fieldLogic->GetFieldMake($post['dtype'], $post['name'], $dfvalue, $post['title']);
             $ntabsql    = $fieldinfos[0];
@@ -556,22 +692,76 @@ class Field extends Base
             }
             if (false !== $r) {
 
-                /*针对单选项、多选项、下拉框：修改之前，将该字段不存在的值都更新为默认值第一个*/
-                if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
-                    $whereArr = [];
-                    $new_dfvalue = '';
-                    $dfvalueArr = explode(',', $dfvalue);
-                    foreach($dfvalueArr as $key => $val){
-                        if ($key == 0) {
-                            $new_dfvalue = $val;
+                // 针对独立表的单选项、多选项、下拉框
+                if (in_array($post['dtype'], ['radios', 'selects', 'checkboxs'])) {
+                    if (!empty($post['mcheck'])) {
+                        $fieldCustomUpdataIds = $fieldCustomUpdata = $fieldCustomAdddata = [];
+                        foreach ($post['mcheck'] as $key => $val) {                              
+                            if (!empty($val['id'])) {
+                                $fieldCustomUpdata[] = [
+                                    'id' => $val['id'],
+                                    'dtype' => $post['dtype'],
+                                    'name' => $post['name'],
+                                    'dfvalue' => trim($val['dfvalue']),
+                                    'sort_order' => intval($val['sort_order']),
+                                    'update_time' => getTime(),
+                                ];
+                                $fieldCustomUpdataIds[] = $val['id'];
+                            } else {
+                                $fieldCustomAdddata[] = [
+                                    'field_id' => $post['id'],
+                                    'channel_id' => $post['channel_id'],
+                                    'dtype' => $post['dtype'],
+                                    'name' => $post['name'],
+                                    'dfvalue' => trim($val['dfvalue']),
+                                    'sort_order' => intval($val['sort_order']),
+                                    'add_time' => getTime(),
+                                    'update_time' => getTime(),
+                                ];
+                            }
                         }
-                        $whereArr[] = "CONCAT(',', `{$post['name']}` ,',') NOT LIKE '%,{$val},%'";
+                        if (!empty($fieldCustomAdddata)) {
+                            Db::name('field_custom_param')->insertAll($fieldCustomAdddata);
+                        }
+                        if (!empty($fieldCustomUpdata)) {
+                            model('FieldCustomParam')->saveAll($fieldCustomUpdata);
+                        }
+                        if (!empty($fieldCustomDeldata)) {
+                            Db::name('field_custom_param')->where(['id'=>['IN', $fieldCustomUpdataIds]])->delete(true);
+                        }
+                    } else {
+                        Db::name('field_custom_param')->where(['channel_id'=>$post['channel_id'], 'name'=>$post['name']])->delete(true);
                     }
-                    $whereArr[] = "(`{$post['name']}` is NULL OR `{$post['name']}` = '')";
-                    $whereStr = implode(' AND ', $whereArr);
-                    Db::name($tableName)->where($whereStr)->update([$post['name']=>$new_dfvalue]);
+                } else {
+                    Db::name('field_custom_param')->where(['channel_id'=>$post['channel_id'], 'name'=>$post['name']])->delete(true);
+                    /*针对单选项、多选项、下拉框：修改之前，将该字段不存在的值都更新为默认值第一个*/
+                    if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
+                        $whereArr = [];
+                        $new_dfvalue = '';
+                        $dfvalueArr = explode(',', $dfvalue);
+                        foreach($dfvalueArr as $key => $val){
+                            if ($key == 0) {
+                                $new_dfvalue = $val;
+                            }
+                            $whereArr[] = "CONCAT(',', `{$post['name']}` ,',') NOT LIKE '%,{$val},%'";
+                        }
+                        $whereArr[] = "(`{$post['name']}` is NULL OR `{$post['name']}` = '')";
+                        $whereStr = implode(' AND ', $whereArr);
+                        Db::name($tableName)->where($whereStr)->update([$post['name']=>$new_dfvalue]);
+                    }
+                    /*end*/
                 }
-                /*end*/
+
+                // 联动选择选项数据
+                if ('cascade' == $post['dtype'] && !empty($post['cascade_data'])) {
+                    // 先删除旧数据
+                    Db::name('field_cascade_data')->where(['field_id' => $post['id']])->delete(true);
+                    // 保存新数据
+                    $cascadeItems = json_decode($post['cascade_data'], true);
+                    if (!empty($cascadeItems) && is_array($cascadeItems)) {
+                        $this->saveCascadeData($cascadeItems, $post['id'], $post['channel_id'], 0, 1);
+                    }
+                }
 
                 /*保存更新字段的记录*/
                 if (!empty($post['region_data'])) {
@@ -603,7 +793,8 @@ class Field extends Base
                             'attr_name'  => ['IN', $attr_name_arr],
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
-                        !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        // !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        if (!empty($new_typeid_arr)) $typeids = array_unique(array_merge($typeids, $new_typeid_arr));
                     }
                     /*--end*/
                     $addData = [];
@@ -646,9 +837,43 @@ class Field extends Base
         if (!empty($info['ifsystem'])) {
             $this->error('系统字段不允许更改！');
         }
+        // 多选项、单选项、下拉框[新]
+        if (in_array($info['dtype'], ['checkboxs','radios','selects'])) {
+            $checkboxsArr = Db::name('field_custom_param')->field('id,name,dfvalue,sort_order')->where(['channel_id'=>$info['channel_id'], 'name'=>$info['name']])->order('sort_order ASC, id ASC')->select();
+            $info[$info['name']] = $checkboxsArr;
+        }
+        // 联动选择选项数据
+        if ('cascade' == $info['dtype']) {
+            $cascadeData = Db::name('field_cascade_data')->where(['field_id' => $id])->order('sort_order ASC, id ASC')->select();
+            $info['cascade_tree'] = $this->buildCascadeTree($cascadeData);
+            $info['cascade_json'] = json_encode($info['cascade_tree'], JSON_UNESCAPED_UNICODE);
+        }
+
         /*字段类型列表*/
-        $assign_data['fieldtype_list'] = model('Field')->getFieldTypeAll('name,title,ifoption');
+        $assign_data['fieldtype_list'] = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         /*--end*/
+
+        $allowed_dtype = [];
+        foreach ($assign_data['fieldtype_list'] as $key => $val) {
+            $allowed_dtype[$val['name']] = $val['name'];
+        }
+        if ('media' == $info['dtype']) {
+            $allowed_dtype = ['media'];
+        } else if (in_array($info['dtype'], ['radio', 'select', 'checkbox'])) {
+            foreach (['radios', 'selects', 'checkboxs'] as $key => $val) {
+                unset($allowed_dtype[$val]);
+            }
+            foreach (['radio', 'select', 'checkbox'] as $key => $val) {
+                if ($val != $info['dtype']) {
+                    unset($allowed_dtype[$val]);
+                }
+            }
+        } else if (in_array($info['dtype'], ['radios', 'selects', 'checkboxs'])) {
+            foreach (['radio', 'select', 'checkbox'] as $key => $val) {
+                unset($allowed_dtype[$val]);
+            }
+        }
+        $info['allowed_dtype'] = $allowed_dtype;
 
         /*允许发布文档列表的栏目*/
         $typeids     = Db::name('channelfield_bind')->where(['field_id' => $id])->column('typeid');
@@ -685,7 +910,7 @@ class Field extends Base
             if (!preg_match('/^([\x{4e00}-\x{9fa5}\w\"\:\{\}\;\，\,]*)$/u', $info['dfvalue'])) {
                 $info['dfvalue'] = '';
             }
-            $dfvalue = unserialize($info['dfvalue']);
+            $dfvalue = safe_unserialize($info['dfvalue']);
             if (is_array($dfvalue)) {
                 $dfvalue['region_id'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_id']);
                 $dfvalue['region_ids'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_ids']);
@@ -719,6 +944,7 @@ class Field extends Base
             $assign_data['parent_array'] = convert_js_array(config('global.field_region_all_type'));
         }
         /*区域字段处理结束*/
+
         $assign_data['info'] = $info;
 
         // 模型列表
@@ -745,22 +971,17 @@ class Field extends Base
                     'id'         => array('eq', $id),
                     'channel_id' => $channel_id,
                 );
-                $result    = Db::name('channelfield')->field('channel_id,name')->where($map)->select();
-                $name_list = get_arr_column($result, 'name');
-                /*删除字段的记录*/
-                Db::name('channelfield')->where($map)->delete();
-                /*--end*/
-                /*删除栏目与字段绑定的记录*/
-                model('ChannelfieldBind')->where(['field_id' => $id])->delete();
-                /*--end*/
-
+                $result    = Db::name('channelfield')->field('channel_id,name')->where($map)->find();
+                Db::name('channelfield')->where($map)->delete(true); // 删除字段的记录
+                model('ChannelfieldBind')->where(['field_id' => $id])->delete(true); // 删除栏目与字段绑定的记录
+                Db::name('field_custom_param')->where(['channel_id'=>$result['channel_id'], 'name'=>$result['name']])->delete(true);//删除字段默认值记录
                 /*获取模型标题*/
                 $channel_title = '';
                 if (!empty($channel_id)) {
                     $channel_title = Db::name('channeltype')->where('id', $channel_id)->getField('title');
                 }
                 /*--end*/
-                adminLog('删除' . $channel_title . '字段：' . implode(',', $name_list));
+                adminLog('删除' . $channel_title . '字段：' . $result['name']);
                 $this->success('删除成功');
             }
 
@@ -938,7 +1159,12 @@ class Field extends Base
 
         if (IS_POST) {
             $post = input('post.', '', 'trim');
-
+            $post['title'] = htmlspecialchars($post['title']);
+            // 判断是否存在|杠
+            $IsData = strstr($post['dfvalue'], '|');
+            if (!empty($IsData)) {
+                $this->error("不可输入 | 杠");
+            }
             if (empty($post['dtype']) || empty($post['title']) || empty($post['name'])) {
                 $this->error("缺少必填信息！");
             }
@@ -952,24 +1178,31 @@ class Field extends Base
             if (!is_string($post['dtype'])) {
                 $this->error("数据类型不正确！");
             }
+            if (in_array($post['dtype'], ['checkboxs','radios','selects'])) {
+                if (empty($post['mcheck'])) {
+                    $this->error("选项参数至少填一项");
+                }
+                $post['dfvalue'] = '';
+            }
 
+            $dfvalue    = $post['dfvalue'];
             /*去除中文逗号，过滤左右空格与空值*/
-            $dfvalue    = str_replace('，', ',', $post['dfvalue']);
             if (in_array($post['dtype'], ['radio','checkbox','select','region'])) {
+                $dfvalue    = str_replace('，', ',', $dfvalue);
                 $pattern    = ['"', '\'', ';', '&', '?', '='];
                 $dfvalue    = func_preg_replace($pattern, '', $dfvalue);
-            }
-            $dfvalueArr = explode(',', $dfvalue);
-            foreach ($dfvalueArr as $key => $val) {
-                $tmp_val = trim($val);
-                if (empty($tmp_val)) {
-                    unset($dfvalueArr[$key]);
-                    continue;
+                $dfvalueArr = explode(',', $dfvalue);
+                foreach ($dfvalueArr as $key => $val) {
+                    $tmp_val = trim($val);
+                    if (empty($tmp_val)) {
+                        unset($dfvalueArr[$key]);
+                        continue;
+                    }
+                    $dfvalueArr[$key] = $tmp_val;
                 }
-                $dfvalueArr[$key] = $tmp_val;
+                $dfvalueArr = array_unique($dfvalueArr);
+                $dfvalue = implode(',', $dfvalueArr);
             }
-            $dfvalueArr = array_unique($dfvalueArr);
-            $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
             /*默认值必填字段*/
@@ -986,7 +1219,7 @@ class Field extends Base
             /*--end*/
 
             /*检测字段是否存在于主表与附加表中*/
-            if (true == $this->fieldLogic->checkChannelFieldList($tableExt, $post['name'], 6)) {
+            if (true == $this->fieldLogic->checkChannelFieldList($tableExt, $post['name'], $channel_id)) {
                 $this->error("字段名称 " . $post['name'] . " 与系统字段冲突！");
             }
             /*--end*/
@@ -1019,6 +1252,26 @@ class Field extends Base
                 $data    = array_merge($post, $newData);
                 $field_id = Db::name('channelfield')->insertGetId($data);
                 /*--end*/
+                
+                // 多选项、单选项、下拉框
+                if (in_array($post['dtype'], ['checkboxs','radios','selects'])){
+                    $mdatas = [];
+                    foreach ($post['mcheck'] as $val) {
+                        $mdatas[] = [
+                            'field_id'=>$field_id,
+                            'dfvalue'=>trim($val['dfvalue']),
+                            'name'=>trim($post['name']),
+                            'sort_order'=>intval($val['sort_order']),
+                            'add_time'=>getTime(),
+                            'update_time'=>getTime(),
+                            'dtype'=>$post['dtype'],
+                            'channel_id'=>$channel_id,
+                        ];
+                    }
+                    if (!empty($mdatas)) {
+                        Db::name('field_custom_param')->insertAll($mdatas);
+                    }
+                }
 
                 /*保存栏目与字段绑定的记录*/
                 $typeids = $post['typeids'];
@@ -1030,10 +1283,11 @@ class Field extends Base
                             $attr_name_arr[] = 'tid' . $val;
                         }
                         $new_typeid_arr = Db::name('language_attr')->where([
-                            'attr_name' => ['IN', $attr_name_arr],
+                            'attr_name'  => ['IN', $attr_name_arr],
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
-                        !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        // !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        if (!empty($new_typeid_arr)) $typeids = array_unique(array_merge($typeids, $new_typeid_arr));
                     }
                     /*--end*/
                     $addData = [];
@@ -1042,14 +1296,15 @@ class Field extends Base
                             continue;
                         }
                         $addData[] = [
-                            'typeid' => $val,
-                            'field_id' => $field_id,
-                            'add_time' => getTime(),
+                            'typeid'      => $val,
+                            'field_id'    => $field_id,
+                            'add_time'    => getTime(),
                             'update_time' => getTime(),
                         ];
                     }
                     !empty($addData) && model('ChannelfieldBind')->saveAll($addData);
                 }
+                /*--end*/
 
                 /*重新生成数据表字段缓存文件*/
                 try {
@@ -1066,7 +1321,7 @@ class Field extends Base
 
         /*字段类型列表*/
         $fieldtype_list = [];
-        $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption');
+        $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         foreach ($fieldtype_list_tmp as $key => $val) {
             if (!in_array($val['name'], ['file','media','region'])) {
                 $fieldtype_list[] = $val;
@@ -1075,15 +1330,13 @@ class Field extends Base
         $assign_data['fieldtype_list'] = $fieldtype_list;
         /*--end*/
 
-        /*模型ID*/
-        $assign_data['channel_id'] = $channel_id;
-        /*--end*/
-
         /*允许编辑的栏目*/
         $allow_release_channel = Db::name('channeltype')->column('id');
         $select_html = allow_release_arctype(0, $allow_release_channel);
         $this->assign('select_html', $select_html);
         /*--end*/
+
+        $assign_data['channel_id'] = $channel_id; // 模型ID
 
         $this->assign($assign_data);
         return $this->fetch();
@@ -1102,10 +1355,24 @@ class Field extends Base
         if (IS_POST) {
             $post = input('post.', '', 'trim');
             $post['id'] = intval($post['id']);
+            $post['title'] = htmlspecialchars($post['title']);
+            // 判断是否存在|杠
+            $IsData = strstr($post['dfvalue'], '|');
+            if (!empty($IsData)) {
+                $this->error("不可输入 | 杠");
+            }
 
-            if ('checkbox' == $post['old_dtype'] && in_array($post['dtype'], ['radio', 'select'])) {
+            $err = false;
+            if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radios', 'selects', 'checkboxs'])) {
+                $err = true;
+            } else if (in_array($post['old_dtype'], ['radios', 'selects', 'checkboxs']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
+                $err = true;
+            } else if ('checkbox' == $post['old_dtype'] && in_array($post['dtype'], ['radio', 'select'])) {
+                $err = true;
+            }
+            if (true === $err) {
                 $fieldtype_list = model('Field')->getFieldTypeAll('name,title', 'name');
-                $this->error("{$fieldtype_list['checkbox']['title']}不能更改为{$fieldtype_list[$post['dtype']]['title']}！");
+                $this->error("{$fieldtype_list[$post['old_dtype']]['title']}不能更改为{$fieldtype_list[$post['dtype']]['title']}！");
             }
 
             if (empty($post['dtype']) || empty($post['title']) || empty($post['name'])) {
@@ -1121,30 +1388,36 @@ class Field extends Base
             if (!is_string($post['dtype'])) {
                 $this->error("数据类型不正确！");
             }
-
+            if (in_array($post['dtype'], ['checkboxs','radios','selects'])) {
+                if (empty($post['mcheck'])) {
+                    $this->error("多选项参数至少填一项");
+                }
+                $post['dfvalue'] = '';
+            }
             $info = model('Channelfield')->getInfoByWhere(['id'=>$post['id'],'channel_id'=>$channel_id], 'ifsystem');
             if (!empty($info['ifsystem'])) {
                 $this->error('系统字段不允许更改！');
             }
 
             $old_name = $post['old_name'];
+            $dfvalue    = $post['dfvalue'];
             /*去除中文逗号，过滤左右空格与空值*/
-            $dfvalue    = str_replace('，', ',', $post['dfvalue']);
             if (in_array($post['dtype'], ['radio','checkbox','select','region'])) {
+                $dfvalue    = str_replace('，', ',', $dfvalue);
                 $pattern    = ['"', '\'', ';', '&', '?', '='];
                 $dfvalue    = func_preg_replace($pattern, '', $dfvalue);
-            }
-            $dfvalueArr = explode(',', $dfvalue);
-            foreach ($dfvalueArr as $key => $val) {
-                $tmp_val = trim($val);
-                if (empty($tmp_val)) {
-                    unset($dfvalueArr[$key]);
-                    continue;
+                $dfvalueArr = explode(',', $dfvalue);
+                foreach ($dfvalueArr as $key => $val) {
+                    $tmp_val = trim($val);
+                    if (empty($tmp_val)) {
+                        unset($dfvalueArr[$key]);
+                        continue;
+                    }
+                    $dfvalueArr[$key] = $tmp_val;
                 }
-                $dfvalueArr[$key] = $tmp_val;
+                $dfvalueArr = array_unique($dfvalueArr);
+                $dfvalue = implode(',', $dfvalueArr);
             }
-            $dfvalueArr = array_unique($dfvalueArr);
-            $dfvalue = implode(',', $dfvalueArr);
             /*--end*/
 
             /*默认值必填字段*/
@@ -1161,7 +1434,7 @@ class Field extends Base
             /*--end*/
 
             /*检测字段是否存在于主表与附加表中*/
-            if (true == $this->fieldLogic->checkChannelFieldList($tableExt, $post['name'], 6, array($old_name))) {
+            if (true == $this->fieldLogic->checkChannelFieldList($tableExt, $post['name'], $channel_id, array($old_name))) {
                 $this->error("字段名称 " . $post['name'] . " 与系统字段冲突！");
             }
             /*--end*/
@@ -1173,7 +1446,7 @@ class Field extends Base
                 foreach($dfvalueArr as $key => $val){
                     $whereArr[] = "CONCAT(',', `{$post['name']}` ,',') NOT LIKE '%,{$val},%'";
                 }
-                $whereStr = implode(' OR ', $whereArr);
+                $whereStr = implode(' AND ', $whereArr);
                 if (in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
                     if (!empty($dfvalueArr[0])) {
                         $new_dfvalue = $dfvalueArr[0];
@@ -1190,6 +1463,7 @@ class Field extends Base
                 Db::name('single_content')->where($whereStr)->update([$post['name']=>$new_dfvalue]);
             }
             /*end*/
+
             if ("checkbox" == $post['dtype']){
                 $dfvalue = explode(',', $dfvalue);
                 if (64 < count($dfvalue)){
@@ -1197,6 +1471,7 @@ class Field extends Base
                 }
                 $dfvalue = implode(',', $dfvalue);
             }
+
             /*组装完整的SQL语句，并执行编辑字段*/
             $fieldinfos = $this->fieldLogic->GetFieldMake($post['dtype'], $post['name'], $dfvalue, $post['title']);
             $ntabsql    = $fieldinfos[0];
@@ -1204,25 +1479,76 @@ class Field extends Base
             $maxlength  = $fieldinfos[2];
             $table      = PREFIX . 'arctype';
             $sql        = " ALTER TABLE `$table` CHANGE COLUMN `{$old_name}` $ntabsql ";
-            if (false !== Db::execute($sql)) {
+            try {
+                if (is_dir('./weapp/CompressContent/')) {                                            
+                   $compressLogic = new \weapp\CompressContent\logic\CompressContentLogic;                    
+                   $compressLogic->copydata(4,$channel_id,'',$table,  $sql);        
+                }                  
+                $r = @Db::execute($sql);
+            } catch (\Exception $e) {
+                $this->error('该数据类型不支持切换');
+            }
+            if (false !== $r) {
 
-                /*针对单选项、多选项、下拉框：修改之前，将该字段不存在的值都更新为默认值第一个*/
-                if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
-                    $whereArr = [];
-                    $new_dfvalue = '';
-                    $dfvalueArr = explode(',', $dfvalue);
-                    foreach($dfvalueArr as $key => $val){
-                        if ($key == 0) {
-                            $new_dfvalue = $val;
+                // 针对独立表的单选项、多选项、下拉框
+                if (in_array($post['dtype'], ['radios', 'selects', 'checkboxs'])) {
+                    if (!empty($post['mcheck'])) {
+                        $fieldCustomUpdataIds = $fieldCustomUpdata = $fieldCustomAdddata = [];
+                        foreach ($post['mcheck'] as $key => $val) {                              
+                            if (!empty($val['id'])) {
+                                $fieldCustomUpdata[] = [
+                                    'id' => $val['id'],
+                                    'dtype' => $post['dtype'],
+                                    'name' => $post['name'],
+                                    'dfvalue' => trim($val['dfvalue']),
+                                    'sort_order' => intval($val['sort_order']),
+                                    'update_time' => getTime(),
+                                ];
+                                $fieldCustomUpdataIds[] = $val['id'];
+                            } else {
+                                $fieldCustomAdddata[] = [
+                                    'field_id' => $post['id'],
+                                    'channel_id' => $post['channel_id'],
+                                    'dtype' => $post['dtype'],
+                                    'name' => $post['name'],
+                                    'dfvalue' => trim($val['dfvalue']),
+                                    'sort_order' => intval($val['sort_order']),
+                                    'add_time' => getTime(),
+                                    'update_time' => getTime(),
+                                ];                           
+                            }              
                         }
-                        $whereArr[] = "CONCAT(',', `{$post['name']}` ,',') NOT LIKE '%,{$val},%'";
+                        if (!empty($fieldCustomAdddata)) {
+                            Db::name('field_custom_param')->insertAll($fieldCustomAdddata);
+                        }
+                        if (!empty($fieldCustomUpdata)) {
+                            model('FieldCustomParam')->saveAll($fieldCustomUpdata);
+                        }
+                        if (!empty($fieldCustomDeldata)) {
+                            Db::name('field_custom_param')->where(['id'=>['IN', $fieldCustomUpdataIds]])->delete(true);
+                        }
+                    } else {
+                        Db::name('field_custom_param')->where(['channel_id'=>$post['channel_id'], 'name'=>$post['name']])->delete(true);
                     }
-                    $whereArr[] = "`{$post['name']}` is NULL";
-                    $whereArr[] = "`{$post['name']}` = ''";
-                    $whereStr = implode(' OR ', $whereArr);
-                    Db::name('single_content')->where($whereStr)->update([$post['name']=>$new_dfvalue]);
+                } else {
+                    Db::name('field_custom_param')->where(['channel_id'=>$post['channel_id'], 'name'=>$post['name']])->delete(true);
+                    /*针对单选项、多选项、下拉框：修改之前，将该字段不存在的值都更新为默认值第一个*/
+                    if (in_array($post['old_dtype'], ['radio', 'select', 'checkbox']) && in_array($post['dtype'], ['radio', 'select', 'checkbox'])) {
+                        $whereArr = [];
+                        $new_dfvalue = '';
+                        $dfvalueArr = explode(',', $dfvalue);
+                        foreach($dfvalueArr as $key => $val){
+                            if ($key == 0) {
+                                $new_dfvalue = $val;
+                            }
+                            $whereArr[] = "CONCAT(',', `{$post['name']}` ,',') NOT LIKE '%,{$val},%'";
+                        }
+                        $whereArr[] = "(`{$post['name']}` is NULL OR `{$post['name']}` = '')";
+                        $whereStr = implode(' AND ', $whereArr);
+                        Db::name('single_content')->where($whereStr)->update([$post['name']=>$new_dfvalue]);
+                    }
+                    /*end*/
                 }
-                /*end*/
 
                 /*保存更新字段的记录*/
                 $newData = array(
@@ -1252,7 +1578,8 @@ class Field extends Base
                             'attr_name'  => ['IN', $attr_name_arr],
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
-                        !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        // !empty($new_typeid_arr) && $typeids = $new_typeid_arr;
+                        if (!empty($new_typeid_arr)) $typeids = array_unique(array_merge($typeids, $new_typeid_arr));
                     }
                     /*--end*/
                     $addData = [];
@@ -1296,11 +1623,15 @@ class Field extends Base
         if (!empty($info['ifsystem'])) {
             $this->error('系统字段不允许更改！');
         }
-        $assign_data['info'] = $info;
+        // 多选项、单选项、下拉框[新]
+        if (in_array($info['dtype'], ['checkboxs','radios','selects'])) {
+            $checkboxsArr = Db::name('field_custom_param')->field('id,name,dfvalue,sort_order')->where(['channel_id'=>$info['channel_id'], 'name'=>$info['name']])->order('sort_order ASC, id ASC')->select();
+            $info[$info['name']] = $checkboxsArr;            
+        }
 
         /*字段类型列表*/
         $fieldtype_list = [];
-        $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption');
+        $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         foreach ($fieldtype_list_tmp as $key => $val) {
             if (!in_array($val['name'], ['file','media','region'])) {
                 $fieldtype_list[] = $val;
@@ -1309,7 +1640,27 @@ class Field extends Base
         $assign_data['fieldtype_list'] = $fieldtype_list;
         /*--end*/
 
-        $assign_data['channel_id'] = $channel_id; //模型ID
+        $allowed_dtype = [];
+        foreach ($assign_data['fieldtype_list'] as $key => $val) {
+            $allowed_dtype[$val['name']] = $val['name'];
+        }
+        if ('media' == $info['dtype']) {
+            $allowed_dtype = ['media'];
+        } else if (in_array($info['dtype'], ['radio', 'select', 'checkbox'])) {
+            foreach (['radios', 'selects', 'checkboxs'] as $key => $val) {
+                unset($allowed_dtype[$val]);
+            }
+            foreach (['radio', 'select', 'checkbox'] as $key => $val) {
+                if ($val != $info['dtype']) {
+                    unset($allowed_dtype[$val]);
+                }
+            }
+        } else if (in_array($info['dtype'], ['radios', 'selects', 'checkboxs'])) {
+            foreach (['radio', 'select', 'checkbox'] as $key => $val) {
+                unset($allowed_dtype[$val]);
+            }
+        }
+        $info['allowed_dtype'] = $allowed_dtype;
 
         /*允许编辑的栏目*/
         $typeids     = Db::name('channelfield_bind')->where(['field_id' => $id])->column('typeid');
@@ -1318,6 +1669,9 @@ class Field extends Base
         $this->assign('select_html', $select_html);
         $this->assign('typeids', $typeids);
         /*--end*/
+
+        $assign_data['channel_id'] = $channel_id; //模型ID
+        $assign_data['info'] = $info;
 
         $this->assign($assign_data);
         return $this->fetch();
@@ -1339,12 +1693,11 @@ class Field extends Base
                     'id'         => array('eq', $id),
                     'channel_id' => $channel_id,
                 );
-                $result    = Db::name('channelfield')->field('channel_id,name')->where($map)->select();
-                $name_list = get_arr_column($result, 'name');
-                Db::name('channelfield')->where($map)->delete();//删除字段的记录
-                Db::name('channelfield_bind')->where('field_id',$id)->delete();//删除字段绑定记录
-
-                adminLog('删除栏目字段：' . implode(',', $name_list));
+                $result    = Db::name('channelfield')->field('channel_id,name')->where($map)->find();
+                Db::name('channelfield')->where($map)->delete(true);//删除字段的记录
+                Db::name('channelfield_bind')->where('field_id',$id)->delete(true);//删除字段绑定记录
+                Db::name('field_custom_param')->where(['channel_id'=>$result['channel_id'], 'name'=>$result['name']])->delete(true);//删除字段默认值记录
+                adminLog('删除栏目字段：' . $result['name']);
                 $this->success('删除成功');
             }
 
@@ -1726,7 +2079,7 @@ class Field extends Base
             if (!preg_match('/^([\x{4e00}-\x{9fa5}\w\"\:\{\}\;\，\,]*)$/u', $info['attr_values'])) {
                 $info['attr_values'] = '';
             }
-            $dfvalue = unserialize($info['attr_values']);
+            $dfvalue = safe_unserialize($info['attr_values']);
             if (is_array($dfvalue)) {
                 $dfvalue['region_id'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_id']);
                 $dfvalue['region_ids'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_ids']);
@@ -1836,5 +2189,19 @@ class Field extends Base
             $this->success('正常');
         }
         $this->error('非法访问');
+    }
+    
+    /**
+     *  删除选项参数[xin]
+     * */
+    public function del_fieldCustomParam(){
+        $rid = input('post.rid/d');
+        if(IS_AJAX_POST && !empty($rid)){
+            $res = Db::name('field_custom_param')->where(['id'=>$rid])->delete(true);
+            if ($res !== false) {
+                $this->success('删除成功');
+            }
+        }
+        $this->success('删除失败');
     }
 }

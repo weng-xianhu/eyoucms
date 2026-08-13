@@ -24,6 +24,7 @@ class Cookie
         'secure'    => false, //  cookie 启用安全传输
         'httponly'  => false, // httponly 设置
         'setcookie' => true, // 是否使用 setcookie
+        'samesite'  => 'Lax', // 推荐 Lax 或 Strict，跨域需求用 None
     ];
 
     /**
@@ -123,10 +124,34 @@ class Cookie
         0;
 
         if ($config['setcookie']) {
-            setcookie(
+            /*setcookie(
                 $name, $value, $expire, $config['path'], $config['domain'],
                 $config['secure'], $config['httponly']
-            );
+            );*/
+
+            if (\PHP_VERSION_ID < 70300) {
+                // 低于 PHP 7.3，手动拼接 SameSite
+                $cookieStr = urlencode($name) . '=' . urlencode($value)
+                    . (empty($expire) ? '' : '; Expires=' . gmdate('D, d-M-Y H:i:s T', $expire))
+                    . '; Path=' . $config['path']
+                    . (empty($config['domain']) ? '' : '; Domain=' . $config['domain'])
+                    . ($config['secure'] ? '; Secure' : '')
+                    . ($config['httponly'] ? '; HttpOnly' : '')
+                    . (!empty($config['samesite']) ? '; SameSite=' . $config['samesite'] : '');
+                header('Set-Cookie: ' . $cookieStr, false);
+            } else {
+                // PHP 7.3+ 原生支持
+                setcookie(
+                    $name, $value, [
+                        'expires' => $expire,
+                        'path' => $config['path'],
+                        'domain' => $config['domain'],
+                        'secure' => $config['secure'],
+                        'httponly' => $config['httponly'],
+                        'samesite' => $config['samesite'] ? $config['samesite'] : 'Lax'
+                    ]
+                );
+            }
         }
 
         $_COOKIE[$name] = $value;

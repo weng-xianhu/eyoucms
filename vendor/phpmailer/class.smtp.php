@@ -17,6 +17,11 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// 版本检查：仅允许PHP 5.4及以下版本使用
+if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
+    die('为了安全起见，PHPMailer不支持PHP5.5及以上高版本使用。您当前PHP版本为：' . PHP_VERSION);
+}
+
 /**
  * PHPMailer RFC821 SMTP email transport class.
  * Implements RFC 821 SMTP commands and provides some utility methods for sending mail to an SMTP server.

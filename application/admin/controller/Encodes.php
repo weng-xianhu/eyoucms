@@ -44,8 +44,9 @@ class Encodes extends Base {
     {
         session('isset_author', 1);
 
+        $is_internal_network = function_exists('is_internal_network') ? is_internal_network() : false;
         $globalConfig = tpCache('global');
-        if (!empty($globalConfig['php_atqueryrequest'])) {
+        if (!empty($globalConfig['php_atqueryrequest']) && !$is_internal_network) {
             $atqueryrequest = json_decode(base64_decode($globalConfig['php_atqueryrequest']), true);
             $atvalue = !isset($globalConfig['php_servicemeal']) ? 0 : $globalConfig['php_servicemeal'];
             $atdata = empty($atqueryrequest[$atvalue]) ? '' : $atqueryrequest[$atvalue];
@@ -103,7 +104,7 @@ class Encodes extends Base {
         }
         /*--end*/
 
-        if (is_array($params) && $params['errcode'] == 0) {
+        if (is_array($params) && $params['errcode'] == 0 && !$is_internal_network) {
 
             if (!empty($params['info'])) {
                 if (!empty($params['info']['code'])) {
@@ -156,8 +157,8 @@ class Encodes extends Base {
                     $fp = fopen($file, "w+");
                     if (!empty($fp)) {
                         fwrite($fp, $tpCacheData['php_servicecode']);
+                        fclose($fp);
                     }
-                    fclose($fp);
                 }
 
                 // 云插件库开关
@@ -165,8 +166,8 @@ class Encodes extends Base {
                 $fp = fopen($file, "w+");
                 if (!empty($fp)) {
                     fwrite($fp, $tpCacheData['php_weapp_plugin_open']);
+                    fclose($fp);
                 }
-                fclose($fp);
             }
 
             if (empty($params['info']['code'])) {
@@ -189,8 +190,12 @@ class Encodes extends Base {
                 if (preg_match('/^v(\d+)\.(\d+)\.(\d+)_(.*)$/i', $version)) {
                     $paginate_type = str_replace(['jsonpR','turn'], ['','y_'], config('default_jsonp_handler'));
                     $filename = strtoupper(md5($paginate_type.$version));
-                    $file = "./data/conf/{$filename}.txt";
-                    $tmpMealValue = file_exists($file) ? 2 : 0;
+                    $tmpMealValue = 0;
+                    if ($is_internal_network) {
+                        $tmpMealValue = 2;
+                    } else if (file_exists("./data/conf/{$filename}.txt")) {
+                        $tmpMealValue = 5;
+                    }
                     $is_authortoken = !empty($tmpMealValue) ? 0 : -1;
                     $serviceinfo = mchStrCode(json_encode(['pid'=>$tmpMealValue,'code'=>$filename]));
                     /*多语言*/

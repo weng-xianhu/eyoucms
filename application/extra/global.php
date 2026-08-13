@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -19,6 +19,15 @@ if (empty($channeltype_row)) {
         ->getAllWithIndex('id');
     \think\Cache::set($cacheKey, $channeltype_row, EYOUCMS_CACHE_TIME, "channeltype");
 }
+
+// [功能地图]-[外贸助手]-[表单手机格式]正则使用处理
+$mobileFormatKey = "foreign_open_mobile_format";
+$openMobileFormat = \think\Cache::get($mobileFormatKey);
+if (false === $openMobileFormat) {
+    $openMobileFormat = \think\Db::name('setting')->where(['name' => 'foreign_open_mobile_format'])->getField('value');
+    \think\Cache::set($mobileFormatKey, intval($openMobileFormat), EYOUCMS_CACHE_TIME, "setting");
+}
+$openMobileFormatVal = !empty($openMobileFormat) ? '/^([\d\-\+]+)$/' : '/^1[3-9]\d{9}$/';
 
 $channeltype_list = []; // 模型标识
 $allow_release_channel = []; // 发布文档的模型ID
@@ -108,7 +117,7 @@ return array(
     'validate_type_list' => [
         6 => [
             'name' => '手机号码',
-            'value' => '/^1\d{10}$/'
+            'value' => $openMobileFormatVal
         ],
         7 => [
             'name' => 'Email邮箱',
@@ -133,7 +142,7 @@ return array(
     'form_field_grep_list' => [
         'mobile' => [
             'name' => '手机号码',
-            'value' => '/^1\d{10}$/'
+            'value' => $openMobileFormatVal
         ],
         'email' => [
             'name' => 'Email邮箱',
@@ -145,7 +154,7 @@ return array(
     // 栏目表内置字段
     'arctype_table_fields' => array('id','channeltype','current_channel','parent_id','topid','typename','dirname','dirpath','diy_dirpath','rulelist','ruleview','englist_name','grade','typelink','litpic','templist','tempview','seo_title','seo_keywords','seo_description','sort_order','is_hidden','is_part','admin_id','is_del','del_method','status','is_release','weapp_code','lang','add_time','update_time','target','nofollow','typearcrank','empty_logic','page_limit','total_arc'),
     // 网络图片扩展名
-    'image_ext' => 'jpg,jpeg,gif,bmp,ico,png,webp', // svg
+    'image_ext' => 'jpg,jpeg,gif,bmp,ico,png,webp,svg',
     // 网络多媒体扩展名
     'media_ext' => 'ra,ram,vqf,wma,mp3,mid,cd,wave,aiff,au,mpeg-4,midi,vqf,amr,wav,mp4,swf,mov,rm,dat,mpeg,mpg,avi,wmv,rmvb,mp4,asf,3gp,mkv,flv,f4v,webm,ogg,ogv,m4a,m3u8',
     // 后台语言Cookie变量
@@ -168,7 +177,8 @@ return array(
         7   => '问答获得悬赏',
         8   => '分销商提现',
         9   => '抽奖',
-        // 10   => '后续添加',
+        10   => '卡密充值', // 卡密充值的插件用
+        // 11   => '后续添加',
     ),
     // 充值状态
     'pay_status_arr' => array(
@@ -195,6 +205,7 @@ return array(
         'Hupijiaopay' => '虎皮椒支付',
         'PersonPay' => '支付宝',
         'aliPay'     => '支付宝支付',
+        'scorePay'   => '积分支付', // 纯积分支付方式
     ),
     // 缩略图默认宽高度
     'thumb' => [
@@ -233,6 +244,8 @@ return array(
     'baidu_map_ak'  => 'RVRMWGdDeElvVml4Z2dIY0FrNm1LcE1k',
     // 提示
     'authori_tips' => '5LuF6ZmQ5LqO5LiT5Lia54mI5ZWG5Lia5o6I5p2D5L2/55So77yB',
+    // mm提示
+    'mm_tips' => "55aR5Ly85pyo6ams5Zu+54mH77yB",
     // 会员投稿发布的文章状态，前台使用
     'home_article_arcrank' => array(
         -1  => '未审核',
@@ -489,7 +502,7 @@ return array(
         1 => '审核中',
         2 => '审核通过',
         3 => '审核不通过',
-        4 => '会员已发货',
+        4 => '商家待收货',
         5 => '商家已收货',
         6 => '换货完成',
         7 => '退款完成',
@@ -498,8 +511,8 @@ return array(
     // 订单退换货服务类型 -- 陈风任
     'order_service_type' => array(
         1 => '换货',
-        2 => '退货',
-        3 => '维修'
+        2 => '退货退款',
+        3 => '仅退款'
     ),
     // 商品评价评分 -- 陈风任
     'order_total_score' => array(

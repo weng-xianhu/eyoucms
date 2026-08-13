@@ -9,6 +9,15 @@ return array (
     'primary' => true,
     'autoinc' => true,
   ),
+  'group_code' => 
+  array (
+    'name' => 'group_code',
+    'type' => 'varchar(10)',
+    'notnull' => false,
+    'default' => 'image',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'upload_type' => 
   array (
     'name' => 'upload_type',

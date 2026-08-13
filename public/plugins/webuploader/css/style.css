@@ -526,6 +526,11 @@ table {
     text-align:center;
 	border:1px solid #ccc;
 }
+.container .area .file-list .file *{
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
 .container .area .file-list .file:hover,
 .container .area .file-list .file.checked{
 	border-color:#1094FA;
@@ -571,18 +576,23 @@ table {
     background-position: -48px 0;
 }
 .container .area .file-list .file .img{
-	position:relative;
-	display:table-cell;
-	height:100px;
-	width:120px;
-	vertical-align:middle;
-	text-align:center;
-	z-index:1;
+    position: relative;
+    display: block;
+    height: 100px;
+    width: 120px;
+    overflow: hidden;
+    vertical-align: middle;
+    text-align: center;
+    z-index: 1;
 }
 .container .area .file-list .file .img img{
-	position:relative;
-	vertical-align:middle;
-	z-index:1;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    max-width: 100%;
+    max-height: 100%;
+    z-index: 1;
 }
 .container .area .file-list .file .icon{
     position:absolute;
@@ -600,7 +610,8 @@ table {
 	background:transparent url(../images/success.png) no-repeat right bottom;
 	_background:transparent url(../images/success.gif) no-repeat right bottom;
 }
-.container .area .file-list .file .desc{
+.container .area .file-list .file .desc {
+    display: inline-block;
 	overflow:hidden;
 	position:absolute;
 	left:0;
@@ -608,10 +619,12 @@ table {
 	padding:0 5px;
 	height:20px;
 	width:100%;
+    max-width: 100%;
 	font-size:14px;
 	color:#666;
 	line-height:20px;
 	text-overflow:ellipsis;
+    white-space: nowrap;
 	z-index:2;
 	cursor:default;
 	background:#efefef;

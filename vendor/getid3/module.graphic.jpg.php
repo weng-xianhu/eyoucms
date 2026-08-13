@@ -62,7 +62,7 @@ class getid3_jpg extends getid3_handler
 
 		$returnOK = false;
 		switch ($type) {
-			case IMG_JPG:
+			case IMAGETYPE_JPEG:
 				$info['video']['resolution_x'] = $width;
 				$info['video']['resolution_y'] = $height;
 
@@ -71,17 +71,14 @@ class getid3_jpg extends getid3_handler
 						if (substr($imageinfo['APP1'], 0, 4) == 'Exif') {
 							//$this->warning('known issue: https://bugs.php.net/bug.php?id=62523');
 							//return false;
-							set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
+							set_error_handler(function($errno, $errstr, $errfile, $errline) { // https://github.com/JamesHeinrich/getID3/issues/275
 								if (!(error_reporting() & $errno)) {
 									// error is not specified in the error_reporting setting, so we ignore it
 									return false;
 								}
-
-								$errcontext['info']['warning'][] = 'Error parsing EXIF data ('.$errstr.')';
+								$this->warning('Error parsing EXIF data ('.$errstr.')');
 							});
-
 							$info['jpg']['exif'] = exif_read_data($info['filenamepath'], null, true, false);
-
 							restore_error_handler();
 						} else {
 							$this->warning('exif_read_data() cannot parse non-EXIF data in APP1 (expected "Exif", found "'.substr($imageinfo['APP1'], 0, 4).'")');
@@ -120,7 +117,7 @@ class getid3_jpg extends getid3_handler
 
 			if (isset($info['jpg']['exif']['GPS']['GPSDateStamp'])) {
 				$explodedGPSDateStamp = explode(':', $info['jpg']['exif']['GPS']['GPSDateStamp']);
-				$computed_time[5] = (isset($explodedGPSDateStamp[0]) ? $explodedGPSDateStamp[0] : '');
+				$computed_time[5] = $explodedGPSDateStamp[0];
 				$computed_time[3] = (isset($explodedGPSDateStamp[1]) ? $explodedGPSDateStamp[1] : '');
 				$computed_time[4] = (isset($explodedGPSDateStamp[2]) ? $explodedGPSDateStamp[2] : '');
 
@@ -188,7 +185,7 @@ class getid3_jpg extends getid3_handler
 	 * @return mixed
 	 */
 	public function CastAsAppropriate($value) {
-		if (is_array($value)) {
+		if (is_array($value) || is_null($value)) {
 			return $value;
 		} elseif (preg_match('#^[0-9]+/[0-9]+$#', $value)) {
 			return getid3_lib::DecimalizeFraction($value);

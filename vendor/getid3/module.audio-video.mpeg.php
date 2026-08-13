@@ -292,6 +292,10 @@ class getid3_mpeg extends getid3_handler
 						$GOPheader['time_code'] = sprintf('%02d'.$time_code_separator.'%02d'.$time_code_separator.'%02d'.$time_code_separator.'%02d', $GOPheader['time_code_hours'], $GOPheader['time_code_minutes'], $GOPheader['time_code_seconds'], $GOPheader['time_code_pictures']);
 
 						$info['mpeg']['group_of_pictures'][] = $GOPheader;
+					} else {
+						// https://github.com/JamesHeinrich/getID3/issues/440
+						$this->warning('group_of_pictures['.$GOPcounter.'] no valid bitratemode');
+						$info['mpeg']['group_of_pictures'][] = array();
 					}
 					break;
 
@@ -394,7 +398,7 @@ $PackedElementaryStream['additional_header_bytes'] = $additional_header_bytes;
 					$info['mpeg']['packed_elementary_streams'][$PackedElementaryStream['stream_type']][$PackedElementaryStream['stream_id']][] = $PackedElementaryStream;
 */
 					$getid3_temp = new getID3();
-					$getid3_temp->openfile($this->getid3->filename);
+					$getid3_temp->openfile($this->getid3->filename, $this->getid3->info['filesize'], $this->getid3->fp);
 					$getid3_temp->info = $info;
 					$getid3_mp3 = new getid3_mp3($getid3_temp);
 					for ($i = 0; $i <= 7; $i++) {
@@ -505,9 +509,9 @@ echo 'average_File_bitrate = '.number_format(array_sum($vbr_bitrates) / count($v
 			$last_GOP_id = max(array_keys($FramesByGOP));
 			$frames_in_last_GOP = count($FramesByGOP[$last_GOP_id]);
 			$gopdata = &$info['mpeg']['group_of_pictures'][$last_GOP_id];
-			$info['playtime_seconds'] = ($gopdata['time_code_hours'] * 3600) + ($gopdata['time_code_minutes'] * 60) + $gopdata['time_code_seconds'] + (($gopdata['time_code_pictures'] + $frames_in_last_GOP + 1) / $info['mpeg']['video']['frame_rate']);
+			$info['playtime_seconds'] = ($gopdata['time_code_hours'] * 3600) + ($gopdata['time_code_minutes'] * 60) + $gopdata['time_code_seconds'] + getid3_lib::SafeDiv($gopdata['time_code_pictures'] + $frames_in_last_GOP + 1, $info['mpeg']['video']['frame_rate']);
 			if (!isset($info['video']['bitrate'])) {
-				$overall_bitrate = ($info['avdataend'] - $info['avdataoffset']) * 8 / $info['playtime_seconds'];
+				$overall_bitrate = getid3_lib::SafeDiv($info['avdataend'] - $info['avdataoffset'] * 8, $info['playtime_seconds']);
 				$info['video']['bitrate'] = $overall_bitrate - (isset($info['audio']['bitrate']) ? $info['audio']['bitrate'] : 0);
 			}
 			unset($info['mpeg']['group_of_pictures']);
@@ -546,6 +550,7 @@ echo 'average_File_bitrate = '.number_format(array_sum($vbr_bitrates) / count($v
 		$VideoBitrate = max(min($VideoBitrate / 1000, 10000), 10); // limit to range of 10kbps -  10Mbps (beyond that curves flatten anyways, no big loss)
 
 
+		$OverheadMultiplierByBitrate      = array();
 		//OMBB[audiobitrate]              = array(video-10kbps,       video-100kbps,      video-1000kbps,     video-10000kbps)
 		$OverheadMultiplierByBitrate[32]  = array(0, 0.9676287944368530, 0.9802276264360310, 0.9844916183244460, 0.9852821845179940);
 		$OverheadMultiplierByBitrate[48]  = array(0, 0.9779100089209830, 0.9787770035359320, 0.9846738664076130, 0.9852683013799960);
@@ -609,14 +614,20 @@ echo 'average_File_bitrate = '.number_format(array_sum($vbr_bitrates) / count($v
 	 * @return float
 	 */
 	public static function videoAspectRatioLookup($rawaspectratio, $mpeg_version=1, $width=0, $height=0) {
+		// Per http://forum.doom9.org/archive/index.php/t-84400.html
+		// 0.9157 is commonly accepted to mean 11/12 or .9166, the reciprocal of 12/11 (1.091) and,
+		// 1.0950 is commonly accepted to mean 11/10 or 1.1, the reciprocal of 10/11 (0.909)
 		$lookup = array(
-			1 => array(0, 1, 0.6735, 0.7031, 0.7615, 0.8055, 0.8437, 0.8935, 0.9157, 0.9815, 1.0255, 1.0695, 1.0950, 1.1575, 1.2015, 0),
+			1 => array(0, 1, 0.6735, 0.7031, 0.7615, 0.8055, 0.8437, 0.8935, 11/12, 0.9815, 1.0255, 1.0695, 11/10, 1.1575, 1.2015, 0),
 			2 => array(0, 1, 1.3333, 1.7778, 2.2100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 		);
 		$ratio = (float) (isset($lookup[$mpeg_version][$rawaspectratio]) ? $lookup[$mpeg_version][$rawaspectratio] : 0);
-		if ($mpeg_version == 2 && $ratio != 1) {
+		if ($mpeg_version == 2 && $ratio != 1 && $width != 0) {
 			// Calculate pixel aspect ratio from MPEG-2 display aspect ratio
 			$ratio = $ratio * $height / $width;
+		} else if ($mpeg_version == 1 && $ratio !== 0.0) {
+			// The MPEG-1 tables store the reciprocal of the pixel aspect ratio.
+			$ratio = 1.0 / $ratio;
 		}
 		return $ratio;
 	}

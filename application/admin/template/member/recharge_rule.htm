@@ -1,0 +1,151 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+{include file="member/left" /}
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <ul class="tab-base nc-row">
+                <li>
+                    <a href='{:url("Member/recharge_pack_list")}'>
+                        <span>充值套餐</span>
+                    </a>
+                </li>
+                <li>
+                    <a href='{:url("Member/recharge_pack_log")}'>
+                        <span>购买记录</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="current" href='{:url("Member/recharge_rule")}'>
+                        <span>充值规则</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div class="explanation">
+            <ul>
+                <li>充值规则将在小程序充值页面展示给用户，可添加多条规则说明</li>
+            </ul>
+        </div>
+        <div class="mDiv mt10">
+            <div class="ftitle">
+                <div class="fbutton">
+                    <a href="javascript:void(0);" onclick="addRule();">
+                        <div class="add" title="添加规则">
+                            <span><i class="layui-icon layui-icon-addition"></i>添加规则</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <form id="ruleForm">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th class="w60"> <div class="tc">序号</div> </th>
+                            <th> <div class="text-l10">规则内容</div> </th>
+                            <th class="w100"> <div class="tc">操作</div> </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%" id="ruleTable">
+                    <tbody id="ruleList">
+                        {empty name="$rules"}
+                        <tr id="emptyRow">
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    <p style="color:#999;margin-top:10px;">暂无规则，请点击上方"添加规则"按钮添加</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {else/}
+                        {volist name="rules" id="rule" key="k"}
+                        <tr class="rule-row">
+                            <td class="sort"> <div class="w60 tc rule-index">{$k}</div> </td>
+                            <td style="width:100%">
+                                <div class="text-l10">
+                                    <input type="text" name="rules[]" value="{$rule}" style="width:95%;border:1px solid #ddd;padding:8px 10px;border-radius:3px;" placeholder="请输入规则内容">
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w100 tc">
+                                    <a href="javascript:void(0);" onclick="removeRule(this);" class="btn red">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/volist}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </form>
+        <div class="tDiv">
+            <div class="tDiv2" style="padding:15px;">
+                <a href="javascript:void(0);" onclick="submitSaveRule();" class="ncap-btn-big ncap-btn-green">保存设置</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+var ruleIndex = {$rules|count};
+
+function addRule() {
+    $('#emptyRow').remove();
+    ruleIndex++;
+    var html = '<tr class="rule-row">' +
+        '<td class="sort"><div class="w60 tc rule-index">' + ruleIndex + '</div></td>' +
+        '<td style="width:100%"><div class="text-l10"><input type="text" name="rules[]" value="" style="width:95%;border:1px solid #ddd;padding:8px 10px;border-radius:3px;" placeholder="请输入规则内容"></div></td>' +
+        '<td class="operation"><div class="w100 tc"><a href="javascript:void(0);" onclick="removeRule(this);" class="btn red">删除</a></div></td>' +
+        '</tr>';
+    $('#ruleList').append(html);
+    updateIndex();
+}
+
+function removeRule(obj) {
+    $(obj).closest('tr').remove();
+    updateIndex();
+    if ($('.rule-row').length === 0) {
+        var emptyHtml = '<tr id="emptyRow"><td class="no-data" align="center" axis="col0" colspan="50"><div class="no_row"><div class="no_pic"><img src="__SKIN__/images/null-data.png"></div><p style="color:#999;margin-top:10px;">暂无规则，请点击上方"添加规则"按钮添加</p></div></td></tr>';
+        $('#ruleList').append(emptyHtml);
+    }
+}
+
+function updateIndex() {
+    $('.rule-row').each(function(i) {
+        $(this).find('.rule-index').text(i + 1);
+    });
+}
+
+function submitSaveRule() {
+    layer_loading('正在处理');
+    $.ajax({
+        type: 'post',
+        data: $('#ruleForm').serialize(),
+        url: "{:url('Member/recharge_rule', ['_ajax'=>1])}",
+        dataType: 'json',
+        success: function(res) {
+            layer.closeAll();
+            if (1 === parseInt(res.code)) {
+                layer.msg(res.msg, {time: 1500}, function() {
+                    window.location.reload();
+                });
+            } else {
+                layer.msg(res.msg, {time: 1500});
+            }
+        }
+    });
+}
+</script>
+{include file="public/footer" /}

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="zh-CN">
     <head>
         <meta charset="utf-8" />
         <title>订单支付-{eyou:global name='web_name' /}</title>
@@ -107,7 +107,7 @@
                 var unified_number = $('#unified_number').val();
                 if (0 === parseInt(pay_id) && 'balance' == pay_mark) {
                     // 发送请求
-                    layer_loading('订单处理中');
+                    layer_loading();
                     $.ajax({
                         url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
                         data: {unified_id: unified_id, unified_number: unified_number, transaction_type: pay_type},

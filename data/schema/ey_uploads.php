@@ -9,6 +9,15 @@ return array (
     'primary' => true,
     'autoinc' => true,
   ),
+  'group_code' => 
+  array (
+    'name' => 'group_code',
+    'type' => 'varchar(10)',
+    'notnull' => false,
+    'default' => 'image',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'type_id' => 
   array (
     'name' => 'type_id',
@@ -84,7 +93,7 @@ return array (
   'mime' => 
   array (
     'name' => 'mime',
-    'type' => 'varchar(50)',
+    'type' => 'varchar(200)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

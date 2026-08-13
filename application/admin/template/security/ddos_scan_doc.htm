@@ -1,0 +1,36 @@
+{include file="public/layout" /}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    <div class="flexigrid">
+        <div class="mDiv" style="margin-left: 30px;">
+            <ol style="font-size: 15px;line-height: 2em;margin-bottom: 10px;">
+                <li style="font-size: 18px; margin-bottom: 10px;">-------- 【宝塔定时扫描教程】 -------- </li>
+                <li>1、定时扫描接口：<a href="javascript:void(0);" onclick="showtext('auto_scan_url');" class="ncap-btn ncap-btn-green auto_scan_url" data-clipboard-text="{$auto_scan_url}">点击复制</a> 如扫描出风险，自动以邮箱方式通知。（<a href="{:url('System/smtp')}" target="_blank">前往配置邮箱信息</a>）</li>
+                <li>2、定时扫描范围：系统文件；（暂不支持扫描附件目录，由于图片、附件等文件可能过多，容易引起超负荷扫描）</li>
+                <li>3、以下提供两种定时执行方式（防止服务器压力过载，每天最多执行一次，建议计划任务里设置每天或每几天一次）</li>
+                <li style="text-indent: 2em;">方式一（简易版）：在宝塔面板添加任务类型[访问URL-GET]，可能会超时报404 <br/>
+                    <div style="text-indent: 2em;">
+                        <img src="https://www.eyoucms.com/uploads/allimg/20250516/1008-250516092U05M.png?{:getTime()}">
+                    </div>
+                </li>
+                <br/>
+                <li style="text-indent: 2em;">方式二（稳定版）：在宝塔面板添加任务类型[Shell脚本] <br/>
+                    <div style="text-indent: 2em;">
+                        <img src="https://www.eyoucms.com/uploads/allimg/20250516/1008-250516093124152.png?{:getTime()}">
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function showtext(classname){
+        var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
+    }
+</script>
+
+{include file="public/footer" /}

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -142,6 +142,11 @@ class Api extends Base
     public function index()
     {
         $data = $this->apiLogic->taglibData();
+        $webConfig = tpCache('web');
+        $data['shopConf'] = [
+            'web_logo' => get_head_pic($webConfig['web_logo']),
+            'web_name' => $webConfig['web_name'],
+        ];
         $this->renderSuccess($data);
     }
 
@@ -264,13 +269,14 @@ class Api extends Base
             }
 
             // 拼装发送的字符串内容
-            $row = M('guestbook_attribute')->field('a.attr_name, b.attr_value')
+            $row = M('guestbook_attribute')->field('a.attr_name, b.attr_value, a.attr_input_type')
                 ->alias('a')
                 ->join('__GUESTBOOK_ATTR__ b', 'a.attr_id = b.attr_id AND a.typeid = '.$typeid, 'LEFT')
                 ->where([
                     'b.aid' => $aid,
+                    'a.is_del' => 0,
                 ])
-                ->order('a.attr_id sac')
+                ->order('a.attr_id asc')
                 ->select();
             $content = '';
             foreach ($row as $key => $val) {
@@ -286,14 +292,56 @@ class Api extends Base
                 }
                 $content .= $val['attr_name'] . '：' . $val['attr_value'].'<br/>';
             }
-            $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$content}</p>";
+
+            // 确定来源
+            $source_text = '电脑端';
             if (isWeixinApplets()) {
-                $html .= "<p style='text-align: left;'>——来源：小程序端</p>";
+                $source_text = '小程序端';
             } else if (isMobile()) {
-                $html .= "<p style='text-align: left;'>——来源：移动端</p>";
-            } else {
-                $html .= "<p style='text-align: left;'>——来源：电脑端</p>";
+                $source_text = '移动端';
             }
+            $year = date('Y');
+            $site_name = tpCache('web.web_name');
+
+            // 美化邮件模板
+            $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Microsoft YaHei',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:normal;">新的留言消息</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <p style="margin-bottom:20px;color:#333;">您好，管理员：</p>
+                            <p style="color:#333;">您收到一条来自 <strong>{$web_name}</strong> 的留言：</p>
+                            <div style="background:#f8f9fa;border-radius:6px;padding:20px;margin:20px 0;">
+                                {$content}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:20px 30px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">
+                                来源：{$source_text} | {$site_name}<br>
+                                &copy; {$year} {$site_name} 版权所有
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
             
             // 发送邮件
             $res = send_email(null,null,$html, $scene);
@@ -384,6 +432,11 @@ class Api extends Base
             $data['showPointsShop'] = $pointsShopLogic->showPointsShop($weappInfo);
         }
 
+        $webConfig = tpCache('web');
+        $data['shopConf'] = [
+            'web_logo' => get_head_pic($webConfig['web_logo']),
+            'web_name' => $webConfig['web_name'],
+        ];
         // 是否安装订单核销插件
         $data['showVerifyOrder'] = false;
         $weappInfo = model('ShopPublicHandle')->getWeappVerifyInfo();
@@ -411,6 +464,7 @@ class Api extends Base
 
         $tagData = $this->apiLogic->taglibData($users);
         $data = array_merge($data, $tagData);
+     
         return $this->renderSuccess($data);
     }
         /**
@@ -824,9 +878,28 @@ class Api extends Base
      */
     public function uploads()
     {
+        if (empty($this->globalConfig['web_users_switch'])) {
+            $this->error('后台会员中心尚未开启！');
+        }
+        
         if (IS_AJAX_POST) {
-            $file_type = input('param.file_type/s',"");
-            $data = func_common('file', 'minicode',$file_type);
+            $file_type_str = '';
+            $image_type = tpCache('basic.image_type');
+            if (!empty($image_type)) {
+                $file_type_str .= '|' . $image_type;
+            }
+            $file_type = tpCache('basic.file_type');
+            if (!empty($file_type)) {
+                $file_type_str .= '|' . $file_type;
+            }
+            $media_type = tpCache('basic.media_type');
+            if (!empty($media_type)) {
+                $file_type_str .= '|' . $media_type;
+            }
+            $file_type_str = trim($file_type_str, '|');
+            $file_type_str = preg_replace('/([\|]+)/', '|', $file_type_str);
+
+            $data = func_common('file', 'minicode', $file_type_str);
             $is_absolute = input('param.is_absolute/d',0);
             if (!empty($data['img_url'])) {
                 if ($is_absolute){
@@ -903,6 +976,13 @@ class Api extends Base
     //上传头像
      public function upload_head_pic()
      {
+        if (empty($this->globalConfig['web_users_switch'])) {
+            $this->error('后台会员中心尚未开启！');
+        }
+
+        // 校验登录态：头像上传必须为已登录会员，未携带有效 token 直接拒绝（防止未授权文件上传）
+        $this->getUser();
+
         if (IS_AJAX_POST) {
             $data = func_common('file', 'minicode');
             if (!empty($data['img_url'])){
@@ -1024,7 +1104,6 @@ class Api extends Base
             if (empty($typeid)) $this->error('post接口缺少typeid的参数与值！');
             // 是否开源小程序提交
             if (!empty($param['applets_id'])) $form_type = 1;
-
             /*留言间隔限制*/
             $channel_guestbook_interval = tpSetting('channel_guestbook.channel_guestbook_interval');
             $channel_guestbook_interval = is_numeric($channel_guestbook_interval) ? intval($channel_guestbook_interval) : 60;
@@ -1066,7 +1145,8 @@ class Api extends Base
                     }
 
                     if ($ga_data['validate_type'] == 6 && !empty($value)) {
-                        $pattern  = "/^1\d{10}$/";
+                        $form_field_grep_list = config('global.form_field_grep_list');
+                        $pattern  = $form_field_grep_list['mobile']['value'];
                         if (!preg_match($pattern, $value)) {
                             $this->error($ga_data['attr_name'] . '格式不正确！');
                         }
@@ -1216,7 +1296,7 @@ class Api extends Base
         $type = input('param.type/s');
         $type = !empty($type) ? $type : 'mobile';
         /*表单令牌*/
-        $token_name = md5($type.'_token_'.md5(getTime().uniqid(mt_rand(), TRUE)));
+        $token_name = md5($type.'_token_'.secure_random_string(16, true));
         $token_value = md5($_SERVER['REQUEST_TIME_FLOAT']);
         $session_path = \think\Config::get('session.path');
         $session_file = ROOT_PATH . $session_path . "/sess_".$token_name;
@@ -1390,9 +1470,9 @@ class Api extends Base
     // 获取自由表单
     public function get_form()
     {
-        $count = Db::name('guestbook_attribute')->count();
+        $count = Db::name('guestbook_attribute')->where('form_type',1)->count();
         if (empty($count)) {
-            $this->error('404报错，接口不生效');
+            $this->error('404报错，没有表单属性');
         }
         $data = $this->apiLogic->taglibData();
         $this->renderSuccess($data);
@@ -1466,5 +1546,209 @@ class Api extends Base
             }
         }
         $this->error('请求错误！');
+    }
+      // 活动报名程序插件操作(集合方法)
+    public function actReg_weapp_action()
+    {
+        if (IS_AJAX) {
+           if (is_dir('./weapp/Actreg/')) {
+                // 是否安装活动报名插件
+                $weappInfo = model('ShopPublicHandle')->getWeappInfo('Actreg');
+                if (!empty($weappInfo)) {
+                    // 调用开源小程序逻辑层方法
+                    $users = $this->getUser(false);
+                    $ActregLogic = new \app\plugins\logic\ActregLogic($users);
+                    $ActregLogic->ActregAction($weappInfo);
+                }
+            } else {
+                $this->error('请先安装小程序活动报名插件！');
+            }
+        }
+        $this->error('请求错误！');
+    }
+    // 多商家插件集合
+    public function multiMerchant_weapp_action()
+    {
+       
+        if (IS_AJAX) {
+          
+            // 是否安装多商家插件
+            $weappInfo = model('ShopPublicHandle')->getWeappInfo('MultiMerchant');
+           
+            if (!empty($weappInfo)) {
+                // 调用多商家逻辑层方法
+                $users = $this->getUser(false);
+                $multiMerchantLogic = new \app\plugins\logic\MultiMerchantLogic($users);
+                $multiMerchantLogic->multiMerchantAction($weappInfo);
+            }
+        }
+        $this->error('请求错误！');
+    }
+     // 招聘集合操作(集合方法)
+    public function RecruitmentAction()
+    {
+        if (IS_AJAX) {
+            // 创建招聘逻辑层实例
+            $users = $this->getUser(false);
+            $recruitLogic = new \app\plugins\logic\RecruitLogic($users);
+            $recruitLogic->RecruitmentAction([]);
+        }
+        $this->error('请求错误！');
+    }
+	// 拼团插件操作(集合方法)
+    public function groupbuy_action()
+    {
+       if (IS_AJAX) {
+	   // 是否安装拼团插件
+	   $weappInfo = model('ShopPublicHandle')->getWeappGroupBuy();
+	   if (!empty($weappInfo)) {
+	      // 调用拼团逻辑层方法
+	      $users = $this->getUser(false);
+	      $groupBuyLogic = new \app\plugins\logic\GroupBuyLogic($users);
+	      $groupBuyLogic->groupBuyAction($weappInfo);
+	     }
+	}
+	$this->error('请求错误！');
+    }
+    // 招聘普通接口（无需登录）
+    public function recruitment_public_action()
+    {
+        if (IS_AJAX) {
+            // 创建招聘逻辑层实例
+            $recruitLogic = new \app\plugins\logic\RecruitLogic();
+            $recruitLogic->publicAction([]);
+        }
+        $this->error('请求错误！');
+    }
+
+    /**
+     * 获取标签索引列表
+     * @return array
+     */
+    public function getTagIndex()
+    {
+        $limit = input('param.limit/s', '10');
+        // 自定义排序
+        $orderby = input('param.orderby/s');
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (empty($orderby) || !preg_match('/^[\s]*[\w\-]+[\s]+(asc|desc)[\s]*(,[\s]*[\w\-]+[\s]+(asc|desc)[\s]*)*$/i', $orderby)) {
+            $orderby = "sort_order asc, id asc";
+        }
+
+        $data = $this->apiLogic->taglibData();
+        
+        // 构造apiTagIndex参数
+        $params = [
+            'apiTagIndex_1' => "limit={$limit}&orderby={$orderby}"
+        ];
+        
+        // 重新调用taglibData获取标签数据
+        $originalParams = input('param.');
+        input($_POST + $_GET + $params); // 临时设置参数
+        $tagData = $this->apiLogic->taglibData();
+        input($_POST + $_GET + $originalParams); // 恢复原参数
+        
+        $result = !empty($tagData['apiTagIndex'][1]) ? $tagData['apiTagIndex'][1] : ['data' => [], 'total' => 0];
+        
+        $this->renderSuccess($result);
+    }
+
+    /**
+     * 根据文章ID获取标签列表
+     * @return array
+     */
+    public function getArticleTags()
+    {
+        $aid = input('param.aid/d', 0);
+        
+        if (empty($aid)) {
+            $this->error('文章ID不能为空');
+        }
+        
+        try {
+            // 查询文章对应的标签
+            $tagRelations = Db::name('taglist')
+                ->alias('tl')
+                ->join('tagindex ti', 'tl.tid = ti.id')
+                ->field('ti.id, ti.tag_name, ti.tag_desc, tl.sort_order')
+                ->where([
+                    'tl.aid' => $aid,
+                    'ti.status' => 1,
+                    'ti.is_del' => 0
+                ])
+                ->order('tl.sort_order asc, ti.id asc')
+                ->select();
+            
+            $result = [];
+            if (!empty($tagRelations)) {
+                foreach ($tagRelations as $tag) {
+                    $result[] = [
+                        'id' => $tag['id'],
+                        'tag_name' => htmlspecialchars_decode($tag['tag_name']),
+                        'tag_desc' => htmlspecialchars_decode($tag['tag_desc']),
+                        'sort_order' => $tag['sort_order']
+                    ];
+                }
+            }
+            
+            $this->renderSuccess([
+                'data' => $result,
+                'total' => count($result),
+                'aid' => $aid
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->renderSuccess([
+                'data' => [],
+                'total' => 0,
+                'aid' => $aid
+            ]);
+        }
+    }
+
+    /**
+     * 获取标签文章列表
+     * @return array
+     */
+    public function getTagList()
+    {
+        $tag_id = input('param.tag_id/d', 0);
+        $limit = input('param.limit/s', '10');
+        // 安全修复: 使用白名单验证排序字段，防止 SQL 注入
+        $orderby_input = input('param.orderby/s', '');
+        $allowed_order_fields = array('aid', 'sort_order', 'add_time', 'update_time', 'title', 'click');
+        $orderby = safe_order_by($orderby_input, 'asc', $allowed_order_fields, 'sort_order');
+        if (empty($orderby_input)) {
+            $orderby = 'sort_order asc, aid desc';
+        }
+        $typeid = input('param.typeid/d', 0);  // 新增：栏目ID
+        $child = input('param.child/d', 0);    // 新增：是否包含子栏目
+        
+        if (empty($tag_id)) {
+            $this->error('标签ID不能为空');
+        }
+        
+        // 构造apiTagList参数，包含typeid和child
+        $paramStr = "tag_id={$tag_id}&limit={$limit}&orderby={$orderby}";
+        if (!empty($typeid)) {
+            $paramStr .= "&typeid={$typeid}";
+        }
+        if (!empty($child)) {
+            $paramStr .= "&child={$child}";
+        }
+        
+        $params = [
+            'apiTagList_1' => $paramStr
+        ];
+        
+        // 重新调用taglibData获取标签文章数据
+        $originalParams = input('param.');
+        input($_POST + $_GET + $params); // 临时设置参数
+        $tagData = $this->apiLogic->taglibData();
+        input($_POST + $_GET + $originalParams); // 恢复原参数
+        
+        $result = !empty($tagData['apiTagList'][1]) ? $tagData['apiTagList'][1] : ['data' => [], 'total' => 0, 'tag_info' => null];
+        
+        $this->renderSuccess($result);
     }
 }

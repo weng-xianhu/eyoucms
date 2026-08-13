@@ -59,8 +59,9 @@ class SpecialNode extends Model
      * @param  array   $specialNode [description]
      * @return [type]               [description]
      */
-    private function insertNode($aid = 0, $specialNode = [])
+    private function insertNode($aid = 0, $post = [])
     {
+        $specialNode = $post['specialNode'];
         if (!empty($specialNode) && !empty($aid)) {
             $addData = [];
             $admin_lang = get_admin_lang();
@@ -107,23 +108,38 @@ class SpecialNode extends Model
                     }
                     $keywords = implode(',', $keywordsArr);
 
-                    // 节点文档列表
-                    $aidlist = !empty($specialNode['aidlist'][$key]) ? trim($specialNode['aidlist'][$key]) : '';
-                    $aidlist = str_replace('，', ',', $aidlist);
-                    $aidlistArr = explode(',', $aidlist);
-                    foreach ($aidlistArr as $_k1 => $_v1) {
-                        $_v1 = trim($_v1);
-                        if (!empty($_v1)) {
-                            $aidlistArr[$_k1] = $_v1;
-                        } else {
-                            unset($aidlistArr[$_k1]);
-                        }
-                    }
-                    $aidlist = implode(',', $aidlistArr);
-
+                    // // 节点文档列表
+                    // $aidlist = !empty($specialNode['aidlist'][$key]) ? trim($specialNode['aidlist'][$key]) : '';
+                    // $aidlist = str_replace('，', ',', $aidlist);
+                    // $aidlistArr = explode(',', $aidlist);
+                    // foreach ($aidlistArr as $_k1 => $_v1) {
+                    //     $_v1 = trim($_v1);
+                    //     if (!empty($_v1)) {
+                    //         $aidlistArr[$_k1] = $_v1;
+                    //     } else {
+                    //         unset($aidlistArr[$_k1]);
+                    //     }
+                    // }
+                    // $aidlist = implode(',', $aidlistArr);                  
+                    $aidlist='';                    
+                    $allsorts='';   
+                    if($post['archivesSort'][$itemid]){
+                        uasort($post['archivesSort'][$itemid], function ($a, $b) {                        
+                            if ($a[0] == $b[0]) {
+                                return 0;
+                            }
+                            return ($a[0] < $b[0]) ? -1 : 1;
+                        });                 
+                        foreach($post['archivesSort'][$itemid] as $key1=>$val){                                                          
+                            $allids[] = $key1;
+                            $allsort[] = $val[0];
+                        }     
+                        $aidlist = implode(',', $allids);  
+                        $allsorts = implode(',', $allsort);
+                        unset($allids,$allsort); 
+                    }                                   
                     // 排序号
-                    $sort_order = 100 + $key;
-
+                    $sort_order =$specialNode['sort_order'][$key];     
                     $addData[] = [
                         'aid'   => $aid,
                         'title'  => !empty($specialNode['title'][$key]) ? trim($specialNode['title'][$key]) : '默认节点',
@@ -132,6 +148,7 @@ class SpecialNode extends Model
                         'keywords'  => $keywords,
                         'typeid'    => !empty($specialNode['typeid'][$key]) ? trim($specialNode['typeid'][$key]) : 0,
                         'aidlist'   => !empty($aidlist) ? $aidlist : '',
+                        'allsorts'   => !empty($allsorts) ? $allsorts : '',
                         'row'    => !empty($specialNode['row'][$key]) ? intval($specialNode['row'][$key]) : 10,
                         'status'    => 1,
                         'is_del'    => 0,
@@ -155,8 +172,9 @@ class SpecialNode extends Model
      * @param  array   $specialNode [description]
      * @return [type]               [description]
      */
-    private function updateNode($aid = 0, $specialNode = [])
-    {
+    private function updateNode($aid = 0, $post = [])
+    {                
+        $specialNode=$post['specialNode'];
         if (!empty($specialNode) && !empty($aid)) {
             $addData = $updateData = $delData = [];
             $admin_lang = get_admin_lang();
@@ -189,7 +207,21 @@ class SpecialNode extends Model
 
             foreach ($specialNode['itemid'] as $key => $itemid) {
                 if (!empty($itemid)) {
-
+                    foreach ($post['archivesArr'][$itemid] as $key1 => $value) {
+                        uasort($value, function ($a, $b) {
+                            if ($a[0] == $b[0]) {
+                                return 0;
+                            }
+                            return ($a[0] < $b[0]) ? -1 : 1;
+                        });  
+                        foreach($value as $key2=>$val){
+                            $allids[] = $key2;
+                            $allsort[] = $val[0];
+                        }     
+                        $aidlist = implode(',', $allids);  
+                        $allsorts = implode(',', $allsort);  
+                        unset($allids,$allsort);
+                    }
                     // 关键词
                     $keywords = !empty($specialNode['keywords'][$key]) ? trim($specialNode['keywords'][$key]) : '';
                     $keywords = str_replace('，', ',', $keywords);
@@ -205,22 +237,20 @@ class SpecialNode extends Model
                     $keywords = implode(',', $keywordsArr);
 
                     // 节点文档列表
-                    $aidlist = !empty($specialNode['aidlist'][$key]) ? trim($specialNode['aidlist'][$key]) : '';
-                    $aidlist = str_replace('，', ',', $aidlist);
-                    $aidlistArr = explode(',', $aidlist);
-                    foreach ($aidlistArr as $_k1 => $_v1) {
-                        $_v1 = trim($_v1);
-                        if (!empty($_v1)) {
-                            $aidlistArr[$_k1] = $_v1;
-                        } else {
-                            unset($aidlistArr[$_k1]);
-                        }
-                    }
-                    $aidlist = implode(',', $aidlistArr);
-
+                    // $aidlist = !empty($specialNode['aidlist'][$key]) ? trim($specialNode['aidlist'][$key]) : '';
+                    // $aidlist = str_replace('，', ',', $aidlist);
+                    // $aidlistArr = explode(',', $aidlist);
+                    // foreach ($aidlistArr as $_k1 => $_v1) {
+                    //     $_v1 = trim($_v1);
+                    //     if (!empty($_v1)) {
+                    //         $aidlistArr[$_k1] = $_v1;
+                    //     } else {
+                    //         unset($aidlistArr[$_k1]);
+                    //     }
+                    // }
+                    // $aidlist = implode(',', $aidlistArr);                    
                     // 排序号
-                    $sort_order = 100 + $key;
-
+                    $sort_order =$specialNode['sort_order'][$key];                    
                     // 新增或者更新
                     $node_id = !empty($specialNode['node_id'][$key]) ? intval($specialNode['node_id'][$key]) : 0;
                     if (empty($node_id)) {
@@ -232,6 +262,7 @@ class SpecialNode extends Model
                             'keywords'  => $keywords,
                             'typeid'    => !empty($specialNode['typeid'][$key]) ? trim($specialNode['typeid'][$key]) : 0,
                             'aidlist'   => !empty($aidlist) ? $aidlist : '',
+                            'allsorts'   => !empty($allsorts) ? $allsorts : '',
                             'row'    => !empty($specialNode['row'][$key]) ? intval($specialNode['row'][$key]) : 10,
                             'status'    => 1,
                             'is_del'    => 0,
@@ -249,6 +280,7 @@ class SpecialNode extends Model
                             'keywords'  => $keywords,
                             'typeid'    => !empty($specialNode['typeid'][$key]) ? trim($specialNode['typeid'][$key]) : 0,
                             'aidlist'   => !empty($aidlist) ? $aidlist : '',
+                            'allsorts'   => !empty($allsorts) ? $allsorts : '',
                             'row'    => !empty($specialNode['row'][$key]) ? intval($specialNode['row'][$key]) : 10,
                             'sort_order'    => $sort_order,
                             'update_time'  => getTime(),

@@ -1,0 +1,9 @@
+<IfModule mod_authz_core.c>
+    # Apache 2.4+ 语法
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2 语法
+    Order deny,allow
+    Deny from all
+</IfModule>

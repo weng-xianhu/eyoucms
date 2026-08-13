@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.ebpp.merchant.config.get request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 17:12:49
+ * @since 1.0, 2024-07-04 17:31:56
  */
 class AlipayEbppMerchantConfigGetRequest
 {

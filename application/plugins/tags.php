@@ -7,7 +7,9 @@ return array(
     // 操作开始执行
     'action_begin' => array(),
     // 视图内容过滤
-    'view_filter'  => array(),
+    'view_filter'  => array(
+        'app\\plugins\\behavior\\ViewFilterBehavior',
+    ),
     // 日志写入
     'log_write'    => array(),
     // 应用结束

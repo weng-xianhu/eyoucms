@@ -4,7 +4,7 @@
 <div id="ajaxwaitid"></div>
 <div class="page atta min-hg-c-10">
     {include file="seo/bar" /}
-    <form method="post" id="handlepost" action="{:U('Sitemap/index')}" enctype="multipart/form-data" name="form1">
+    <form method="post" id="handlepost" action="{:url('Sitemap/index')}" enctype="multipart/form-data" name="form1">
         <div class="ncap-form-default">
             <dl class="row">
                 <dt class="tit">
@@ -19,7 +19,8 @@
                         {else /}
                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.xml" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.xml</a> &nbsp;&nbsp;
                         {/notempty}
-                         <a href="javascript:void(0);" onclick="update_sitemap_xml();">手工更新</a>
+                         <!-- <a href="javascript:void(0);" onclick="update_sitemap_xml();">手工更新</a> -->
+                         <a href="javascript:void(0);" class='getValuesButton' data-id="1">手工更新</a> 
                     </span>
                     <br/>
                     <label class="curpoin"><input type="checkbox" name="sitemap_txt" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_txt) && $config.sitemap_txt eq 1"}checked="checked"{/if}>txt地图</label>&nbsp;&nbsp;
@@ -30,16 +31,40 @@
                          {else /}
                          <a href="{$web_basehost}__ROOT_DIR__/sitemap.txt" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.txt</a> &nbsp;&nbsp;
                         {/notempty}
-                        <a href="javascript:void(0);" onclick="update_sitemap_txt();">手工更新</a>
+                        <a href="javascript:void(0);" class='getValuesButton' data-id="2">手工更新</a>
                     </span>
                     <br/>
                     <label class="curpoin"><input type="checkbox" name="sitemap_html" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_html) && $config.sitemap_html eq 1"}checked="checked"{/if}>html地图</label>&nbsp;&nbsp;
                     <span class="notic2 {if condition="!isset($config.sitemap_html) || $config.sitemap_html != 1"}none{/if}" id="sg_sitemap_html">
-                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.html" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.html</a> &nbsp;&nbsp;<a href="javascript:void(0);" onclick="update_sitemap_html();">手工更新</a>
-                        （<a href="javascript:void(0);" onclick="sitemap_exp('sitemap_1_1');">查看模板</a><span id="sitemap_1_1" class="none">：__ROOT_DIR__/public/html/sitemap.htm</span>）
+                         <a href="{$web_basehost}__ROOT_DIR__/sitemap.html" target="_blank">{$web_basehost}__ROOT_DIR__/sitemap.html</a> &nbsp;&nbsp;<a href="javascript:void(0);" class='getValuesButton' data-id="3">手工更新</a>
+                        <a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips('模板路径：__ROOT_DIR__/public/html/sitemap.htm', this, {time:100000});" onmouseout="layer.close(layer_tips);"></a>
                     </span>
+                    {if condition="$php_servicemeal >= 5"}
+                    <br/>
+                    <label class="curpoin"><input type="checkbox" name="ai_content_index_html" value="1" onclick="sitemap_type(this);" {if condition="isset($config.ai_content_index_html) && $config.ai_content_index_html eq 1"}checked="checked"{/if}>AI网站内容索引页</label>&nbsp;&nbsp;
+                    <span class="notic2 {if condition="!isset($config.ai_content_index_html) || $config.ai_content_index_html != 1"}none{/if}" id="sg_ai_content_index_html">
+                         <a href="{$web_basehost}__ROOT_DIR__/ai-content-index.html" target="_blank">{$web_basehost}__ROOT_DIR__/ai-content-index.html</a> &nbsp;&nbsp;<a href="javascript:void(0);" class='getValuesButton' data-id="4">手工更新</a>
+                        <a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips('模板路径：__ROOT_DIR__/public/html/ai-content-index.htm', this, {time:100000});" onmouseout="layer.close(layer_tips);"></a>
+                    </span>
+                    <br/>
+                    <label class="curpoin"><input type="checkbox" name="llms_txt" value="1" onclick="sitemap_type(this);" {if condition="isset($config.llms_txt) && $config.llms_txt eq 1"}checked="checked"{/if}>LLMs.txt</label>&nbsp;&nbsp;
+                    <span class="notic2 {if condition="!isset($config.llms_txt) || $config.llms_txt != 1"}none{/if}" id="sg_llms_txt">
+                         <a href="{$web_basehost}__ROOT_DIR__/llms.txt" target="_blank">{$web_basehost}__ROOT_DIR__/llms.txt</a> &nbsp;&nbsp;<a href="javascript:void(0);" class='getValuesButton' data-id="5">手工更新</a>
+                        <a class="ui_tips" href="javascript:void(0);" onmouseover="layer_tips = layer.tips('模板路径：__ROOT_DIR__/public/html/llms.txt.htm', this, {time:100000});" onmouseout="layer.close(layer_tips);"></a>
+                    </span>
+                    {/if}
                     <span class="err"></span>
                     <p class="notic"></p>
+                </dd>
+            </dl>
+            <dl class="row" {if condition="empty($global['web_language_switch'])"}style="display:none;"{/if}>
+                <dt class="tit">语言地图</dt>
+                <dd class="opt">
+                    {volist name='langlist' id='v'}
+                    <label class="curpoin"><input name="sitemap_lang[]" value="{$v.mark}" {if !empty($v.is_home_default)} checked disabled {elseif isset($config.sitemap_lang) && in_array($v['mark'],$config['sitemap_lang']) && !empty($global['web_language_switch']) /} checked {/if} type="checkbox">{$v.title}</label>
+                    &nbsp;
+                    {/volist}
+                    <p class="notic">地图跟随文档一起更新</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -185,7 +210,6 @@
     </form>
 </div>
 <script type="text/javascript">
-
     $(document).ready(function(){
         // 生成文档数量
         // $('#sitemap_archives_num').keyup(function(){
@@ -207,12 +231,10 @@
         //     }
         // });
     });
-
     function sitemap_exp(id)
     {
         $('#'+id).toggle();
     }
-
     function sitemap_type(obj)
     {
         var name = $(obj).attr('name');
@@ -229,20 +251,27 @@
             $('#sg_'+name).hide();
         }
     }
-
-    function update_sitemap() {
+    function update_sitemap(lang) {
+        if(lang){
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
         layer_loading('正在处理');
         $.ajax({
             url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap&lang="+__lang__,
             type: "POST",
             dataType: "json",
-            data: {_ajax:1},
+            data: {_ajax:1,langs:langs},
             success: function(res){
-                layer.closeAll();
-                if (1 == res.code) {
-                    layer.msg(res.msg, {icon: 1, time: 1000});
-                } else {
-                    layer.alert(res.data.msg, {icon: 5, title: false});
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
                 }
             },
             error: function(e){
@@ -251,19 +280,27 @@
             }
         });
     }
-    function update_sitemap_xml(){
+    function update_sitemap_xml(lang){
+        if(lang){
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
         layer_loading('正在处理');
         $.ajax({
             url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_xml&lang="+__lang__,
             type: "POST",
             dataType: "json",
-            data: {is_auto:'off', _ajax:1},
+            data: {is_auto:'off', _ajax:1,langs:langs},
             success: function(res){
-                layer.closeAll();
-                if (1 == res.code) {
-                    layer.msg(res.msg, {icon: 1, time: 1000});
-                } else {
-                    layer.alert(res.data.msg, {icon: 5, title: false});
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
                 }
             },
             error: function(e){
@@ -272,19 +309,27 @@
             }
         });
     }
-    function update_sitemap_txt(){
+    function update_sitemap_txt(lang){
+        if(lang){           
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
         layer_loading('正在处理');
         $.ajax({
             url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_txt&lang="+__lang__,
             type: "POST",
             dataType: "json",
-            data: {is_auto:'off', _ajax:1},
+            data: {is_auto:'off', _ajax:1,langs:langs},
             success: function(res){
-                layer.closeAll();
-                if (1 == res.code) {
-                    layer.msg(res.msg, {icon: 1, time: 1000});
-                } else {
-                    layer.alert(res.data.msg, {icon: 5, title: false});
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
                 }
             },
             error: function(e){
@@ -293,20 +338,27 @@
             }
         });
     }
-    
-    function update_sitemap_html(){
+    function update_sitemap_html(lang){
+        if(lang){
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
         layer_loading('正在处理');
         $.ajax({
             url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_sitemap_html&lang="+__lang__,
             type: "POST",
             dataType: "json",
-            data: {is_auto:'off', _ajax:1},
+            data: {is_auto:'off', _ajax:1,langs:langs},
             success: function(res){
-                layer.closeAll();
-                if (1 == res.code) {
-                    layer.msg(res.msg, {icon: 1, time: 1000});
-                } else {
-                    layer.alert(res.data.msg, {icon: 5, title: false});
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
                 }
             },
             error: function(e){
@@ -315,11 +367,123 @@
             }
         });
     }
-
-    function adsubmit(){
-        layer_loading("正在处理");
-        $('#handlepost').submit();
+    function update_ai_content_index_html(lang){
+        if(lang){
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
+        layer_loading('正在处理');
+        $.ajax({
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_ai_content_index_html&lang="+__lang__,
+            type: "POST",
+            dataType: "json",
+            data: {is_auto:'off', _ajax:1,langs:langs},
+            success: function(res){
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
     }
+    function update_llms_txt(lang){
+        if(lang){
+            __lang__ = lang;
+        }
+        let langs = $('input[name="sitemap_lang[]"]:checked').map(function() {
+            return $(this).val();
+        }).get().join(',');
+        layer_loading('正在处理');
+        $.ajax({
+            url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_llms_txt&lang="+__lang__,
+            type: "POST",
+            dataType: "json",
+            data: {is_auto:'off', _ajax:1,langs:langs},
+            success: function(res){
+                if(!lang){
+                    layer.closeAll();
+                    if (1 == res.code) {
+                        layer.msg(res.msg, {icon: 1, time: 1000});
+                    } else {
+                        layer.alert(res.data.msg, {icon: 5, title: false});
+                    }
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title:false});
+            }
+        });
+    }
+    function adsubmit(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Sitemap/index')}",
+            data : $('#handlepost').serialize(),
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    var is_ai_content_index_html = $('input[name="ai_content_index_html"]').is(':checked');
+                    if(res.data){
+                        var arr =res.data;
+                        for (let i = 0; i < arr.length; i++) {
+                           update_sitemap(arr[i]);
+                           if (is_ai_content_index_html) {
+                               update_ai_content_index_html(arr[i]);
+                           }
+                        }
+                    }
+                    if ($('input[name="llms_txt"]').is(':checked')) {
+                        update_llms_txt('{$is_home_lang}');
+                    }
+                    layer.msg(res.msg, {icon: 1, time: 1000}, function(){
+                        window.location.reload();
+                    });
+                }else{
+                    layer.closeAll();
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+    $('.getValuesButton').click(function () {
+        let type  = $(this).attr('data-id');
+        let lang = '';
+        let is_home_lang = '{$is_home_lang}';
+        $('input[name="sitemap_lang[]"]:checked').each(function () {
+            lang = $(this).val()
+            if(type==1){
+                update_sitemap_xml(lang);
+            }else if(type==2){
+                update_sitemap_txt(lang)
+            }else if(type==4){
+                update_ai_content_index_html(is_home_lang)
+                return false;
+            }else if(type==5){
+                update_llms_txt(is_home_lang)
+                return false;
+            }else{
+                update_sitemap_html(is_home_lang)
+                return false;
+            }
+        });
+        layer.closeAll();
+        layer.msg('操作成功', {icon: 1, time: 1000});
+    });
 </script>
-
 {include file="public/footer" /}

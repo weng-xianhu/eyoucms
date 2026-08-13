@@ -1,0 +1,197 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page min-hg-c-10">
+    <div class="flexigrid">
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th abbr="backup_file" axis="col1">
+                            <div class="text-l10">备份文件名</div>
+                        </th>
+                        <th abbr="backup_version" axis="col2" class="w120">
+                            <div class="tc">版本号</div>
+                        </th>
+                        <th abbr="backup_size" axis="col3" class="w100">
+                            <div class="tc">备份大小</div>
+                        </th>
+                        <th abbr="backup_time" axis="col4" class="w150">
+                            <div class="tc">创建时间</div>
+                        </th>
+                        <th abbr="backup_count" axis="col5" class="w80">
+                            <div class="tc">文件数</div>
+                        </th>
+                        <th axis="col6" class="w160">
+                            <div class="tc">操作</div>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                    {empty name="backupList"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                    <div class="no_text">暂无备份文件</div>
+                                </div>
+                            </td>
+                        </tr>
+                    {else/}
+                        {foreach name="backupList" item="vo" key="k" }
+                        <tr>
+                            <td style="width: 100%">
+                                <div class="text-l10">
+                                    <p style="margin-top: -5px;">
+                                        <span style="color: #3b639f;">{$vo.file_name}</span>
+                                    </p>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w120 tc">
+                                    <span class="green">{$vo.version}</span>
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w100 tc">
+                                    {$vo.size_format}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w150 tc">
+                                    {$vo.create_time}
+                                </div>
+                            </td>
+                            <td class="">
+                                <div class="w80 tc">
+                                    {$vo.file_count|default='0'}
+                                </div>
+                            </td>
+                            <td class="operation">
+                                <div class="w160 tc">
+                                    <a class="btn blue" href="javascript:void(0);" data-href="{:url('Security/ddos_backup_files', ['backup_file'=>$vo.file_name])}" onclick="parent_openFullframe(this, '【{$vo.file_name}】备份文件列表', '80%', '80%');">文件列表</a>
+                                    <i></i>
+                                    <a class="btn" href="javascript:void(0)" data-backup-file="{$vo.file_name}" onclick="restore_backup(this);">还原</a>
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0)" data-backup-file="{$vo.file_name}" onclick="delete_backup(this);">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {/foreach}
+                    {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * 还原备份
+     */
+    function restore_backup(obj)
+    {
+        var backupFile = $(obj).attr('data-backup-file');
+        var title = '确定要还原此备份吗？还原操作会将备份中的文件覆盖到当前系统中。<br/><font color="red">注意：只能还原与当前系统版本号相同的备份包</font>';
+        layer.confirm(title, {
+                shade: layer_shade,
+                area: ['480px', '220px'],
+                move: false,
+                title: '还原备份',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'], //按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function(index){
+                // 确定
+                layer_loading('正在还原...');
+                $.ajax({
+                    type : 'POST',
+                    url : "{:url('Security/ddos_backup_restore')}",
+                    data : {backup_file:backupFile, _ajax:1},
+                    dataType : 'json',
+                    success : function(res){
+                        layer.closeAll();
+                        if(res.code == 1){
+                            layer.msg(res.msg, {icon: 1, time:2000}, function(){
+                                if (typeof parent.win_reload === 'function') {
+                                    parent.win_reload();
+                                }
+                            });
+                        }else{
+                            showErrorAlert(res.msg);
+                        }
+                    },
+                    error:function(e){
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                })
+            }, function(index){
+                layer.close(index);
+                return false;// 取消
+            }
+        );
+    }
+
+    /**
+     * 删除备份
+     */
+    function delete_backup(obj)
+    {
+        var backupFile = $(obj).attr('data-backup-file');
+        layer.confirm('确定要删除此备份吗？删除后无法恢复。', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '删除备份',
+                btnAlign:'r',
+                closeBtn: 3,
+                btn: ['确定', '取消'], //按钮
+                success: function () {
+                    $(".layui-layer-content").css('text-align', 'left');
+                }
+            }, function(index){
+                // 确定
+                layer_loading('正在删除...');
+                $.ajax({
+                    type : 'POST',
+                    url : "{:url('Security/ddos_backup_delete')}",
+                    data : {backup_file:backupFile, _ajax:1},
+                    dataType : 'json',
+                    success : function(res){
+                        layer.closeAll();
+                        if(res.code == 1){
+                            layer.msg(res.msg, {icon: 1, time:1000}, function(){
+                                window.location.reload();
+                            });
+                        }else{
+                            showErrorAlert(res.msg);
+                        }
+                    },
+                    error:function(e){
+                        layer.closeAll();
+                        showErrorAlert(e.responseText);
+                    }
+                })
+            }, function(index){
+                layer.close(index);
+                return false;// 取消
+            }
+        );
+    }
+</script>
+
+{include file="public/footer" /}
+

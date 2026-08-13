@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -41,7 +41,11 @@ class Base extends \app\api\controller\Base
         $dataConf = tpSetting("OpenMinicode.conf", [], $this->main_lang);
         $dataConf = json_decode($dataConf, true);
         if (!empty($dataConf['apiopen'])) {
-            $this->error('API接口已关闭不可用！');
+            $errorMsg = 'API接口未开启，无法使用！' . "\n\n";
+            $errorMsg .= '【解决方法】' . "\n";
+            $errorMsg .= '请前往后台：基本信息→接口API→小程序API→配置' . "\n";
+            $errorMsg .= '将"API接口"设置为"开启"状态即可。';
+            $this->error($errorMsg);
         } else {
             if (!empty($dataConf['apiverify'])) {
                 $times = getTime();

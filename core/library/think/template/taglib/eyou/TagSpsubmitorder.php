@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -495,9 +495,22 @@ class TagSpsubmitorder extends Base
             $data['addr_width']  = '100%';
             $data['addr_height'] = '100%';
         } else {
-            if (in_array($this->usersTplVersion, ['v3', 'v5']) || in_array($this->usersTpl2xVersion, ['v2.x'])) {
+            if (in_array($this->usersTplVersion, ['v3', 'v5'])) {
                 $data['addr_width']  = '660px';
                 $data['addr_height'] = '392px';
+            } else if (in_array($this->usersTpl2xVersion, ['v2.x'])) {
+                $data['addr_width']  = '660px';
+                $data['addr_height'] = '392px';
+                $aiData = tpCache('ai');
+                if (is_dir('./weapp/Ai/') && !empty($aiData['ai_bd_adr_open'])) {
+                    $name = array_join_string(array('cGhwLnBocF9zZXJ2aWNlbWVhbA=='));
+                    $value = tpCache($name);
+                    $value = !empty($value) ? intval($value) : 0;
+                    if (5 <= $value) {
+                        $data['addr_width']  = '660px';
+                        $data['addr_height'] = '600px';
+                    }
+                }
             } else {
                 $data['addr_width']  = '350px';
                 $data['addr_height'] = '480px';

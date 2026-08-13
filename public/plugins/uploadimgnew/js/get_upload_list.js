@@ -116,6 +116,56 @@ function batch_delimg(obj) {
     });
 }
 
+// 彻底删除选中的图片（包括服务器上的文件）
+function batch_delimg_completely(obj) {
+    var img_id_arr = [];
+    $('#file_list li').each(function(i,o){
+        if($(o).hasClass('up-over')){
+            img_id_arr.push($(o).attr('data-id'));
+        }
+    })
+    if(img_id_arr.length == 0){
+        layer.msg('请至少选择一张！', {icon: 5});
+        return;
+    }
+
+    // 弹出确认对话框
+    layer.confirm('删除后无法恢复，图片从服务器永久移除<br>文档如有引用将打不开！<span style="color:red;">请谨慎操作！</span>', {
+        icon: 3,
+        title: '彻底删除',
+        btn: ['确定删除', '我再想想'],
+        btnAlign: 'c',
+        closeBtn: 1
+    }, function(index){
+        layer.close(index);
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url : eyou_basefile + "?m="+module_name+"&c=Uploadimgnew&a=del_uploadsimg_completely&lang=" + __lang__,
+            data: {img_id: img_id_arr, _ajax: 1},
+            dataType: 'json',
+            success: function (res) {
+                if (res.code == 1) {
+                    $.cookie("img_id_upload", "");
+                    $.cookie("imgname_id_upload", "");
+                    layer.msg(res.msg, {icon: 6, time: 1000}, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    layer.closeAll();
+                    layer.msg(res.msg, {icon: 5});
+                }
+            },
+            error : function(e) {
+                layer.closeAll();
+                layer.alert(e.responseText, {icon: 5, title: false, closeBtn: false});
+            }
+        });
+    }, function(index){
+        layer.close(index);
+    });
+}
+
 function getLastMonth(){
     var now=new Date();
     var year = now.getFullYear();//getYear()+1900=getFullYear()
@@ -358,7 +408,7 @@ function addfileChange(obj)
         axupimgs.push(files[i]);
     }
     if (axupimgs.length > 0) {
-        layer_loading('正在上传');
+        showUploadProgress(axupimgs.length);
         $('#file_list li.up-no').each(function(item) {
             var el = item.get(0);
             el.classList ? el.classList.add('up-now') : el.className+=' up-now';
@@ -447,7 +497,16 @@ function upAllFiles(n) {
             contentType: false,
             processData: false,
             dataType: 'json',
-            // async: false,
+            xhr: function() {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function(evt) {
+                    if (evt.lengthComputable) {
+                        var filePercent = (evt.loaded / evt.total) * 100;
+                        updateUploadProgress(n, filePercent);
+                    }
+                }, false);
+                return xhr;
+            },
             success: function (res) {
                 if (res.state == 'SUCCESS') {
                     var class_up_over = ' up-over ';
@@ -479,12 +538,13 @@ function upAllFiles(n) {
                     $('#file_list').prepend(html);
 
                     if (img_len == len) {
+                        closeUploadProgress();
                         layer.msg('上传成功', {icon: 6, time: 1000, shade: [0.2]}, function() {
                             window.location.reload();
                         });
                     }
                 } else {
-                    layer.closeAll();
+                    closeUploadProgress();
                     layer.alert(res.state, {icon: 5, title: false, closeBtn: false});
                 }
                 n++;
@@ -495,7 +555,7 @@ function upAllFiles(n) {
                     var el = item.get(0);
                     el.setAttribute('class','up-no');
                 });
-                layer.closeAll();
+                closeUploadProgress();
                 layer.alert(e.responseText, {icon: 5, title: false, closeBtn: false});
             }
         })
@@ -505,7 +565,7 @@ function upAllFiles(n) {
 // 加载框
 function layer_loading(msg) {
     var loading = layer.msg(
-    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
+    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面',
     {
         icon: 6,
         time: 3600000, //1小时后后自动关闭
@@ -516,4 +576,45 @@ function layer_loading(msg) {
         shade: [0.1,'#fff'] //0.1透明度的白色背景
     });
     return loading;
+}
+
+// 上传进度条
+var uploadProgressIndex = null;
+var uploadTotalFiles = 0;
+function showUploadProgress(totalFiles) {
+    uploadTotalFiles = totalFiles;
+    var html = '<div style="padding:20px 30px 10px;">'
+        + '<div style="margin-bottom:8px;font-size:14px;color:#333;" id="upload_progress_text">准备上传... (0/' + totalFiles + ')</div>'
+        + '<div style="background:#e9e9e9;border-radius:4px;height:18px;overflow:hidden;">'
+        + '<div id="upload_progress_bar" style="width:0%;height:100%;border-radius:4px;background:linear-gradient(90deg,#1E9FFF,#009688);transition:width .3s;"></div>'
+        + '</div>'
+        + '<div style="margin-top:6px;font-size:12px;color:#999;text-align:center;" id="upload_progress_pct">0%</div>'
+        + '<div style="margin-top:4px;font-size:12px;color:#ff9800;text-align:center;">请勿刷新页面</div>'
+        + '</div>';
+    uploadProgressIndex = layer.open({
+        type: 1,
+        title: '图片上传',
+        area: ['360px'],
+        shade: [0.3],
+        closeBtn: 0,
+        move: false,
+        content: html
+    });
+}
+function updateUploadProgress(fileIndex, filePercent) {
+    var overall = ((fileIndex + filePercent / 100) / uploadTotalFiles) * 100;
+    if (overall > 100) overall = 100;
+    var pct = Math.round(overall) + '%';
+    var $bar = $('#upload_progress_bar');
+    var $pct = $('#upload_progress_pct');
+    var $text = $('#upload_progress_text');
+    if ($bar.length) $bar.css('width', pct);
+    if ($pct.length) $pct.text(pct);
+    if ($text.length) $text.text('正在上传第 ' + (fileIndex + 1) + ' 个，共 ' + uploadTotalFiles + ' 个');
+}
+function closeUploadProgress() {
+    if (uploadProgressIndex !== null) {
+        layer.close(uploadProgressIndex);
+        uploadProgressIndex = null;
+    }
 }

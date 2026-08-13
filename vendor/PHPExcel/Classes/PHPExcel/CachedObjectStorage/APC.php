@@ -149,7 +149,7 @@ class PHPExcel_CachedObjectStorage_APC extends PHPExcel_CachedObjectStorage_Cach
 
         //    Set current entry to the requested entry
         $this->currentObjectID = $pCoord;
-        $this->currentObject = unserialize($obj);
+        $this->currentObject = PHPExcel_CachedObjectStorageFactory::safeUnserialize($obj);
         //    Re-attach this as the cell's parent
         $this->currentObject->attach($this);
 

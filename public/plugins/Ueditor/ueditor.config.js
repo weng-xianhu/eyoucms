@@ -15,6 +15,9 @@ if (typeof __web_xss_filter__ === 'undefined') {
 if (typeof __is_mobile__ === 'undefined') {
     var __is_mobile__ = navigator.userAgent.toLowerCase().match(/(ipod|iphone|android|coolpad|mmp|smartphone|midp|wap|xoom|symbian|j2me|blackberry|wince)/i) != null;
 }
+if (typeof __editor_bd_style__ === 'undefined') {
+    var __editor_bd_style__ = '';
+}
 
 (function () {
 
@@ -74,8 +77,14 @@ if (typeof __is_mobile__ === 'undefined') {
             'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'music', 'attachment', 'map', 'gmap', 'insertframe', 'insertcode', 'webapp', 'pagebreak', 'template', 'background', '|',
             'horizontal', 'date', 'time', 'spechars', 'snapscreen', 'wordimage', '|',
             'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
-            'print', 'preview', 'searchreplace', 'drafts', 'help','previewmobile'
+            'print', 'preview', 'searchreplace', 'drafts', 'ai', 'help','previewmobile'
         ]]
+        // 动态选项配置，该值可以通过后端配置接口动态返回，动态控制toolbars的功能
+        , toolbarShows:{
+            // "ai": false,
+        }
+        // 新旧编辑器的标识
+        ,editor_bd_style: __editor_bd_style__
         //当鼠标放在工具栏上时显示的tooltip提示,留空支持自动多语言配置，否则以配置值为准
         ,labelMap:{
             'previewmobile':'手机预览'
@@ -275,8 +284,43 @@ if (typeof __is_mobile__ === 'undefined') {
         //]
 
         //快捷菜单
-        //,shortcutMenu:["fontfamily", "fontsize", "bold", "italic", "underline", "forecolor", "backcolor", "insertorderedlist", "insertunorderedlist"]
+        , shortcutMenu: [
+            "ai",           // AI智能
+            // "fontfamily",   // 字体
+            // "fontsize",     // 字号
+            "bold",            // 加粗
+            "italic",          // 斜体
+            "underline",       // 下划线
+            "strikethrough",   // 删除线
+            "fontborder",      // 字符边框
+            "forecolor",       // 字体颜色
+            "backcolor",       // 背景色
+            "imagenone",       // 图片默认
+            "imageleft",       // 图片左浮动
+            "imagecenter",     // 图片居中
+            "imageright",      // 图片右浮动
+            "insertimage",     // 插入图片
+            // "justifyleft",    // 居左对齐
+            // "justifycenter",  // 居中对齐
+            // "justifyright",   // 居右对齐
+            // "justifyjustify", // 两端对齐
+            // "rowspacingtop",     // 段前距
+            // "rowspacingbottom",  // 段后距
+            // "lineheight",           // 行间距
+            // "insertorderedlist",    // 有序列表
+            // "insertunorderedlist",  // 无序列表
+            // "superscript",    // 上标
+            // "subscript",      // 下标
+            // "link",           // 超链接
+            // "unlink",         // 取消链接
+            // "touppercase",    // 字母大写
+            // "tolowercase"     // 字母小写
+        ]
 
+        // 动态选项配置，该值可以通过后端配置接口动态返回，动态控制shortcutMenu的功能
+        ,shortcutMenuShows: {
+            // "ai": false,
+        }
         //elementPathEnabled
         //是否启用元素路径，默认是显示
         //,elementPathEnabled : true
@@ -382,6 +426,67 @@ if (typeof __is_mobile__ === 'undefined') {
         //webAppKey 百度应用的APIkey，每个站长必须首先去百度官网注册一个key后方能正常使用app功能，注册介绍，http://app.baidu.com/static/cms/getapikey.html
         //, webAppKey: ""
 
+        // AI智能相关配置
+        , ai: {
+            // 大模型驱动 Default OpenAi ModStart DeepSeek
+            driver: 'Default',
+            // 大模型对接配置
+            driverConfig: {
+                // 模型API地址，留空使用默认
+                url: '',
+                // 大模型平台Key
+                key: '',
+                // 大模型平台模型
+                model: 'deepseek-chat',
+            },
+            // 自定义接入
+            // driverRequest: function (option) {
+            //     var texts = []
+            //     var mock = function () {
+            //         var text = '测试' + (i++)
+            //         texts.push(text)
+            //         if (texts.length >= 10) {
+            //             // 调用 onFinish 方法表示结束
+            //             option.onFinish({code: 0, msg: 'ok', data: {text: texts.join("")}})
+            //             return
+            //         }
+            //         // 调用 onStream 方法模拟流式返回
+            //         option.onStream({code: 0, msg: 'ok', data: {text: text}})
+            //         setTimeout(mock, 50);
+            //     };
+            //     mock();
+            // },
+        }
+        , aiFunctions:[
+            {
+                text: '<i class="edui-iconfont edui-icon-translate"></i> 翻译',
+                prompt: "{selectText}\n\n请帮我翻译一下这段内容，并直接返回优化后的结果。\n注意：你应该先判断一下这句话是中文还是英文，如果是中文，请给我返回英文，如果是英文，请给我返回中文内容，只需要返回内容即可，不需要告知我是中文还是英文。",
+                enable: function (param) {
+                    return !!param.selectText
+                }
+            },
+            {
+                text: '<i class="edui-iconfont edui-icon-continue-write"></i> 续写',
+                prompt: "{selectText}\n\n请帮我续写一下这段内容，并直接返回续写后的结果。",
+                enable: function (param) {
+                    return !!param.selectText
+                }
+            },
+            {
+                text: '<i class="edui-iconfont edui-icon-text-shrink"></i> 简化内容',
+                prompt: "{selectText}\n\n请帮我简化一下这段内容，并直接返回简化后的结果。",
+                enable: function (param) {
+                    return !!param.selectText
+                }
+            },
+            {
+                text: '<i class="edui-iconfont edui-icon-text-extend"></i> 丰富内容',
+                prompt: "{selectText}\n\n请帮我丰富一下这段内容，并直接返回丰富后的结果。",
+                enable: function (param) {
+                    return !!param.selectText
+                }
+            }
+        ]
         //默认过滤规则相关配置项目
         ,disabledTableInTable:false  //禁止表格嵌套
         ,allowDivTransToP:false      //允许进入编辑器的div标签自动变成p标签
@@ -432,7 +537,7 @@ if (typeof __is_mobile__ === 'undefined') {
             header: [],
             hr:     [],
             i:      ['class', 'style'],
-            img:    ['src', 'alt', 'title', 'width', 'height', 'id', '_src', '_url', 'loadingclass', 'class', 'data-latex', 'anchorname'],
+            img:    ['src', 'alt', 'title', 'width', 'height', 'id', '_src', '_url', 'loadingclass', 'class', 'data-latex', 'anchorname', 'style', 'data-word-image'],
             ins:    ['datetime'],
             li:     ['class', 'style'],
             mark:   [],
@@ -530,4 +635,30 @@ if (typeof __is_mobile__ === 'undefined') {
         getUEBasePath: getUEBasePath
     };
 
+})();
+
+// 清理粘贴内容中的 text-wrap-mode 和 white-space: nowrap 样式
+(function() {
+    var checkUE = setInterval(function() {
+        if (typeof UE !== 'undefined' && UE.Editor) {
+            clearInterval(checkUE);
+            var _ready = UE.Editor.prototype.ready;
+            UE.Editor.prototype.ready = function(fn) {
+                var me = this;
+                return _ready.call(me, function() {
+                    me.addListener('afterpaste', function() {
+                        setTimeout(function() {
+                            var content = me.getContent();
+                            var cleaned = content.replace(/text-wrap-mode:\s*nowrap;?/gi, '')
+                                                .replace(/white-space:\s*nowrap;?/gi, '');
+                            if (content !== cleaned) {
+                                me.setContent(cleaned);
+                            }
+                        }, 100);
+                    });
+                    fn && fn.apply(me, arguments);
+                });
+            };
+        }
+    }, 50);
 })();

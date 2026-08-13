@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -65,6 +65,12 @@ class TagStatic extends Base
             $is_mobile = isMobile();
         }
 
+        $theme_style_path = THEME_STYLE_PATH;
+        if (self::$request->controller() == 'Buildmhtml') {
+            $is_mobile = 1;
+            $theme_style_path = preg_replace('/(\/)?pc$/i', '${1}mobile', $theme_style_path);
+        }
+
         static $site_config = null;
         if (self::$city_switch_on && null == $site_config) {
             $site_config = tpCache('site');
@@ -119,15 +125,15 @@ class TagStatic extends Base
                             $file = '/template/'.TPL_THEME.'pc/'.$file;
                         } else {
                             if (self::$city_switch_on && !empty($site_config['site_template']) && !empty($paramsite) && !preg_match('/^users(_([^\/]*))?\//i', $file)) { // 多城市站点的独立模板
-                                if (file_exists('./template/'.THEME_STYLE_PATH.'/city/'.$paramsite)) {
-                                    $file = '/template/'.THEME_STYLE_PATH.'/city/'.$paramsite.'/'.$file;
-                                } else if (file_exists('./template/'.THEME_STYLE_PATH.'/'.$paramsite)) {
-                                    $file = '/template/'.THEME_STYLE_PATH.'/'.$paramsite.'/'.$file;
+                                if (file_exists('./template/'.$theme_style_path.'/city/'.$paramsite)) {
+                                    $file = '/template/'.$theme_style_path.'/city/'.$paramsite.'/'.$file;
+                                } else if (file_exists('./template/'.$theme_style_path.'/'.$paramsite)) {
+                                    $file = '/template/'.$theme_style_path.'/'.$paramsite.'/'.$file;
                                 } else {
-                                    $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                                    $file = '/template/'.$theme_style_path.'/'.$file;
                                 }
                             } else { // 默认模板
-                                $file = '/template/'.THEME_STYLE_PATH.'/'.$file;
+                                $file = '/template/'.$theme_style_path.'/'.$file;
                             }
                         }
                     } else {

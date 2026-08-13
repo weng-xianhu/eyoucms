@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -10,6 +10,9 @@
  * Author: 小虎哥 <1105415366@qq.com>
  * Date: 2018-4-3
  */
+
+$globalConfig = tpCache('global');
+$web_theme_welcome_tplname = empty($globalConfig['web_theme_welcome_tplname']) ? 'welcome.htm' : $globalConfig['web_theme_welcome_tplname'];
 
 /**
  * 权限属性说明
@@ -228,7 +231,7 @@ return [
         'name'  => '允许操作',
         'is_modules'    => 1,
         'sort_order'    => 100,
-        'auths' => 'Statistics@*,Shop@*,ShopProduct@*,Member@*',
+        'auths' => 'Statistics@*,Shop@*,ShopProduct@*',
     ],
     [
         'id' => 24,
@@ -298,7 +301,7 @@ return [
         'menu_id' => 1005,
         'menu_id2' => 1005001,
         'name'  => '快捷导航',
-        'is_modules'    => 1,
+        'is_modules'    => ($web_theme_welcome_tplname == 'welcome.htm') ? 1 : 0,
         'sort_order'    => 100,
         'auths' => 'Index@ajax_quickmenu',
     ],
@@ -307,7 +310,7 @@ return [
         'menu_id' => 1005,
         'menu_id2' => 1005002,
         'name'  => '内容统计',
-        'is_modules'    => 1,
+        'is_modules'    => ($web_theme_welcome_tplname == 'welcome.htm') ? 1 : 0,
         'sort_order'    => 100,
         'auths' => 'Index@ajax_content_total',
     ],
@@ -419,6 +422,15 @@ return [
         'sort_order'    => 140,
         'auths' => 'Memgift@*',
     ],
+    // [
+    //     'id' => 45,
+    //     'menu_id' => 2004,
+    //     'menu_id2' => 2004024,
+    //     'name'  => '消息通知',
+    //     'is_modules'    => 1,
+    //     'sort_order'    => 106,
+    //     'auths' => 'Notice@*',
+    // ],
     [
         'id' => 46,
         'menu_id' => 2004,
@@ -446,4 +458,40 @@ return [
         'sort_order'    => 100,
         'auths' => 'Archives@index_reback',
     ],*/
+    [
+        'id' => 49,
+        'menu_id' => 2004,
+        'menu_id2' => 2004027,
+        'name'  => '智能互联',
+        'is_modules'    => 1,
+        'sort_order'    => 108,
+        'auths' => 'Ai@*',
+    ],
+    [
+        'id' => 50,
+        'menu_id' => 1005,
+        'menu_id2' => 1005003,
+        'name'  => '实时概况',
+        'is_modules'    => ($web_theme_welcome_tplname == 'welcome_shop.htm') ? 1 : 0,
+        'sort_order'    => 100,
+        'auths' => 'Index@ajax_surveyquickmenu',
+    ],
+    [
+        'id' => 51,
+        'menu_id' => 2003,
+        'menu_id2' => 2003005,
+        'name'  => 'Robots',
+        'is_modules'    => 1,
+        'sort_order'    => 20,
+        'auths' => 'Robots@*',
+    ],
+    [
+        'id' => 52,
+        'menu_id' => 2004,
+        'menu_id2' => 2004028,
+        'name'  => 'FAQ',
+        'is_modules'    => 1,
+        'sort_order'    => 20,
+        'auths' => 'FAQ@*',
+    ],
 ];

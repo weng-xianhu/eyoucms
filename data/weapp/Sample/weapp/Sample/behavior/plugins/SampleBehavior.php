@@ -32,7 +32,13 @@ class SampleBehavior
      */
     public function moduleInit(&$params)
     {
-
+        if ('Sample' == self::$controllerName) {
+            if (isMobile() && file_exists('./template/plugins/sample/mobile/')) {
+                !defined('THEME_STYLE') && define('THEME_STYLE', 'mobile'); // mobile端模板
+            } else {
+                !defined('THEME_STYLE') && define('THEME_STYLE', 'pc'); // pc端模板
+            }
+        }
     }
 
     /**

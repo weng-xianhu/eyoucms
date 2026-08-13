@@ -710,7 +710,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
                 break;
             case 'serialize':
                 try {
-                    $value = unserialize($value);
+                    $value = safe_unserialize($value);
                 } catch (\Exception $e) {
                     $value = null;
                 }

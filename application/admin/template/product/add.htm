@@ -19,7 +19,10 @@
             <div class="item-title-lr">
                 <div class="item-title-l">
                     {include file="public/callback_page_1" /}<!-- 返回箭头 -->
-                    
+                    <div class="subject">
+                        <h3>发布产品</h3>
+                        <h5></h5>
+                    </div>
                     <ul class="tab-base nc-row">
                         <li><a href="javascript:void(0);" data-index='1' class="tab current"><span>基础内容</span></a></li>
                         <li><a href="javascript:void(0);" data-index='2' class="tab"><span>产品参数</span></a></li>
@@ -133,6 +136,9 @@
                     &nbsp;&nbsp;
                     {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/archives/ai_uploads_btn.htm')" /}
                         {include file="/weapp/Ai/template/archives/ai_uploads_btn.htm" /}
+                    {/if}
+                    {if condition="file_exists(ROOT_PATH.'weapp/PexelsImg/template/archives/pexels_uploads_btn.htm')" /}
+                        {include file="/weapp/PexelsImg/template/archives/pexels_uploads_btn.htm" /}
                     {/if}
                     <span class="err"></span>
                     <p class="notic"></p>
@@ -392,7 +398,7 @@
                             if (1 == spec_type) {
                                 $('.spec_type_1').show();
                                 $('.spec_type_2').hide();
-                                $('#dl_virtual_sales').show();
+                                $('#dl_virtual_sales,#dl_stock_code').show();                                
                                 $('#users_price, #stock_count').removeAttr("readonly");
                                 if (IsSpecData && IsSpecData != ' ') {
                                     layer.confirm('<span style="color: red;">请注意：您已添加多规格，若切换单规格并保存商品，则清空多规格数据！</span>', {
@@ -422,7 +428,7 @@
                             } else {
                                 $('.spec_type_1').hide();
                                 $('.spec_type_2').show();
-                                $('#dl_virtual_sales').hide();
+                                $('#dl_virtual_sales,#dl_stock_code').hide();
                                 $('#users_price, #stock_count').attr("readonly", "readonly");
                             }
                         }
@@ -850,7 +856,7 @@
                         // 批量设置价格
                         function BulkSetPrice(obj) {
                             layer.prompt({
-                                title: false, 
+                                title: false,
                                 shade: layer_shade,
                                 formType: 3,
                                 id: 'BulkSetPrice',
@@ -870,6 +876,27 @@
                             });
                         }
 
+                        // 批量设置划线价
+                        function BulkSetCrossedPrice(obj) {
+                            layer.prompt({
+                                title: false,
+                                shade: layer_shade,
+                                formType: 3,
+                                id: 'BulkSetCrossedPrice',
+                                btn: ['确定', '关闭'],
+                                closeBtn: 0,
+                                success: function(layero, index){
+                                    $("#BulkSetCrossedPrice").find('input').attr('placeholder', '批量设置划线价');
+                                    $("#BulkSetCrossedPrice").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                    $("#BulkSetCrossedPrice").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                }
+                            }, function(price, index){
+                                layer.close(index);
+                                $('.crossed_price').val(price);
+                                $('#crossed_price').val(price);
+                            });
+                        }
+
                         // 更新价格，取出最小的值赋值到价格中
                         function UpPrice(obj) {
                             var UsersPriceArray = new Array();
@@ -881,10 +908,10 @@
                             $('#users_price').val(MinValue);
                         }
 
-                        // 批量设置价格
+                        // 批量设置库存
                         function BulkSetStock(obj) {
                             layer.prompt({
-                                title: false, 
+                                title: false,
                                 shade: layer_shade,
                                 formType: 3,
                                 id: 'BulkSetStock',
@@ -904,6 +931,54 @@
                                 $('#stock_count').val(stock_count);
                                 // 禁用库存框
                                 $('#stock_count').attr('readonly','readonly');
+                            });
+                        }
+
+                        // 批量虚拟销量
+                        function BulkSetSales(obj) {
+                            layer.prompt({
+                                title: false,
+                                shade: layer_shade,
+                                formType: 3,
+                                id: 'BulkSetSales',
+                                btn: ['确定', '关闭'],
+                                closeBtn: 0,
+                                success: function(layero, index){
+                                    $("#BulkSetSales").find('input').attr('placeholder', '批量虚拟销量');
+                                    $("#BulkSetSales").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                    $("#BulkSetSales").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                }
+                            }, function(stock, index){
+                                layer.close(index);
+                                $('.spec_sales_num').val(stock);
+                                $('.spec_sales_num').attr('data-old_stock',stock);
+                                stock_count = Number($('.spec_sales_num').length) * Number(stock);
+                                $('#spec_sales_num').val(stock_count);
+                                $('#spec_sales_num').attr('readonly','readonly');
+                            });
+                        }
+
+                        // 批量商品编码
+                        function BulkSetCode(obj) {
+                            layer.prompt({
+                                title: false,
+                                shade: layer_shade,
+                                formType: 3,
+                                id: 'BulkSetCode',
+                                btn: ['确定', '关闭'],
+                                closeBtn: 0,
+                                success: function(layero, index){
+                                    $("#BulkSetCode").find('input').attr('placeholder', '批量商品编码');
+                                    $("#BulkSetCode").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                    $("#BulkSetCode").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
+                                }
+                            }, function(stock, index){
+                                layer.close(index);
+                                $('.stock_code').val(stock);
+                                $('.stock_code').attr('data-old_stock',stock);
+                                stock_count = Number($('.stock_code').length) * Number(stock);
+                                $('#stock_code').val(stock_count);
+                                $('#stock_code').attr('readonly','readonly');
                             });
                         }
 
@@ -964,6 +1039,12 @@
                     <dd class="opt">
                         <input type="text" name="virtual_sales" id="virtual_sales" maxlength="100" style="width: 10%;" value="" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')">
                         <p class="notic">只适用单规格商品，前台展示时是实际销量+虚拟销量</p>
+                    </dd>
+                </dl><dl class="row" id="dl_stock_code">
+                    <dt class="tit"> <label for="stock_code">商品编码</label> </dt>
+                    <dd class="opt">
+                        <input type="text" name="stock_code" id="stock_code" style="width: 10%;" value="" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')">
+                        <p class="notic"></p>
                     </dd>
                 </dl>
             {/if}
@@ -1217,6 +1298,9 @@
                     <span class="add-on input-group-addon"> <i class="glyphicon glyphicon-calendar fa fa-calendar"></i> </span>
                 </dd>
             </dl>
+            {if condition="file_exists(ROOT_PATH.'weapp/TimingTask/template/admin/archives/removal_time_add.htm')" /}
+                {include file="/weapp/TimingTask/template/admin/archives/removal_time_add.htm" /}
+            {/if}
             <dl class="row">
                 <dt class="tit"> <label for="tempview">文档模板</label> </dt>
                 <dd class="opt">

@@ -45,6 +45,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'order_score' => 
+  array (
+    'name' => 'order_score',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'pay_time' => 
   array (
     'name' => 'pay_time',

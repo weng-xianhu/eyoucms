@@ -152,17 +152,17 @@
                     <dd class="opt">
                         <input pattern="^\d{1,}$" onblur="$('#mark_degree2').empty().html(this.value);" name="mark_degree" id="mark_degree" value="{$config.mark_degree|default=''}" class="input-txt" type="range" min="0" step="2" max="100">
                         <span class="err" id="mark_degree2">{$config.mark_degree|default=''}</span>
-                        <p class="notic">0代表完全透明，100代表不透明</p>
+                        <p class="notic">拖动滑块调节水印透明度，滑块越短，水印越透明</p>
                     </dd>
                 </dl>
                 <dl class="row imgtr">
                     <dt class="tit">
-                        <label for="mark_degree">JPEG 水印质量</label>
+                        <label for="mark_degree">水印质量</label>
                     </dt>
                     <dd class="opt">
-                        <input pattern="^\d{1,}$" onblur="$('#mark_quality2').empty().html(this.value);" name="mark_quality" id="mark_quality" value="{$config.mark_quality|default=''}" class="input-txt" type="range" min="0" step="2" max="100">
+                        <input pattern="^\d{1,}$" onblur="$('#mark_quality2').empty().html(this.value);" name="mark_quality" id="mark_quality" value="{$config.mark_quality|default=''}" class="input-txt" type="range" min="1" step="1" max="100">
                         <span class="err" id="mark_quality2">{$config.mark_quality|default=''}</span>
-                        <p class="notic">水印质量请设置为0-100之间的数字,决定 jpg 格式图片的质量</p>
+                        <p class="notic">拖动滑块调节水印清晰度，滑块越短，水印越模糊</p>
                     </dd>
                 </dl>
                 <dl class="row">

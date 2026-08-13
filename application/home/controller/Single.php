@@ -28,6 +28,7 @@ class Single extends Base
 
     public function lists($tid)
     {
+        $param = input('param.');
         $tid_tmp = $tid;
         $seo_pseudo = config('ey_config.seo_pseudo');
         if (empty($tid)) {
@@ -43,8 +44,15 @@ class Single extends Base
             header('Location: '.$typeurl);
             exit;
         } else {
+            $is_screen = false;
             if (3 == $seo_pseudo) {
-                $map = array('dirname'=>$tid);
+                $url_screen_var = config('global.url_screen_var');
+                if (!empty($param[$url_screen_var]) && 1 == intval($param[$url_screen_var])) {
+                    $is_screen = true;
+                    $map = array('id' => intval($tid));
+                } else {
+                    $map = array('dirname' => $tid);
+                }
             } else {
                 if (!is_numeric($tid) || strval(intval($tid)) !== strval($tid)) {
                     abort(404,'页面不存在');
@@ -60,7 +68,7 @@ class Single extends Base
             /*--end*/
 
             if (3 == $seo_pseudo) {
-                $tid = $dirname;
+                $tid = $is_screen ? $tid : $dirname;
             } else {
                 $tid = $tid_tmp;
             }

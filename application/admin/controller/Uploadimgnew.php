@@ -29,6 +29,7 @@ class Uploadimgnew extends Base
     function __construct() 
     {
         parent::__construct();
+        // 图片文件类型配置
         $this->imageExt = config('global.image_ext');
         $this->image_type = tpCache('basic.image_type');
         $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : $this->imageExt;
@@ -40,7 +41,7 @@ class Uploadimgnew extends Base
     public function get_type()
     {
         if (IS_AJAX){
-            $type_list = Db::name('uploads_type')->field('id,upload_type')->select();
+            $type_list = Db::name('uploads_type')->field('id,upload_type')->where(['group_code'=>'image'])->select();
             if (empty($type_list)){
                 $this->error('请先创建目录');
             }else{
@@ -98,8 +99,8 @@ class Uploadimgnew extends Base
         $assign_data['current_upload_list_url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$type_id, 'info'=>mchStrCode(json_encode($info), 'ENCODE')]);
 
         // 侧边栏我的分组
-        $uploads_total_list = Db::name('uploads')->field('type_id, count(img_id) as total')->where(['is_del'=>0])->group('type_id')->getAllWithIndex('type_id');
-        $uploads_type_list = Db::name('uploads_type')->order('id asc')->select();
+        $uploads_total_list = Db::name('uploads')->field('type_id, count(img_id) as total')->where(['group_code'=>'image','is_del'=>0])->group('type_id')->getAllWithIndex('type_id');
+        $uploads_type_list = Db::name('uploads_type')->where(['group_code'=>'image'])->order('id asc')->select();
         foreach ($uploads_type_list as $key => $val) {
             $val['total'] = !empty($uploads_total_list[$val['id']]['total']) ? $uploads_total_list[$val['id']]['total'] : 0;
             $val['url'] = url('Uploadimgnew/get_upload_list', ['type_id'=>$val['id'], 'info'=>mchStrCode(json_encode($info), 'ENCODE')]);
@@ -240,7 +241,9 @@ class Uploadimgnew extends Base
         $info['image_accept'] = $this->image_accept;
         $assign_data['info'] = $info;
 
-        $Where = [];
+        $Where = [
+            'group_code' => 'image',
+        ];
         // 时间检索条件查询
         $post_eytime = input('eytime/s');
         $EyTime = !empty($post_eytime) ? $post_eytime : '';
@@ -273,6 +276,15 @@ class Uploadimgnew extends Base
                 $Where['add_time'] = array('elt', $End);
             }
         }
+        
+        // 图片名称搜索条件查询
+        $keywords = input('keywords/s');
+        $keywords = !empty($keywords) ? trim($keywords) : '';
+        $assign_data['keywords'] = $keywords;
+        if (!empty($keywords)) {
+            $Where['title'] = array('like', '%'.$keywords.'%');
+        }
+        
         $Where['type_id'] = $type_id;
         $Where['is_del'] = 0;
         $countimg = Db::name('uploads')->where($Where)->count('img_id');
@@ -285,7 +297,7 @@ class Uploadimgnew extends Base
             ->limit($pageObj->firstRow.','.$pageObj->listRows)
             ->select();
         foreach ($imglist as $key => $val) {
-            $val['image_url'] = handle_subdir_pic($val['image_url']);
+            $val['image_url'] = handle_subdir_pic($val['image_url'], 'img');
             empty($val['title']) && $val['title'] = preg_replace('/^(.*)\/([^\/]+)$/i', '${2}', $val['image_url']);
             $imglist[$key] = $val;
         }
@@ -319,10 +331,10 @@ class Uploadimgnew extends Base
             }
         }
         $assign_data['storageTitle'] = $storageTitle;
-        /*----------------------------第三方存储插件 start------------------------*/
+        /*----------------------------第三方存储插件 end------------------------*/
 
         // 分组图片总数
-        $assign_data['countimg'] = Db::name('uploads')->where(['type_id' => $type_id, 'is_del' => 0])->count('img_id');
+        $assign_data['countimg'] = Db::name('uploads')->where(['group_code'=>'image','type_id' => $type_id, 'is_del' => 0])->count('img_id');
 
         // 标记是否已经同步导入数据
         $assign_data['admin_logic_1639031991'] = tpSetting('syn.admin_logic_1639031991', [], 'cn');
@@ -624,6 +636,29 @@ class Uploadimgnew extends Base
                 $commonPic_db = Db::name('common_pic');
                 $data  = [];
                 foreach ($images_array as $key => $value) {
+                    // 安全修复：过滤 XSS 攻击
+                    
+                    // 1. 验证图片路径格式（只允许合法的图片路径）
+                    $value = trim($value);
+                    
+                    // 2. 移除 HTML 标签
+                    $value = strip_tags($value);
+                    
+                    // 3. 转义特殊字符，防止 XSS
+                    $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                    
+                    // 4. 验证路径必须以 uploads/ 或 /uploads/ 开头
+                    if (!preg_match('#^/?uploads/[\w\-/\.]+$#i', $value)) {
+                        continue; // 跳过非法路径
+                    }
+                    
+                    // 5. 验证文件扩展名（只允许图片）
+                    $ext = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+                    $allowedExts = explode(',', config('global.image_ext'));
+                    if (!in_array($ext, $allowedExts)) {
+                        continue; // 跳过非图片文件
+                    }
+                    
                     // 添加数组
                     $data[$key] = [
                         'pic_path'    => $value,
@@ -752,6 +787,8 @@ class Uploadimgnew extends Base
             } else if (!is_http_url($imgremoteurl)) {
                 $this->error("请输入有效的图片地址！");
             }
+            
+            // 下载远程图片
             $reData = saveRemote($imgremoteurl);
             $reData = json_decode($reData, true);
             if ('SUCCESS' != $reData['state']) {
@@ -761,14 +798,33 @@ class Uploadimgnew extends Base
                 if (is_http_url($reData['url'])) {
                     $image_url = $reData['url'];
                 } else {
-                    $image_url = handle_subdir_pic($reData['url']);
+                    $image_url = handle_subdir_pic($reData['url'], 'img');
                 }
+            }
+
+            // 如果已存在相同图片路径，避免重复写入
+            $where = [
+                'image_url'  => $image_url,
+                'group_code' => 'image',
+            ];
+            $existing = Db::name('uploads')->where($where)->find();
+            if (!empty($existing)) {
+                // 如选择了分组且与现有记录不同，补充更新分组
+                if ($type_id != $existing['type_id']) {
+                    Db::name('uploads')->where(['img_id' => $existing['img_id']])->update([
+                        'type_id'     => $type_id,
+                        'update_time' => getTime(),
+                    ]);
+                    $existing['type_id'] = $type_id;
+                }
+                $this->success('提取成功', null, $existing);
             }
 
             // 添加图片进数据库
             $addData = [
                 'aid'         => 0,
                 'type_id'     => $type_id,
+                'group_code'  => 'image',
                 'image_url'   => $image_url,
                 'title'       => !empty($reData['title']) ? $reData['title'] : '',
                 'intro'       => '',
@@ -788,7 +844,7 @@ class Uploadimgnew extends Base
     }
 
     /*------------------------------------新版上传图片带分组 start-----------------------------------*/
-    //添加栏目
+    //添加分组
     public function Addtype()
     {
         if (IS_AJAX_POST) {
@@ -797,6 +853,7 @@ class Uploadimgnew extends Base
             if (empty($upload_type)) $this->error("请输入分组名称");
 
             $data = [
+                'group_code'  => 'image',
                 'upload_type' => $upload_type,
                 'add_time'    => getTime(),
                 'update_time' => getTime(),
@@ -809,7 +866,7 @@ class Uploadimgnew extends Base
         $this->error("分组添加失败");
     }
 
-    // 编辑栏目
+    // 编辑分组
     public function EditType()
     {
         if (IS_AJAX_POST) {
@@ -823,7 +880,6 @@ class Uploadimgnew extends Base
 
             $data = [
                 'upload_type' => $upload_type,
-                'add_time'    => getTime(),
                 'update_time' => getTime(),
             ];
             $rs = Db::name('UploadsType')->where('id', $type_id)->update($data);
@@ -834,7 +890,7 @@ class Uploadimgnew extends Base
         $this->error("分组编辑失败");
     }
 
-    // 删除栏目
+    // 删除分组
     public function DelType()
     {
         if (IS_AJAX_POST) {
@@ -843,17 +899,17 @@ class Uploadimgnew extends Base
             $type_id = $post['type_id'];
             if (empty($type_id)) $this->error("请选择分组");
 
-            $rs = Db::name('UploadsType')->where('id', $type_id)->delete();
+            $rs = Db::name('UploadsType')->where(['group_code'=>'image','id' => $type_id])->delete();
             if (!empty($rs)) {
-                Db::name('uploads')->where('type_id', $type_id)->update(['type_id' => 0, 'update_time'=>getTime()]);
+                Db::name('uploads')->where(['group_code'=>'image','type_id' => $type_id])->update(['type_id' => 0, 'update_time'=>getTime()]);
                 $this->success("删除分组成功");
             }
         }
-        $this->error("分组添加失败");
+        $this->error("删除分组失败");
     }
     
     // 批量删除
-    public function del_uploadsimg() 
+    public function del_uploadsimg()
     {
         $del_type = 'img_id';
         $img_ids = input('img_id/a');
@@ -871,8 +927,32 @@ class Uploadimgnew extends Base
         }
         if (IS_POST && !empty($img_ids)) {
             if ('image_url' == $del_type) {
+                $fileExt = '';
+                $image_type = tpCache('basic.image_type');
+                !empty($image_type) && $fileExt .= '|'.$image_type;
+                $file_type = tpCache('basic.file_type');
+                !empty($file_type) && $fileExt .= '|'.$file_type;
+                $media_type = tpCache('basic.media_type');
+                !empty($media_type) && $fileExt .= '|'.$media_type;
+                $fileExt = !empty($fileExt) ? str_replace('||', '|', $fileExt) : config('global.image_ext');
                 foreach ($img_ids as $key => $val) {
-                    $rs = @unlink(ROOT_PATH.$val);
+                    // 安全修复: 路径穿越防护，验证文件路径在允许的目录内
+                    $filePath = ROOT_PATH . $val;
+                    $realPath = realpath($filePath);
+                    $uploadsDir = realpath(ROOT_PATH . 'uploads');
+
+                    // 验证文件必须在 uploads 目录内
+                    if ($realPath === false || $uploadsDir === false) {
+                        continue;
+                    }
+                    if (strpos($realPath, $uploadsDir) !== 0) {
+                        continue; // 路径不在 uploads 目录内，跳过
+                    }
+                    // 禁止删除非图片、文件、视频文件
+                    if (!preg_match('/\.('.$fileExt.')$/i', $realPath)) {
+                        continue;
+                    }
+                    $rs = @unlink($realPath);
                 }
             } else {
                 $rs = Db::name('uploads')->where("img_id", 'IN', $img_ids)->delete();
@@ -880,6 +960,72 @@ class Uploadimgnew extends Base
             }
             if ($rs !== false) {
                 $this->success("删除成功");
+            }
+        }
+        $this->error("删除失败");
+    }
+
+    // 彻底删除图片（包括服务器上的文件）
+    public function del_uploadsimg_completely() 
+    {
+        $img_ids = input('img_id/a');
+        if (IS_POST && !empty($img_ids)) {
+            // 验证并处理img_id
+            foreach ($img_ids as $key => $val) {
+                if (!is_numeric($val)) {
+                    unset($img_ids[$key]);
+                } else {
+                    $img_ids[$key] = intval($val);
+                }
+            }
+            
+            if (empty($img_ids)) {
+                $this->error("参数错误");
+            }
+
+            // 查询图片信息
+            $image_list = Db::name('uploads')->field('img_id,image_url')->where("img_id", 'IN', $img_ids)->select();
+            
+            if (empty($image_list)) {
+                $this->error("未找到要删除的图片");
+            }
+
+            $delete_count = 0;
+            $file_delete_count = 0;
+            
+            // 删除图片文件
+            foreach ($image_list as $image) {
+                $image_url = $image['image_url'];
+                
+                // 只删除本地图片，远程图片跳过
+                if (!is_http_url($image_url)) {
+                    // 处理图片路径，去除ROOT_DIR前缀
+                    $file_path = preg_replace('#^'.preg_quote(ROOT_DIR, '#').'#i', '', $image_url);
+                    $file_path = ltrim($file_path, '/');
+                    
+                    // 构建完整文件路径
+                    $full_path = ROOT_PATH . $file_path;
+                    
+                    // 安全检查：确保路径在uploads目录下
+                    if (strpos($file_path, 'uploads/') === 0 && file_exists($full_path)) {
+                        if (@unlink($full_path)) {
+                            $file_delete_count++;
+                        }
+                    }
+                }
+            }
+            
+            // 删除数据库记录
+            $rs = Db::name('uploads')->where("img_id", 'IN', $img_ids)->delete();
+            
+            if ($rs !== false) {
+                $msg = "删除成功";
+                if ($file_delete_count > 0) {
+                    $msg .= "，已删除 {$file_delete_count} 个图片文件";
+                }
+                $this->success($msg);
+            } else {
+                $this->error("删除失败");
             }
         }
         $this->error("删除失败");
@@ -991,7 +1137,7 @@ class Uploadimgnew extends Base
             cache("get_files_total_serialize".$this->php_sessid, $pagetotal);
 
         }else{
-            $files = unserialize($get_files_data_serialize);
+            $files = safe_unserialize($get_files_data_serialize);
             $pagetotal        = cache("get_files_total_serialize".$this->php_sessid);
         }
         return [$files,$pagetotal];

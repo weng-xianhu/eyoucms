@@ -290,7 +290,7 @@ class Template
         if (!isset($matches[1])) {
             return false;
         }
-        $includeFile = unserialize($matches[1]);
+        $includeFile = safe_unserialize($matches[1]);
         if (!is_array($includeFile)) {
             return false;
         }
@@ -567,6 +567,53 @@ class Template
                 foreach ($matches as $match) {
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
+                    
+                    // ===== 安全验证：只允许包含模板文件 =====
+                    // 1. 规范化路径，防止路径穿越
+                    $file = str_replace('\\', '/', $file);
+                    $file = preg_replace('/^(\.*)\//', '/', $file); // 移除前面所有 . 
+                    $file = preg_replace('/\.(\.*)\//', '', $file); // 移除所有 ./ 、 ../ 和 .../ 等
+                    
+                    // 2. 严格限制：只能包含 .htm 或 .html 模板文件
+                    $allowedExtensions = ['htm', 'html'];
+                    $pathInfo = pathinfo($file);
+                    $fileExtension = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+                    
+                    // 如果没有扩展名，默认会添加 .htm，这是允许的
+                    // 如果有扩展名，必须是 htm 或 html
+                    if (!empty($fileExtension) && !in_array($fileExtension, $allowedExtensions)) {
+                        $content = str_replace($match[0], '<!-- 安全拦截：只允许包含.htm/.html模板文件 -->', $content);
+                        continue; // 跳过此次循环
+                    }
+                    
+                    // 3. 禁止包含危险目录下的文件
+                    $dangerousPaths = [
+                        'uploads/',     // 上传目录
+                        '/uploads/',
+                        'data/',        // 数据目录
+                        '/data/',
+                        'vendor/',      // 第三方库目录
+                        '/vendor/',
+                        'core/',        // 核心目录
+                        '/core/',
+                    ];
+                    
+                    $isDangerous = false;
+                    $normalizedFile = '/' . ltrim($file, '/'); // 规范化用于检查
+                    foreach ($dangerousPaths as $dangerPath) {
+                        if (stripos($normalizedFile, '/' . trim($dangerPath, '/') . '/') !== false) {
+                            $isDangerous = true;
+                            break;
+                        }
+                    }
+                    
+                    // 如果包含危险路径，记录日志并跳过
+                    if ($isDangerous) {
+                        $content = str_replace($match[0], '<!-- 安全拦截：禁止包含该目录下的文件 -->', $content);
+                        continue;
+                    }
+                    // ===== 安全验证结束 =====
+                    
                     // 插件引入会员中心模板跟随会员中心模板风格
                     if ('plugins' == MODULE_NAME && preg_match('/\/template\/(pc|mobile)\//i', $file)) {
                         $file = '.'. $file;
@@ -671,6 +718,53 @@ class Template
                 foreach ($matches as $match) {
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
+                    
+                    // ===== 安全验证：只允许包含模板文件 =====
+                    // 1. 规范化路径，防止路径穿越
+                    $file = str_replace('\\', '/', $file);
+                    $file = preg_replace('/^(\.*)\//', '/', $file); // 移除前面所有 . 
+                    $file = preg_replace('/\.(\.*)\//', '', $file); // 移除所有 ./ 、 ../ 和 .../ 等
+                    
+                    // 2. 严格限制：只能包含 .htm 或 .html 模板文件
+                    $allowedExtensions = ['htm', 'html'];
+                    $pathInfo = pathinfo($file);
+                    $fileExtension = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+                    
+                    // 如果没有扩展名，默认会添加 .htm，这是允许的
+                    // 如果有扩展名，必须是 htm 或 html
+                    if (!empty($fileExtension) && !in_array($fileExtension, $allowedExtensions)) {
+                        $content = str_replace($match[0], '<!-- 安全拦截：只允许包含.htm/.html模板文件 -->', $content);
+                        continue; // 跳过此次循环
+                    }
+                    
+                    // 3. 禁止包含危险目录下的文件
+                    $dangerousPaths = [
+                        'uploads/',     // 上传目录
+                        '/uploads/',
+                        'data/',        // 数据目录
+                        '/data/',
+                        'vendor/',      // 第三方库目录
+                        '/vendor/',
+                        'core/',        // 核心目录
+                        '/core/',
+                    ];
+                    
+                    $isDangerous = false;
+                    $normalizedFile = '/' . ltrim($file, '/'); // 规范化用于检查
+                    foreach ($dangerousPaths as $dangerPath) {
+                        if (stripos($normalizedFile, '/' . trim($dangerPath, '/') . '/') !== false) {
+                            $isDangerous = true;
+                            break;
+                        }
+                    }
+                    
+                    // 如果包含危险路径，记录日志并跳过
+                    if ($isDangerous) {
+                        $content = str_replace($match[0], '<!-- 安全拦截：禁止包含该目录下的文件 -->', $content);
+                        continue;
+                    }
+                    // ===== 安全验证结束 =====
+                    
                     if ( (defined('MODULE_NAME') && 'admin' != MODULE_NAME) || !defined('MODULE_NAME') && 'admin' != Request::instance()->module() ) {
                         if (!empty($is_mobile)) {
                             if (file_exists('./template/'.TPL_THEME.'pc/'.$web_users_tpl_theme.'/'.$users_wap_tpl_dir.'/users_login.htm') && preg_match('/^users(_([^\/]*))?\//i', $file)) {

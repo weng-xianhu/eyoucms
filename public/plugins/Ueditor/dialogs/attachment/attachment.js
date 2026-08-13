@@ -82,6 +82,265 @@
         };
     }
 
+    /* 打开附件库弹窗 */
+    function openFileLibraryDialog(uploadFileInstance) {
+        // 获取附件库URL
+        var fileLibraryUrl = '';
+        try {
+            // 尝试从父页面获取附件库URL
+            if (window.parent && window.parent.uploadFileSysLayerUrl) {
+                fileLibraryUrl = window.parent.uploadFileSysLayerUrl;
+            } else if (window.top && window.top.uploadFileSysLayerUrl) {
+                fileLibraryUrl = window.top.uploadFileSysLayerUrl;
+            } else {
+                // 构建默认的附件库URL
+                var langParam = '';
+                try {
+                    if (window.top && window.top.__lang__) {
+                        langParam = window.top.__lang__;
+                    } else if (window.parent && window.parent.__lang__) {
+                        langParam = window.parent.__lang__;
+                    }
+                } catch (err) {}
+
+                if (window.top && window.top.eyou_basefile) {
+                    fileLibraryUrl = window.top.eyou_basefile
+                        + "?m=admin&c=Uploadfilenew&a=upload&func=ueditorFileCallback&path=soft&open_source=bendi&num=100";
+                } else {
+                    var locationRef;
+                    try {
+                        locationRef = (window.top && window.top.location) ? window.top.location : window.location;
+                    } catch (err2) {
+                        locationRef = window.location;
+                    }
+                    var baseUrl = locationRef.origin + locationRef.pathname.replace(/\/[^\/]*$/, '');
+                    baseUrl = baseUrl.replace(/\/public\/plugins\/Ueditor\/dialogs\/attachment$/i, '');
+                    fileLibraryUrl = baseUrl + '/login.php?m=admin&c=Uploadfilenew&a=upload&func=ueditorFileCallback&path=soft&open_source=bendi&num=100';
+                }
+
+                if (langParam && fileLibraryUrl.indexOf('lang=') === -1) {
+                    fileLibraryUrl += '&lang=' + encodeURIComponent(langParam);
+                }
+            }
+        } catch (e) {
+            console.error('获取附件库URL失败:', e);
+        }
+        
+        if (!fileLibraryUrl) {
+            alert('无法获取附件库地址，请刷新页面后重试');
+            return false;
+        }
+        
+        // 获取layer对象
+        var layerObj = window.parent.layer || window.top.layer || (window.parent && window.parent.parent && window.parent.parent.layer);
+        if (!layerObj) {
+            try {
+                if (window.top && window.top.layer) {
+                    layerObj = window.top.layer;
+                } else if (window.parent && window.parent.layer) {
+                    layerObj = window.parent.layer;
+                }
+            } catch (e) {
+                console.error('获取layer对象失败:', e);
+            }
+        }
+        
+        if (layerObj) {
+            // 创建全局回调函数
+            var callbackName = 'ueditorFileCallback';
+            var parentWindow = window.parent;
+            var topWindow = window.top;
+            
+            // 定义回调函数
+            var callbackFunc = function(fileurl_tmp, filename_tmp, filesize_tmp, videotime_tmp) {
+                // 处理从附件库选择的附件
+                handleFileSelection(uploadFileInstance, fileurl_tmp, filename_tmp, filesize_tmp);
+            };
+            
+            // 在多个window对象上注册回调函数
+            try {
+                if (parentWindow) {
+                    parentWindow[callbackName] = callbackFunc;
+                }
+                if (topWindow && topWindow !== parentWindow) {
+                    topWindow[callbackName] = callbackFunc;
+                }
+                window[callbackName] = callbackFunc;
+            } catch (e) {
+                console.error('注册回调函数失败:', e);
+            }
+            
+            // 在URL中添加回调函数名
+            if (fileLibraryUrl.indexOf('func=') > -1) {
+                fileLibraryUrl = fileLibraryUrl.replace(/func=[^&]*/i, 'func=' + callbackName);
+            } else {
+                var separator = fileLibraryUrl.indexOf('?') > -1 ? '&' : '?';
+                fileLibraryUrl += separator + 'func=' + callbackName;
+            }
+            
+            // 防止重复打开同一附件库弹窗（多个事件或重叠元素可能导致多次触发）
+            (function(){
+                // 在将要打开 layer 的那个顶级 window 对象上设置保护标识
+                var layerGlobalWindow = parentWindow || topWindow || window;
+                try {
+                    if (layerGlobalWindow._ueditorFileLayerOpening) {
+                        // 已经在打开中，直接返回，避免重复弹窗
+                        return false;
+                    }
+                    // 标记正在打开
+                    layerGlobalWindow._ueditorFileLayerOpening = true;
+                } catch (err) {
+                    // 若无法访问（跨域等），忽略保护并继续尝试打开
+                    console.warn('设置弹窗打开保护失败:', err);
+                }
+
+                layerObj.open({
+                    type: 2,
+                    title: '选择附件',
+                    shadeClose: false,
+                    shade: 0.3,
+                    maxmin: false,
+                    area: ['1000px', '625px'],
+                    content: fileLibraryUrl,
+                    success: function(layero, index) {
+                        try {
+                            // 保存索引并清除打开保护
+                            layerGlobalWindow._ueditorFileLayerIndex = index;
+                            layerGlobalWindow._ueditorFileLayerOpening = false;
+                        } catch (err) {
+                            // 忽略跨域或其他访问问题
+                        }
+                    },
+                    end: function() {
+                        // 清理回调函数，并移除保护标识
+                        try {
+                            if (parentWindow && parentWindow[callbackName]) {
+                                delete parentWindow[callbackName];
+                            }
+                            if (topWindow && topWindow[callbackName] && topWindow !== parentWindow) {
+                                delete topWindow[callbackName];
+                            }
+                            if (window[callbackName]) {
+                                delete window[callbackName];
+                            }
+                            // 清理我们可能设置的全局标识
+                            if (layerGlobalWindow && layerGlobalWindow._ueditorFileLayerIndex) {
+                                delete layerGlobalWindow._ueditorFileLayerIndex;
+                            }
+                            if (layerGlobalWindow && layerGlobalWindow._ueditorFileLayerOpening) {
+                                delete layerGlobalWindow._ueditorFileLayerOpening;
+                            }
+                        } catch (e) {
+                            console.error('清理回调函数失败:', e);
+                        }
+                    }
+                });
+            })();
+        } else {
+            alert('无法打开附件库，请确保页面已加载layer组件');
+        }
+    }
+
+    /* 处理从附件库选择的附件 */
+    function handleFileSelection(uploadFileInstance, fileurl_tmp, filename_tmp, filesize_tmp) {
+        if (!fileurl_tmp) {
+            return;
+        }
+        
+        // 处理单个或多个附件
+        var fileUrls = Array.isArray(fileurl_tmp) ? fileurl_tmp : [fileurl_tmp];
+        var fileNames = Array.isArray(filename_tmp) ? filename_tmp : (filename_tmp ? [filename_tmp] : []);
+        
+        var $ = jQuery;
+        var prefix = editor.getOpt('fileUrlPrefix') || '';
+        
+        // 将选中的附件添加到文件列表
+        for (var i = 0; i < fileUrls.length; i++) {
+            var fileUrl = fileUrls[i];
+            if (!fileUrl) continue;
+            
+            // 处理URL：如果已经是完整URL，直接使用；否则可能需要添加前缀
+            var finalUrl = fileUrl;
+            if (prefix && fileUrl.indexOf('http://') !== 0 && fileUrl.indexOf('https://') !== 0 && fileUrl.indexOf('//') !== 0) {
+                // 如果URL不是以http开头，可能需要添加前缀
+                if (fileUrl.indexOf(prefix) !== 0) {
+                    finalUrl = prefix + (fileUrl.indexOf('/') === 0 ? fileUrl.substr(1) : fileUrl);
+                }
+            }
+            
+            // 获取文件名
+            var fileName = '';
+            if (fileNames[i]) {
+                fileName = fileNames[i];
+            } else {
+                // 从URL中提取文件名
+                var urlParts = finalUrl.split('/');
+                fileName = urlParts[urlParts.length - 1] || '未知文件';
+                // 去除可能的查询参数
+                if (fileName.indexOf('?') > -1) {
+                    fileName = fileName.split('?')[0];
+                }
+            }
+            
+            // 构建文件数据对象，模拟上传成功的格式
+            var fileData = {
+                state: 'SUCCESS',
+                url: finalUrl.indexOf(prefix) === 0 ? finalUrl.substr(prefix.length) : finalUrl,
+                original: fileName,
+                title: fileName
+            };
+            
+            // 添加到文件列表
+            uploadFileInstance.fileList.push(fileData);
+            
+            // 创建文件项并添加到界面
+            var fileExt = '';
+            var lastDotIndex = fileName.lastIndexOf('.');
+            if (lastDotIndex > -1) {
+                fileExt = fileName.substr(lastDotIndex + 1).toLowerCase();
+            }
+            
+            var $li = $('<li class="file-item">' +
+                '<p class="title">' + fileName + '</p>' +
+                '<p class="imgWrap"></p>' +
+                '</li>');
+            
+            var $wrap = $li.find('p.imgWrap');
+            if ('|png|jpg|jpeg|bmp|gif|'.indexOf('|'+fileExt+'|') == -1) {
+                $wrap.empty().addClass('notimage').append(
+                    '<i class="file-preview file-type-' + (fileExt || 'file') + '"></i>' +
+                    '<span class="file-title" title="' + fileName + '">' + fileName + '</span>'
+                );
+            } else {
+                // 如果是图片，尝试显示预览
+                $wrap.text(lang.uploadPreview || '预览');
+                try {
+                    var $img = $('<img src="' + finalUrl + '">');
+                    $wrap.empty().append($img);
+                    $img.on('error', function () {
+                        $wrap.text(lang.uploadNoPreview || '无法预览');
+                    });
+                } catch (e) {
+                    $wrap.text(lang.uploadPreview || '预览');
+                }
+            }
+            
+            $li.append('<span class="success"></span>');
+            $li.insertBefore($('#filePickerBlock'));
+            
+            // 更新状态
+            var $queue = uploadFileInstance.$wrap.find('.filelist');
+            var $statusBar = uploadFileInstance.$wrap.find('.statusBar');
+            var $placeHolder = uploadFileInstance.$wrap.find('.placeholder');
+            
+            if (uploadFileInstance.fileList.length === 1) {
+                $placeHolder.addClass('element-invisible');
+                $statusBar.removeClass('element-invisible').show();
+                $queue.removeClass('element-invisible');
+            }
+        }
+    }
+
 
     /* 上传附件 */
     function UploadFile(target) {
@@ -174,6 +433,107 @@
                 id: '#filePickerBtn',
                 label: lang.uploadAddFile
             });
+
+            // 判断是否是前端投稿页面（兼容伪静态路径和参数形式）
+            var isUserReleasePage = false;
+            try {
+                function detectUserReleaseFromUrl(url) {
+                    // if (!url) return false;
+                    // // 常见伪静态路径： /user/UsersRelease/article_add.html 或 /user/UsersRelease/article_add
+                    // var pathMatch = url.match(/\/user\/UsersRelease\/article_(add|edit)(?:\.html|\/?|$)/i);
+                    // if (pathMatch) return true;
+                    // // 参数形式： ?m=user&c=UsersRelease&a=article_add
+                    // if (url.indexOf('m=user') > -1 && url.indexOf('UsersRelease') > -1) return true;
+                    // return false;
+                    
+                    var eyou_top_basefile = window.top.eyou_basefile || '/index.php';
+                    const reg = /\/(?!index)[^\/]+\.php(?:\?|#|$)/i;
+                    if (eyou_top_basefile.indexOf('/index.php') === -1 || true === reg.test(url)) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+
+                // 检查当前窗口 URL（包含伪静态）
+                var currentUrl = (window.location && window.location.href) ? window.location.href : '';
+                if (detectUserReleaseFromUrl(currentUrl)) {
+                    isUserReleasePage = true;
+                }
+
+                // 检查当前窗口的 pathname（更精确匹配伪静态）
+                if (!isUserReleasePage && window.location && window.location.pathname) {
+                    var pathname = window.location.pathname || '';
+                    if (pathname.match(/\/user\/UsersRelease\/article_(add|edit)(?:\.html|\/?$)/i)) {
+                        isUserReleasePage = true;
+                    }
+                }
+
+                // 检查父窗口 URL（UEditor 对话框通常在 iframe 中）
+                if (!isUserReleasePage && window.parent && window.parent !== window) {
+                    try {
+                        var parentHref = window.parent.location && window.parent.location.href ? window.parent.location.href : '';
+                        if (detectUserReleaseFromUrl(parentHref)) {
+                            isUserReleasePage = true;
+                        } else if (window.parent.location && window.parent.location.pathname) {
+                            var ppath = window.parent.location.pathname || '';
+                            if (ppath.match(/\/user\/UsersRelease\/article_(add|edit)(?:\.html|\/?$)/i)) {
+                                isUserReleasePage = true;
+                            }
+                        }
+                    } catch (e) {
+                        // 跨域访问可能失败，忽略
+                    }
+                }
+
+                // 检查顶级窗口 URL（多层 iframe 情况）
+                if (!isUserReleasePage && window.top && window.top !== window) {
+                    try {
+                        var topHref = window.top.location && window.top.location.href ? window.top.location.href : '';
+                        if (detectUserReleaseFromUrl(topHref)) {
+                            isUserReleasePage = true;
+                        } else if (window.top.location && window.top.location.pathname) {
+                            var tpath = window.top.location.pathname || '';
+                            if (tpath.match(/\/user\/UsersRelease\/article_(add|edit)(?:\.html|\/?$)/i)) {
+                                isUserReleasePage = true;
+                            }
+                        }
+                    } catch (e) {
+                        // 跨域访问可能失败，忽略
+                    }
+                }
+            } catch (e) {
+                console.error('判断页面类型失败:', e);
+            }
+            
+            // 只有非前端投稿页面才拦截文件选择按钮，打开附件库弹窗
+            if (!isUserReleasePage) {
+                // 拦截文件选择按钮的点击事件，打开附件库弹窗
+                setTimeout(function() {
+                    // 拦截 #filePickerReady 区域的点击
+                    var $filePickerReady = $('#filePickerReady');
+                    if ($filePickerReady.length) {
+                        // 移除 WebUploader 的点击事件，使用我们自己的
+                        $filePickerReady.off('click').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openFileLibraryDialog(_this);
+                            return false;
+                        });
+                    }
+                    
+                    // 拦截 #filePickerBtn 的点击
+                    var $filePickerBtn = $('#filePickerBtn');
+                    if ($filePickerBtn.length) {
+                        $filePickerBtn.off('click').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openFileLibraryDialog(_this);
+                            return false;
+                        });
+                    }
+                }, 100);
+            }
 
             setState('pedding');
 

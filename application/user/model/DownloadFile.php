@@ -70,6 +70,7 @@ class DownloadFile extends Model
         if (!empty($fileupload)) {
             foreach($fileupload['file_url'] as $key => $val)
             {
+                $val = trim($val);
                 if($val == null || empty($val))  continue;
                 $title     = !empty($post['title']) ? $post['title'] : '';
                 $file_size = isset($post['fileupload']['file_size'][$key]) ? $post['fileupload']['file_size'][$key] : 0;
@@ -104,6 +105,7 @@ class DownloadFile extends Model
         if (!empty($post['remote_file'])) {
             foreach($post['remote_file'] as $kkk => $vvv)
             {
+                $vvv = trim($vvv);
                 if($vvv == null || empty($vvv)) continue;
                 $server_name = !empty($post['server_name'][$kkk]) ? trim($post['server_name'][$kkk]) : '';
                 $extract_code = !empty($post['extract_code'][$kkk]) ? trim($post['extract_code'][$kkk]) : '';

@@ -126,7 +126,12 @@
                                         <ul class="adpic">
                                             {volist name="$vo.ad" id="vs" length="1" }
                                                 <li>
-                                                    <img src="{$vs.litpic}"> {eq name="$vo.type" value="1"}<span>{$vo.ad_count}</span>{/eq}
+                                                    <img src="{$vs.litpic}"> 
+                                                    {eq name="$vo.type" value="1"}
+                                                    {egt name="$vo.ad_count" value="1"}
+                                                    <span>{$vo.ad_count}</span>
+                                                    {/egt}
+                                                    {/eq}
                                                 </li>
                                             {/volist}
                                         </ul>

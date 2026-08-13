@@ -1,0 +1,1 @@
+var editor_bd_style = '';

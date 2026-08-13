@@ -247,7 +247,7 @@
                 <!-- 单张图 start -->
                 <div class="form-group group_z">
                     <div class="input-group input-group-icon">
-                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="12123123" style="display: none;"><!--{$vo.info|default=''}-->
+                        <input type="text" class="form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="" style="display: none;"><!--{$vo.info|default=''}-->
                         <input class=" form-control {$vo.fieldArr}_{$vo.name|default=''}_input" placeholder="{$vo.title}" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back','{:url('user/Uploadify/upload',['resource'=>'reg'])}')">
                     </div>
                 </div>

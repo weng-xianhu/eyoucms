@@ -5,30 +5,37 @@ var parentObj = parent.layer.getFrameIndex(window.name);
 var zNodes;
 var myLayout;
 jQuery(document).ready(function () {
-    myLayout = jQuery("body").layout({
-    /*  全局配置 */
-        closable:                   false    /* 是否显示点击关闭隐藏按钮*/
-    ,   resizable:                  true    /* 是否允许拉动*/
-    ,   maskContents:               true    /* 加入此参数，框架内容页就可以拖动了*/
-    /*  顶部配置 */
-    ,   north__spacing_open:        0       /* 顶部边框大小*/
-    /*  底部配置 */
-    ,   south__spacing_open:        0       /* 底部边框大小*/
-    ,   west__spacing_open:         0       /* 左部边框大小*/
-    ,   east__spacing_open:         1       /* 右部边框大小*/
-    /*  some pane-size settings*/
-    ,   west__minSize:              140     /*左侧最小宽度*/
-    ,   west__maxSize:              143     /*左侧最大宽度*/
-    /*  左侧配置 */
-    ,   west__slidable:             false
-    ,   west__animatePaneSizing:    false
-    ,   west__fxSpeed_size:         "slow"  /* 'fast' animation when resizing west-pane*/
-    ,   west__fxSpeed_open:         1000    /* 1-second animation when opening west-pane*/
-    ,   west__fxSettings_open:      { easing: "easeOutBounce" } // 'bounce' effect when opening*/
-    ,   west__fxName_close:         "none"  /* NO animation when closing west-pane*/
-    ,   stateManagement__enabled:   false   /*是否读取cookies*/
-    ,   showDebugMessages:          false ,
-    }); 
+    // 仅在页面包含完整的 jQuery Layout 结构时才初始化
+    if (jQuery(".ui-layout-west").length > 0 || jQuery(".ui-layout-north").length > 0) {
+        try {
+            myLayout = jQuery("body").layout({
+            /*  全局配置 */
+                closable:                   false    /* 是否显示点击关闭隐藏按钮*/
+            ,   resizable:                  true    /* 是否允许拉动*/
+            ,   maskContents:               true    /* 加入此参数，框架内容页就可以拖动了*/
+            /*  顶部配置 */
+            ,   north__spacing_open:        0       /* 顶部边框大小*/
+            /*  底部配置 */
+            ,   south__spacing_open:        0       /* 底部边框大小*/
+            ,   west__spacing_open:         0       /* 左部边框大小*/
+            ,   east__spacing_open:         1       /* 右部边框大小*/
+            /*  some pane-size settings*/
+            ,   west__minSize:              140     /*左侧最小宽度*/
+            ,   west__maxSize:              143     /*左侧最大宽度*/
+            /*  左侧配置 */
+            ,   west__slidable:             false
+            ,   west__animatePaneSizing:    false
+            ,   west__fxSpeed_size:         "slow"  /* 'fast' animation when resizing west-pane*/
+            ,   west__fxSpeed_open:         1000    /* 1-second animation when opening west-pane*/
+            ,   west__fxSettings_open:      { easing: "easeOutBounce" } // 'bounce' effect when opening*/
+            ,   west__fxName_close:         "none"  /* NO animation when closing west-pane*/
+            ,   stateManagement__enabled:   false   /*是否读取cookies*/
+            ,   showDebugMessages:          false ,
+            });
+        } catch (e) {
+            // 忽略 layout 初始化错误
+        }
+    }
 });
 
 var setting = {
@@ -251,7 +258,10 @@ $(function(){
                     arrimgname = imgname_id_upload.split(",");
                     $.cookie("imgname_id_upload", "");
                 }
-                errmsg = '请至少选择一张图片！';
+                // 只有在没有选择图片时才设置错误消息
+                if (arrimg.length == 0) {
+                    errmsg = '请至少选择一张图片！';
+                }
             }
 
             if (num > 1) {

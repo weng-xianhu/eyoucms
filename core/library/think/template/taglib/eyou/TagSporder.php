@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -196,7 +196,7 @@ class TagSporder extends Base
                         }
                     }
                     // 产品属性处理
-                    $ValueData = unserialize($value['data']);
+                    $ValueData = safe_unserialize($value['data']);
                     $result['DetailsData'][$key]['pointsGoodsBuyField'] = !empty($ValueData['pointsGoodsBuyField']) ? json_decode($ValueData['pointsGoodsBuyField'], true) : [];
                     $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
                     $spec_value = htmlspecialchars_decode($spec_value);
@@ -289,6 +289,14 @@ class TagSporder extends Base
                 $result['OrderData']['province'] = get_province_name($result['OrderData']['province']);
                 $result['OrderData']['city']     = get_city_name($result['OrderData']['city']);
                 $result['OrderData']['district'] = get_area_name($result['OrderData']['district']);
+
+                // 优惠券信息
+                $result['OrderData']['coupon_price'] = !empty($result['OrderData']['coupon_price']) ? floatval(sprintf("%.2f", $result['OrderData']['coupon_price'])) : 0;
+                $result['OrderData']['coupon_name'] = '';
+                if (!empty($result['OrderData']['coupon_id']) && $result['OrderData']['coupon_price'] > 0) {
+                    $couponName = Db::name('weapp_coupons')->where('coupon_id', intval($result['OrderData']['coupon_id']))->getField('coupon_name');
+                    if (!empty($couponName)) $result['OrderData']['coupon_name'] = $couponName;
+                }
 
                 if (!empty($result['OrderData']['payment_method'])) {
                     $result['OrderData']['pay_name'] = $pay_method_arr['delivery_pay'];

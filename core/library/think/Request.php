@@ -337,7 +337,7 @@ class Request
             $domain_postfix_cn_array = ["ac", "ah", "bj", "cn", "com", "co", "cq", "fj", "edu", "gd", "gs", "gov", "goho", "gx", "gz", "ha", "hb", "he", "hi", "hl", "hk", "hn", "jl", "js", "jx", "ln", "lt", "me", "mo", "net", "nm", "nx", "org", "plc", "qh", "sc", "sd", "sh", "sn", "sx", "tj", "tw", "xj", "xz", "yn", "zj", "bbhj"];
             $array_domain = explode(".", $host);
             $array_num = count($array_domain) - 1;
-            if (in_array($array_domain[$array_num], ['cn','tw','hk','nz','au','uk','co','jp','hj','ai','de'])) {
+            if (in_array($array_domain[$array_num], ['cn','tw','hk','nz','au','uk','co','jp','hj','ai','de','za','br','th','vn'])) {
                 if (in_array($array_domain[$array_num - 1], $domain_postfix_cn_array)) {
                     $suffix = "." . $array_domain[$array_num - 1] . "." . $array_domain[$array_num];
                     if ($tq_suffix) {
@@ -1248,6 +1248,137 @@ class Request
             $value .= ' ';
         }
         // TODO 其他安全过滤
+        $this->checkedUrlParams();
+    }
+    
+    /**
+     * 检查URL参数（适用于所有情况）
+     */
+    private function checkedUrlParams()
+    {
+        $isCheckedParams = true;
+        $root_dir = ROOT_DIR;
+        $url = $this->url();
+        if (!stristr($this->baseFile(), 'index.php')) {
+            $isCheckedParams = false;
+        }
+        else if (preg_match('/^'.str_replace('/','\/',$root_dir).'\/search.html/',$url) || (preg_match('/(\?|&)c=Search/i', $url) && preg_match('/(\?|&)a=lists/i', $url))) {
+            // 前台模板目录切换
+            static $tpl_theme = null;
+            if (null === $tpl_theme) {
+                try {
+                    $database = include_once APP_PATH."database.php";
+                    $row = \think\Db::connect("{$database['type']}://{$database['username']}:{$database['password']}@{$database['hostname']}:{$database['hostport']}/{$database['database']}#{$database['charset']}")->query("select value from {$database['prefix']}config where name=:name limit 1",['name'=>'web_tpl_theme']);
+                    $tpl_theme = empty($row[0]['value']) ? '' : $row[0]['value'];
+                } catch (\Exception $e) {
+                    $isCheckedParams = false;
+                }
+            }
+            if (empty($tpl_theme)) {
+                if (file_exists(ROOT_PATH.'template/default')) {
+                    $tpl_theme = 'default/';
+                } else {
+                    $tpl_theme = '';
+                }
+            } else {
+                if ('default' == $tpl_theme && !file_exists(ROOT_PATH.'template/default')) {
+                    $tpl_theme = '';
+                } else if ('default' != $tpl_theme && !file_exists(ROOT_PATH.'template/'.$tpl_theme)) {
+                    $tpl_theme = '';
+                } else {
+                    $tpl_theme .= '/';
+                }
+            }
+            if (file_exists(ROOT_PATH.'template/'.$tpl_theme.'pc/lists_search.htm')) {
+                $isCheckedParams = false;
+            }
+        }
+
+        static $checkedParams = false;
+        
+        if ($isCheckedParams && !$checkedParams && isset($_SERVER['REQUEST_URI'])) {
+            $checkedParams = true; // 确保每个请求只检查一次
+            
+            $requestUri = $_SERVER['REQUEST_URI'];
+            
+            // 处理标准查询字符串（?后面的内容）
+            if (strpos($requestUri, '?') !== false) {
+                $queryString = parse_url($requestUri, PHP_URL_QUERY);
+                if ($queryString) {
+                    $this->checkQueryParams($queryString);
+                }
+            }
+            
+            // 处理以 & 或 /& 开头的情况
+            if (preg_match('/[\/]?&/', $requestUri)) {
+                $parts = explode('&', $requestUri);
+                // 跳过第一部分，因为它要么是路径，要么是空
+                array_shift($parts);
+                
+                if (!empty($parts)) {
+                    $queryString = implode('&', $parts);
+                    $this->checkQueryParams($queryString);
+                }
+            }
+        }
+    }
+
+    /**
+     * 检查查询参数是否包含非法字符
+     * @param string $queryString 查询字符串
+     * @throws \think\exception\HttpException
+     */
+    private function checkQueryParams($queryString)
+    {
+        parse_str($queryString, $params);
+        foreach ($params as $paramName => $paramValue) {
+            // 检查参数名
+            if (preg_match('/[\[\]\{\}]/', $paramName)) {
+                throw new \think\exception\HttpException(404, '参数名包含非法字符');
+            }
+            
+            // 检查参数值
+            if (is_array($paramValue)) {
+                // 处理数组类型的值
+                $this->checkParamValueArray($paramValue);
+            } else {
+                $pattern = '\[\]';
+                $m = $this->param('m/s');
+                $c = $this->param('c/s');
+                $a = $this->param('a/s');
+                $paramValue_arr = json_decode($paramValue, true);
+                if (!in_array("{$m}/{$c}/{$a}", ['plugins/Certify/face_return_back']) || empty($paramValue_arr)) {
+                    $pattern .= '\{\}';
+                }
+                if (preg_match('/['.$pattern.']/', $paramValue)) {
+                    throw new \think\exception\HttpException(404, '参数值包含非法字符');
+                }
+            }
+        }
+    }
+    
+    /**
+     * 递归检查参数值数组
+     * @param array $valueArray 需要检查的数组
+     * @throws \think\exception\HttpException
+     */
+    private function checkParamValueArray($valueArray)
+    {
+        foreach ($valueArray as $key => $value) {
+            // 检查数组键名
+            if (preg_match('/[\[\]\{\}]/', $key)) {
+                throw new \think\exception\HttpException(404, '参数名包含非法字符');
+            }
+            
+            // 递归检查值
+            if (is_array($value)) {
+                $this->checkParamValueArray($value);
+            } else {
+                if (preg_match('/[\[\]\{\}]/', $value)) {
+                    throw new \think\exception\HttpException(404, '参数值包含非法字符');
+                }
+            }
+        }
     }
 
     /**

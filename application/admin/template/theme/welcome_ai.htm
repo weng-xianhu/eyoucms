@@ -1,0 +1,721 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Apple devices fullscreen -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/css/theme/ai_main.css?v={$version}" rel="stylesheet" type="text/css">
+    <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/font/css/iconfont.css?v={$version}" rel="stylesheet"/>
+    <link href="__SKIN__/css/theme/ai_index.css?v={$version}" rel="stylesheet" type="text/css">
+    <!--[if IE 7]>
+    <link rel="stylesheet" href="__SKIN__/font/css/font-awesome-ie7.min.css?v={$version}">
+    <![endif]-->
+    <link href="__SKIN__/css/diy_style.css?v={$version}" rel="stylesheet" type="text/css"/>
+    {include file="public/theme_css" /}
+    <script type="text/javascript">
+        var eyou_basefile = "{$Request.baseFile}";
+        var module_name = "{$Think.const.MODULE_NAME}";
+        var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
+        var __main_lang__ = "{$main_lang}";
+        var VarSecurityPatch = {$security_patch|default=0};
+    </script>
+    <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+    <script src="__SKIN__/js/upgrade.js?v={$version}"></script>
+    <script src="__SKIN__/js/global.js?v={$version}"></script>
+    <script type="text/javascript" src="__PUBLIC__/plugins/Echarts/echarts.min.js?v={$version}"></script>
+</head>
+<body style="background-color:#F4F4F4;padding:0px; overflow: auto;">
+<div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="survey">
+    <div class="survey_left">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <div class="index_box" id="content_total_box">
+                        <div class="real_time_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">实时概况 <span class="f-12 color-grey">更新时间：{$current_time}</span></h3>
+                                 {eq name="'Index@ajax_content_total'|is_check_access" value="1"}
+                                 <div class="fr"><a href="javascript:void(0);" id="contentTotalAdd"><i style="font-size: 20px;" class="iconfont e-tianjia"></i></a></div>
+                                 {/eq}
+                             </div>
+                             <div class="container-fluid list-stats-survey">
+                                <ul class="stats4">
+                                {volist name='$contentTotal' id='vo' length='8'}
+                                    {if condition="is_check_access($vo['controller'].'@'.$vo['action'])"}
+                                    <li class="content_total">
+                                        <a class="card_box" href="javascript:void(0);" onclick="GoLocation(this);" data-href="{:url($vo.controller.'/'.$vo.action, $vo.vars)}">
+                                            <div class="title-survey">{$vo.title}</div>
+                                            <p title="{$vo.tips|default=''}"><cite>{$vo.total|default='0'}</cite>{$vo.unit|default='个'}</p>
+                                        </a>
+                                    </li>
+                                    {/if}
+                                {/volist}
+                                </ul>
+                             </div>
+                             <script type="text/javascript">
+                                $(function(){
+                                    if ($('#content_total_box li.content_total').length > 0) {
+                                        $('#content_total_box').show();
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="survey_right">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <!-- 待办事项 -->
+                    <div class="pending">
+                        <h3>待办事项</h3>
+                        <div class="pending-list" id="explanation_welcome">
+                            <ul>
+                                {if condition="intval($ddos_scan_last_time) + (15*86400) < getTime()"}
+                                <li><i class="fa fa-caret-right red"></i>温馨提示：欢迎使用{$version}版本，建议到安全中心给系统做一次安全检测，是否有安全隐患需要处理<a href="{:url('Security/index')}">【点击进入】</a>&nbsp;<a href="javascript:void(0);" class="checkZoom" data-type="4" style="color: red;">[忽略]</a></li>
+                                {/if}
+                                {if condition='empty($system_explanation_welcome_2)'}
+                                <li><i class="fa fa-caret-right red"></i>后台登录密码强度：{$admin_login_pwdlevel|getPasswordLevelTitle}，容易被暴力破解，请及时
+                                <a href="javascript:void(0);" data-href="{:url('Admin/admin_edit', ['id'=>$Think.session.admin_info.admin_id,'iframe'=>1])}" onclick="openFullframe(this, '管理员-修改密码');">【修改密码】</a>提高安全性。&nbsp;<a href="javascript:void(0);" class="checkZoom" data-type="2" style="color: red;">[忽略]</a></li>
+                                {/if}
+                                {if condition='empty($system_explanation_welcome_5)'}
+                                <li><i class="fa fa-caret-right red"></i>风险提示：通过定期扫描网站发现存在一些安全隐患，请前往处理<a href="{:url('Security/index', ['noreset'=>1])}">【点击进入】</a>&nbsp;<a href="javascript:void(0);" class="checkZoom" data-type="5" style="color: red;">[忽略]</a></li>
+                                {/if}
+                                {volist name="$notice_list" id="vo"}
+                                <li>
+                                    <i class="fa fa-circle red" style="font-size: 8px;"></i><a href="{:url('UsersNotice/admin_notice_index', ['open_id'=>$vo['content_id'], 'gourl'=>url('Index/welcome')])}">{$vo.content_title} （{$vo.add_time|MyDate='Y-m-d H:i',###}）</a>
+                                </li>
+                                {/volist}
+                            </ul>
+                        </div>
+                        <script type="text/javascript">
+                            $(function(){
+                                if ($('#explanation_welcome li').length > 0) {
+                                    $('#explanation_welcome').show();
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="survey">
+    <div class="survey_left">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <div class="index_box">
+                        <div class="info_count">
+                            <div class="survey_title">
+                                <h3 class="fl">
+                                    <div class="tab tab-on" data-tab="tab1">常用功能</div>
+                                    <div class="tab" data-tab="tab2">应用导航</div>
+                                </h3>
+                                <div class="fr">
+                                    <a class="tab-con tab1" href="javascript:void(0);" id="quickMenuAdd">
+                                        <i style="font-size: 20px;" class="iconfont e-tianjia"></i>
+                                    </a>
+                                    <a class="tab-con tab2" href="javascript:void(0);" id="quickWeappMenuAdd" style="display:none;">
+                                        <i style="font-size: 20px;" class="iconfont e-tianjia"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="container-fluid tab-con tab1" style="display:none;">
+                                <ul>
+                                    {volist name="$quickMenu" id="vo" length='8'}
+                                        <li>
+                                            <a href="javascript:void(0);" onclick="GoLocation(this);" data-href="{$vo['href']}">
+                                                <div class="icon">
+                                                    {if condition="preg_match('/\.png$/i', $vo['litpic'])"}
+                                                    <img src="{$vo.litpic|get_default_pic=###}" width="48" height="48">
+                                                    {else /}
+                                                    <i class="{$vo.litpic|default='iconfont e-chajian'}"></i>
+                                                    {/if}
+                                                </div>
+                                                <div class="navs">
+                                                    <h5>{$vo.title}</h5>
+                                                    <p>{$vo.intro|default=''}</p>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {/volist}
+                                </ul>
+                            </div>
+                            <div class="container-fluid tab-con tab2" style="display:none;">
+                                <ul>
+                                    {volist name="$weappMenuList" id="vo" length='8'}
+                                    <li>
+                                        {notempty name="$vo.is_system"}
+                                        <a href="{$vo['config']['management']['href']}" target="{$vo['config']['management']['target']|default='_self'}">
+                                            <div class="pic" style="background-color: #fd5148;">
+                                                <i class="{$vo.config.litpic|default='iconfont e-chajian'}"></i>
+                                            </div>
+                                            <div class="navs">
+                                                <h5>{$vo['name']}</h5>
+                                                <p>{$vo.config.description|default='暂无描述~'}</p>
+                                            </div>
+                                        </a>
+                                        {else /}
+                                        <a href="{$vo['config']['management']['href']}" {$vo['config']['management']['event']|default=''} target="{$vo['config']['management']['target']|default='_self'}" data-id="{$vo['id']}" data-code="{$vo['code']}" data-min_version="{$vo['config']['min_version']}" data-is_buy="{$vo['is_buy']}">
+                                            <div class="pic">
+                                                <img src="{$vo.config.litpic|get_default_pic=###}" width="48" height="48">
+                                            </div>
+                                            <div class="navs">
+                                                <h5>{$vo['name']}</h5>
+                                                <p>{$vo.config.description|default='暂无描述~'}</p>
+                                            </div>
+                                        </a>
+                                        {/notempty}
+                                    </li>
+                                    {/volist}
+                                </ul>
+                            </div>
+                            <script type="text/javascript">
+                                $(function(){
+                                    $('.tab').click(function(){
+                                        $(this).addClass('tab-on').siblings().removeClass('tab-on');
+                                        $('.tab-con').hide();
+                                        var tab_value = $(this).data('tab');
+                                        $('.'+tab_value).show();
+                                        setCookies('ai_quick_menu_tab', tab_value);
+                                    });
+
+                                    var ai_quick_menu_tab = getCookie('ai_quick_menu_tab');
+                                    if ('' == ai_quick_menu_tab) {
+                                        ai_quick_menu_tab = 'tab1';
+                                    }
+                                    $('.tab[data-tab="'+ai_quick_menu_tab+'"]').trigger('click');
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="survey_right">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <!-- 待办事项 -->
+                    <div class="pending">
+                        <h3>版本信息</h3>
+                        <div class="pending-list">
+                            <ul>
+                                <li>系统更新：<span id="td_upgrade_msg">
+                                    <div id="upgrade_filelist" style="display:none;"></div>
+                                    <div id="upgrade_intro" style="display:none;"></div>
+                                    <div id="upgrade_notice" style="display:none;"></div>
+                                    <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}" data-php_servicemeal="{$php_servicemeal|default=0}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+                                </li>
+                                <li>
+                                    当前版本：{$sys_info.curent_version|default='v1.0.0'}
+                                </li>
+                                <li>
+                                    网站名称：{$sys_info.web_name|default='Eyoucms企业网站管理系统'}
+                                </li>
+                                <li>
+                                    版权所有：{notempty name="$is_eyou_authortoken"}<a href="https://www.eyoucms.com/buy/" target="_blank" style="color: #454545;">盗版必究</a>{else /}正版软件{/notempty}&nbsp;
+                                    {if condition="!is_internal_network()"}
+                                    <a class="color" href="javascript:void(0);" onclick="top.openItem('Index|authortoken|is_force|1');">校验</a>
+                                    {/if}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="survey">
+    <div class="survey_df">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    {eq name="'Order@index'|is_check_access" value="1"}
+                    <div class="index_box">
+                        <div class="info_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">最近15天访客情况</h3>
+                                 <!-- <div class="fr"><a class="basics-color" href="{:url('Statistics/index')}" onclick="pleftMenuFocus('Statistics_index');">更多</a></div> -->
+                             </div>
+                             <div class="container-fluid">
+                                 <div class="list-stats">
+                                     <div class="stats-con">
+                                         <div id="stats-box-1" style="width:90%;height:400px;margin: 0 auto;"></div>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                    {/eq}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="survey_df">
+        <div class="warpper">
+            <div class="content start_content">
+                <div class="contentWarp">
+                    <div class="index_box">
+                        <div class="info_count">
+                             <div class="survey_title">
+                                 <h3 class="fl">最近15天文章创作情况</h3>
+                                 <!-- <div class="fr"><a class="basics-color" href="{:url('Statistics/index')}" onclick="pleftMenuFocus('Statistics_index');">更多</a></div> -->
+                             </div>
+                             <div class="container-fluid">
+                                 <div class="list-stats">
+                                     <div class="stats-con">
+                                         <div id="stats-box-7" style="width:90%;height:400px;margin: 0 auto;"></div>
+                                 
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="td_upgrade_msg" style="display: none;">
+    <div id="upgrade_filelist" style="display:none;"></div>
+    <div id="upgrade_intro" style="display:none;"></div>
+    <div id="upgrade_notice" style="display:none;"></div>
+    <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+</div>
+                        
+<div id="footer" style="position: static; bottom: 0px; font-size:14px;">
+    <p>
+        <b>{$global.web_copyright|htmlspecialchars_decode}</b>
+    </p>
+</div>
+<script type="text/javascript">
+
+    function GoLocation(obj) {
+        layer_loading('正在加载');
+        var url = $(obj).data('href');
+        if (url.indexOf('&c=ShopProduct&a=index') > -1) {
+            top.$('#Shop_home').attr('data-click', true).attr('data-click_url', url).click();
+        } else {
+            window.location.href = $(obj).data('href');
+        }
+    }
+
+    /*function getBeforeDate(n) {
+        var n = n;
+        var d = new Date();
+        var year = d.getFullYear();
+        var mon = d.getMonth() + 1;
+        var day = d.getDate();
+        if(day <= n) {
+            if(mon > 1) {
+                mon = mon - 1;
+            } else {
+                year = year - 1;
+                mon = 12;
+            }
+        }
+        d.setDate(d.getDate() - n);
+        year = d.getFullYear();
+        mon = d.getMonth() + 1;
+        day = d.getDate();
+        s = year + "-" + (mon < 10 ? ('0' + mon) : mon) + "-" + (day < 10 ? ('0' + day) : day);
+        return s;
+    }*/
+
+    var datesList = {$datesList};
+</script>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart_1 = echarts.init(document.getElementById('stats-box-1'));
+    // 指定图表的配置项和数据
+    var option_1 = {
+        color: ['#3398DB'],
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+        },
+        // legend: {
+        //     data: ['访客量']
+        // },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: datesList,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#eee'],
+                    width: 1,
+                    type: 'solid'
+                }
+            }
+        },
+        yAxis:
+            {
+                type: 'value',
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: ['#eee'],
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            } ,
+        // [{
+        //     type: 'value',
+        //     name:'访客量',
+        //     splitLine: {
+        //         show: true,
+        //         lineStyle: {
+        //             color: ['#eee'],
+        //             width: 1,
+        //             type: 'solid'
+        //         }
+        //     }
+        // }],
+        series: [{
+                name: '访客量',
+                type: 'line',
+                data: ["{$ChartNum[1][0]}","{$ChartNum[1][1]}","{$ChartNum[1][2]}","{$ChartNum[1][3]}","{$ChartNum[1][4]}","{$ChartNum[1][5]}","{$ChartNum[1][6]}","{$ChartNum[1][7]}","{$ChartNum[1][8]}","{$ChartNum[1][9]}","{$ChartNum[1][10]}","{$ChartNum[1][11]}","{$ChartNum[1][12]}","{$ChartNum[1][13]}","{$ChartNum[1][14]}"],
+            },
+        ]
+    };
+    // 使用刚指定的配置项和数据显示图表。
+    myChart_1.setOption(option_1);
+</script>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart_7 = echarts.init(document.getElementById('stats-box-7'));
+    // 指定图表的配置项和数据
+    var option_7 = {
+        color: ['#3398DB'],
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+        },
+        // legend: {
+        //     data: ['文章量']
+        // },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: datesList,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#eee'],
+                    width: 1,
+                    type: 'solid'
+                }
+            }
+        },
+        yAxis:
+            {
+                type: 'value',
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: ['#eee'],
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            } ,
+        // [{
+        //     type: 'value',
+        //     name:'文章量',
+        //     splitLine: {
+        //         show: true,
+        //         lineStyle: {
+        //             color: ['#eee'],
+        //             width: 1,
+        //             type: 'solid'
+        //         }
+        //     }
+        // }],
+        series: [{
+                name: '文章量',
+                type: 'line',
+                data: ["{$ChartNum[7][0]}","{$ChartNum[7][1]}","{$ChartNum[7][2]}","{$ChartNum[7][3]}","{$ChartNum[7][4]}","{$ChartNum[7][5]}","{$ChartNum[7][6]}","{$ChartNum[7][7]}","{$ChartNum[7][8]}","{$ChartNum[7][9]}","{$ChartNum[7][10]}","{$ChartNum[7][11]}","{$ChartNum[7][12]}","{$ChartNum[7][13]}","{$ChartNum[7][14]}"],
+            },
+        ]
+    };
+    // 使用刚指定的配置项和数据显示图表。
+    myChart_7.setOption(option_7);
+</script>
+<script type="text/javascript">
+    $(function () {
+        if (1 == VarSecurityPatch) {
+            checkUpgradeSecurityVersion();
+        } else {
+            {eq name="upgrade" value="true"}
+            check_upgrade_version();
+            {/eq}
+        }
+
+        $.get("{:url('Ajax/welcome_handle', ['_ajax'=>1])}"); // 进入欢迎页面需要异步处理的业务
+        check_language_tips();
+
+        // 检测语言版本
+        function check_language_tips()
+        {
+            if (__main_lang__ != __lang__) {
+                var language_title = $('#language_title', window.parent.document).html();
+                layer.msg('当前后台已切换至【'+language_title+'】编辑状态！', {time:3000});
+            }
+        }
+
+        // 检测系统安全补丁更新弹窗
+        function checkUpgradeSecurityVersion() {
+            $.ajax({
+                type : "GET",
+                url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                data : {},
+                dataType : "JSON",
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (2 == res.data.code) {
+                            /*显示顶部导航更新提示*/
+                            try {
+                                $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                            } catch(e) {}
+
+                            $('#upgrade_filelist').html(res.data.msg.upgrade);
+                            $('#upgrade_intro').html(res.data.msg.intro);
+                            $('#upgrade_notice').html(res.data.msg.notice);
+                            $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                            $('#a_upgrade').html('检测到安全补丁包'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                            /* END */
+
+                            var webShowPopupUpgrade = {$web_show_popup_upgrade|default=1};
+                            var adminInfoRoleID = {$Think.session.admin_info.role_id|default=0};
+                            var adminInfoAuthRoleInfoOnlineUpdate = {$Think.session.admin_info.auth_role_info.online_update|default=0};
+                            if (-1 != webShowPopupUpgrade && (0 >= adminInfoRoleID || 1 == adminInfoAuthRoleInfoOnlineUpdate)) {
+                                btn_upgrade($("#a_upgrade"), 1);
+                            }
+                        } else if (0 == res.data.code) {
+                            layer.alert(res.data.msg, {title:false, closeBtn:0});
+                        } else {
+                            $('#td_upgrade_msg').html(res.data.msg);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 版本检测更新弹窗
+        function check_upgrade_version() {
+            $.ajax({
+                type : "GET",
+                url  : "{:url('Ajax/check_upgrade_version', ['_ajax'=>1])}",
+                data : {},
+                dataType : "JSON",
+                success: function(res) {
+                    if (1 == res.code) {
+                        if (2 == res.data.code) {
+                            /*显示顶部导航更新提示*/
+                            try {
+                                $("#upgrade_filelist", window.parent.document).html(res.data.msg.upgrade);
+                                $("#upgrade_intro", window.parent.document).html(res.data.msg.intro);
+                                $("#upgrade_notice", window.parent.document).html(res.data.msg.notice);
+                                $('#a_upgrade', window.parent.document).attr('data-version',res.data.msg.key_num).attr('data-max_version',res.data.msg.max_version).show();
+                            } catch(e) {}
+
+                            $('#upgrade_filelist').html(res.data.msg.upgrade);
+                            $('#upgrade_intro').html(res.data.msg.intro);
+                            $('#upgrade_notice').html(res.data.msg.notice);
+                            $('#a_upgrade').attr('data-version', res.data.msg.key_num).attr('data-max_version', res.data.msg.max_version).attr('title', res.data.msg.tips);
+                            $('#a_upgrade').html('检测到新版本'+res.data.msg.key_num+'[点击查看]').css('color', '#F00');
+                            /* END */
+
+                            {if condition="-1 != $web_show_popup_upgrade AND (0 >= $Think.session.admin_info.role_id OR 1 == $Think.session.admin_info.auth_role_info.online_update)"}
+                                btn_upgrade($("#a_upgrade"), 1);
+                            {/if}
+                        } else if (99 == res.data.code) {
+                            try {
+                                $('#a_upgrade', window.parent.document).attr('data-max_version',res.data.max_version).show();
+                            } catch(e) {}
+
+                            $('#a_upgrade').attr('data-max_version', res.data.max_version).attr('title', res.data.tips);
+                            $('#a_upgrade').html(res.data.msg).css('color', '#F00');
+                        } else {
+                            $('#td_upgrade_msg').html(res.data.msg);
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    $(function() {
+        //操作提示缩放动画
+        $(".checkZoom").click(function(){
+            $(this).parent().animate({
+                color: "#FFF",
+                backgroundColor: "#4FD6BE",
+                width: "0",
+                height: "0",
+            },300,function(){
+                $(this).remove();
+            });
+            if(1 >= $('#explanation_welcome').find('li').length) {
+                // $('#explanation_welcome').remove();
+            }
+            var url = eyou_basefile+"?m=admin&c=Ajax&a=explanation_welcome&type="+$(this).attr('data-type')+"&lang="+__lang__+"&_ajax=1";
+            $.get(url);
+        });
+
+        {eq name='$main_lang' value='$admin_lang'}
+        checkInlet(); // 自动检测隐藏index.php
+        {/eq}
+    });
+
+    // 自动检测隐藏index.php
+    function checkInlet() {
+        layer.open({
+            type: 2,
+            title: false,
+            area: ['0px', '0px'],
+            shade: 0.0,
+            closeBtn: 0,
+            shadeClose: true,
+            content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+            success: function(layero, index){
+                layer.close(index);
+                var body = layer.getChildFrame('body', index);
+                var content = body.html();
+                if (content.indexOf("Congratulations on passing") == -1)
+                {
+                    $.ajax({
+                        type : "POST",
+                        url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1",
+                        data : {seo_inlet:0},
+                        dataType : "JSON",
+                        success: function(res) {
+
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // 新增常用功能
+    $('#quickMenuAdd').click(function(){
+        var iframes = layer.open({
+            type: 2,
+            title: '常用功能',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['750px', '480px'],
+            content: "{:url('Index/ajax_quickmenu_ai', ['max_selnum'=>8])}"
+        });
+    });
+
+    // 新增应用导航
+    $('#quickWeappMenuAdd').click(function(){
+        var iframes = layer.open({
+            type: 2,
+            title: '应用导航',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['550px', '300px'],
+            content: "{:url('Index/ajax_weapp_quickmenu', ['max_selnum'=>8, 'welcome_type'=>'ai'])}"
+        });
+    });
+
+    // 新增实时概况快捷导航
+    $('#contentTotalAdd').click(function(){
+        //iframe窗
+        var iframes = layer.open({
+            type: 2,
+            title: '实时概况',
+            fixed: true, //不固定
+            shadeClose: false,
+            shade: layer_shade,
+            // maxmin: false, //开启最大化最小化按钮
+            area: ['550px', '320px'],
+            content: "{:url('Index/ajax_content_total', ['max_selnum'=>8, 'welcome_type'=>'ai'])}"
+        });
+    });
+
+    /**
+     * 更新组件库
+     * @return {[type]} [description]
+     */
+    var is_update_component_access = {$is_update_component_access|default=0};
+    function update_component_access()
+    {
+        if (1 == is_update_component_access) {
+            $.ajax({
+                type : 'post',
+                url : eyou_basefile+'?m=admin&c=Diyminipro&a=ajax_syn_component_access&lang='+__lang__,
+                data : {mini_id:0, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    if(res.code == 1) {
+                        console.log(res.msg);
+                    }
+                }
+            });
+        }
+    }
+    update_component_access();
+</script>
+{include file="public/footer" /}

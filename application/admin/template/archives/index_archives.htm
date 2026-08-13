@@ -6,23 +6,120 @@
 <div style="height: 10px;"></div>
 <div class="page min-hg-c-66">
     <div class="flexigrid" style="margin-top: 0px;min-height: 600px;">
-        <div class="mDiv">
-            <div class="ftitle">
-                 {include file="archives/tags_btn" /}
-            </div>
-            <!--<div title="刷新数据" class="pReload"><i class="fa fa-refresh"></i></div>-->
-            <form id="searchForm" class="navbar-form form-inline" action="{:url('Archives/index_archives')}" method="get" onSubmit="layer_loading('正在处理');">
-                {$searchform.hidden|default=''}
-                <div class="sDiv">
-                    {include file="archives/flag_btn" /}
-                    <div class="sDiv2">
-                        <input type="hidden" name="typeid" value="{$typeid}">
-                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="标题搜索..." {if condition="!empty($arctype_info['typename'])"}title="仅搜索“{$arctype_info['typename']}”栏目下的文档"{/if}>
-                        <input type="submit" class="btn" value="搜索">
-                        <i class="iconfont e-sousuo"></i>
+        <div class="mDiv"><div class="ftitle">{include file="archives/tags_btn" /}</div></div>
+        <div class="header-bar mb20">
+            <div class="more">
+                <div class="search">
+                    <div class="content">
+                        <form id="searchForm" action="{:url('Archives/index_archives')}" method="get" onsubmit="layer_loading('正在处理');" style="display: unset;">
+                            {$searchform.hidden|default=''}
+                            <input type="hidden" name="typeid" value="{$typeid}">
+                            <div class="ey-form-item"><label class="users-form-item-label">关键词：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" size="50" name="keywords" value="{$Request.param.keywords}" class="qsbox w220" placeholder="请输入文档标题/ID">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ey-form-item">
+                                <label class="users-form-item-label">属性：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div>
+                                                <select name="flags" id="flag">
+                                                    <option value="">请选择</option>
+                                                    {volist name="archives_flags" id="vo"}
+                                                    <option value="{$vo.flag_fieldname}" {eq name="$Request.param.flags" value="$vo.flag_fieldname"}selected{/eq}>{$vo.flag_name}</option>
+                                                    {/volist}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ey-form-item"><label class="users-form-item-label">发布时间：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="sDiv2">
+                                                <input type="text" name="add_time" id="eYLaydateTimeLinkage" data-max_date="{php}echo date('Y-m-d');{/php}" autocomplete="off"  class="qsbox" placeholder="请选择" lay-key="1" style="width: 220px;" value="{$Request.param.add_time}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {notempty name="$global.web_citysite_open"}
+                            <div class="ey-form-item"><label class="users-form-item-label">区域：</label>
+                                <div class="users-form-item-content">
+                                    <div class="users-select">
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="province_id" id="province_id" onchange="set_city_list(0);">
+                                                    <option value="0">全国</option>
+                                                    {volist name=':get_site_province_list()' id='vo'}
+                                                    <option value="{$vo.id}" {eq name="$Request.param.province_id" value="$vo.id" } selected="true" {/eq}>{$vo.name}</option>
+                                                    {/volist}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="users-select" style="display: none;" >
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="city_id" id="city_id" onchange="set_area_list(0);">
+                                                    <option value="">--请选择--</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="users-select" style="display: none;" >
+                                        <div tabindex="0" class="users-select-selection">
+                                            <div class="">
+                                                <select name="area_id" id="area_id">
+                                                    <option value="">--请选择--</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <script type="text/javascript">
+                                try {
+                                    var isArchivesQuery = true;
+                                    set_city_list({$Request.param.city_id|default=0});
+                                    set_area_list({$Request.param.area_id|default=0});
+                                }catch(e){}
+                                /*$(document).ready(function(){
+                                    $('#searchForm select[name=province_id],#searchForm select[name=city_id],#searchForm select[name=area_id]').change(function(){
+                                        $('#searchForm').submit();
+                                    });
+                                });*/
+                            </script>
+                            {/notempty}
+                        </form>
+                        <div class="ey-form-item" style="margin-left: 20px;">
+                            <div class="users-form-item-content">
+                                <span class="bt-xin" onclick="archivesQuery();">查询</span>
+                                <span class="bt-xin-no" onclick="archivesQuery('reset');">重置</span>
+                            </div>
+                        </div>
+                        <script type="text/javascript">
+                            function archivesQuery(isReset) {
+                                if (isReset && 'reset' == isReset) {
+                                    window.location.href = "{:url('Archives/index_archives')}";
+                                } else {
+                                    $('#searchForm').submit();
+                                }
+                            }
+                        </script>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
         <div class="hDiv">
             <div class="hDivBox">
@@ -60,7 +157,7 @@
                             <div class="tc">下载</div>
                         </th>
                         {/if}
-                        <th abbr="article_time" axis="col6" class="w100">
+                        <th abbr="article_time" axis="col6" class="w150">
                             <div class="tc">发布时间</div>
                         </th>
                         <th axis="col1" class="w160">
@@ -160,8 +257,8 @@
                             </td>
                             {/if}
                             <td>
-                                <div class="w100 tc">
-                                    {$vo.add_time|date='Y-m-d',###}
+                                <div class="w150 tc">
+                                    {$vo.add_time|date='Y-m-d H:i:s',###}
                                 </div>
                             </td>
                             <td class="operation">
@@ -186,7 +283,7 @@
                              <td class="sort">
                                 <div class="w60 tc">
                                     {eq name="'Archives@edit'|is_check_access" value="1"}
-                                    <input type="text" onChange="changeTableVal('archives','aid','{$vo.aid}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
+                                    <input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" onChange="changeTableVal('archives','aid','{$vo.aid}','sort_order',this);"  size="4"  value="{$vo.sort_order}" />
                                     {else /}
                                     {$vo.sort_order}
                                     {/eq}
@@ -262,7 +359,6 @@
     });
     
     $(document).ready(function(){
-
         // 表格行点击选中切换
         $('#flexigrid > table>tbody >tr').click(function(){
             $(this).toggleClass('trSelected');
@@ -334,5 +430,7 @@
         });
     }
 </script>
-
+<!-- 日期联动选择js文件 start -->
+<script type="text/javascript" src="__PUBLIC__/static/common/js/ey_laydate_time_linkage.js?v={$version}"></script>
+<!-- 日期联动选择js文件 end -->
 {include file="public/footer" /}

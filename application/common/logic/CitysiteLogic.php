@@ -134,7 +134,7 @@ class CitysiteLogic extends Model
                 {
                     $select .= str_repeat('&nbsp;', $value['grade'] * 4);
                 }
-                $select .= htmlspecialchars_decode(addslashes($value['name'])) . '</option>';
+                $select .= safe_htmlspecialchars_decode(addslashes($value['name'])) . '</option>';
             }
         }
     
@@ -182,7 +182,7 @@ class CitysiteLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['grade'] = $grade;
                         $options[$id]['id']    = $id;
-                        $options[$id]['name']  = htmlspecialchars_decode($value['name']);
+                        $options[$id]['name']  = safe_htmlspecialchars_decode($value['name']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] == 0)
@@ -200,7 +200,7 @@ class CitysiteLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['grade'] = $grade;
                         $options[$id]['id']    = $id;
-                        $options[$id]['name']  = htmlspecialchars_decode($value['name']);
+                        $options[$id]['name']  = safe_htmlspecialchars_decode($value['name']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] > 0)

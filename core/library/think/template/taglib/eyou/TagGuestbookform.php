@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -100,9 +100,9 @@ class TagGuestbookform extends Base
         /*--end*/
         if (empty($attributeList)) {
             if (1 == $this->form_type) {
-                echo '标签form报错：该表单下没有新增表单属性。';
+                echo '标签form报错：该表单下没有新增表单字段。';
             } else {
-                echo '标签guestbookform报错：该栏目下没有新增留言属性。';
+                echo '标签guestbookform报错：该栏目下没有新增留言字段。';
             }
             return false;
         } else {
@@ -119,6 +119,7 @@ class TagGuestbookform extends Base
             $attr_input_type_1 = 1; // 兼容v1.1.6之前的版本
             $validate_type_list = config("global.validate_type_list"); //检测规则
             $check_js = '';
+            $check_rules = []; // 验证规则数组（用于外部JS）
             foreach ($attributeList as $key => $val) {
                 $attr_id = $val['attr_id'];
                 /*字段名称*/
@@ -130,6 +131,7 @@ class TagGuestbookform extends Base
                 }
                 /*--end*/
                 $newAttribute['itemname_'.$attr_id] = $val['attr_name']; // 表单提示文字
+                $newAttribute['required_'.$attr_id] = $val['required']; // 是否必填
                 if (in_array($val['attr_input_type'], [1,3,4])) { // 单选/多选/下拉选择框
                     $tmp_option_val = explode(PHP_EOL, $val['attr_values']);
                     $options = array();
@@ -149,25 +151,24 @@ class TagGuestbookform extends Base
                     ++$attr_input_type_1;
                     /*--end*/
                 }elseif ($val['attr_input_type']==9) { // 区域联动
-                    $newAttribute['first_id_'.$attr_id]=" id='first_id_$attr_id' onchange=\"getNext1598839807('second_id_$attr_id',$attr_id,1);\" ";
-                    $newAttribute['second_id_'.$attr_id]=" id='second_id_$attr_id' onchange=\"getNext1598839807('third_id_$attr_id',$attr_id,2);\" style='display:none;'";
-                    $newAttribute['third_id_'.$attr_id]=" id='third_id_$attr_id' style='display:none;'  onchange=\"getNext1598839807('', $attr_id,3);\" ";
+                    $newAttribute['first_id_'.$attr_id]=" id='first_id_$attr_id' onchange=\"EyouGbook.getNextRegion('second_id_$attr_id',$attr_id,1,'{$this->root_dir}','{$gbook14}');\" ";
+                    $newAttribute['second_id_'.$attr_id]=" id='second_id_$attr_id' onchange=\"EyouGbook.getNextRegion('third_id_$attr_id',$attr_id,2,'{$this->root_dir}','{$gbook14}');\" style='display:none;'";
+                    $newAttribute['third_id_'.$attr_id]=" id='third_id_$attr_id' style='display:none;'  onchange=\"EyouGbook.getNextRegion('',$attr_id,3,'{$this->root_dir}','{$gbook14}');\" ";
                     $newAttribute['hidden_'.$attr_id]= "<input type='hidden' name='{$name}' id='{$name}'>";
-                    $val['attr_values'] = unserialize($val['attr_values']);
+                    $val['attr_values'] = safe_unserialize($val['attr_values']);
                     $newAttribute['options_'.$attr_id] = Db::name('region')->where('id','in',$val['attr_values']['region_ids'])->select();
                 }
                 /*--end*/
 
                 //是否必填（js判断）
                 if (!empty($val['required'])){
-                    
                     if ($val['attr_input_type'] == 4) { // 多选框
                         $alert_msg = sprintf(foreign_lang('gbook13', self::$home_lang), $val['attr_name']);
                         $alert_msg = str_replace("'", "\'", $alert_msg);
                         $check_js .= "
                             if(x[i].name == 'attr_".$val['attr_id']."[]'){
-                                var names = document.getElementsByName('attr_".$val['attr_id']."[]');    
-                                var flag = false ; //标记判断是否选中一个               
+                                var names = document.getElementsByName('attr_".$val['attr_id']."[]');
+                                var flag = false ; //标记判断是否选中一个
                                 for(var j=0; j<names.length; j++){
                                     if(names[j].checked){
                                         flag = true ;
@@ -180,13 +181,15 @@ class TagGuestbookform extends Base
                                 }
                             }
                         ";
+                        // 收集规则到数组
+                        $check_rules[] = ['name' => 'attr_'.$val['attr_id'].'[]', 'required' => true, 'type' => 'checkbox', 'emptyMsg' => $alert_msg];
                     } else if ($val['attr_input_type'] == 3) { // 单选框
                         $alert_msg = sprintf(foreign_lang('gbook14', self::$home_lang), $val['attr_name']);
                         $alert_msg = str_replace("'", "\'", $alert_msg);
                         $check_js .= "
                             if(x[i].name == 'attr_".$val['attr_id']."'){
-                                var names = document.getElementsByName('attr_".$val['attr_id']."');    
-                                var flag = false ; //标记判断是否选中一个               
+                                var names = document.getElementsByName('attr_".$val['attr_id']."');
+                                var flag = false ; //标记判断是否选中一个
                                 for(var j=0; j<names.length; j++){
                                     if(names[j].checked){
                                         flag = true ;
@@ -199,6 +202,8 @@ class TagGuestbookform extends Base
                                 }
                             }
                         ";
+                        // 收集规则到数组
+                        $check_rules[] = ['name' => 'attr_'.$val['attr_id'], 'required' => true, 'type' => 'radio', 'emptyMsg' => $alert_msg];
                     } else {
                         $alert_msg = sprintf(foreign_lang('gbook3', self::$home_lang), $val['attr_name']);
                         $alert_msg = str_replace("'", "\'", $alert_msg);
@@ -208,6 +213,8 @@ class TagGuestbookform extends Base
                                 return false;
                             }
                         ";
+                        // 收集规则到数组
+                        $check_rules[] = ['name' => 'attr_'.$val['attr_id'], 'required' => true, 'emptyMsg' => $alert_msg];
                     }
                 }
 
@@ -215,16 +222,28 @@ class TagGuestbookform extends Base
                 if (!empty($val['validate_type']) && !empty($validate_type_list[$val['validate_type']]['value'])){
                     $alert_msg = sprintf(foreign_lang('gbook4', self::$home_lang), $val['attr_name']);
                     $alert_msg = str_replace("'", "\'", $alert_msg);
-                    $check_js .= " 
+                    $check_js .= "
                     if(x[i].name == 'attr_".$val['attr_id']."' && !(".$validate_type_list[$val['validate_type']]['value'].".test( x[i].value)) && x[i].value.length > 0){
                         alert('{$alert_msg}！');
                         return false;
                     }
                    ";
+                    // 收集正则规则到数组，提取正则表达式字符串
+                    $patternRaw = $validate_type_list[$val['validate_type']]['value'];
+                    // 去掉首尾的 / 符号，提取纯正则
+                    $patternStr = preg_replace('/^\\/(.+)\\/$/', '$1', $patternRaw);
+                    $lastIdx = count($check_rules) - 1;
+                    if ($lastIdx >= 0 && $check_rules[$lastIdx]['name'] === 'attr_'.$val['attr_id']) {
+                        $check_rules[$lastIdx]['pattern'] = $patternStr;
+                        $check_rules[$lastIdx]['patternMsg'] = $alert_msg.'！';
+                    } else {
+                        $check_rules[] = ['name' => 'attr_'.$val['attr_id'], 'required' => false, 'pattern' => $patternStr, 'patternMsg' => $alert_msg.'！'];
+                    }
                 }
 
                 // 是否为手机号码类型 且 需要发进行真实验证
                 if (6 === intval($val['attr_input_type']) && 1 === intval($val['real_validate'])) $realValidateData = $val;
+                if (7 === intval($val['attr_input_type']) && 1 === intval($val['real_validate'])) $realValidateDataEmail = $val;
             }
 
             // 如果存在需要真实验证则执行
@@ -234,8 +253,8 @@ class TagGuestbookform extends Base
                 $vertifySrc = url('api/Ajax/vertify', ['type' => 'guestbook', 'token' => '__token__'  .$tokenID, 'r' => mt_rand(0, 10000)]);
                 $realValidate = [
                     'verifyInput' => ' type="text" name="real_validate_input" id="real_validate_input" autocomplete="off" ',
-                    'verifyClick' => " href=\"javascript:void(0);\" onclick=\"ey_fleshVerify_{$times}('verify_{$tokenID}');\" ",
-                    'verifyImg' => " id=\"verify_{$tokenID}\" src=\"{$vertifySrc}\" onclick=\"ey_fleshVerify_{$times}('verify_{$tokenID}');\" ",
+                    'verifyClick' => " href=\"javascript:void(0);\" onclick=\"EyouGbook.fleshVerify('verify_{$tokenID}','{$this->root_dir}','{$home_lang}');\" ",
+                    'verifyImg' => " id=\"verify_{$tokenID}\" src=\"{$vertifySrc}\" onclick=\"EyouGbook.fleshVerify('verify_{$tokenID}','{$this->root_dir}','{$home_lang}');\" ",
                     'phoneInput' => ' type="text" name="real_validate_phone_input" id="real_validate_phone_input" autocomplete="off" ',
                     'phoneClick' => " type=\"button\" id=\"real_validate_phone_click\" onclick=\"realValidatePhoneClick('".$realValidateData['attr_id']."');\" ",
                 ];
@@ -278,6 +297,57 @@ EOF;
             }
             $newAttribute['realValidate'] = $realValidate;
 
+            // 如果存在需要真实验证则执行
+            $realValidateEmail = [];
+            if (!empty($realValidateDataEmail)) {
+                $tokenEmailID = md5('guestbookform_token_email_'.$typeid.md5(getTime().uniqid(mt_rand(), TRUE)));
+                $vertifyEmailSrc = url('api/Ajax/vertify', ['type' => 'gbook_real_validate', 'token' => '__token__'  .$tokenEmailID, 'r' => mt_rand(0, 10000)]);
+                $realValidateEmail = [
+                    'verifyInput' => ' type="text" name="real_validate_email_input" id="real_validate_email_input" autocomplete="off" ',
+                    'verifyClick' => " href=\"javascript:void(0);\" onclick=\"EyouGbook.fleshVerify('verify_{$tokenEmailID}','{$this->root_dir}','{$home_lang}');\" ",
+                    'verifyImg' => " id=\"verify_{$tokenEmailID}\" src=\"{$vertifyEmailSrc}\" onclick=\"EyouGbook.fleshVerify('verify_{$tokenEmailID}','{$this->root_dir}','{$home_lang}');\" ",
+                    'emailInput' => ' type="text" name="real_validate_email_code" id="real_validate_email_code" autocomplete="off" ',
+                    'emailClick' => " type=\"button\" id=\"real_validate_email_click\" onclick=\"realValidateEmailClick('".$realValidateDataEmail['attr_id']."');\" ",
+                ];
+
+                $mobile_alert_msg = str_replace("'", "\'", foreign_lang('gbook23', self::$home_lang));
+                $verify_alert_msg = str_replace("'", "\'", foreign_lang('gbook5', self::$home_lang));
+
+                // 真实验证所需JS
+                $realValidateEmailJS = <<<EOF
+<script type="text/javascript">
+    function realValidateEmailClick(id) {
+        var email = document.getElementById('attr_' + id).value;
+        var code = document.getElementById('real_validate_email_input').value;
+        var codeToken = document.getElementById('real_validate_email_token').value;
+        if (email.length == 0) {
+            alert('{$mobile_alert_msg}');
+            return false;
+        } else if (code.length == 0) {
+            alert('{$verify_alert_msg}');
+            return false;
+        }
+        var ajaxdata = 'email='+email+'&code='+code+'&code_token='+codeToken+'&scene=40&type=gbook_real_validate&_ajax=1';
+
+        var ajax = new XMLHttpRequest();
+        ajax.open("post", "{$this->root_dir}/index.php?m=api&c=Ajax&a=send_email", true);
+        ajax.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        ajax.send(ajaxdata);
+        ajax.onreadystatechange = function () {
+            if (ajax.readyState==4 && ajax.status==200) {
+                var msg = JSON.parse(ajax.responseText).msg;
+                alert(msg);
+          　}
+        }
+    }
+</script>
+EOF;
+                // 隐藏域内容
+                $realValidateEmail['verifyHidden'] = '<input type="hidden" name="real_validate_email" value="'.$realValidateDataEmail['real_validate'].'" /><input type="hidden" name="real_validate_email_attr_id" value="attr_'.$realValidateDataEmail['attr_id'].'" /><input type="hidden" name="real_validate_email_token" id="real_validate_email_token" value="__token__'.$tokenEmailID.'" />' . $realValidateEmailJS;
+            }
+            $newAttribute['realValidateEmail'] = $realValidateEmail;
+
             if (!empty($check_js)) {
                 $check_js = <<<EOF
     var x = elements;
@@ -288,7 +358,10 @@ EOF;
             }
 
             if (!empty($beforeSubmit)) {
+                $beforeSubmitFn = $beforeSubmit; // 保留原始函数名给外部JS用
                 $beforeSubmit = "try{if(false=={$beforeSubmit}()){return false;}}catch(e){}";
+            } else {
+                $beforeSubmitFn = '';
             }
 
             $token_id = md5('guestbookform_token_'.$typeid.md5(getTime().uniqid(mt_rand(), TRUE)));
@@ -297,113 +370,12 @@ EOF;
             $home_lang = self::$home_lang;
             $gbook14 = sprintf(foreign_lang('gbook14', self::$home_lang), '');
 	    $gbook14 = str_replace("'", "\'", $gbook14);
+            $rules_json = json_encode($check_rules, JSON_UNESCAPED_UNICODE);
+            $guestbook_js_version = getCmsVersion();
             $tokenStr = <<<EOF
+<script type="text/javascript" src="{$this->root_dir}/public/static/common/js/guestbook.js?v={$guestbook_js_version}"></script>
 <script type="text/javascript">
-    function {$submit}(elements)
-    {
-        if (document.getElementById('gourl_{$token_id}')) {
-            document.getElementById('gourl_{$token_id}').value = encodeURIComponent(window.location.href);
-        }
-        {$check_js}
-        {$beforeSubmit}
-        elements.submit();
-    }
-
-    function ey_fleshVerify_{$times}(id)
-    {
-        var token = id.replace(/verify_/g, '__token__');
-        var src = "{$this->root_dir}/index.php?m=api&c=Ajax&a=vertify&type=guestbook&lang={$home_lang}&token="+token;
-        src += "&r="+ Math.floor(Math.random()*100);
-        document.getElementById(id).src = src;
-    }
-
-    function {$funname}()
-    {
-        var ajax = new XMLHttpRequest();
-        ajax.open("post", "{$this->root_dir}/index.php?m=api&c=Ajax&a=get_token", true);
-        ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
-        ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-        ajax.send("name=__token__{$token_id}");
-        ajax.onreadystatechange = function () {
-            if (ajax.readyState==4 && ajax.status==200) {
-                document.getElementById("{$token_id}").value = ajax.responseText;
-                document.getElementById("gourl_{$token_id}").value = encodeURIComponent(window.location.href);
-          　}
-        } 
-    }
-    {$funname}();
-    function getNext1598839807(id,name,level) {
-        var input = document.getElementById('attr_'+name);
-        var first = document.getElementById('first_id_'+name);
-        var second = document.getElementById('second_id_'+name);
-        var third = document.getElementById('third_id_'+name);
-        var findex ='', fvalue = '',sindex = '',svalue = '',tindex = '',tvalue = '',value='';
-
-        if (level == 1){
-            if (second) {
-                second.style.display = 'none';
-                second.innerHTML  = ''; 
-            }
-            if (third) {
-                third.style.display = 'none';
-                third.innerHTML  = '';
-            }
-            findex = first.selectedIndex;
-            fvalue = first.options[findex].value;
-            input.value = fvalue;
-            value = fvalue;
-        } else if (level == 2){
-            if (third) {
-                third.style.display = 'none';
-                third.innerHTML  = '';
-            }
-            findex = first.selectedIndex;
-            fvalue = first.options[findex].value;
-            sindex = second.selectedIndex;
-            svalue = second.options[sindex].value;
-            if (svalue) {
-                input.value = fvalue+','+svalue;
-                value = svalue;
-            }else{
-                input.value = fvalue;
-            }
-        } else if (level == 3){
-            findex = first.selectedIndex;
-            fvalue = first.options[findex].value;
-            sindex = second.selectedIndex;
-            svalue = second.options[sindex].value;
-            tindex = third.selectedIndex;
-            tvalue = third.options[tindex].value;
-            if (tvalue) {
-                input.value = fvalue+','+svalue+','+tvalue;
-                value = tvalue;
-            }else{
-                input.value = fvalue+','+svalue;
-            }
-        } 
-        if (value) {
-            if(document.getElementById(id))
-            {
-                document.getElementById(id).options.add(new Option('{$gbook14}','')); 
-                var ajax = new XMLHttpRequest();
-                ajax.open("post", "{$this->root_dir}/index.php?m=api&c=Ajax&a=get_region", true);
-                ajax.setRequestHeader("X-Requested-With","XMLHttpRequest");
-                ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-                ajax.send("pid="+value);
-                ajax.onreadystatechange = function () {
-                    if (ajax.readyState==4 && ajax.status==200) {
-                        var data = JSON.parse(ajax.responseText).data;
-                        if (data) {
-                            data.forEach(function(item) {
-                                document.getElementById(id).options.add(new Option(item.name,item.id)); 
-                                document.getElementById(id).style.display = "block";
-                            });
-                        }
-                  　}
-                }
-            }
-        }
-    }
+EyouGbook.init({tokenId:"{$token_id}",submitFn:"{$submit}",rootDir:"{$this->root_dir}",lang:"{$home_lang}",placeholder:"{$gbook14}",beforeSubmit:"{$beforeSubmitFn}",rules:{$rules_json}});
 </script>
 EOF;
             $seo_pseudo = tpCache('seo.seo_pseudo');
@@ -435,7 +407,7 @@ EOF;
             if (1 == $IsVertify) {
                 // 留言验证码数据
                 $VertifyUrl = url('api/Ajax/vertify',['type'=>'guestbook','token'=>'__token__'.$token_id,'r'=>mt_rand(0,10000)]);
-                $newAttribute['VertifyData'] = " src=\"{$VertifyUrl}\" id=\"verify_{$token_id}\" onclick=\"ey_fleshVerify_{$times}('verify_{$token_id}');\" ";
+                $newAttribute['VertifyData'] = " src=\"{$VertifyUrl}\" id=\"verify_{$token_id}\" onclick=\"EyouGbook.fleshVerify('verify_{$token_id}','{$this->root_dir}','{$home_lang}');\" ";
             }
             /* END */
 

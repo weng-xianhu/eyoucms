@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.ebpp.pdeduct.pay request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 16:45:48
+ * @since 1.0, 2025-08-14 07:22:40
  */
 class AlipayEbppPdeductPayRequest
 {
@@ -49,6 +49,11 @@ class AlipayEbppPdeductPayRequest
 	 * 备注信息
 	 **/
 	private $memo;
+	
+	/** 
+	 * 用户UserId在应用AppId下的唯一用户标识
+	 **/
+	private $openId;
 	
 	/** 
 	 * 商户外部业务流水号
@@ -166,6 +171,17 @@ class AlipayEbppPdeductPayRequest
 	public function getMemo()
 	{
 		return $this->memo;
+	}
+
+	public function setOpenId($openId)
+	{
+		$this->openId = $openId;
+		$this->apiParas["open_id"] = $openId;
+	}
+
+	public function getOpenId()
+	{
+		return $this->openId;
 	}
 
 	public function setOutOrderNo($outOrderNo)

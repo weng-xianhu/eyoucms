@@ -155,7 +155,7 @@ class ArctypeLogic extends Model
                 {
                     $select .= str_repeat('&nbsp;', $value['level'] * 4);
                 }
-                $select .= htmlspecialchars_decode(addslashes($value['typename'])) . '</option>';
+                $select .= safe_htmlspecialchars_decode(addslashes($value['typename'])) . '</option>';
             }
         }
     
@@ -205,7 +205,7 @@ class ArctypeLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['level'] = $level;
                         $options[$id]['id']    = $id;
-                        $options[$id]['typename']  = htmlspecialchars_decode($value['typename']);
+                        $options[$id]['typename']  = safe_htmlspecialchars_decode($value['typename']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] == 0)
@@ -223,7 +223,7 @@ class ArctypeLogic extends Model
                         $options[$id]          = $value;
                         $options[$id]['level'] = $level;
                         $options[$id]['id']    = $id;
-                        $options[$id]['typename']  = htmlspecialchars_decode($value['typename']);
+                        $options[$id]['typename']  = safe_htmlspecialchars_decode($value['typename']);
                         unset($arr[$key]);
     
                         if ($value['has_children'] > 0)

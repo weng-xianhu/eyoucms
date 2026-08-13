@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -218,7 +218,7 @@ class Shop extends UserBase
                 'a.lang'     => get_home_lang(),
                 'b.arcrank'  => array('egt', 0)
             ];
-            $field = 'a.*, b.aid, b.title, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.attrlist_id, c.spec_price, c.spec_stock';
+            $field = 'a.*, b.aid, b.title, b.merchant_id, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.attrlist_id, c.spec_price, c.spec_stock';
             if ('v1.5.1' < getVersion()) {
                 $field .= ',c.seckill_price, c.seckill_stock';
             }
@@ -828,106 +828,296 @@ class Shop extends UserBase
         // 订单提交处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
         $OrderData = model('ShopPublicHandle')->orderSubmitPublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
 
+        // 检查商品类型，判断处理方式
+        $selfMerchantProducts = []; // merchant_id = 0 的自营店商品
+        $thirdPartyProducts = [];   // merchant_id > 0 的第三方商家商品
+        
+        foreach ($list as $product) {
+            if (intval($product['merchant_id']) === 0) {
+                $selfMerchantProducts[] = $product;
+            } else if (intval($product['merchant_id']) > 0) {
+                $thirdPartyProducts[] = $product;
+            }
+        }
+        
+
+        
+        // 判断处理方式
+        $hasThirdParty = !empty($thirdPartyProducts);
+        $hasSelfMerchant = !empty($selfMerchantProducts);
+        
+        if ($hasThirdParty && !$hasSelfMerchant) {
+            // 情况1：纯第三方商家商品
+            
+            $retData = [
+                'code' => 1,
+                'data' => [
+                    'list' => $thirdPartyProducts,
+                    'OrderData' => $OrderData
+                ]
+            ];
+            
+            // 转换支付方式参数以适配多商家逻辑
+            $multiMerchantPost = $post;
+            if (1 === intval($post['pay_type'])) {
+                // 微信支付 - 走完整多商家逻辑（包括支付）
+                $multiMerchantPost['payment_type'] = 'wechat_wechat';
+                $multiMerchantPost['payment_method'] = 0;
+                $multiMerchantPost['users_id'] = $post['users_id'];
+                $multiMerchantPost['api_call'] = true;
+                $multiMerchantPost['call_source'] = 'miniapp';
+                
+                // 调用完整多商家订单处理逻辑（包括支付）
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic();
+                $multiMerchantLogic->multiMerchantOrderHandle($retData['data']['list'], $multiMerchantPost);
+                return; // 多商家逻辑会处理支付并返回结果
+            } else if (2 === intval($post['pay_type'])) {
+                // 余额支付 - 只创建订单，支付后处理走正常逻辑
+                $multiMerchantPost['payment_type'] = 'yezf_balance';
+                $multiMerchantPost['payment_method'] = 0;
+                $multiMerchantPost['users_id'] = $post['users_id'];
+                $multiMerchantPost['api_call'] = true;
+                $multiMerchantPost['call_source'] = 'miniapp';
+                $multiMerchantPost['only_create_order'] = true; // 只创建订单不支付
+                
+                // 创建多商家订单（不支付）
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic();
+                $merchantResult = $multiMerchantLogic->multiMerchantOrderHandle($retData['data']['list'], $multiMerchantPost);
+                
+                // 继续走正常的余额支付逻辑
+                $list = $thirdPartyProducts;
+                $isMultiMerchantBalancePay = true; // 标记这是多商家余额支付
+            } else {
+                // 其他支付方式 - 走完整多商家逻辑
+                $multiMerchantPost['payment_method'] = 0;
+                $multiMerchantPost['users_id'] = $post['users_id'];
+                $multiMerchantPost['api_call'] = true;
+                $multiMerchantPost['call_source'] = 'miniapp';
+                
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic();
+                $multiMerchantLogic->multiMerchantOrderHandle($retData['data']['list'], $multiMerchantPost);
+                return;
+            }
+            
+        } else if ($hasThirdParty && $hasSelfMerchant) {
+            // 情况2：混合商品 - 根据支付方式选择处理逻辑
+            
+            if (1 === intval($post['pay_type'])) {
+                // 微信支付：走完整多商家逻辑，包含所有商品（自营+第三方）
+                $retData = [
+                    'code' => 1,
+                    'data' => [
+                        'list' => $list, // 使用原始的完整商品列表，包含自营和第三方
+                        'OrderData' => $OrderData
+                    ]
+                ];
+                
+                $multiMerchantPost = $post;
+                $multiMerchantPost['payment_type'] = 'wechat_wechat';
+                $multiMerchantPost['payment_method'] = 0;
+                $multiMerchantPost['users_id'] = $post['users_id'];
+                $multiMerchantPost['api_call'] = true;
+                $multiMerchantPost['call_source'] = 'miniapp';
+                
+                // 走完整多商家逻辑（包括统一支付）
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic();
+                $multiMerchantLogic->multiMerchantOrderHandle($retData['data']['list'], $multiMerchantPost);
+                return; // 多商家逻辑会处理支付并返回结果
+            } else {
+                // 其他支付方式（余额支付等）：多商家订单只创建不支付，自营店订单走正常逻辑
+                $retData = [
+                    'code' => 1,
+                    'data' => [
+                        'list' => $thirdPartyProducts,
+                        'OrderData' => $OrderData
+                    ]
+                ];
+                
+                $multiMerchantPost = $post;
+                if (2 === intval($post['pay_type'])) {
+                    $multiMerchantPost['payment_type'] = 'yezf_balance';
+                }
+                $multiMerchantPost['payment_method'] = 0;
+                $multiMerchantPost['users_id'] = $post['users_id'];
+                $multiMerchantPost['api_call'] = true;
+                $multiMerchantPost['call_source'] = 'miniapp';
+                $multiMerchantPost['only_create_order'] = true; // 只创建订单不支付
+                
+                // 创建多商家订单（不支付）
+                $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic();
+                $merchantResult = $multiMerchantLogic->multiMerchantOrderHandle($retData['data']['list'], $multiMerchantPost);
+                
+                // 继续处理自营店商品（走正常逻辑）
+                $list = $selfMerchantProducts;
+                
+                // 调试信息：检查自营商品数据
+                $debugInfo = [
+                    '混合订单类型' => '余额支付',
+                    '自营商品数量' => count($selfMerchantProducts),
+                    '第三方商品数量' => count($thirdPartyProducts),
+                    '自营商品信息' => array_map(function($p) {
+                        return [
+                            'id' => $p['aid'],
+                            'title' => $p['title'],
+                            'price' => $p['users_price'],
+                            'num' => $p['product_num'],
+                            'cart_id' => isset($p['cart_id']) ? $p['cart_id'] : 'unknown'
+                        ];
+                    }, $selfMerchantProducts)
+                ];
+                file_put_contents(APP_PATH . '../debug_mixed_order.log', 
+                    date('Y-m-d H:i:s') . " - " . json_encode($debugInfo, JSON_UNESCAPED_UNICODE) . "\n", 
+                    FILE_APPEND);
+                
+                // 保存原始总金额（用于支付）
+                $originalTotalAmount = $OrderData['order_amount'];
+                
+                // 计算自营店商品的金额（用于订单创建）
+                $selfMerchantAmount = 0;
+                foreach ($selfMerchantProducts as $product) {
+                    $selfMerchantAmount += $product['users_price'] * $product['product_num'];
+                }
+                
+                // 标记这是混合订单，需要特殊处理
+                $isMixedOrder = true;
+                
+                // 注意：混合订单中的自营商品不设置isMultiMerchantBalancePay
+                // 因为自营商品需要走正常的订单处理逻辑（包括购物车清空、库存扣减等）
+            }
+            
+        } else {
+            // 情况3：纯自营店商品 - 走正常逻辑
+        }
+
+        // 如果是混合订单，需要调整订单金额为只包含自营店商品的金额
+        if (!empty($isMixedOrder) && !empty($selfMerchantAmount)) {
+            $OrderData['order_amount'] = $selfMerchantAmount;
+            $OrderData['order_total_amount'] = $selfMerchantAmount;
+        }
+        
         // 添加订单及后续处理
-        $OrderId = Db::name('shop_order')->add($OrderData);
+        // 只有在有自营商品时才创建新订单
+        if (!empty($isMultiMerchantBalancePay) && empty($isMixedOrder)) {
+            // 纯第三方商品余额支付：不创建新订单，使用多商家订单ID
+            $OrderId = 'multi_merchant'; // 标记为多商家订单，跳过自营商品订单创建
+        } else {
+            // 正常情况：创建新订单（包括混合订单中的自营商品订单）
+            $OrderId = Db::name('shop_order')->add($OrderData);
+        }
+        
         if (!empty($OrderId)) {
-            $OrderData['order_id'] = $OrderId;
+            // 只有在创建了真实订单时才设置order_id
+            if (is_numeric($OrderId)) {
+                $OrderData['order_id'] = $OrderId;
+            }
+            
+            // 如果是混合订单，恢复原始总金额用于支付
+            if (!empty($isMixedOrder) && !empty($originalTotalAmount)) {
+                $OrderData['order_amount'] = $originalTotalAmount;
+                $OrderData['order_total_amount'] = $originalTotalAmount;
+            }
+            
+            // 对于多商家余额支付，跳过订单创建后续处理，直接进入支付逻辑
+            if (empty($isMultiMerchantBalancePay)) {
+                // 订单创建后续处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
+                $OrderData = model('ShopPublicHandle')->orderCreatePublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
 
-            // 订单创建后续处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
-            $OrderData = model('ShopPublicHandle')->orderCreatePublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
+                //锁定优惠券
+                if (!empty($coupon_info)){
+                    $coupon_update = [
+                        'coupon_id'=>$post['coupon_id'],
+                        'use_status'=> 0,
+                        'users_id'  => $post['users_id'],
+                    ];
+                    $coupon_use_table = 'shop_coupon_use';
+                    $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
+                    if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
+                        $coupon_use_table = 'weapp_coupons_use';
+                    }
 
-            //锁定优惠券
-            if (!empty($coupon_info)){
-                $coupon_update = [
-                    'coupon_id'=>$post['coupon_id'],
-                    'use_status'=> 0,
-                    'users_id'  => $post['users_id'],
-                ];
-                $coupon_use_table = 'shop_coupon_use';
-                $weappInfo = model('ShopPublicHandle')->getWeappInfo("Coupons");
-                if (!empty($weappInfo['status']) && 1 == $weappInfo['status']) {
-                    $coupon_use_table = 'weapp_coupons_use';
+                    Db::name($coupon_use_table)->where($coupon_update)->update(['use_status'=> 1,'use_time'=>getTime(),'update_time'=>getTime()]);
                 }
 
-                Db::name($coupon_use_table)->where($coupon_update)->update(['use_status'=> 1,'use_time'=>getTime(),'update_time'=>getTime()]);
-            }
+                $cart_ids   = $UpSpecValue = [];
+                $contains_virtual = 1;//是否包含虚拟产品
+                foreach ($list as $key => $value) {
+                    $attr_value = $attr_value_new = $spec_value = '';
 
-            $cart_ids   = $UpSpecValue = [];
-            $contains_virtual = 1;//是否包含虚拟产品
-            foreach ($list as $key => $value) {
-                $attr_value = $attr_value_new = $spec_value = '';
+                    // 旧商品属性处理
+                    $attr_value = $this->ProductAttrProcessing($value);
+                    // 新商品属性处理
+                    $attr_value_new = $this->ProductNewAttrProcessing($value);
+                    // 商品规格处理
+                    $spec_value = $this->ProductSpecProcessing($value);
 
-                // 旧商品属性处理
-                $attr_value = $this->ProductAttrProcessing($value);
-                // 新商品属性处理
-                $attr_value_new = $this->ProductNewAttrProcessing($value);
-                // 商品规格处理
-                $spec_value = $this->ProductSpecProcessing($value);
+                    // 规格及属性
+                    $ParamData = [
+                        // 商品属性
+                        'attr_value'     => htmlspecialchars($attr_value),
+                        // 商品属性
+                        'attr_value_new' => htmlspecialchars($attr_value_new),
+                        // 商品规格
+                        'spec_value'     => htmlspecialchars($spec_value),
+                        // 商品规格值ID
+                        'spec_value_id'  => $value['spec_value_id'],
+                        // 对应规格值ID的唯一标识ID，数据表主键ID
+                        'value_id'       => $value['value_id'],
+                        // 后续添加
+                    ];
 
-                // 规格及属性
-                $ParamData = [
-                    // 商品属性
-                    'attr_value'     => htmlspecialchars($attr_value),
-                    // 商品属性
-                    'attr_value_new' => htmlspecialchars($attr_value_new),
-                    // 商品规格
-                    'spec_value'     => htmlspecialchars($spec_value),
-                    // 商品规格值ID
-                    'spec_value_id'  => $value['spec_value_id'],
-                    // 对应规格值ID的唯一标识ID，数据表主键ID
-                    'value_id'       => $value['value_id'],
-                    // 后续添加
-                ];
+                    // 订单副表添加数组
+                    $OrderDetailsData[] = [
+                        'order_id'      => $OrderId,
+                        'users_id'      => $post['users_id'],
+                        'product_id'    => $value['aid'],
+                        'product_name'  => $value['title'],
+                        'num'           => $value['product_num'],
+                        'data'          => serialize($ParamData),
+                        'product_price' => $value['users_price'],
+                        'prom_type'     => $value['prom_type'],
+                        'litpic'        => $value['litpic'],
+                        'add_time'      => $time,
+                        'lang'          => get_home_lang()
+                    ];
 
-                // 订单副表添加数组
-                $OrderDetailsData[] = [
-                    'order_id'      => $OrderId,
-                    'users_id'      => $post['users_id'],
-                    'product_id'    => $value['aid'],
-                    'product_name'  => $value['title'],
-                    'num'           => $value['product_num'],
-                    'data'          => serialize($ParamData),
-                    'product_price' => $value['users_price'],
-                    'prom_type'     => $value['prom_type'],
-                    'litpic'        => $value['litpic'],
-                    'add_time'      => $time,
-                    'lang'          => get_home_lang()
-                ];
+                    // 处理购物车ID
+                    if (empty($GlobalInfo['submit_order_type'])) {
+                        array_push($cart_ids, $value['cart_id']);
+                    }
 
-                // 处理购物车ID
-                if (empty($GlobalInfo['submit_order_type'])) {
-                    array_push($cart_ids, $value['cart_id']);
+                    // 商品库存处理
+                    $UpSpecValue[] = [
+                        'aid'           => $value['aid'],
+                        'value_id'      => $value['value_id'],
+                        'quantity'      => $value['product_num'],
+                        'spec_value_id' => $value['spec_value_id'],
+                        'order_source'       => isset($post['order_source']) ? $post['order_source'] : 10,
+                        'order_source_id'    => isset($post['order_source_id']) ? $post['order_source_id'] : 0,
+                    ];
+
+                    if (in_array($value['prom_type'],[1,2,3])){
+                        $contains_virtual = 2;
+                    }
+                }
+                if (2 == $contains_virtual) {
+                    Db::name('shop_order')->where('order_id',$OrderId)->update(['contains_virtual'=>$contains_virtual]);
                 }
 
-                // 商品库存处理
-                $UpSpecValue[] = [
-                    'aid'           => $value['aid'],
-                    'value_id'      => $value['value_id'],
-                    'quantity'      => $value['product_num'],
-                    'spec_value_id' => $value['spec_value_id'],
-                    'order_source'       => isset($post['order_source']) ? $post['order_source'] : 10,
-                    'order_source_id'    => isset($post['order_source_id']) ? $post['order_source_id'] : 0,
-                ];
+                $DetailsId = Db::name('shop_order_details')->insertAll($OrderDetailsData);
+                if (!empty($OrderId) && !empty($DetailsId)) {
+                    // 清理购物车中已下单的ID
+                    if (!empty($cart_ids)) Db::name('shop_cart')->where('cart_id', 'IN', $cart_ids)->delete();
 
-                if (in_array($value['prom_type'],[1,2,3])){
-                    $contains_virtual = 2;
+                    // 商品库存、销量处理
+                    $this->ProductStockProcessing($UpSpecValue);
+
+                    // 添加订单操作记录
+                    AddOrderAction($OrderId, $post['users_id']);
                 }
             }
-            if (2 == $contains_virtual) {
-                Db::name('shop_order')->where('order_id',$OrderId)->update(['contains_virtual'=>$contains_virtual]);
-            }
-
-            $DetailsId = Db::name('shop_order_details')->insertAll($OrderDetailsData);
-            if (!empty($OrderId) && !empty($DetailsId)) {
-                // 清理购物车中已下单的ID
-                if (!empty($cart_ids)) Db::name('shop_cart')->where('cart_id', 'IN', $cart_ids)->delete();
-
-                // 商品库存、销量处理
-                $this->ProductStockProcessing($UpSpecValue);
-
-                // 添加订单操作记录
-                AddOrderAction($OrderId, $post['users_id']);
-
+            
+            // 支付处理逻辑（对所有情况都适用）
+            if (!empty($OrderId)) {
                 // 微信支付
                 if (1 === intval($post['pay_type'])) {
                     if ('h5' == self::$provider) {
@@ -958,7 +1148,8 @@ class Shop extends UserBase
                             'WeChatPay' => $weChatPay,
                             'OrderData' => [
                                 'order_id'   => $OrderId,
-                                'order_code' => $OrderData['order_code']
+                                'order_code' => $OrderData['order_code'],
+                                'transaction_type' => !empty($isMultiMerchantBalancePay) || !empty($isMixedOrder) ? 99 : 2
                             ]
                         ];
                         // 已开启的微信订阅消息模板
@@ -976,22 +1167,86 @@ class Shop extends UserBase
                 }
                 // 余额支付
                 else if (2 === intval($post['pay_type'])) {
-                    // 更新订单为已余额支付完成
-                    $pay_details = [
-                        'unified_id'     => $OrderId,
-                        'unified_number' => $OrderData['order_code'],
-                        'payment_amount' => $OrderData['order_amount'],
-                        'payment_type'   => '余额支付'
-                    ];
-                    $update = [
-                        'order_status'    => 1,
-                        'pay_name'        => 'balance',
-                        'wechat_pay_type' => '',
-                        'pay_details'     => serialize($pay_details),
-                        'pay_time'        => getTime(),
-                        'update_time'     => getTime()
-                    ];
-                    $resultID = Db::name('shop_order')->where('order_id', $OrderId)->update($update);
+                    // 检查是否为多商家余额支付（纯第三方商品）
+                    if (!empty($isMultiMerchantBalancePay) && !empty($merchantResult['order_ids']) && empty($isMixedOrder)) {
+                        // 纯多商家余额支付：更新所有多商家订单
+                        $orderIds = $merchantResult['order_ids'];
+                        $totalAmount = $merchantResult['total_amount'];
+                        
+                        // 为每个订单创建支付详情
+                        $pay_details = [
+                            'unified_id'     => implode(',', $orderIds),
+                            'unified_number' => $OrderData['order_code'],
+                            'payment_amount' => $totalAmount,
+                            'payment_type'   => '余额支付'
+                        ];
+                        $update = [
+                            'order_status'    => 1,
+                            'pay_name'        => 'balance',
+                            'wechat_pay_type' => '',
+                            'pay_details'     => serialize($pay_details),
+                            'pay_time'        => getTime(),
+                            'update_time'     => getTime()
+                        ];
+                        $resultID = Db::name('shop_order')->where('order_id', 'IN', $orderIds)->update($update);
+                        
+                        // 更新OrderData用于后续处理
+                        $OrderData['order_amount'] = $totalAmount;
+                        $OrderId = $orderIds; // 传递所有订单ID用于后续处理
+                    } else if (!empty($isMixedOrder) && !empty($merchantResult['order_ids'])) {
+                        // 混合订单的余额支付：正常处理自营店订单，额外更新多商家订单状态
+                        
+                        // 1. 先正常更新自营店订单
+                        $pay_details = [
+                            'unified_id'     => $OrderId,
+                            'unified_number' => $OrderData['order_code'],
+                            'payment_amount' => $OrderData['order_amount'],
+                            'payment_type'   => '余额支付'
+                        ];
+                        $update = [
+                            'order_status'    => 1,
+                            'pay_name'        => 'balance',
+                            'wechat_pay_type' => '',
+                            'pay_details'     => serialize($pay_details),
+                            'pay_time'        => getTime(),
+                            'update_time'     => getTime()
+                        ];
+                        $resultID = Db::name('shop_order')->where('order_id', $OrderId)->update($update);
+                        
+                        // 2. 更新多商家订单状态（使用相同的支付信息）
+                        $merchantOrderIds = $merchantResult['order_ids'];
+                        $merchantUpdate = [
+                            'order_status'    => 1,
+                            'pay_name'        => 'balance',
+                            'wechat_pay_type' => '',
+                            'pay_details'     => serialize($pay_details), // 使用相同的支付详情
+                            'pay_time'        => getTime(),
+                            'update_time'     => getTime()
+                        ];
+                        $merchantResultID = Db::name('shop_order')->where('order_id', 'IN', $merchantOrderIds)->update($merchantUpdate);
+                        
+                        // 3. 合并所有订单ID用于后续处理（通知、虚拟商品发货等）
+                        $allOrderIds = array_merge([$OrderId], $merchantOrderIds);
+                        $OrderId = $allOrderIds;
+                        $resultID = $resultID && $merchantResultID;
+                    } else {
+                        // 普通单商家余额支付
+                        $pay_details = [
+                            'unified_id'     => $OrderId,
+                            'unified_number' => $OrderData['order_code'],
+                            'payment_amount' => $OrderData['order_amount'],
+                            'payment_type'   => '余额支付'
+                        ];
+                        $update = [
+                            'order_status'    => 1,
+                            'pay_name'        => 'balance',
+                            'wechat_pay_type' => '',
+                            'pay_details'     => serialize($pay_details),
+                            'pay_time'        => getTime(),
+                            'update_time'     => getTime()
+                        ];
+                        $resultID = Db::name('shop_order')->where('order_id', $OrderId)->update($update);
+                    }
                     if (!empty($resultID)) {
                         // 扣除会员余额
                         $resultID = Db::name('users')->where('users_id', $post['users_id'])->setDec('users_money', $OrderData['order_amount']);
@@ -1004,27 +1259,70 @@ class Shop extends UserBase
                             UsersMoneyAction($OrderData['order_code'], $getParam, $OrderData['order_amount'], '订单支付');
 
                             // 添加订单操作记录
-                            AddOrderAction($OrderId, $post['users_id'], 0, 1, 0, 1, '支付成功！', '会员使用余额完成支付！');
+                            if (is_array($OrderId)) {
+                                // 多商家订单：为每个订单添加操作记录
+                                foreach ($OrderId as $singleOrderId) {
+                                    AddOrderAction($singleOrderId, $post['users_id'], 0, 1, 0, 1, '支付成功！', '会员使用余额完成支付！');
+                                }
+                            } else {
+                                // 单个订单
+                                AddOrderAction($OrderId, $post['users_id'], 0, 1, 0, 1, '支付成功！', '会员使用余额完成支付！');
+                            }
 
                             // 虚拟自动发货
                             $ShopModel = new \app\user\model\Pay();
-                            $Where     = [
-                                'lang'     => get_home_lang(),
-                                'users_id' => $post['users_id'],
-                                'order_id' => $OrderId
-                            ];
-                            $ShopModel->afterVirtualProductPay($Where);
+                            if (is_array($OrderId)) {
+                                // 多商家订单：为每个订单处理虚拟商品发货
+                                foreach ($OrderId as $singleOrderId) {
+                                    $Where = [
+                                        'lang'     => get_home_lang(),
+                                        'users_id' => $post['users_id'],
+                                        'order_id' => $singleOrderId
+                                    ];
+                                    $ShopModel->afterVirtualProductPay($Where);
+                                }
+                            } else {
+                                // 单个订单
+                                $Where = [
+                                    'lang'     => get_home_lang(),
+                                    'users_id' => $post['users_id'],
+                                    'order_id' => $OrderId
+                                ];
+                                $ShopModel->afterVirtualProductPay($Where);
+                            }
+                            
+                            // 清空购物车中的已下单商品
+                            if (!empty($isMultiMerchantBalancePay) || !empty($isMixedOrder)) {
+                                // 多商家订单：清空所有选中的购物车商品
+                                $cartWhere = [
+                                    'users_id' => $post['users_id'],
+                                    'selected' => 1
+                                ];
+                                Db::name('shop_cart')->where($cartWhere)->delete();
+                            }
                             
                             // 统计销售额
                             eyou_statistics_data(2);
                             eyou_statistics_data(3, $OrderData['order_amount']);
 
                             // 订单支付通知
-                            $params = [
-                               'users_id' => $post['users_id'],
-                               'result_id' => $OrderId,
-                            ];
-                            eyou_send_notice(9, $params);
+                            if (is_array($OrderId)) {
+                                // 多商家订单：为每个订单发送通知
+                                foreach ($OrderId as $singleOrderId) {
+                                    $params = [
+                                       'users_id' => $post['users_id'],
+                                       'result_id' => $singleOrderId,
+                                    ];
+                                    eyou_send_notice(9, $params);
+                                }
+                            } else {
+                                // 单个订单
+                                $params = [
+                                   'users_id' => $post['users_id'],
+                                   'result_id' => $OrderId,
+                                ];
+                                eyou_send_notice(9, $params);
+                            }
 
                             // // 已开启的微信订阅消息模板
                             // $where = [
@@ -1157,6 +1455,7 @@ class Shop extends UserBase
                 'order_id'   => $PostData['order_id'],
                 'order_code' => $PostData['order_code'],
             ];
+          
             $order = Db::name('shop_order')->where($where)->find();
             if (empty($order)) $this->error('无效订单');
             if ((0 < intval($order['prom_type']) || (0 === intval($order['prom_type']) && 2 === intval($order['logistics_type']))) && in_array($order['order_status'], [2, 3]) && 'wechat' === trim($order['pay_name'])) {
@@ -1164,9 +1463,65 @@ class Shop extends UserBase
                 $this->success('订单已完成');
             }
             if (0 !== intval($order['order_status'])) $this->success('订单支付成功');
-            $order['unified_id'] = $order['order_id'];
-            $order['unified_number'] = $order['order_code'];
-            $order['transaction_type'] = 2;
+            // 检查是否为多商家订单
+            $isMultiMerchantOrder = false;
+            $unifiedPay = null;
+            
+            // 优先通过 order_ids 查找统一支付记录（因为微信回调返回的是具体的子订单信息）
+            $unifiedPayList = Db::name('shop_order_unified_pay')->where([
+                'users_id' => $this->users_id,
+                'pay_status' => 0
+            ])->select();
+            
+            foreach ($unifiedPayList as $unifiedPayItem) {
+                $orderIds = !empty($unifiedPayItem['order_ids']) ? safe_unserialize($unifiedPayItem['order_ids']) : [];
+                if (in_array($order['order_id'], $orderIds)) {
+                    $unifiedPay = $unifiedPayItem;
+                    $isMultiMerchantOrder = true;
+                    break;
+                }
+            }
+            
+            // 如果没找到，再通过 unified_number 查找
+            if (empty($unifiedPay)) {
+                $unifiedPay = Db::name('shop_order_unified_pay')->where([
+                    'users_id' => $this->users_id,
+                    'unified_number' => $order['order_code'],
+                    'pay_status' => 0
+                ])->find();
+                
+                if (!empty($unifiedPay)) {
+                    $isMultiMerchantOrder = true;
+                }
+            }
+            
+            // 设置订单相关信息
+            if (!empty($unifiedPay)) {
+                $order['unified_id'] = $unifiedPay['unified_id'];
+                $order['unified_number'] = $unifiedPay['unified_number'];
+                $order['transaction_type'] = 99;
+                // 重要：使用统一支付的总金额，而不是单个订单金额
+                $order['total_amount'] = $unifiedPay['unified_amount'];
+            } else {
+                // 检查该订单的商品是否包含多商家商品
+                $hasMultiMerchant = Db::name('shop_order_details')->alias('od')
+                    ->join('archives a', 'od.product_id = a.aid', 'LEFT')
+                    ->where([
+                        'od.order_id' => $order['order_id'],
+                        'a.merchant_id' => ['>', 0]
+                    ])->count();
+                
+                if ($hasMultiMerchant > 0) {
+                    $isMultiMerchantOrder = true;
+                }
+                
+                $order['unified_id'] = $order['order_id'];
+                $order['unified_number'] = $order['order_code'];
+                $order['transaction_type'] = $isMultiMerchantOrder ? 99 : 2;
+                $order['total_amount'] = $order['order_amount'];
+            }
+            
+
             if (9 === intval($PostData['pay_type'])) {
                 model('TikTok')->tikTokAppletsPayDealWith($order);
             }
@@ -1180,7 +1535,43 @@ class Shop extends UserBase
             }
             // 微信支付
             else {
-                model('ShopPublicHandle')->getWeChatPayResult($this->users_id, $order);
+                // 如果是多商家订单，需要特殊处理
+                if ($isMultiMerchantOrder) {
+                    // 构造支付详情数据
+                    $payDetails = [
+                        'transaction_type' => 99,
+                        'payment_type'     => "微信支付",
+                        'unified_id'       => $order['unified_id'],
+                        'unified_number'   => $order['unified_number'],
+                        'unified_amount'   => $order['total_amount']
+                    ];
+                    
+                    // 对于多商家订单，直接处理支付成功逻辑，不再调用微信验证
+                    // 因为微信回调已经验证了支付成功，这里只需要更新订单状态
+                    if (!empty($unifiedPay)) {
+                        // 有统一支付记录，使用统一支付处理逻辑
+                        $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic;
+                        $multiMerchantLogic->unifiedPaySuccessHandle($unifiedPay, 'wechat', $payDetails);
+                    } else {
+                        // 没有统一支付记录的多商家订单，使用完整的支付成功逻辑
+                        $returnData = pay_success_logic($this->users_id, $order['order_code'], $payDetails, 'wechat', false);
+                        
+                        if (empty($returnData) || (is_array($returnData) && 1 !== intval($returnData['code']))) {
+                            $this->error('订单处理异常，请联系管理员');
+                        }
+                    }
+                    
+                    // 返回小程序格式
+                    $returnData = [
+                        'email' => false,
+                        'mobile' => false,
+                        'url' => 1 == input('param.fenbao/d') ? '' : '/pages/order/index'
+                    ];
+                    $this->success('支付完成', $returnData['url'], $returnData);
+                } else {
+                    // 普通订单：走原有逻辑
+                    model('ShopPublicHandle')->getWeChatPayResult($this->users_id, $order);
+                }
             }
         }
     }
@@ -1193,6 +1584,7 @@ class Shop extends UserBase
             'order_id'   => $post['order_id'],
             'order_code' => $post['order_code']
         ];
+        
         $field  = 'order_status, order_amount';
         $Result = Db::name('shop_order')->where($where)->field($field)->find();
         if (!empty($Result)) {
@@ -1409,7 +1801,7 @@ class Shop extends UserBase
     }
 
     // 扣除商品库存
-    private function ProductStockProcessing($SpecValue = [])
+    public function ProductStockProcessing($SpecValue = [])
     {
         if (!empty($SpecValue)) {
             $SpecUpData = []; // 有规格
@@ -1484,8 +1876,9 @@ class Shop extends UserBase
             // 立即购买下单
             $where['a.aid'] = $CacheData['product_id'];
             if (!empty($CacheData['spec_value_id'])) $where['b.spec_value_id'] = $CacheData['spec_value_id'];
-            $field = 'a.aid, a.typeid, a.title, a.litpic, a.users_price, a.users_discount_type, a.stock_count, a.prom_type, a.attrlist_id, a.logistics_type, b.value_id, b.aid as product_id, b.spec_value_id, b.spec_price, b.spec_stock';
-            if ('v1.5.1' < getVersion()) {
+            $field = 'a.aid, a.typeid, a.title, a.litpic, a.users_price, a.merchant_id,  a.users_discount_type, a.stock_count, a.prom_type, a.attrlist_id, a.logistics_type, b.value_id, b.aid as product_id, b.spec_value_id, b.spec_price, b.spec_stock';
+           
+           if ('v1.5.1' < getVersion()) {
                 $field .= ',b.seckill_price, b.seckill_stock';
             }
             if ('v1.5.7' < getVersion()) {
@@ -1555,7 +1948,7 @@ class Shop extends UserBase
                 'a.lang'     => get_home_lang(),
                 'a.selected' => 1,
             ];
-            $list = Db::name('shop_cart')->field('a.*,b.typeid, b.aid, b.title, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.prom_type, b.attrlist_id, b.logistics_type, c.spec_price, c.spec_stock, c.value_id')
+            $list = Db::name('shop_cart')->field('a.*,b.typeid, b.aid, b.title, b.litpic, b.users_price, b.users_discount_type, b.stock_count, b.prom_type, b.attrlist_id, b.logistics_type,  b.merchant_id, c.spec_price, c.spec_stock, c.value_id')
                 ->alias('a')
                 ->join('__ARCHIVES__ b', 'a.product_id = b.aid', 'LEFT')
                 ->join('__PRODUCT_SPEC_VALUE__ c', 'a.spec_value_id = c.spec_value_id and a.product_id = c.aid', 'LEFT')
@@ -1583,7 +1976,47 @@ class Shop extends UserBase
     // 商品规格/折扣数据处理
     private function OrderProductProcess($list = [], $ConfigData = [], $users_discount = 1, $level_id = 0)
     {
+        // 获取所有商品的merchant_id，用于批量查询店铺信息
+        $merchant_ids = [];
+        foreach ($list as $value) {
+            if (!empty($value['merchant_id']) && $value['merchant_id'] > 0) {
+                $merchant_ids[] = $value['merchant_id'];
+            }
+        }
+
+        // 批量查询店铺信息
+        $merchant_info = [];
+        if (!empty($merchant_ids)) {
+            $merchant_list = Db::name('weapp_multi_merchant')
+                ->field('merchant_id, merchant_name')
+                ->where([
+                    'merchant_id' => ['in', array_unique($merchant_ids)],
+                    'is_del' => 0,
+                    'audit_status' => 2,
+                    'merchant_status' => 1
+                ])
+                ->select();
+            
+            foreach ($merchant_list as $merchant) {
+                $merchant_info[$merchant['merchant_id']] = $merchant['merchant_name'];
+            }
+        }
+        
         foreach ($list as $key => $value) {
+            // 添加店铺信息
+            if (!empty($value['merchant_id']) && $value['merchant_id'] > 0) {
+                $list[$key]['shop_id'] = $value['merchant_id'];
+                $list[$key]['shop_name'] = isset($merchant_info[$value['merchant_id']]) 
+                    ? $merchant_info[$value['merchant_id']] 
+                    : '店铺名称未知';
+                $list[$key]['shop_type'] = 'merchant';
+            } else {
+                // 默认为官方自营店
+                $list[$key]['shop_id'] = 0;
+                $list[$key]['shop_name'] = '官方自营店';
+                $list[$key]['shop_type'] = 'official';
+            }
+            
             // 规格处理
             $list[$key]['product_spec_list'] = !empty($value['spec_value_id']) ? model('ShopPublicHandle')->getGoodsSpecList($value) : [];
 
@@ -1733,7 +2166,7 @@ class Shop extends UserBase
     }
 
     // 旧产品属性处理
-    private function ProductAttrProcessing($value = array())
+    public function ProductAttrProcessing($value = array())
     {
         $attr_value = '';
         $AttrWhere  = [
@@ -1754,7 +2187,7 @@ class Shop extends UserBase
     }
 
     // 新商品属性处理
-    private function ProductNewAttrProcessing($value = array())
+    public function ProductNewAttrProcessing($value = array())
     {
         $attr_value = '';
         $where      = [
@@ -1776,7 +2209,7 @@ class Shop extends UserBase
     }
 
     // 商品规格处理
-    private function ProductSpecProcessing($value = array())
+    public function ProductSpecProcessing($value = array())
     {
         $spec_value_s = '';
         if (!empty($value['spec_value_id'])) {
@@ -2156,6 +2589,16 @@ class Shop extends UserBase
             'lang' => get_home_lang(),
             'users_id' => intval($users_id),
         ];
+        // 检查是否安装拼团插件
+        $hasGroupBuyPlugin = false;
+        try {
+            // 检查拼团插件是否存在
+            $weappInfo = model('ShopPublicHandle')->getWeappGroupBuy();
+            $hasGroupBuyPlugin = !empty($weappInfo);
+        } catch (\Exception $e) {
+            $hasGroupBuyPlugin = false;
+        }
+
         // 订单数据类型
         switch ($type) {
             case 'all': // 全部
@@ -2169,6 +2612,15 @@ class Shop extends UserBase
             case 'received'; // 待收货
                 $where['order_status'] = 2;
                 break;
+            case 'grouping'; // 拼团中
+                if ($hasGroupBuyPlugin) {
+                    $where['groups_shop_order'] = 1;
+                    $where['order_status'] = 1; // 拼团中的订单状态为已支付
+                } else {
+                    // 如果没有拼团插件，返回空结果
+                    $where['order_id'] = 0; // 不存在的订单ID，确保返回空结果
+                }
+                break;
             case 'complete'; // 待评价
                 $where['order_status'] = 3;
                 // $where['is_comment'] = 0;
@@ -2177,7 +2629,25 @@ class Shop extends UserBase
                 $where['order_status'] = -1;
                 break; 
         }
-        $result = Db::name('shop_order')->where($where)->order('order_id desc')->paginate(15, false, ['query' => request()->param()]);
+        
+        // 构建查询
+        $query = Db::name('shop_order')->where($where);
+        
+        // 如果是待发货类型，需要额外排除拼团中的订单，但包含拼团成功的订单
+        if ($type === 'delivery' && $hasGroupBuyPlugin) {
+            // 只有安装了拼团插件才执行拼团相关查询
+            $query = $query->where(function($query) {
+                $query->where('groups_shop_order', 'neq', 1)
+                      ->whereOr(function($query) {
+                          $query->where('groups_shop_order', 1)
+                                ->where('group_id', '>', 0); // 有团单ID的拼团订单
+                      });
+            });
+        }
+        
+
+        
+        $result = $query->order('order_id desc')->paginate(15, false, ['query' => request()->param()]);
         !empty($result) && $result = $result->toArray();
         $order_ids = get_arr_column($result['data'], 'order_id');
 
@@ -2188,7 +2658,6 @@ class Shop extends UserBase
             'order_id' => ['IN', $order_ids],
         ];
         $goodsList = Db::name('shop_order_details')->where($where)->order('order_id desc')->select();
-
         // 安装积分商城插件则执行
         if (!empty($goodsList)) {
             $weappInfo = model('ShopPublicHandle')->getWeappPointsShop();
@@ -2214,6 +2683,35 @@ class Shop extends UserBase
 
         $pay_method_arr = config('global.pay_method_arr');
         $order_status_arr = config('global.order_status_arr');
+        
+        // 批量查询拼团状态
+        $groupOrders = [];
+        $groupIds = [];
+        if ($hasGroupBuyPlugin) {
+            foreach ($result['data'] as $_order) {
+                if (!empty($_order['groups_shop_order']) && !empty($_order['group_id'])) {
+                    $groupIds[] = $_order['group_id'];
+                }
+            }
+            
+            if (!empty($groupIds)) {
+                try {
+                    $groupTeams = Db::name('weapp_groupbuy_team')
+                        ->field('id, status, current_person_num, need_person_num, expire_time')
+                        ->where('id', 'in', $groupIds)
+                        ->select();
+                    foreach ($groupTeams as $team) {
+                        $groupOrders[$team['id']] = $team;
+                    }
+                } catch (\Exception $e) {
+                    // 如果拼团表不存在，忽略错误
+                    $groupOrders = [];
+                }
+            }
+        }
+        
+        // 根据类型过滤订单
+        $filteredOrders = [];
         foreach ($result['data'] as $key => &$_order) {
             $_order['shipping_fee'] = unifyPriceHandle($_order['shipping_fee']);
             $_order['order_amount'] = unifyPriceHandle($_order['order_amount']);
@@ -2224,7 +2722,42 @@ class Shop extends UserBase
             $_order['goods']             = !empty($orderGoods[$_order['order_id']]) ? $orderGoods[$_order['order_id']] : [];
             $_order['channel_ntitle']    = '商品'; // $channel_ntitle;
             $_order['pointsGoodsBuyField'] = !empty($pointsGoodsBuyField[$_order['order_id']]) ? $pointsGoodsBuyField[$_order['order_id']] : [];
+            
+            // 添加拼团状态信息
+            if (!empty($_order['groups_shop_order']) && !empty($_order['group_id']) && isset($groupOrders[$_order['group_id']])) {
+                $groupInfo = $groupOrders[$_order['group_id']];
+                $_order['group_status'] = $groupInfo['status']; // 0:拼团中, 1:拼团成功, 2:拼团失败
+                $_order['group_current_person_num'] = $groupInfo['current_person_num'];
+                $_order['group_need_person_num'] = $groupInfo['need_person_num'];
+                $_order['group_expire_time'] = $groupInfo['expire_time'];
+                $_order['group_remaining_time'] = max(0, $groupInfo['expire_time'] - time());
+            } else {
+                $_order['group_status'] = null;
+                $_order['group_current_person_num'] = 0;
+                $_order['group_need_person_num'] = 0;
+                $_order['group_expire_time'] = 0;
+                $_order['group_remaining_time'] = 0;
+            }
+            
+            // 根据类型过滤订单
+            $shouldInclude = true;
+            if ($hasGroupBuyPlugin) {
+                if ($type === 'grouping' && !empty($_order['groups_shop_order'])) {
+                    // 拼团中：只显示拼团中的订单
+                    $shouldInclude = ($_order['group_status'] === 0);
+                } elseif ($type === 'delivery' && !empty($_order['groups_shop_order'])) {
+                    // 待发货：排除拼团中的订单，包含拼团成功的订单
+                    $shouldInclude = ($_order['group_status'] !== 0);
+                }
+            }
+            
+            if ($shouldInclude) {
+                $filteredOrders[] = $_order;
+            }
         }
+        
+        // 更新结果数据
+        $result['data'] = $filteredOrders;
         return $result;
     }
 
@@ -2381,7 +2914,7 @@ class Shop extends UserBase
         if (empty($result)) {
             $this->error('订单不存在！');
         }
-
+     
         // 优化显示金额
         $result['coupon_price'] = unifyPriceHandle($result['coupon_price']);
         $result['shipping_fee'] = unifyPriceHandle($result['shipping_fee']);
@@ -2491,7 +3024,7 @@ class Shop extends UserBase
             if ($virtual_delivery_status && !empty($virtual_delivery)) $result['virtual_delivery'] = $virtual_delivery;
 
             // 商品属性处理
-            $ValueData  = unserialize($value['data']);
+            $ValueData  = safe_unserialize($value['data']);
             $spec_value = !empty($ValueData['spec_value']) ? htmlspecialchars_decode($ValueData['spec_value']) : '';
             $spec_value = !empty($spec_value) ? htmlspecialchars_decode($spec_value) : '';
             // 旧参数+规格值
@@ -2648,14 +3181,14 @@ class Shop extends UserBase
                     $val['add_time'] = date('Y-m-d H:i:s', $val['add_time']);
                 }
                 if (!empty($val['upload_img'])){
-                    $val['upload_img'] = unserialize($val['upload_img']);
+                    $val['upload_img'] = safe_unserialize($val['upload_img']);
                     $val['upload_img'] = explode(',',$val['upload_img']);
                     foreach ($val['upload_img'] as $k => $v){
                         $val['upload_img'][$k] = get_default_pic($v,true);
                     }
                 }
                 if (!empty($val['content'])){
-                    $val['content'] = unserialize($val['content']);
+                    $val['content'] = safe_unserialize($val['content']);
                 }
                 $result['data'][$key] = $val;
             }
@@ -3449,8 +3982,8 @@ class Shop extends UserBase
             $serviceData['product_img'] = $this->get_default_pic($serviceData['product_img'], true);
             $serviceData['status_name'] = Config::get('global.order_service_status')[$serviceData['status']];
             $serviceData['service_type_name'] = Config::get('global.order_service_type')[$serviceData['service_type']];
-            $serviceData['admin_delivery'] = !empty($serviceData['admin_delivery']) ? unserialize($serviceData['admin_delivery']) : '';
-            $serviceData['users_delivery'] = !empty($serviceData['users_delivery']) ? unserialize($serviceData['users_delivery']) : '';
+            $serviceData['admin_delivery'] = !empty($serviceData['admin_delivery']) ? safe_unserialize($serviceData['admin_delivery']) : '';
+            $serviceData['users_delivery'] = !empty($serviceData['users_delivery']) ? safe_unserialize($serviceData['users_delivery']) : '';
 
             // 查询售后订单流程记录
             $where = [
@@ -4117,7 +4650,7 @@ class Shop extends UserBase
                     ];
                     $ResultID   = Db::name('users_money')->where($OrderWhere)->update($OrderData);
                     if (!empty($ResultID)) {
-                        $order['cause'] = unserialize($order['cause']);
+                        $order['cause'] = safe_unserialize($order['cause']);
                         $level_maturity_days = Db::name('users')->where('users_id', $UsersID)->value('level_maturity_days');
                         $limit_arr = Config::get('global.admin_member_limit_arr');
 

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -32,6 +32,33 @@ class PayApi extends Base {
         $this->PayApiLogic = new PayApiLogic();
     }
 
+    /**
+     * 安全验证支付插件标识，防止动态类实例化RCE攻击
+     * @param string $pay_mark 支付插件标识
+     * @return bool 验证通过返回true，否则返回false
+     */
+    private function validatePayMark($pay_mark)
+    {
+        if (empty($pay_mark)) {
+            return false;
+        }
+        // 只允许字母、数字和下划线
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $pay_mark)) {
+            return false;
+        }
+        // 验证插件目录是否存在
+        $weapp_path = './weapp/' . $pay_mark . '/';
+        if (!is_dir($weapp_path)) {
+            return false;
+        }
+        // 验证控制器文件是否存在
+        $controller_file = $weapp_path . 'controller/' . $pay_mark . '.php';
+        if (!file_exists($controller_file)) {
+            return false;
+        }
+        return true;
+    }
+
     // 支付接口列表
     public function select_pay_method()
     {
@@ -58,6 +85,10 @@ class PayApi extends Base {
 
         } else if (!empty($Config) && !empty($Config['pay_mark']) && 0 == $Config['system_built']) {
             /*第三方插件*/
+            // 安全验证：验证支付插件标识
+            if (!$this->validatePayMark($Config['pay_mark'])) {
+                $this->error('支付插件配置异常');
+            }
             $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
             $UnifyController = new $ControllerName;
 
@@ -119,6 +150,10 @@ class PayApi extends Base {
                 
             } else if (!empty($Config) && !empty($Config['pay_mark']) && 0 == $Config['system_built']) {
                 // 第三方支付
+                // 安全验证：验证支付插件标识
+                if (!$this->validatePayMark($Config['pay_mark'])) {
+                    $this->error('支付插件配置异常');
+                }
                 $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
                 $UnifyController = new $ControllerName;
                 $ResultData = $UnifyController->OtherPayProcessing($PayInfo, $post['unified_number'], $post['transaction_type']);
@@ -324,33 +359,96 @@ class PayApi extends Base {
                 }
 
                 // 订单数据更新处理
-                if ($this->users['users_money'] < $orderData['order_amount']) {
-                    $url = urldecode(url('user/Pay/pay_account_recharge'));
-                    $this->error('余额不足，若要使用余额支付，请去充值！',$url);
-                } else {
-                    $ret = Db::name('users')->where($Where)->update([
+                // 安全修复：使用原子性UPDATE操作防止并发竞争（在WHERE中检查余额）
+                $ret = Db::name('users')->where($Where)
+                    ->where('users_money', '>=', $orderData['order_amount'])
+                    ->update([
                         'users_money' => Db::raw('users_money-'.$orderData['order_amount']),
                         'update_time' => getTime(),
                     ]);
-                    if (false !== $ret) {
-                        $pay_details = [
-                            'unified_id'        => $orderData['order_id'],
-                            'unified_number'    => $orderData['order_code'],
-                            'transaction_type'  => $post['transaction_type'],
-                            'payment_amount'    => $orderData['order_amount'],
-                            'payment_type'      => "余额支付",
-                        ];
-                        $returnData = pay_success_logic($this->users_id, $orderData['order_code'], $pay_details, 'balance', true, $this->users);
-                        if (is_array($returnData)) {
-                            if (1 == $returnData['code']) {
-                                $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
-                            } else {
-                                $this->error($returnData['msg']);
-                            }
+                if ($ret > 0) {
+                    $pay_details = [
+                        'unified_id'        => $orderData['order_id'],
+                        'unified_number'    => $orderData['order_code'],
+                        'transaction_type'  => $post['transaction_type'],
+                        'payment_amount'    => $orderData['order_amount'],
+                        'payment_type'      => "余额支付",
+                    ];
+                    $returnData = pay_success_logic($this->users_id, $orderData['order_code'], $pay_details, 'balance', true, $this->users);
+                    if (is_array($returnData)) {
+                        if (1 == $returnData['code']) {
+                            $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
+                        } else {
+                            $this->error($returnData['msg']);
                         }
                     }
                     $this->error('订单支付异常，请刷新后再进行支付！');
+                } else {
+                    $url = urldecode(url('user/Pay/pay_account_recharge'));
+                    $this->error('余额不足，若要使用余额支付，请去充值！', $url);
                 }
+            }
+        }
+    }
+
+    // 积分支付(目前仅文章模型使用)
+    public function score_payment()
+    {
+        if (IS_AJAX_POST) {
+            $post = input('post.');
+            $post['unified_id'] = intval($post['unified_id']);
+            if (empty($post['unified_id']) || !is_numeric($post['unified_id'])) $this->error('订单支付数据异常，刷新重试');
+
+            // 文章支付
+            if (9 === intval($post['transaction_type'])) {
+                // 查询订单信息
+                $articleOrder = Db::name('article_order')->find($post['unified_id']);
+                if (empty($articleOrder)) $this->error('订单支付数据不存在，刷新重试');
+                // 如果订单已支付过，则跳转到详情页
+                $viewUrl = cookie($this->users_id . '_' . $articleOrder['product_id'] . '_EyouArticleViewUrl');
+                if (in_array($articleOrder['order_status'], [1])) $this->success('订单已支付！即将跳转', $viewUrl);
+                // 进行积分支付
+                // 安全修复：先检查积分是否足够
+                if (floatval($this->users['scores']) < floatval($articleOrder['order_score'])) {
+                    $this->error('积分不足，无法完成支付！');
+                }
+
+                // 订单更新条件
+                $where = [
+                    'order_id'  => $articleOrder['order_id'],
+                    'users_id'  => $this->users_id,
+                    'lang'      => $this->home_lang
+                ];
+                // 订单更新数据，更新为已付款
+                $post['payment_type'] = '积分支付';
+                $post['payment_amount'] = $articleOrder['order_amount'];
+                $update = [
+                    'order_status' => 1,
+                    'pay_name' => 'scorePay',
+                    'wechat_pay_type' => '',
+                    'pay_details'  => serialize($post),
+                    'pay_time'     => getTime(),
+                    'update_time'  => getTime()
+                ];
+                $resultID = Db::name('article_order')->where($where)->update($update);
+                // 订单更新后续操作
+                if (!empty($resultID)) {
+                    // 添加会员积分记录并且减少会员对应积分
+                    $insert = [
+                        'type' => 13,
+                        'users_id' => $this->users_id,
+                        'score' => $articleOrder['order_score'],
+                        'info' => '文章订单支付',
+                        'remark' => '文章订单支付',
+                    ];
+                    addConsumObtainScores($insert, 1, true);
+
+                    // 订单操作完成，返回跳转
+                    $this->success('支付成功，处理订单完成', $viewUrl);
+                }
+                $this->error('订单更新失败，请重试');
+            } else {
+                $this->error('目前仅支持文章订单支付');
             }
         }
     }
@@ -485,6 +583,10 @@ class PayApi extends Base {
                     }
 
                     // 第三方插件
+                    // 安全验证：验证支付插件标识
+                    if (!$this->validatePayMark($Config['pay_mark'])) {
+                        $this->error('支付插件配置异常');
+                    }
                     $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
                     $UnifyController = new $ControllerName;
                     // 虎皮椒支付成功后返回页面，主要用于手机浏览器端、微信端使用虎皮椒支付后页面跳转

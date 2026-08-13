@@ -67,11 +67,19 @@ class MultiMerchantLogic extends Model
         $merchantOrder = $resultOrder['merchantOrder'];
         if (!empty($resultOrder['needQuery'])) $merchantOrder = $this->merchantOrderAddrInfoHandle($merchantOrder, $post);
 
-        // 数据验证
-        $rule = ['payment_method' => 'require|token'];
-        $message = ['payment_method.require' => '不可为空'];
-        $validate = new \think\Validate($rule, $message);
-        if (!$validate->check($post)) $this->error('请勿重复提交订单');
+        // 数据验证 - 兼容小程序API调用
+        if (!empty($post['call_source']) && $post['call_source'] === 'miniapp') {
+            // 小程序API调用，只验证基本参数
+            if (!isset($post['payment_method'])) {
+                $this->error('支付方式不可为空');
+            }
+        } else {
+            // PC端调用，进行token验证
+            $rule = ['payment_method' => 'require|token'];
+            $message = ['payment_method.require' => '不可为空'];
+            $validate = new \think\Validate($rule, $message);
+            if (!$validate->check($post)) $this->error('请勿重复提交订单');
+        }
 
         // 删除数据表不存在的字段
         foreach ($merchantOrder as $key => $value) {
@@ -90,20 +98,39 @@ class MultiMerchantLogic extends Model
             $merchantOrder = $this->shop_order_db->where($where)->getAllWithIndex('merchant_id');
 
             // 对商家订单数据创建订单明细数据
-            $resultDetails = $this->merchantOrderDetailsHandle($merchantOrder, $list, $this->users_id);
+            $resultDetails = $this->merchantOrderDetailsHandle($merchantOrder, $list, $this->users_id, $post);
             if (empty($resultDetails['code'])) $this->error($resultDetails['msg']);
 
             // 批量添加订单明细信息
             $insertAll = !empty($resultDetails['data']['orderDetails']) ? $this->shop_order_details_db->insertAll($resultDetails['data']['orderDetails']) : 0;
+       
             if (!empty($insertAll)) {
+             
                 // 删除商品购物车信息
                 if (!empty($resultDetails['data']['delCartID'])) $this->delCartProductData($resultDetails['data']['delCartID']);
-
-                // 产品库存、销量处理
-                model('Shop')->ProductStockProcessing($resultDetails['data']['productStock']);
+                   
+                // 产品库存、销量处理 - 兼容小程序API调用
+                if (!empty($post['call_source']) && $post['call_source'] == 'miniapp') {
+                    $shopModel = new \app\api\model\v1\Shop;
+                    $shopModel->ProductStockProcessing($resultDetails['data']['productStock']);
+                } else {
+                    // PC端调用，使用用户模型的方法
+                    model('Shop')->ProductStockProcessing($resultDetails['data']['productStock']);
+                }
 
                 // 添加订单操作记录
                 AddOrderAction($merchantOrder, $this->users_id);
+
+                // 如果标记为只创建订单不支付，则返回订单信息
+                if (!empty($post['only_create_order'])) {
+                    $orderIds = get_arr_column($merchantOrder, 'order_id');
+                    $totalAmount = array_sum(get_arr_column($merchantOrder, 'order_amount'));
+                    return [
+                        'order_ids' => $orderIds,
+                        'total_amount' => $totalAmount,
+                        'orders' => $merchantOrder
+                    ];
+                }
 
                 // 订单支付调用
                 if (0 === intval($post['payment_method'])) {
@@ -112,17 +139,49 @@ class MultiMerchantLogic extends Model
                         $this->useBalancePayOrder($merchantOrder, $post);
                     } else {
                         // 微信、支付宝、第三方在线支付
-                        if (empty($this->isMobile) && empty($this->isWeixin)) {
+                        if (!empty($post['call_source']) && $post['call_source'] === 'miniapp') {
+                            // 小程序API调用的微信支付处理
+                            $unifiedPay = $this->createShopOrderUnifiedPay($merchantOrder, 'wechat', 'WeChatAppletsPay');
+                            if (!empty($unifiedPay)) {
+                                // 直接调用微信小程序支付接口
+                                $weChatPay = model('ShopPublicHandle')->getWechatAppletsPay($this->users_id, $unifiedPay['unified_number'], $unifiedPay['unified_amount']);
+                                
+                                if (!empty($weChatPay)) {
+                                    // 获取第一个订单的ID和订单号作为主要返回信息（与正常商品支付保持一致）
+                                    $orderIds = get_arr_column($merchantOrder, 'order_id');
+                                    $orderCodes = get_arr_column($merchantOrder, 'order_code');
+                                    $mainOrderId = !empty($orderIds) ? $orderIds[0] : $unifiedPay['unified_id'];
+                                    $mainOrderCode = !empty($orderCodes) ? $orderCodes[0] : $unifiedPay['unified_number'];
+                                    
+                                    $result = [
+                                        'WeChatPay' => $weChatPay,
+                                        'OrderData' => [
+                                            'order_id' => $mainOrderId, // 前端需要的字段，使用第一个商家订单ID
+                                            'order_code' => $mainOrderCode, // 前端需要的字段，使用第一个商家订单号
+                                            'unified_id' => $unifiedPay['unified_id'], // 保留后端处理需要的字段
+                                            'unified_number' => $unifiedPay['unified_number'], // 保留后端处理需要的字段
+                                            'transaction_type' => 99, // 多商家处理标识
+                                        ],
+                                        'tmplData' => []
+                                    ];
+                                    $this->success('正在支付', null, $result);
+                                } else {
+                                    $this->error('错误代码：408，微信支付调用失败', urldecode(url('user/Shop/shop_centre')));
+                                }
+                            } else {
+                                $this->error('错误代码：409，批量支付异常，请在订单列表进行支付', urldecode(url('user/Shop/shop_centre')));
+                            }
+                        } else if (empty($this->isMobile) && empty($this->isWeixin)) {
                             // 电脑PC端下单 WeChatScanCode
                             $this->computerPCSideSubmitOrder($merchantOrder, $post);
-                        } else if (!empty($this->isMobile) && !empty($this->isWeixin)) {
+                        } else if (!empty($this->isMobile) && !empty($this->isWeixin) && empty($this->isWeixinApplets)) {
                             // 手机端微信下单 WeChatInternal  
                             $this->mobileWeChatSubmitOrder($merchantOrder, $post);
                         } else if (!empty($this->isMobile) && empty($this->isWeixinApplets)) {
                             // 手机端浏览器下单 WeChatH5
                             $this->mobileBrowserSubmitOrder($merchantOrder, $post);
                         } else if (!empty($this->isMobile) && !empty($this->isWeixinApplets)) {
-                            // 手机微信小程序端下单
+                            // 手机微信小程序端下单 (原有逻辑保留)
                             dump(4);exit;
                         }
                     }
@@ -296,19 +355,26 @@ class MultiMerchantLogic extends Model
     }
 
     // 商家订单详情处理
-    private function merchantOrderDetailsHandle($merchantOrder = [], $list = [], $users_id = 0)
+    private function merchantOrderDetailsHandle($merchantOrder = [], $list = [], $users_id = 0, $post = [])
     {
         // 订单详情、删除的购物车ID、商品更新库存信息
         $orderDetails = $delCartID = $productStock = [];
 
         // 添加到订单明细表
         foreach ($list as $key => $value) {
-            // 旧产品属性处理
-            $attrValue = model('Shop')->ProductAttrProcessing($value);
-            // 新产品属性处理
-            $attrValueNew = model('Shop')->ProductNewAttrProcessing($value);
-            // 产品规格处理
-            $specValue = model('Shop')->ProductSpecProcessing($value);
+            // 产品属性处理 - 兼容小程序API调用
+            if (!empty($post['call_source']) && $post['call_source'] === 'miniapp') {
+                // 小程序API调用，使用API模型的方法
+                $shopModel = new \app\api\model\v1\Shop;
+                $attrValue = $shopModel->ProductAttrProcessing($value);
+                $attrValueNew = $shopModel->ProductNewAttrProcessing($value);
+                $specValue = $shopModel->ProductSpecProcessing($value);
+            } else {
+                // PC端调用，使用用户模型的方法
+                $attrValue = model('Shop')->ProductAttrProcessing($value);
+                $attrValueNew = model('Shop')->ProductNewAttrProcessing($value);
+                $specValue = model('Shop')->ProductSpecProcessing($value);
+            }
             // 商品自定义参数
             $customParam = $this->getProductCustomParam($value['aid']);
             $data = [
@@ -505,6 +571,7 @@ class MultiMerchantLogic extends Model
         }
     }
 
+
     // 使用货到付款完成订单
     private function useCashOnDeliveryCompletedOrder($merchantOrder = [], $post = [])
     {
@@ -588,7 +655,7 @@ class MultiMerchantLogic extends Model
         // 订单未处理，进行处理
         if (isset($unifiedPay['pay_status']) && 0 === intval($unifiedPay['pay_status'])) {
             // 解析统一订单包含的子订单ID
-            $unifiedPay['order_ids'] = !empty($unifiedPay['order_ids']) ? unserialize($unifiedPay['order_ids']) : [];
+            $unifiedPay['order_ids'] = !empty($unifiedPay['order_ids']) ? safe_unserialize($unifiedPay['order_ids']) : [];
 
             // 更新订单为已支付
             $where = [
@@ -659,7 +726,7 @@ class MultiMerchantLogic extends Model
         ];
         $merchantContact = Db::name('weapp_multi_merchant')->where($where)->getField('merchant_contact');
         if (!empty($merchantContact)) {
-            $merchantContact = unserialize($merchantContact);
+            $merchantContact = safe_unserialize($merchantContact);
             $contactProvince = !empty($merchantContact['contactProvince']) ? get_province_name($merchantContact['contactProvince']) : '';
             $contactCity = !empty($merchantContact['contactCity']) ? get_city_name($merchantContact['contactCity']) : '';
             $contactDistrict = !empty($merchantContact['contactDistrict']) ? get_area_name($merchantContact['contactDistrict']) : '';

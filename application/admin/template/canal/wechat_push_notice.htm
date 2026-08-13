@@ -26,7 +26,7 @@
                         &nbsp;
                         <label class="curpoin"><input id="wechat_push_notice_open0" name="wechat[wechat_push_notice_open]" value="0" type="radio" {if condition="empty($global['wechat_push_notice_open'])"}checked="checked"{/if}>关闭</label>
                         <span class="err"></span>
-                        <p class="notic2">当前管理员已有{$adminBindNum|default=0}人绑定并关注公众号&nbsp;[<a href="javascript:void(0);" id="to_bind_btn"  data-href="{:url('Admin/admin_edit', ['id'=>$admin_id,'iframe'=>1])}" onclick="toBind(this);">去绑定</a>]</p>
+                        <p class="notic2 {if condition="empty($global['wechat_push_notice_open'])"}none{/if}" id="dl_web_mobile_domain">当前管理员已有{$adminBindNum|default=0}人绑定并关注公众号&nbsp;[<a href="javascript:void(0);" id="to_bind_btn"  data-href="{:url('Admin/admin_edit', ['id'=>$admin_id,'iframe'=>1])}" onclick="toBind(this);">去绑定</a>]</p>
                     </dd>
                 </dl>
                 <dl class="row">
@@ -47,7 +47,7 @@
                     <dt class="tit"> <label for="">模板演示</label> </dt>
                     <dd class="opt"> 
                         {volist name="$list" id='vo'}
-                        <div class="default-template-content fl" style="margin-right: 20px;">
+                        <div class="default-template-content mb20 fl" style="margin-right: 20px;">
                             <img src="__STATIC__/admin/images/notice_template_wxapp_bg.png" alt="" class="bg-img">
                             <div class="line"></div>
                             <div class="wxapp-notice">
@@ -83,6 +83,14 @@
     </div>
 </div>
 <script type="text/javascript">
+    // 提示未关注公众号
+    $('input[name="wechat[wechat_push_notice_open]"]').click(function(){
+        if($(this).val() == 1){
+            $('#dl_web_mobile_domain').show();
+        }else{
+            $('#dl_web_mobile_domain').hide();
+        }
+    });
     function toBind(obj)
     {
         var appid = "{$wechat_data['appid']|default=''}";
@@ -120,7 +128,8 @@
                 layer.closeAll();
                 if (res.code == 1) {
                     layer.msg(res.msg, {shade: layer_shade, time: 1000}, function() {
-                        if (1 == cur_admin_bind) {
+                        var wechat_push_notice_open = $('input[name="wechat[wechat_push_notice_open]"]:checked').val();
+                        if (1 == cur_admin_bind || 0 == wechat_push_notice_open) {
                             window.location.reload();
                         } else {
                             layer.confirm('当前管理员未完成微信绑定', {

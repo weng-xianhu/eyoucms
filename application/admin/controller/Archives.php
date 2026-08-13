@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -147,6 +147,7 @@ class Archives extends Base
         // 获取到所有URL参数
         $param = input('param.');
         $flag = input('flag/s');
+        $flags = input('flags/s');
         $typeid = input('typeid/d', 0);
 
         //跳转到指定栏目的文档列表
@@ -169,7 +170,7 @@ class Archives extends Base
             }
         }
 
-        foreach (['keywords','typeid','flag','is_release','province_id','city_id','area_id'] as $key) {
+        foreach (['keywords','typeid','flag','flags','is_release','province_id','city_id','area_id'] as $key) {
             $param[$key] = !empty($param[$key]) ? addslashes(trim($param[$key])):"";
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
@@ -201,10 +202,8 @@ class Archives extends Base
                         $FlagNew = $param[$key];
                         $condition['a.'.$param[$key]] = array('eq', 1);
                     }
-                // } else if ($key == 'is_release') {
-                //     if (0 < intval($param[$key])) {
-                //         $condition['a.users_id'] = array('gt', intval($param[$key]));
-                //     }
+                } else if ($key == 'flags') {
+                    $condition['a.'.$param[$key]] = array('eq', 1);
                 } else if (in_array($key, ['province_id','city_id','area_id'])) {
                     $citysiteNew = '';
                     if (!empty($param['province_id'])) {
@@ -260,12 +259,21 @@ class Archives extends Base
         $condition['a.lang'] = array('eq', $this->admin_lang);
         $condition['a.is_del'] = array('eq', 0);
         $condition['a.arcrank'] = array('egt', -1);
-
+        // 发布时间查询
+        if (!empty($param['add_time'])) {
+            $add_time = explode('~', $param['add_time']);
+            $start = strtotime(rtrim($add_time[0]));
+            $finish = strtotime(rtrim($add_time[1]).' 23:59:59');
+            $condition['a.add_time'] = ['between', "$start, $finish"];
+        }
         $continueNew = "(a.users_id = 0 OR (a.users_id > 0 AND a.arcrank >= 0))";
 
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.aid desc";
         } else {
             $orderby = "a.aid desc";
@@ -961,6 +969,7 @@ class Archives extends Base
             if (!empty($info)) {
                 $editor['editor_remote_img_local'] = $info['editor_remote_img_local'];
                 $editor['editor_img_clear_link'] = $info['editor_img_clear_link'];
+                $editor['editor_ai_create'] = $info['editor_ai_create'];
             }
             // 查询对应的自定义字段
             $addonFieldExtList = model('Field')->getChannelFieldList($channeltype, 0, $aid, $info);
@@ -1049,6 +1058,14 @@ class Archives extends Base
                     }
                 }
             }
+
+            // ----------- 处理文本格式的内容 --- chenfy
+            if (is_dir('./weapp/AiEditor/')) {
+                $aiEditorLogic = new \weapp\AiEditor\logic\AiEditorLogic();
+                $addonFieldExtList = $aiEditorLogic->handleAddonFieldExtList($addonFieldExtList);
+            }
+            // ----------- end
+
             $assign_data['content_ey_m_dfvalue'] = $content_ey_m_dfvalue;
             $assign_data['have_content_ey_m'] = $have_content_ey_m;
             $assign_data['addonFieldExtList'] = $addonFieldExtList;
@@ -1264,7 +1281,14 @@ EOF;
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        $orderby = !empty($orderby) ? "a.{$orderby} {$orderway}, a.aid desc" : "a.aid desc";
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
+            $orderby = "a.{$orderby} {$orderway}, a.aid desc";
+        } else {
+            $orderby = "a.aid desc";
+        }
 
         // 总投稿数
         $condition1 = $condition2 = $condition;
@@ -1475,8 +1499,10 @@ EOF;
             if (!empty($keyword)) {
                 $search_data = [];
                 if ($originlist) {
+                    // 安全修复: 转义正则特殊字符，防止正则表达式注入
+                    $keyword = preg_quote($keyword, '/');
                     foreach ($originlist as $k => $v) {
-                        if (preg_match("/$keyword/s", $v)) $search_data[] = $v;
+                        if (preg_match("/$keyword/si", $v)) $search_data[] = $v;
                     }
                 }
             }
@@ -1625,7 +1651,14 @@ EOF;
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        $orderby = !empty($orderby) ? "a.{$orderby} {$orderway}, a.aid desc" : "a.aid desc";
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
+            $orderby = "a.{$orderby} {$orderway}, a.aid desc";
+        } else {
+            $orderby = "a.aid desc";
+        }
 
         // 总投稿数
         $condition1 = $condition2 = $condition;

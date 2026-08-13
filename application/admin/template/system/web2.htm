@@ -2,60 +2,63 @@
 <body class="bodystyle" style="overflow-y: scroll;">
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-<div class="page min-hg-c-10">
+<div class="page atta min-hg-c-10">
     {include file="system/bar" /}
     <form method="post" id="handlepost" action="{:U('System/web2')}" enctype="multipart/form-data" name="form1">
         <div class="ncap-form-default">
             <dl class="row">
-                <dt class="tit">系统模式</dt>
+                <dt class="tit">系统运行模式</dt>
                 <dd class="opt">
-                    <label class="curpoin"><input type="radio" name="web_cmsmode" value="2" {if condition='!isset($config.web_cmsmode) || $config.web_cmsmode eq 2'}checked="checked"{/if}>开发</label>
+                    <label class="curpoin"><input type="radio" name="web_cmsmode" value="2" {if condition='!isset($config.web_cmsmode) || $config.web_cmsmode eq 2'}checked="checked"{/if}>开发模式</label>
                     &nbsp;
-                    <label class="curpoin"><input type="radio" name="web_cmsmode" value="1" {if condition='isset($config.web_cmsmode) && $config.web_cmsmode eq 1'}checked="checked"{/if}>运营</label>
+                    <label class="curpoin"><input type="radio" name="web_cmsmode" value="1" {if condition='isset($config.web_cmsmode) && $config.web_cmsmode eq 1'}checked="checked"{/if}>运营模式</label>
                     <br/>
-                    <p class="notic2">开发模式：方便修改模板，及时预览前台效果，没缓存，一改便生效。<br/>运营模式：提高前台响应速度，利于收录；改模板及采集、导入文档等操作需执行【<a href="{:U('System/clear_cache')}">更新缓存</a>】后才能在前台展示。</p>
+                    <p class="notic2">
+                        开发模式：适合开发和调试阶段。修改模板后立即生效，无需清除缓存，方便实时预览效果。<br/>
+                        运营模式：适合正式运营阶段。启用缓存提升网站访问速度，有利SEO收录。修改模板、采集或导入文档后，需执行【<a href="{:U('System/clear_cache')}">更新缓存</a>】才能在前台看到效果。
+                    </p>
                 </dd>
             </dl>
             {eq name="upgrade" value="true"}
             <dl class="row">
                 <dt class="tit">
-                    <label for="site_url">升级提醒</label>
+                    <label for="site_url">系统更新提醒</label>
                 </dt>
                 <dd class="opt">
-                    <label class="curpoin" title="第一时间收到系统更新并弹窗提醒"><input type="radio" name="web_show_popup_upgrade" value="1" {if condition='!isset($config.web_show_popup_upgrade) || $config.web_show_popup_upgrade eq 1'}checked="checked"{/if}>开启提示</label>
+                    <label class="curpoin" title="第一时间收到系统更新并弹窗提醒"><input type="radio" name="web_show_popup_upgrade" value="1" {if condition='!isset($config.web_show_popup_upgrade) || $config.web_show_popup_upgrade eq 1'}checked="checked"{/if}>弹窗提醒</label>
                     &nbsp;
-                    <label class="curpoin" title="仅收到系统更新提醒，静默不弹窗"><input type="radio" name="web_show_popup_upgrade" value="-1" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq -1'}checked="checked"{/if}>静默模式</label>
+                    <label class="curpoin" title="仅收到系统更新提醒，静默不弹窗"><input type="radio" name="web_show_popup_upgrade" value="-1" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq -1'}checked="checked"{/if}>仅后台提醒</label>
                     &nbsp;
                     {if condition="$php_servicemeal > 0"}
-                        <label class="curpoin" title="不再收到系统更新提醒"><input type="radio" name="web_show_popup_upgrade" value="2" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq 2'}checked="checked"{/if}>完全关闭</label>
+                        <label class="curpoin" title="不再收到系统更新提醒"><input type="radio" name="web_show_popup_upgrade" value="2" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq 2'}checked="checked"{/if}>关闭提醒</label>
                     {else /}
-                        <label class="curpoin" title="不再收到系统更新提醒" onclick="showErrorAlert('仅限于授权域名使用', 4);"><input type="radio" name="web_show_popup_upgrade" value="2" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq 2'}checked="checked"{/if} disabled="disabled">完全关闭</label>
+                        <label class="curpoin" title="不再收到系统更新提醒" onclick="showErrorAlert('仅限于授权域名使用', 4);"><input type="radio" name="web_show_popup_upgrade" value="2" {if condition='isset($config.web_show_popup_upgrade) && $config.web_show_popup_upgrade eq 2'}checked="checked"{/if} disabled="disabled">关闭提醒</label>
                     {/if}
                     &nbsp;
-                    <p class="notic">1.开启提示：第一时间收到系统更新并弹窗提醒<br>2.静默模式：仅收到系统更新提醒，静默不弹窗<br>3.完全关闭：不再收到系统更新提醒</p>
+                    <p class="notic">建议选择"弹窗提醒"，以便及时了解系统更新和安全补丁。</p>
                 </dd>
             </dl>
             {/eq}
             <dl class="row">
                 <dt class="tit">
-                    <label for="web_mobile_domain_open">手机站域名</label>
+                    <label for="web_mobile_domain_open">手机站独立域名</label>
                 </dt>
                 <dd class="opt">
                     <label class="curpoin"><input type="radio" name="web_mobile_domain_open" value="1" {if condition='isset($config.web_mobile_domain_open) && $config.web_mobile_domain_open eq 1'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="web_mobile_domain_open" value="0" {if condition='empty($config.web_mobile_domain_open)'}checked="checked"{/if}>关闭</label>
-                    <p class="notic"></p>
+                    <p class="notic">开启后，可为手机站配置独立的子域名（如：m.example.com），提升移动端访问体验。</p>
                 </dd>
             </dl>
             <dl class="row {if condition='empty($config.web_mobile_domain_open)'}none{/if}" id="dl_web_mobile_domain">
                 <dt class="tit">
-                    <label for="web_mobile_domain"></label>
+                    <label for="web_mobile_domain">子域名前缀</label>
                 </dt>
                 <dd class="opt">
                     {eq name="$is_localhost" value="1"}
-                    <p class="red">本地url路径不支持指定手机站二级域名</p>
+                    <p class="red">本地环境不支持配置手机站独立域名，请在正式服务器上配置。</p>
                     {else /}
-                    <input id="web_mobile_domain" name="web_mobile_domain" value="{$config.web_mobile_domain|default=''}" type="text" placeholder="手机域名" onKeyUp="this.value=this.value.replace(/[^0-9a-z]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-z]/g,''));" style="width: 60px;" />.{$Request.rootDomain}__ROOT_DIR__
+                    <input id="web_mobile_domain" name="web_mobile_domain" value="{$config.web_mobile_domain|default=''}" type="text" placeholder="如：m" onKeyUp="this.value=this.value.replace(/[^0-9a-z]/g,'');" onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^0-9a-z]/g,''));" style="width: 60px;" />.{$Request.rootDomain}__ROOT_DIR__
                     <p class="notic">为了更好的体验效果，IP访问不会自动跳转到手机站域名访问。</p>
                     <p class="{empty name='$config.web_mobile_domain'}none{/empty} red" id="p_web_mobile_domain">先做好子域名 <span id="span_web_mobile_domain">{$config.web_mobile_domain|default=''}</span>.{$Request.rootDomain} 的解析及绑定 ，已处理请忽略！ <a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=8432&origin_eycms=1','域名解析与绑定')">【操作示例】</a></p>
                     {/eq}
@@ -63,36 +66,36 @@
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="site_url">URL启用https</label>
+                    <label for="site_url">强制HTTPS访问</label>
                 </dt>
                 <dd class="opt">
                     <label class="curpoin"><input type="radio" name="web_is_https" value="1" {if condition='isset($config.web_is_https) && $config.web_is_https eq 1'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="web_is_https" value="0" {if condition='empty($config.web_is_https)'}checked="checked"{/if}>关闭</label>
-                    <p class="notic">开启之后，sitemap.xml地图以及全站URL将带有https头协议</p>
-                    <p class="notic2">开启前，请先在空间正确配置SSL证书。<br/>在能正常访问https://域名的情况下，才开启这个功能，使整站的URL都强制采用https协议访问。</p>
+                    <p class="notic">开启后，sitemap.xml地图以及全站URL将强制使用HTTPS协议访问。</p>                    
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="switch">回收站</label>
+                    <label for="switch">回收站功能</label>
                 </dt>
                 <dd class="opt">
                     <label class="curpoin"><input type="radio" name="web_recycle_switch" value="0" {if condition='empty($config.web_recycle_switch)'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="web_recycle_switch" value="1" {if condition='!empty($config.web_recycle_switch)'}checked="checked"{/if}>关闭</label>
+                    <p class="notic">开启后，删除的文档、栏目等内容将进入回收站，可以恢复。关闭后，删除的内容将直接永久删除，无法恢复。</p>
                     <input type="hidden" name="recycle_is_clear" id="recycle_is_clear" value="1">
                 </dd>
             </dl>
             <dl class="row">
                 <dt class="tit">
-                    <label for="other_pcwapjs">pc跳转手机端js</label>
+                    <label for="other_pcwapjs">PC端自动跳转手机端</label>
                 </dt>
                 <dd class="opt">
-                    <label class="curpoin"><input type="radio" name="other_pcwapjs" value="0" {if condition='empty($other_pcwapjs)'}checked="checked"{/if}>追加</label>
+                    <label class="curpoin"><input type="radio" name="other_pcwapjs" value="0" {if condition='empty($other_pcwapjs)'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="other_pcwapjs" value="1" {if condition='!empty($other_pcwapjs)'}checked="checked"{/if}>关闭</label>
-                    <p class="notic">追加之后，生成静态模式下，自动在PC端模板头部head标签出现一段PC跳转手机端的JS代码，当在手机端访问PC端URL时，自动跳到相应的手机端URL。</p>
+                    <p class="notic">开启后，在静态页面模式下，系统会在PC端模板的head标签中自动添加跳转代码。当用户使用手机访问PC端URL时，将自动跳转到对应的手机端页面。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -103,7 +106,7 @@
                     <label class="curpoin"><input type="radio" name="web_stypeid_open" value="1" {if condition='isset($config.web_stypeid_open) && $config.web_stypeid_open eq 1'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="web_stypeid_open" value="0" {if condition='empty($config.web_stypeid_open)'}checked="checked"{/if}>关闭</label>
-                    <p class="notic">开启之后，将在发布/编辑文档的页面出现选择副栏目，该功能会过多消耗性能，请悉知。</p>
+                    <p class="notic">开启后，在发布/编辑文档的页面会出现选择副栏目，实现文档的多栏目分类。<br/>注意：此功能会增加系统负载，建议在文档量较大时谨慎开启。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -114,7 +117,7 @@
                     <label class="curpoin"><input type="radio" name="absolute_path_open" value="1" {if condition='isset($config.absolute_path_open) && $config.absolute_path_open eq 1'}checked="checked"{/if}>开启</label>
                     &nbsp;
                     <label class="curpoin"><input type="radio" name="absolute_path_open" value="0" {if condition='empty($config.absolute_path_open)'}checked="checked"{/if}>关闭</label>
-                    <p class="notic">开启此项后附件、图片、栏目链接、文档链接等启用绝对网址</p>
+                    <p class="notic">开启后，系统中的附件、图片、栏目链接、文档链接等将使用完整的绝对网址（包含域名）。<br/>适用于：内容需要被其他网站引用、RSS订阅、邮件发送等场景。<br/>关闭时使用相对路径，适合单域名网站。</p>
                 </dd>
             </dl>
             <!-- 
@@ -137,8 +140,8 @@
                     <label for="web_cmspath">系统安装目录</label>
                 </dt>
                 <dd class="opt">
-                    <input id="web_cmspath" name="web_cmspath" value="{$config.web_cmspath|default=''}" class="input-txt" type="text" />
-                    <p class="notic">目录后面不要带 / 反斜杆，一般适用于EyouCms安装在子目录</p>
+                    <input id="web_cmspath" name="web_cmspath" value="{$config.web_cmspath|default=''}" class="input-txt" type="text" placeholder="如：cms" style="width: 60px;" />
+                    <p class="notic">如果EyouCms安装在网站子目录中，请在此填写子目录名称（不含域名，不含前后斜杠）。例如：如果访问地址是 http://www.example.com/cms/，则填写 cms。如果安装在根目录，请留空。</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -154,12 +157,12 @@
                             {/notin}
                         {/volist}
                     </select>
-                    &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9976&origin_eycms=1','如何防止网站模板文件被仿盗？')" style="font-size: 12px;padding-left: 38px;position:absolute;top: 18px;">查看教程？</a>
-                    <p class="notic">如果是静态URL模式，每次切换请重新生成所有静态页面！</p>
+                    &nbsp;<a href="JavaScript:void(0);" onclick="click_to_eyou_1575506523('https://www.eyoucms.com/plus/view.php?aid=9976&origin_eycms=1','如何防止网站模板文件被仿盗？')" style="font-size: 12px;padding-left: 38px;position:absolute;top: 18px;">如何防止模板被仿盗？</a>
+                    <p class="notic">如果当前使用的是静态URL模式，切换模板风格后请重新生成所有静态页面，否则前台可能显示异常。</p>
                 </dd>
             </dl>
             <div class="bot">
-                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onClick="adsubmit();">确认提交</a>
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onClick="adsubmit();">保存设置</a>
             </div>
         </div>
     </form>
@@ -223,11 +226,11 @@
 
         $('input[name="web_is_https"]').click(function(){
             if (1 == $(this).val()) {
-                layer.confirm('确认空间已配置SSL证书，否则网站无法访问？', {
+                layer.confirm('1. 已在服务器正确配置SSL证书<br/>2. 能够正常访问 https://您的域名<br/>满足以上条件后，再开启此功能，系统将强制所有链接使用HTTPS协议。', {
                     shade: layer_shade,
-                    area: ['480px', '190px'],
+                    area: ['500px', '220px'],
                     move: false,
-                    title: '提示',
+                    title: '开启前请确认',
                     btnAlign:'r',
                     closeBtn: 3,
                     btn: ['确定', '取消'] ,//按钮

@@ -13,6 +13,8 @@
 
 namespace think\template\taglib\eyou;
 
+use think\Db;
+
 /**
  * 在内容页模板追加显示浏览量
  */
@@ -42,6 +44,8 @@ class TagArcclick extends Base
                 $type = 'view';
             } else {
                 $type = 'lists';
+                $click = (int) Db::name('archives')->where(['aid'=>$aid])->value('click');
+                return $click;
             }
         }
         /*end*/

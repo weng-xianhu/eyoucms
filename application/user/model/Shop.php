@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -715,7 +715,7 @@ class Shop extends Model
         }
         $Service['service_type_old'] = $Service['service_type'];
         $Service['service_type'] = Config::get('global.order_service_type')[$Service['service_type']];
-        $Service['admin_delivery'] = !empty($Service['admin_delivery']) ? unserialize($Service['admin_delivery']) : ['name'=>'', 'code'=>''];
+        $Service['admin_delivery'] = !empty($Service['admin_delivery']) ? safe_unserialize($Service['admin_delivery']) : ['name'=>'', 'code'=>''];
         $Service['product_total'] = floatval(sprintf("%.2f", $Service['refund_price'] * (string)$Service['product_num']));
         /*计算退还余额*/
         $field_new = 'b.details_id, b.product_price, b.data, b.num, a.shipping_fee, a.order_total_num';
@@ -739,7 +739,7 @@ class Shop extends Model
         $Service['refund_total_price'] = floatval((string)$Service['product_total'] - (string)$ShippingFee);
         // 规格
         $product_spec_list = [];
-        $spec_data = unserialize($Order['data']);
+        $spec_data = safe_unserialize($Order['data']);
         if (!empty($spec_data['spec_value'])) {
             $spec_value_arr = explode('<br/>', htmlspecialchars_decode($spec_data['spec_value']));
             foreach ($spec_value_arr as $sp_key => $sp_val) {
@@ -754,6 +754,10 @@ class Shop extends Model
         }
         $Service['product_spec_list'] = $product_spec_list;
         /* END */
+
+        $Service['mobile'] = !empty($Service['mobile']) ? trim($Service['mobile']) : '';
+        $Service['address'] = !empty($Service['address']) ? trim($Service['address']) : '';
+        $Service['consignee'] = !empty($Service['consignee']) ? trim($Service['consignee']) : '';
         return $Service;
     }
 
@@ -811,14 +815,14 @@ class Shop extends Model
         // 获取订单商品规格列表(购买时的商品规格)
         $Details['product_spec_list'] = model('ShopPublicHandle')->getOrderGoodsSpecList($Details);
         // 商品其他处理
-        $Details['data'] = unserialize($Details['data']);
+        $Details['data'] = safe_unserialize($Details['data']);
         $Details['spec_value'] = htmlspecialchars_decode(htmlspecialchars_decode($Details['data']['spec_value']));
         $Details['spec_value_id'] = $Details['data']['spec_value_id'];
         $Details['value_id'] = $Details['data']['value_id'];
         unset($Details['data']);
 
         // 查询订单主表数据并处理
-        $field = 'order_code, merchant_id, consignee, province, city, district, address, mobile, allow_service';
+        $field = 'order_code, order_status, merchant_id, consignee, province, city, district, address, mobile, allow_service';
         $Order = Db::name('shop_order')->field($field)->where('order_id', $Details['order_id'])->find();
         // 判断订单是否允许申请售后
         if (isset($Order['allow_service']) && 1 === intval($Order['allow_service'])) {

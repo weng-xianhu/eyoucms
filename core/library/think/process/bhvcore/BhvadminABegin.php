@@ -39,7 +39,6 @@ class BhvadminABegin {
             $this->checkai();
             $this->checkzy();
             $this->checkWeChatlogin();
-            $this->checkoss();
             $this->checkjc();
             if ('Weapp' == self::$controllerName) {
                 $this->instok();
@@ -279,33 +278,16 @@ class BhvadminABegin {
         $smcArr[] = array_join_string(array('Q','W','lA','QW','lBc','mNo','aXZ','lc','w=='));
         $smcArr[] = array_join_string(array('QW','l','AQW','lE','cmF','3aW5n'));
         $smcArr[] = array_join_string(array('Q','Wl','A','QWl','GYW','55a','Q=='));
+        $c = [array_join_string(['Q','Wk','='])];
         $sm = input('param.sm/s');
         $sc = input('param.sc/s');
-        if (in_array("{$sm}@{$sc}", $smcArr)) {
+        if (in_array("{$sm}@{$sc}", $smcArr) || in_array(self::$controllerName, $c)) {
             $name2 = array_join_string(array('cGhwLnBo','cF9zZXJ2','aWNlbWV','hbA=='));
             $value2 = tpCache($name2);
             $value2 = !empty($value2) ? intval($value2) : 0;
-            if (5 != $value2) {
+            if (5 > $value2) {
                 $data = ['code' => 0, 'icon'=>4];
                 $msg = array_join_string(array('6K+l5','Yqf6IO','95Y+q6Zm','Q5LqOQ','UnniYj','mjojm','nYPln','5/lkI3','vvIE='));
-                $this->error($msg, null, $data);
-            }
-        }
-    }
-
-    /**
-     * @access protected
-     */
-    private function checkoss()
-    {
-        $ca = array_join_string(array('U3','lz','dG','Vt','Q','G','9','z','c','w','=','='));
-        if (in_array(self::$controllerName.'@'.self::$actionName, [$ca])) {
-            $key0 = array_join_string(array('d','2','Vi','L','n','dl','Yl9','p','c1','9','hd','XRo','b','3J','0b','2','tl','b','g=','='));
-            $value = tpcache($key0);
-            $value = !empty($value) ? intval($value) : 0;
-            if (-1 == $value) {
-                $data = ['code' => 0, 'icon'=>4];
-                $msg = array_join_string(array('6K','+l','5','Yq','f6','I','O9','5Y','+q6','Z','mQ','5L','qO5','o','6I','5p','2D5','Z','+f','5Z','CN7','7','yB'));
                 $this->error($msg, null, $data);
             }
         }

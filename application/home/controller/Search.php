@@ -55,8 +55,11 @@ class Search extends Base
             if (!file_exists($viewfilepath)) {
                 $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
                 $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+                $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
                 if (file_exists($viewfilepath2) && !empty($this->eyou['global']['site_template'])) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3) && !empty($this->eyou['global']['site_template'])) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath) && !empty($this->eyou['global']['site_template'])) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 } else {
@@ -95,23 +98,30 @@ class Search extends Base
         $nowTime = getTime();
 
         /*记录搜索词*/
-        if (!isset($param['keywords'])) {
-            die('标签调用错误：缺少属性 name="keywords"，请查看标签教程修正 <a href="https://www.eyoucms.com/plus/view.php?aid=521" target="_blank">前往查看</a>');
+        if (!array_key_exists('keywords', $param)) {
+            abort(404);
+            // die('标签调用错误：缺少属性 name="keywords"，请查看标签教程修正 <a href="https://www.eyoucms.com/plus/view.php?aid=521" target="_blank">前往查看</a>');
         }
         $word = $this->request->param('keywords');
+        $word = is_string($word) ? trim($word) : '';
         if(empty($word)){
             $this->error(foreign_lang('system15', $this->home_lang));
+        } else if (hasEmoji($word)) {
+            if ('utf8' == config('database.charset')) {
+                $this->error('关键词不支持表情符号等特殊字符');
+            }
         }
+
         $page = $this->request->param('page');
         if(!empty($word) && 2 > $page)
         {
-            $word_decode = htmlspecialchars_decode($word);
+            $word_decode = strtolower(htmlspecialchars_decode($word));
 
             $searchConf = tpCache('search');
-            if (!isset($searchConf['search_tabu_words'])) {
-                $searchConf['search_tabu_words'] = ['<','>','"',';',',','@','&','#','\\','*'];
+            if (empty($searchConf) || !in_array('search_tabu_words', array_keys($searchConf))) {
+                $searchConf['search_tabu_words'] = ['<','>','"',';',',','@','&','#','\\','*','eval','call_user_func_array','file_put_contents','phpinfo','shell_exec'];
             } else {
-                $searchConf['search_tabu_words'] = explode(PHP_EOL, $searchConf['search_tabu_words']);
+                $searchConf['search_tabu_words'] = explode(PHP_EOL, strtolower($searchConf['search_tabu_words']));
             }
             /*前台禁止搜索开始*/
             if (!empty($searchConf['search_tabu_words'])) {
@@ -215,25 +225,40 @@ class Search extends Base
                 /*搜索频率限制 end*/
 
                 /*记录搜索词*/
-                $row = $this->searchword_db->field('id')->where(['word'=>$word, 'lang'=>$this->home_lang])->find();
-                if(empty($row))
-                {
-                    $this->searchword_db->insert([
-                        'word'      => $word,
-                        'sort_order'    => 100,
-                        'users_id' => $users_id,
-                        'ip' => clientIP(),
-                        'lang'      => $this->home_lang,
-                        'add_time'  => $nowTime,
-                        'update_time'  => $nowTime,
-                    ]);
-                }else{
-                    $this->searchword_db->where(['id'=>$row['id']])->update([
-                        'searchNum'         =>  Db::raw('searchNum+1'),
-                        'users_id' => $users_id,
-                        'ip' => clientIP(),
-                        'update_time'       => $nowTime,
-                    ]);
+                if (!isset($searchConf['hot_search_open']) || $searchConf['hot_search_open'] != 0) try {
+                    $row = $this->searchword_db->field('id')->where(['word'=>$word, 'lang'=>$this->home_lang])->find();
+                    if(empty($row))
+                    {
+                        $this->searchword_db->insert([
+                            'word'      => $word,
+                            'sort_order'    => 100,
+                            'users_id' => $users_id,
+                            'ip' => clientIP(),
+                            'lang'      => $this->home_lang,
+                            'add_time'  => $nowTime,
+                            'update_time'  => $nowTime,
+                        ]);
+                    }else{
+                        $this->searchword_db->where(['id'=>$row['id']])->update([
+                            'searchNum'         =>  Db::raw('searchNum+1'),
+                            'users_id' => $users_id,
+                            'ip' => clientIP(),
+                            'update_time'       => $nowTime,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    try {
+                        $Prefix = config('database.prefix');
+                        // 搜索词统计表
+                        $r = @Db::execute("DROP INDEX `word` ON `{$Prefix}search_word`");
+                        if ($r !== false) {
+                            $sql = "ALTER TABLE `{$Prefix}search_word` MODIFY COLUMN `word`  varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '关键词';";
+                            $r = @Db::execute($sql);
+                            if ($r !== false) {
+                                @Db::execute("CREATE INDEX `word` ON `{$Prefix}search_word`(`word`(250)) USING BTREE ;");
+                            }
+                        }
+                    } catch (\Exception $e) {}
                 }
             }
         }
@@ -241,6 +266,8 @@ class Search extends Base
 
         $result = $param;
         !isset($result['keywords']) && $result['keywords'] = '';
+        $result['pageurl'] = request()->url(true); // 获取当前页面URL
+        $result['pageurl_m'] = pc_to_mobile_url($result['pageurl']); // 获取当前页面对应的移动端URL
         $eyou = array(
             'field' => $result,
         );
@@ -261,9 +288,12 @@ class Search extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -36,17 +36,36 @@ class Security extends Base
 
     public function index()
     {
+        // 针对可能有风险的域名进行弹窗后，关闭欢迎页的弹窗提示
+        $pop_detecting_domain = input('param.pop_detecting_domain/d');
+        if (!empty($pop_detecting_domain)) {
+            tpSetting('pop', ['pop_detecting_domain' => $pop_detecting_domain], 'cn');
+        }
+
         // 重置扫描范围
         $setdata = [
             'ddos_scan_range_files' => 1,
             'ddos_scan_range_attachment' => 0,
             'ddos_scan_range_uploads' => 0,
-            'ddos_scan_is_finish' => 0,
-            'ddos_scan_allscantotal' => 0,
         ];
         tpSetting('ddos', $setdata, 'cn');
-        // 重置ddos_log表
-        $this->ddosLogic->ddos_log_reset();
+
+        /*$noreset = input('param.noreset/d', 0);
+        if (empty($noreset)) {
+            // 重置扫描范围
+            $setdata = [
+                'ddos_scan_range_files' => 1,
+                'ddos_scan_range_attachment' => 0,
+                'ddos_scan_range_uploads' => 0,
+                'ddos_scan_is_finish' => 0,
+                'ddos_scan_allscantotal' => 0,
+                'ddos_is_auto_scan' => 0,
+            ];
+            tpSetting('ddos', $setdata, 'cn');
+            // 重置ddos_log表
+            $this->ddosLogic->ddos_log_reset();
+        }*/
+
         $this->redirect(url('Security/ddos_kill', [], true, true));
         exit;
 
@@ -92,6 +111,21 @@ class Security extends Base
         }
         $this->assign('security_askanswer_list', $security_askanswer_list);
 
+        return $this->fetch();
+    }
+
+    /**
+     * 自动定期扫描教程
+     * @return [type] [description]
+     */
+    public function ddos_scan_doc()
+    {
+        $assign_data = [];
+        $admin_info = Db::name('admin')->where(['admin_id'=>$this->admin_id])->find();
+        $data = ['user_name'=>md5($admin_info['user_name'])];
+        $hash = mchStrCode(json_encode($data), 'ENCODE');
+        $assign_data['auto_scan_url'] = request()->domain(). $this->root_dir.'/index.php?m=api&c=Security&a=ddos_auto_scan&hash='.$hash;
+        $this->assign($assign_data);
         return $this->fetch();
     }
 
@@ -158,15 +192,9 @@ class Security extends Base
             /*-------------------后台安全配置 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', $param, $val['mark']);
-                }
-            } else {
-                tpCache('web', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $param, $val['mark']);
             }
             /*--end*/
 
@@ -178,7 +206,7 @@ class Security extends Base
                 $session_conf = [];
                 $session_file = APP_PATH.'admin/conf/session_conf.php';
                 if (file_exists($session_file)) {
-                    require_once($session_file);
+                    safe_require_once($session_file);
                     $session_conf_tmp = EY_SESSION_CONF;
                     if (!empty($session_conf_tmp)) {
                         $session_conf_tmp = json_decode($session_conf_tmp, true);
@@ -232,6 +260,7 @@ class Security extends Base
             fwrite($fp, $content);
             fclose($fp);
         }
+        \think\Cache::clear('config');
     }
 
     /**
@@ -243,9 +272,16 @@ class Security extends Base
         if (IS_POST) {
             $settingData = [];
             $post = input('post.');
+            $securityOld = tpSetting('security');
 
-            if (empty($post['security_ask_open'])) {
-                $securityOld = tpSetting('security');
+            $is_verify_ip = false;
+            // $security_answerverify_ip = !empty($securityOld['security_answerverify_ip']) ? $securityOld['security_answerverify_ip'] : '-1';
+            // $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$this->admin_id])->find();
+            // if ($admin_info['last_ip'] == $security_answerverify_ip) {
+            //     $is_verify_ip = true;
+            // }
+
+            if (!$is_verify_ip || empty($post['security_ask_open'])) { // 以前是关闭要原密保，现在开启或关闭都需要原密保
                 if (!empty($securityOld['security_ask'])) {
                     $answer = empty($post['security_answer_old']) ? '' : trim($post['security_answer_old']);
                     if (empty($answer)) {
@@ -266,15 +302,9 @@ class Security extends Base
             /*-------------------二次安全验证 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('security', $settingData, $val['mark']);
-                }
-            } else {
-                tpSetting('security', $settingData);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('security', $settingData, $val['mark']);
             }
             /*--end*/
 
@@ -373,10 +403,11 @@ class Security extends Base
         // 1、问答要已设置；2、目前是开启；3、当前要关闭；
         if (!empty($securityOld['security_ask_open']) && empty($post['security_ask_open']) && !empty($securityOld['security_ask'])) {
             $admin_info = Db::name('admin')->field('*')->where(['admin_id'=>$this->admin_id])->find();
-            // if (!empty($admin_info['parent_id']) || -1 != $admin_info['role_id']) {
-            //     $this->error('创始人才能关闭安全验证功能！');
-            // }
-            if ($admin_info['last_ip'] != $security_answerverify_ip) {
+            // 同时支持 Session 验证、数据库验证和 IP 验证
+            $session_key = 'security_verified_' . $this->admin_id;
+            $is_session_verified = session($session_key);
+            $is_db_verified = !empty($admin_info['security_verify_time']) && $admin_info['security_verify_time'] >= $admin_info['last_login'];
+            if ($admin_info['last_ip'] != $security_answerverify_ip && empty($is_session_verified) && !$is_db_verified) {
                 $this->error("<span style='display:none;'>__html__</span>出于安全考虑<br/>请勿非法越过密保答案验证", null, '', 3);
             }
         }
@@ -448,15 +479,9 @@ class Security extends Base
                 'security_askanswer_list' => json_encode($security_askanswer_list),
             ];
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('security', $data, $val['mark']);
-                }
-            } else {
-                tpSetting('security', $data);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('security', $data, $val['mark']);
             }
             /*--end*/
 
@@ -521,15 +546,9 @@ class Security extends Base
 
             if (!empty($data)) {
                 /*多语言*/
-                if (is_language()) {
-                    $langRow = \think\Db::name('language')->order('id asc')
-                        ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                        ->select();
-                    foreach ($langRow as $key => $val) {
-                        tpSetting('security', $data, $val['mark']);
-                    }
-                } else {
-                    tpSetting('security', $data);
+                $langRow = \think\Db::name('language')->order('id asc')->select();
+                foreach ($langRow as $key => $val) {
+                    tpSetting('security', $data, $val['mark']);
                 }
                 /*--end*/
             }
@@ -557,6 +576,20 @@ class Security extends Base
     public function ajax_answer_verify()
     {
         if (IS_POST) {
+            // 检查失败次数限制
+            $fail_key = 'security_fail_count_' . $this->admin_id;
+            $fail_count = session($fail_key) ? intval(session($fail_key)) : 0;
+            $max_fail_count = 5; // 最多允许失败5次
+            $lock_time = 1800; // 锁定时间30分钟
+
+            // 检查是否被锁定
+            $lock_key = 'security_locked_' . $this->admin_id;
+            $lock_until = session($lock_key);
+            if (!empty($lock_until) && time() < $lock_until) {
+                $remaining = ceil(($lock_until - time()) / 60);
+                $this->error("验证失败次数过多，账号已被锁定 {$remaining} 分钟");
+            }
+
             $answer = input('param.answer/s');
             $answer = trim($answer);
             if (empty($answer)) {
@@ -565,7 +598,18 @@ class Security extends Base
                 $security_answer = tpSetting('security.security_answer');
                 $encrypt_answer = func_encrypt($answer, true, pwd_encry_type('bcrypt'));
                 if ($security_answer != $encrypt_answer) {
-                    $this->error('密保答案不正确！');
+                    // 验证失败，增加失败次数
+                    $fail_count++;
+                    session($fail_key, $fail_count);
+
+                    // 如果失败次数达到上限，锁定账号
+                    if ($fail_count >= $max_fail_count) {
+                        session($lock_key, time() + $lock_time);
+                        $this->error('验证失败次数过多，账号已被锁定 30 分钟');
+                    }
+
+                    $remaining = $max_fail_count - $fail_count;
+                    $this->error("密保答案不正确！还剩 {$remaining} 次机会");
                 }
             }
             $this->submit_answer_verify();
@@ -579,23 +623,27 @@ class Security extends Base
      */
     private function submit_answer_verify()
     {
-        /*多语言*/
-        $ip = clientIP();
-        if (is_language()) {
-            $langRow = \think\Db::name('language')->order('id asc')
-                ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                ->select();
-            foreach ($langRow as $key => $val) {
-                tpSetting('security', ['security_answerverify_ip'=>$ip], $val['mark']);
-            }
-        } else {
-            tpSetting('security', ['security_answerverify_ip'=>$ip]);
-        }
-        /*--end*/
+        // Session 验证（作为快速缓存）
+        $session_key = 'security_verified_' . $this->admin_id;
+        session($session_key, time());
 
-        // 解决个别用户安装后，登录后台没记录最后登录IP地址，导致一直弹出验证答案
-        $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$this->admin_id])->find();
-        Db::name('admin')->where(['admin_id'=>$admin_info['admin_id']])->save(['last_ip'=>$ip, 'update_time'=>getTime()]);
+        // 清除失败次数记录
+        $fail_key = 'security_fail_count_' . $this->admin_id;
+        session($fail_key, null);
+
+        // 更新管理员IP和密保验证时间（持久化到数据库，兼容CDN环境）
+        $ip = clientIP();
+        Db::name('admin')->where(['admin_id'=>$this->admin_id])->update([
+            'last_ip' => $ip,
+            'security_verify_time' => getTime(),
+            'update_time' => getTime(),
+        ]);
+
+        // 同步更新 security_answerverify_ip
+        $langRow = \think\Db::name('language')->order('id asc')->select();
+        foreach ($langRow as $key => $val) {
+            tpSetting('security', ['security_answerverify_ip'=>$ip], $val['mark']);
+        }
     }
 
     /**
@@ -605,6 +653,21 @@ class Security extends Base
     public function ajax_isverify_answer()
     {
         if (IS_POST) {
+            // 优先检查 Session 验证
+            $session_key = 'security_verified_' . $this->admin_id;
+            $is_session_verified = session($session_key);
+            if (!empty($is_session_verified)) {
+                $this->success('已验证');
+            }
+            // Session 丢失时查数据库（兼容 CDN 环境）
+            if ($this->admin_id > 0) {
+                $admin_row = Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$this->admin_id])->find();
+                if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
+                    session($session_key, $admin_row['security_verify_time']);
+                    $this->success('已验证');
+                }
+            }
+            // 兼容 IP 验证
             $security = tpSetting('security');
             $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
             $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$this->admin_id])->find();
@@ -644,13 +707,9 @@ class Security extends Base
                 $arr[] = $security_ask;
             }
 
-            if (is_language()) {
-                $langRow = Db::name('language')->order('id asc')->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('security', ['security_askanswer_list'=>json_encode($arr)], $val['mark']);
-                }
-            } else { // 单语言
-                tpSetting('security', ['security_askanswer_list'=>json_encode($arr)]);
+            $langRow = Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('security', ['security_askanswer_list'=>json_encode($arr)], $val['mark']);
             }
             $value = implode(PHP_EOL, $arr);
 
@@ -673,15 +732,9 @@ class Security extends Base
             /*-------------------二次安全验证 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('security', $settingData, $val['mark']);
-                }
-            } else {
-                tpSetting('security', $settingData);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('security', $settingData, $val['mark']);
             }
             /*--end*/
 
@@ -782,7 +835,7 @@ CREATE TABLE IF NOT EXISTS `{$Prefix}ddos_log` (
   `file_total` int(10) DEFAULT '0' COMMENT '总文件数',
   `file_doubt_total` int(10) DEFAULT '0' COMMENT '可疑恶意文件数',
   `file_excess` int(5) DEFAULT '0' COMMENT '大于0表示多余，2表示官方目录的多余自行修复',
-  `file_grade` int(10) DEFAULT '0' COMMENT '文件级别，0=正常，100=异常文件，200=疑似木马，970=低危，980=中危，990=高危',
+  `file_grade` int(10) DEFAULT '0' COMMENT '文件级别，0=正常，100=异常文件，200=疑似mm，970=低危，980=中危，990=高危',
   `html` longtext,
   `admin_id` int(11) DEFAULT '0',
   `add_time` int(11) DEFAULT '0' COMMENT '新增时间',
@@ -790,7 +843,14 @@ CREATE TABLE IF NOT EXISTS `{$Prefix}ddos_log` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='ddos查杀进度记录表';
 EOF;
-        $r = @Db::execute($tableSql);
+        try{
+            $r = @Db::execute($tableSql);
+        }catch(\Exception $e){
+            if (stristr($e->getMessage(), 'Storage engine MyISAM is disabled')) {
+                $tableSql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $tableSql);
+                $r = @Db::execute($tableSql);
+            }
+        }
         if ($r !== false) {
             schemaTable('ddos_log');
         }
@@ -807,7 +867,14 @@ CREATE TABLE IF NOT EXISTS `{$Prefix}ddos_setting` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='ddos业务存储表';
 EOF;
-        $r = @Db::execute($tableSql);
+        try{
+            $r = @Db::execute($tableSql);
+        }catch(\Exception $e){
+            if (stristr($e->getMessage(), 'Storage engine MyISAM is disabled')) {
+                $tableSql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $tableSql);
+                $r = @Db::execute($tableSql);
+            }
+        }
         if ($r !== false) {
             schemaTable('ddos_setting');
         }
@@ -823,90 +890,29 @@ CREATE TABLE IF NOT EXISTS `{$Prefix}ddos_whitelist` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='ddos扫描白名单列表';
 EOF;
-        $r = @Db::execute($tableSql);
+        try{
+            $r = @Db::execute($tableSql);
+        }catch(\Exception $e){
+            if (stristr($e->getMessage(), 'Storage engine MyISAM is disabled')) {
+                $tableSql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $tableSql);
+                $r = @Db::execute($tableSql);
+            }
+        }
         if ($r !== false) {
             schemaTable('ddos_whitelist');
         }
 
         // 病毒特征库
-        $url = 'ht'.'tp'.':/'.'/'.'up'.'da'.'te'.'.e'.'yo'.'u.5'.'f'.'a.'.'c'.'n/other/ddos_feature_library.txt';
-        $response = @httpRequest2($url, 'GET', [], [], 3);
-        if (!strstr($response, '100001')) {
-            $context = stream_context_set_default(array('http' => array('timeout' => 3,'method'=>'GET')));
-            $response = @file_get_contents($url, false, $context);
-        }
-        if (strstr($response, '100001')) {
-            $path = DATA_PATH.'conf/ddos_feature_library.txt';
-            if (!file_exists($path) || is_writeable($path)) {
-                try {
-                    $fp = fopen($path, "w+");
-                    if (!empty($fp) && fwrite($fp, $response)) {
-                        fclose($fp);
-                    }
-                } catch (\Exception $e) {}
-            }
-            $this->ddosLogic->ddos_setting('sys.feature_library', $response);
-        } else {
-            $response = getVersion('ddos_feature_library', '');
-            if (empty($response)) {
-                $response = $this->ddosLogic->ddos_setting('sys.feature_library');
-            }
-        }
-
-        if (empty($response)) {
-            $this->error('文件 data/conf/ddos_feature_library.txt 没有读写权限', null, '', 20);
-        }
-        $response = preg_replace("#[\r\n]{1,}#", "\n", $response);
-        $feature_librarys = explode("\n", $response);
-        $feature_librarys = array_filter($feature_librarys);
-
-        $feature_pattern = [];
-        $feature_imgpattern = [];
-        $feature_msg = [];
-        $feature_msg_grade = [];
-        $feature_other = [];
-        foreach ($feature_librarys as $key => $val) {
-            if (!preg_match('/^#/i', $val)) {
-                if (preg_match('/^pattern\|/i', $val)) {
-                    $_k = preg_replace('/^pattern\|(\d+)\|(.*)$/i', '${1}', $val);
-                    $feature_pattern[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
-                }
-                else if (preg_match('/^imgpattern\|/i', $val)) {
-                    $_k = preg_replace('/^imgpattern\|(\d+)\|(.*)$/i', '${1}', $val);
-                    $feature_imgpattern[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
-                }
-                else if (preg_match('/^msg\|/i', $val)) {
-                    $_k = preg_replace('/^msg\|(\d+)\|(.*)$/i', '${1}', $val);
-                    $feature_msg[$_k]['value'] = preg_replace('/^(.*)\|value\|([^\|]+)\|(.*)$/i', '${2}', $val);
-                    $_k2 = preg_replace('/^(\d{3,3})(.*)$/i', '${1}', $_k);
-                    $feature_msg_grade[$_k2]['grade'] = $_k2;
-                    $feature_msg_grade[$_k2]['value'] = preg_replace('/^msg\|(\d+)\|([^\|]+)\|(.*)$/i', '${2}', $val);
-                    $opt = preg_replace('/^(.*)\|opt_([\w\-]*)\|(.*)$/i', '${2}', $val);
-                    $feature_msg[$_k]['opt']['event'] = $opt;
-                    $feature_msg[$_k]['opt']['value'] = preg_replace('/^(.*)\|opt_([\w\-]*)\|([^\|]+)\|(.*)$/i', '${3}', $val);
-                }
-                else if (preg_match('/^other\|/i', $val)) {
-                    $_k = preg_replace('/^other\|(\d+)\|(.*)$/i', '${1}', $val);
-                    $feature_other[$_k]['value'] = preg_replace('/^(.*)\|value\|(.*)$/i', '${2}', $val);
-                }
-            }
-        }
-        $setData = [
-            'ddos_feature_pattern' => base64_encode(json_encode($feature_pattern)),
-            'ddos_feature_imgpattern' => base64_encode(json_encode($feature_imgpattern)),
-            'ddos_feature_msg' => base64_encode(json_encode($feature_msg)),
-            'ddos_feature_msg_grade' => base64_encode(json_encode($feature_msg_grade)),
-            'ddos_feature_other' => base64_encode(json_encode($feature_other)),
-        ];
-        tpSetting('ddos', $setData, 'cn');
+        $this->ddosLogic->feature_init();
 
         $assign_data['ddosSetting'] = tpSetting('ddos', [], 'cn');
         $assign_data['root_path'] = ROOT_PATH;
         $assign_data['doubtdata'] = $this->ddosLogic->ddos_doubtdata();
         // 后台入口文件
         $assign_data['adminbasefile'] = $this->ddosLogic->getAdminbasefile(false);
-        // 图片木马检测的开关
         $assign_data['check_illegal_open'] = tpCache('weapp.weapp_check_illegal_open');
+        // 用来判断是否第一次使用
+        $assign_data['source_dirlist_total'] = $this->ddosLogic->ddos_setting('web.source_dirlist_total');
 
         $this->assign($assign_data);
 
@@ -933,7 +939,10 @@ EOF;
             // 清除session过期文件
             if (function_exists('clear_session_file')) clear_session_file();
             // 生成语言包文件
-            if (file_exists('application/common/model/ForeignPack.php')) model('ForeignPack')->updateLangFile();
+            if (file_exists('application/common/model/ForeignPack.php')) {
+                $foreignPack = new \app\common\model\ForeignPack;
+                $foreignPack->updateLangFile();
+            }
             // 第一个先执行的范围，重置一些数据
             $init_runtype = input('param.init_runtype/s');
             if ('files' == $init_runtype) {
@@ -956,7 +965,7 @@ EOF;
 
             // 递归读取文件夹
             $list[] = '/';
-            $this->ddosLogic->ddos_getDir($dir, '', $list, ['uploads','public/upload', 'upload']);
+            $this->ddosLogic->ddos_getDir($dir, '', $list, ['uploads', 'public/upload', 'upload', 'runtime/cache']);
             // 存储读取后的文件夹列表
             $this->ddosLogic->ddos_setting('web.source_dirlist', json_encode($list));
 
@@ -1025,14 +1034,17 @@ EOF;
             }
             if (!empty($data[1])) {
                 if ($data[1]['achievepage'] >= $data[1]['allpagetotal']) {
+                    @unlink(DATA_PATH.'conf/eyoufilelist.txt');
                     $setdata = [
                         'ddos_scan_is_finish' => 2, // 扫描完成
+                        'ddos_is_auto_scan' => 0,
                         'ddos_scan_allscantotal' => $data[1]['allscantotal'],
                     ];
                     tpSetting('ddos', $setdata, 'cn');
                 } else {
                     $setdata = [
                         'ddos_scan_is_finish' => 1, // 扫描中
+                        'ddos_is_auto_scan' => 0,
                     ];
                     tpSetting('ddos', $setdata, 'cn');
                 }
@@ -1066,12 +1078,36 @@ EOF;
         }
         $list = [];
         foreach ($result as $key => $val) {
-            if (1 == $val['file_excess'] || preg_match('/^install([\w\-]*)$/i', $val['file_name'])) {
+            if (/*1 == $val['file_excess'] || */preg_match('/^install([\w\-]*)$/i', $val['file_name'])) {
                 $list['del'][] = $val;
             } else if (0 == $val['file_excess']) {
-                $list['replace'][] = $val;
+                if ($val['file_grade'] != 990 || !preg_match('/\.js$/i', $val['file_name'])) {
+                    $list['replace'][] = $val;
+                }
             }
         }
+
+        // 先备份要处理的文件
+        $backupFileList = [];
+        if (!empty($list['del'])) {
+            $backupFileList = array_merge($backupFileList, $list['del']);
+        }
+        if (!empty($list['replace'])) {
+            $backupFileList = array_merge($backupFileList, $list['replace']);
+        }
+
+        $backupResult = null;
+        if (!empty($backupFileList)) {
+            $backupResult = $this->ddosLogic->createBackup($backupFileList);
+            if (!$backupResult['code']) {
+                // 备份失败，可以选择继续处理或停止
+                // 这里选择继续处理，但记录备份失败信息
+                $backupMsg = '一键修复失败，原因：' . $backupResult['msg'];
+                // 备份失败，停止处理
+                $this->error($backupMsg);
+            }
+        }
+
         $msg = '';
         $errnum = 0;
         $md5keys = [];
@@ -1104,11 +1140,20 @@ EOF;
 
         if (!empty($md5keys)) {
             $redata = $this->ddosLogic->ddos_update_doubt_total();
+            $responseData = ['file_doubt_total'=>$redata['file_doubt_total'], 'md5keys'=>$md5keys];
+            if (!empty($backupResult) && $backupResult['code']) {
+                $responseData['backup_file'] = $backupResult['backup_file'];
+                $responseData['backup_msg'] = $backupResult['msg'];
+            }
             if ($data['code'] !== false) {
-                $this->success('操作成功', null, ['file_doubt_total'=>$redata['file_doubt_total'], 'md5keys'=>$md5keys]);
+                $successMsg = '操作成功';
+                if (!empty($backupResult) && $backupResult['code']) {
+                    $successMsg .= '，' . $backupResult['msg'];
+                }
+                $this->success($successMsg, null, $responseData);
             } else {
                 if (!empty($errnum)) {
-                    $this->error('部分操作失败', null, ['file_doubt_total'=>$redata['file_doubt_total'], 'md5keys'=>$md5keys]);
+                    $this->error('部分操作失败', null, $responseData);
                 }
             }
         }
@@ -1319,6 +1364,122 @@ EOF;
         $this->error($msg);
     }
 
+    /**
+     * 备份列表
+     */
+    public function ddos_backup_list()
+    {
+        $backupList = $this->ddosLogic->getBackupList();
+        $this->assign('backupList', $backupList);
+        return $this->fetch();
+    }
+
+    /**
+     * 查看备份文件列表
+     */
+    public function ddos_backup_files()
+    {
+        $backupFileName = input('param.backup_file/s', '');
+        if (empty($backupFileName)) {
+            $this->error('备份文件名不能为空');
+        }
+
+        // 安全检查：只允许 .bak 文件
+        if (!preg_match('/\.bak$/i', $backupFileName)) {
+            $this->error('无效的备份文件名');
+        }
+
+        $result = $this->ddosLogic->getBackupInfo($backupFileName);
+        if (empty($result['code'])) {
+            $this->error($result['msg']);
+        }
+
+        $backupInfo = !empty($result['data']['backup_info']) ? $result['data']['backup_info'] : [];
+        $fileCount  = !empty($result['data']['file_count']) ? intval($result['data']['file_count']) : 0;
+
+        $this->assign('backupFileName', $backupFileName);
+        $this->assign('backupInfo', $backupInfo);
+        $this->assign('fileCount', $fileCount);
+
+        return $this->fetch('security/ddos_backup_files');
+    }
+
+    /**
+     * 删除备份
+     */
+    public function ddos_backup_delete()
+    {
+        $backupFileName = input('backup_file/s', '');
+        if (empty($backupFileName)) {
+            $this->error('备份文件名不能为空');
+        }
+
+        // 安全检查：只允许 .bak 文件
+        if (!preg_match('/\.bak$/i', $backupFileName)) {
+            $this->error('无效的备份文件名');
+        }
+
+        $result = $this->ddosLogic->deleteBackup($backupFileName);
+        if ($result['code']) {
+            $this->success($result['msg']);
+        } else {
+            $this->error($result['msg']);
+        }
+    }
+
+    /**
+     * 还原备份
+     */
+    public function ddos_backup_restore()
+    {
+        $backupFileName = input('backup_file/s', '');
+        if (empty($backupFileName)) {
+            $this->error('备份文件名不能为空');
+        }
+
+        // 安全检查：只允许 .bak 文件
+        if (!preg_match('/\.bak$/i', $backupFileName)) {
+            $this->error('无效的备份文件名');
+        }
+
+        $result = $this->ddosLogic->restoreBackup($backupFileName);
+        if ($result['code']) {
+            $this->success($result['msg'], null, ['restore_count' => $result['restore_count']]);
+        } else {
+            $this->error($result['msg']);
+        }
+    }
+
+    /**
+     * 还原备份中的单个文件或目录
+     */
+    public function ddos_backup_restore_item()
+    {
+        $backupFileName = input('post.backup_file/s', '');
+        $fileName       = input('post.file_name/s', '');
+
+        if (empty($backupFileName)) {
+            $this->error('备份文件名不能为空');
+        }
+        if (empty($fileName)) {
+            $this->error('还原目标不能为空');
+        }
+
+        // 安全检查：只允许 .bak 文件
+        if (!preg_match('/\.bak$/i', $backupFileName)) {
+            $this->error('无效的备份文件名');
+        }
+
+        $result = $this->ddosLogic->restoreBackupItem($backupFileName, $fileName);
+        if (!empty($result['code'])) {
+            $this->success($result['msg'], null, [
+                'restore_count' => !empty($result['restore_count']) ? intval($result['restore_count']) : 0,
+            ]);
+        } else {
+            $this->error($result['msg']);
+        }
+    }
+
     /*-----------------------ddos攻击脚本查杀 end-----------------------*/
 
     /**
@@ -1342,15 +1503,9 @@ EOF;
             /*-------------------后台安全配置 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', $param, $val['mark']);
-                }
-            } else {
-                tpCache('web', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $param, $val['mark']);
             }
             /*--end*/
 
@@ -1421,15 +1576,9 @@ EOF;
             /*-------------------后台安全配置 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', $param, $val['mark']);
-                }
-            } else {
-                tpCache('web', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $param, $val['mark']);
             }
             /*--end*/
 
@@ -1439,7 +1588,7 @@ EOF;
                 $session_conf = [];
                 $session_file = APP_PATH.'admin/conf/session_conf.php';
                 if (file_exists($session_file)) {
-                    require_once($session_file);
+                    safe_require_once($session_file);
                     $session_conf_tmp = EY_SESSION_CONF;
                     if (!empty($session_conf_tmp)) {
                         $session_conf_tmp = json_decode($session_conf_tmp, true);
@@ -1481,15 +1630,9 @@ EOF;
             /*-------------------后台安全配置 end-------------------*/
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpCache('web', $param, $val['mark']);
-                }
-            } else {
-                tpCache('web', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpCache('web', $param, $val['mark']);
             }
             /*--end*/
 
@@ -1555,6 +1698,9 @@ EOF;
             }
             $web_anti_words = implode(PHP_EOL, $web_anti_words);
             $param['web_anti_words'] = $web_anti_words;
+
+            // 默认模板引擎是否禁用PHP原生代码
+            $param['web_tpl_deny_php'] = intval($post['web_tpl_deny_php']);
             /*-------------------后台安全配置 end-------------------*/
 
             $langRow = \think\Db::name('language')->order('id asc')->select();
@@ -1612,15 +1758,9 @@ EOF;
             }
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('firewall', $param, $val['mark']);
-                }
-            } else {
-                tpSetting('firewall', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('firewall', $param, $val['mark']);
             }
             /*--end*/
 
@@ -1679,7 +1819,7 @@ EOF;
 
                     $smsTemp = Db::name('sms_template')->where(["send_scene"=>30,"sms_type"=>$sms_type,'lang'=>get_admin_lang()])->find();
                     if (empty($is_conf) || empty($smsTemp['sms_sign']) || empty($smsTemp['sms_tpl_code']) || empty($smsTemp['tpl_content'])){
-                        $this->error("未配置云短信接口或短信模板，请确认配置好再操作");
+                        $this->error("1、请先确认已配置短信接口及短信模板<br>2、并且测试能正常发送信息");
                     }
                     Db::name('sms_template')->where(["send_scene"=>$smsTemp['send_scene']])->update(['is_open'=>1]);
                 }
@@ -1693,22 +1833,16 @@ EOF;
                     $smtp_config = tpCache('smtp');
                     $smtpTemp = Db::name('smtp_tpl')->where(["send_scene"=>30,'lang'=>get_admin_lang()])->find();
                     if (empty($smtp_config['smtp_user']) || empty($smtp_config['smtp_from_eamil']) || empty($smtpTemp['tpl_title']) || empty($smtpTemp['tpl_content'])){
-                        $this->error("未配置邮箱接口，请确认配置好再操作");
+                        $this->error("1、请先确认已配置邮箱接口及邮箱模板<br>2、并且测试能正常发送邮件");
                     }
                     Db::name('smtp_tpl')->where(["send_scene"=>$smtpTemp['send_scene']])->update(['is_open'=>1]);
                 }
             }
 
             /*多语言*/
-            if (is_language()) {
-                $langRow = \think\Db::name('language')->order('id asc')
-                    ->cache(true, EYOUCMS_CACHE_TIME, 'language')
-                    ->select();
-                foreach ($langRow as $key => $val) {
-                    tpSetting('twofactor', $param, $val['mark']);
-                }
-            } else {
-                tpSetting('twofactor', $param);
+            $langRow = \think\Db::name('language')->order('id asc')->select();
+            foreach ($langRow as $key => $val) {
+                tpSetting('twofactor', $param, $val['mark']);
             }
             /*--end*/
 
@@ -1757,7 +1891,7 @@ EOF;
 
             $smsTemp = Db::name('sms_template')->where(["send_scene"=>30,"sms_type"=>$sms_type,'lang'=>get_admin_lang()])->find();
             if (empty($is_conf) || empty($smsTemp['sms_sign']) || empty($smsTemp['sms_tpl_code']) || empty($smsTemp['tpl_content'])){
-                $this->error("未配置云短信接口或短信模板，请确认配置好再操作", url('System/sms'));
+                $this->error("1、请先确认已配置短信接口及短信模板<br>2、并且测试能正常发送信息", url('System/sms'));
             } else {
                 Db::name('sms_template')->where(["send_scene"=>$smsTemp['send_scene']])->update(['is_open'=>1]);
                 $sms_test_mobile = $this->ddosLogic->get_first_test_mobile();
@@ -1781,7 +1915,7 @@ EOF;
                     if (!empty($res['msg']) && preg_match('/(MOBILE_NUMBER_ILLEGAL)/i', $res['msg'])) {
                         $this->error("短信配置里的管理员手机号无效", url('System/sms'));
                     } else {
-                        $this->error("未配置云短信接口或短信模板，请确认配置好再操作", url('System/sms'));
+                        $this->error("1、请先确认已配置短信接口及短信模板<br>2、并且测试能正常发送信息", url('System/sms'));
                     }
                 }
             }
@@ -1796,7 +1930,7 @@ EOF;
             $smtp_config = tpCache('smtp');
             $smtpTemp = Db::name('smtp_tpl')->where(["send_scene"=>30,'lang'=>get_admin_lang()])->find();
             if (empty($smtp_config['smtp_user']) || empty($smtp_config['smtp_from_eamil']) || empty($smtpTemp['tpl_title']) || empty($smtpTemp['tpl_content'])){
-                $this->error("未配置邮箱接口，请确认配置好再操作", url('System/smtp'));
+                $this->error("1、请先确认已配置邮箱接口及邮箱模板<br>2、并且测试能正常发送邮件", url('System/smtp'));
             } else {
                 Db::name('smtp_tpl')->where(["send_scene"=>$smtpTemp['send_scene']])->update(['is_open'=>1]);
                 $smtp_from_eamil = $this->ddosLogic->get_first_test_email();
@@ -1821,7 +1955,7 @@ EOF;
                     if (!empty($res['msg']) && preg_match('/(non-existent(\s+)account)/i', $res['msg'])) {
                         $this->error("邮箱配置里的管理员邮箱无效", url('System/smtp'));
                     } else {
-                        $this->error("未配置邮箱接口，请确认配置好再操作", url('System/smtp'));
+                        $this->error("1、请先确认已配置邮箱接口及邮箱模板<br>2、并且测试能正常发送邮件", url('System/smtp'));
                     }
                 }
             }
@@ -1870,7 +2004,6 @@ EOF;
         return $this->fetch();
     }
 
-    // 图片木马的开关设置
     public function illegal_check_open()
     {
         $msg = "";
@@ -1881,13 +2014,9 @@ EOF;
             $msg = "关闭成功";
         }
         /*多语言*/
-        if (is_language()) {
-            $langRow = \think\Db::name('language')->order('id asc')->select();
-            foreach ($langRow as $key => $val) {
-                tpCache('weapp', ['weapp_check_illegal_open' => $value], $val['mark']);
-            }
-        } else { // 单语言
-            tpCache('weapp', ['weapp_check_illegal_open' => $value]);
+        $langRow = \think\Db::name('language')->order('id asc')->select();
+        foreach ($langRow as $key => $val) {
+            tpCache('weapp', ['weapp_check_illegal_open' => $value], $val['mark']);
         }
         /*--end*/
         $this->success($msg);

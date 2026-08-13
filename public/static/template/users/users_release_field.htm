@@ -66,7 +66,7 @@
             {/case}
 
             {case value="checkbox"}
-                <!-- 复选框 start -->
+                <!-- 复选框[旧] start -->
                 <div class="row">
                     <div class="col-xs-2">
                         <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -87,11 +87,36 @@
                         $("input[name='{$vo.fieldArr}[{$vo.name}_eyempty]']").val(len);
                     }
                 </script>
+                <!-- 复选框[旧] end -->
+            {/case}
+
+            {case value="checkboxs"}
+                <!-- 复选框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if} onclick="func_{$vo.name}_eyempty();">{$v2['name']}</label>&nbsp;
+                        {/volist}
+                        <input type="hidden" name="{$vo.fieldArr}[{$vo.name}_eyempty]" value="{if condition="!empty($vo['trueValue'])"}1{else /}0{/if}">
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function func_{$vo.name}_eyempty()
+                    {
+                        var len = $("input[name='{$vo.fieldArr}[{$vo.name}][]']:checked").length;
+                        $("input[name='{$vo.fieldArr}[{$vo.name}_eyempty]']").val(len);
+                    }
+                </script>
                 <!-- 复选框 end -->
             {/case}
 
             {case value="radio"}
-                <!-- 单选项 start -->
+                <!-- 单选项[旧] start -->
                 <div class="row">
                     <div class="col-xs-2">
                         <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -99,6 +124,23 @@
                     <div class="col-xs-9">
                         {volist name="$vo.dfvalue" id="v2"}
                         <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2}</label>&nbsp;
+                        {/volist}
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 单选项[旧] end -->
+            {/case}
+
+            {case value="radios"}
+                <!-- 单选项 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        {volist name="$vo.dfvalue" id="v2"}
+                        <label><input type="radio" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/if}>{$v2['name']}</label>&nbsp;
                         {/volist}
                         <span class="err"></span>
                         <p class="notic">{$vo.remark|default=''}</p>
@@ -145,7 +187,7 @@
             {/case}
 
             {case value="select"}
-                <!-- 下拉框 start -->
+                <!-- 下拉框[旧] start -->
                 <div class="row">
                     <div class="col-xs-2">
                         <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
@@ -154,6 +196,25 @@
                         <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
                             {volist name="$vo.dfvalue" id="v2"}
                             <option value="{$v2}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2}</option>
+                            {/volist}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <!-- 下拉框[旧] end -->
+            {/case}
+
+            {case value="selects"}
+                <!-- 下拉框 start -->
+                <div class="row">
+                    <div class="col-xs-2">
+                        <label for="title">{if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<em>*</em>{/if}{$vo.title|default=''}</label>
+                    </div>
+                    <div class="col-xs-9">
+                        <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}">
+                            {volist name="$vo.dfvalue" id="v2"}
+                            <option value="{$v2['id']}" {if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/if}>{$v2['name']}</option>
                             {/volist}
                         </select>
                         <span class="err"></span>

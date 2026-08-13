@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -53,7 +53,13 @@ class FilemanagerLogic extends Model
         // 允许新增/编辑扩展名文件
         $this->editExt = array('htm','js','css','txt');
         // 过滤php危险函数
-        $this->disableFuns = ['phpinfo'];
+        $this->disableFuns = [
+            'php'.'info', 'sys'.'tem', 'pass'.'thru', 'shel'.'l_ex'.'ec', 'pop'.'en',
+            'proc_op'.'en', 'pcnt'.'l_ex'.'ec', 'call_us'.'er_func', 'call_u'.'ser_func'.'_array',
+            'cre'.'ate_func'.'tion', 'fil'.'e_put_conte'.'nts', 'file_ge'.'t_conte'.'nts',
+            'fwr'.'ite', 'fpu'.'ts', 'fop'.'en', 'cu'.'rl_e'.'xec', 'ob_st'.'art',
+            'd'.'l', 'ini_'.'set', 'put'.'env', 'move_uplo'.'aded_file',
+        ];
     }
 
     /**
@@ -73,11 +79,15 @@ class FilemanagerLogic extends Model
         } else {
             $admin_id = session('?admin_id') ? (int)session('admin_id') : 0;
             $admin_info = Db::name('admin')->field('admin_id,last_ip')->where(['admin_id'=>$admin_id])->find();
-            // 当前管理员二次安全验证过的IP地址
-            $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
-            // 同IP不验证
-            if (empty($admin_info) || $admin_info['last_ip'] != $security_answerverify_ip) {
-                return '出于安全考虑，请勿非法越过密保答案验证';
+            // 优先检查 Session 验证
+            $session_key = 'security_verified_' . $admin_id;
+            $is_session_verified = session($session_key);
+            if (empty($is_session_verified)) {
+                // 兼容 IP 验证
+                $security_answerverify_ip = !empty($security['security_answerverify_ip']) ? $security['security_answerverify_ip'] : '-1';
+                if (empty($admin_info) || $admin_info['last_ip'] != $security_answerverify_ip) {
+                    return '出于安全考虑，请勿非法越过密保答案验证';
+                }
             }  
         }
 
@@ -110,6 +120,27 @@ class FilemanagerLogic extends Model
             $content = htmlspecialchars_decode($content, ENT_QUOTES);
             if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
                 return "模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。";
+            }
+            if (preg_match_all('#\{\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\(#i', $content, $funcMatches)) {
+                $dangerFuns = array_merge($this->disableFuns, array(
+                    'ev'.'al', 'ass'.'ert', 'ex'.'ec', 'preg_'.'replace',
+                    'array_'.'map', 'array_'.'filter', 'array_'.'walk',
+                    'us'.'ort', 'ua'.'sort', 'uk'.'sort',
+                    'header', 'unl'.'ink', 'rm'.'dir', 'mk'.'dir',
+                    'ren'.'ame', 'ch'.'mod', 'ch'.'own',
+                    'inc'.'lude', 'req'.'uire', 'inclu'.'de_once', 'requ'.'ire_once',
+                ));
+                foreach ($funcMatches[1] as $_funcName) {
+                    $_funcNameLower = strtolower(trim($_funcName));
+                    foreach ($dangerFuns as $_danger) {
+                        if ($_funcNameLower === strtolower($_danger)) {
+                            return "模板里不允许使用{:function()}调用危险函数【{$_funcName}】，为了安全考虑，请通过FTP工具进行编辑上传。";
+                        }
+                    }
+                }
+            }
+            if (preg_match('#\{\s*~\s*[a-zA-Z_\$]#i', $content)) {
+                return "模板里不允许使用{~code}语法，为了安全考虑，请通过FTP工具进行编辑上传。";
             }
             foreach ($this->disableFuns as $key => $val) {
                 $val_new = msubstr($val, 0, 1).'-'.msubstr($val, 1);

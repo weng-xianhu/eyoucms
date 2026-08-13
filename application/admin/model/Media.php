@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -50,7 +50,14 @@ class Media extends Model
             // 视频章节分组插件
             if (is_dir('./weapp/Videogroup/')) {
                 $Prefix = config('database.prefix');
-                $isTable = Db::query("SHOW TABLES LIKE '{$Prefix}weapp_videogroup'");
+                $dbType = config('database.type');
+                if ($dbType == 'dm') { // 达梦优化
+                    $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_videogroup'");
+                } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                    $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_videogroup'");
+                } else {
+                    $isTable = Db::query("SHOW TABLES LIKE '{$Prefix}weapp_videogroup'");
+                }
                 if (!empty($isTable)) {
                     Db::name('weapp_videogroup')->where(['hash'=>$post['hash_1670831712']])->update(['aid'=>$aid,'update_time'=>getTime()]);
                 }
@@ -70,7 +77,7 @@ class Media extends Model
                     $post['addonFieldExt']['total_video'] -= 1;
                     continue;
                 }
-                $post['addonFieldExt']['total_duration'] += $v['file_time'];
+                $post['addonFieldExt']['total_duration'] += intval($v['file_time']);
                 $file_size = !empty($v['file_size']) ? $v['file_size'] : 0;
                 $is_remote = 0;
                 $file_ext  = explode('.', $v['file_url']);

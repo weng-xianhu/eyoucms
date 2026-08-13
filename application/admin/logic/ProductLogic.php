@@ -262,11 +262,11 @@ EOF;
         // 属性类型被更改了 就先删除以前的属性类型 或者没有属性 则删除        
         if($typeid == 0)  
         {
-            $productAttr->where('aid = '.$aid)->delete(); 
+            $productAttr->where(['aid' => $aid])->delete();
             return;
         }
     
-        $productAttrList = $productAttr->where('aid = '.$aid)->select();
+        $productAttrList = $productAttr->where(['aid' => $aid])->select();
         
         $old_product_attr = array(); // 数据库中的的属性  以 attr_id _ 和值的 组合为键名
         foreach($productAttrList as $k => $v)
@@ -312,7 +312,7 @@ EOF;
         // 没有被 unset($old_product_attr[$tmp_key]); 掉是 说明 数据库中存在 表单中没有提交过来则要删除操作
         foreach($old_product_attr as $k => $v)
         {                
-            $productAttr->where('product_attr_id = '.$v['product_attr_id'])->delete(); // 
+            $productAttr->where(['product_attr_id' => $v['product_attr_id']])->delete(); // 
         }                       
     }
 
@@ -329,11 +329,11 @@ EOF;
         $ShopProductAttr = Db::name('ShopProductAttr');
         // 属性类型被更改了 就先删除以前的属性类型 或者没有属性 则删除
         if($typeid == 0) {
-            $ShopProductAttr->where('aid = '.$aid)->delete(); 
+            $ShopProductAttr->where(['aid' => $aid])->delete(); 
             return false;
         }
 
-        $productAttrList = $ShopProductAttr->where('aid = '.$aid)->select();
+        $productAttrList = $ShopProductAttr->where(['aid' => $aid])->select();
         $old_product_attr = array(); // 数据库中的的属性  以 attr_id _ 和值的 组合为键名
         foreach($productAttrList as $k => $v) {
             $old_product_attr[$v['attr_id'].'_'.$v['attr_value'].'_'.$v['sort_order']] = $v;
@@ -371,7 +371,7 @@ EOF;
 
         // 没有被 unset($old_product_attr[$tmp_key]); 掉是 说明 数据库中存在 表单中没有提交过来则要删除操作
         foreach($old_product_attr as $k => $v) {                
-            $ShopProductAttr->where('product_attr_id = '.$v['product_attr_id'])->delete();
+            $ShopProductAttr->where(['product_attr_id' => $v['product_attr_id']])->delete();
         }                       
     }
 }

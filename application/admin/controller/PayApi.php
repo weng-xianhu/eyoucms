@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -26,6 +26,28 @@ class PayApi extends Base {
         parent::__construct();
         $this->language_access(); // 多语言功能操作权限
         $this->pay_api_config_db = Db::name('pay_api_config');
+    }
+
+    /**
+     * 安全验证支付插件标识，防止动态类实例化RCE攻击
+     */
+    private function validatePayMark($pay_mark)
+    {
+        if (empty($pay_mark)) {
+            return false;
+        }
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $pay_mark)) {
+            return false;
+        }
+        $weapp_path = './weapp/' . $pay_mark . '/';
+        if (!is_dir($weapp_path)) {
+            return false;
+        }
+        $controller_file = $weapp_path . 'controller/' . $pay_mark . '.php';
+        if (!file_exists($controller_file)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -62,6 +84,9 @@ class PayApi extends Base {
             $TemplateHtml = $this->AliPayPayTemplate($Config);
         } else if (!empty($Config) && !empty($Config['pay_mark']) && 0 == $Config['system_built']) {
             // 第三方插件
+            if (!$this->validatePayMark($Config['pay_mark'])) {
+                $this->error('支付插件配置异常');
+            }
             $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
             $UnifyController = new $ControllerName;
             $TemplateHtml = $UnifyController->UnifyAction($Config);
@@ -90,6 +115,9 @@ class PayApi extends Base {
                 $this->AliPayPayConfig($post);
             } else if (!empty($Config) && !empty($Config['pay_mark']) && 0 == $Config['system_built']) {
                 // 第三方插件
+                if (!$this->validatePayMark($Config['pay_mark'])) {
+                    $this->error('支付插件配置异常');
+                }
                 $ControllerName  = "\weapp\\" . $Config['pay_mark']."\controller\\" . $Config['pay_mark'];
                 $UnifyController = new $ControllerName;
                 $UnifyController->UnifySaveConfigAction($post);
@@ -100,8 +128,8 @@ class PayApi extends Base {
     /* 微信逻辑 */
     public function WeChatPayTemplate($Config = [])
     {
-        $pay_info = !empty($Config['pay_info']) ? unserialize($Config['pay_info']) : [];
-        $Config['pay_terminal'] = !empty($Config['pay_terminal']) ? unserialize($Config['pay_terminal']) : [];
+        $pay_info = !empty($Config['pay_info']) ? safe_unserialize($Config['pay_info']) : [];
+        $Config['pay_terminal'] = !empty($Config['pay_terminal']) ? safe_unserialize($Config['pay_terminal']) : [];
         $this->assign('Config', $Config);
         $this->assign('pay_info', $pay_info);
         return $this->fetch('wechat_template');
@@ -146,8 +174,8 @@ class PayApi extends Base {
     /* 支付宝逻辑 */
     public function AliPayPayTemplate($Config = [])
     {
-        $pay_info = !empty($Config['pay_info']) ? unserialize($Config['pay_info']) : [];
-        $Config['pay_terminal'] = !empty($Config['pay_terminal']) ? unserialize($Config['pay_terminal']) : [];
+        $pay_info = !empty($Config['pay_info']) ? safe_unserialize($Config['pay_info']) : [];
+        $Config['pay_terminal'] = !empty($Config['pay_terminal']) ? safe_unserialize($Config['pay_terminal']) : [];
         $this->assign('Config', $Config);
         $this->assign('pay_info', $pay_info);
         // PHP5.5.0或更高版本，可使用新版支付方式，兼容旧版支付方式
@@ -250,13 +278,12 @@ class PayApi extends Base {
         // 文件后缀名
         $fileName = $file->getInfo('name');
         $file_ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        /*验证图片一句话木马*/
+
         if (in_array($file_ext, explode('|', $image_type))) {
             if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
-                $result = '疑似木马图片！';
+                $result = base64_decode(config('global.mm_tips'));
             }
         }
-        /*--end*/
 
         if (true !== $result || empty($file)) {
             echo json_encode(['msg' => $result]);

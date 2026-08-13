@@ -116,6 +116,76 @@
                 {/empty}
             {/case}
 
+            {case value="cascade"}
+                <!-- 联动选择 start -->
+                <div class="item-from-row">
+                    <div class="from-row-l">
+                        {if condition="isset($vo['ifrequire']) AND !empty($vo['ifrequire'])"}<span class="red">*</span>{/if}{$vo.title|default=''}：
+                    </div>
+                    <div class="from-row-r">
+                        <select class="el-input_select_inner" name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="cascade_level1_{$vo.id}" onchange="getCascadeLevel2_{$vo.id}(this.value);">
+                            <option value="-1">请选择</option>
+                            {volist name="$vo.cascade_level1" id="cl1"}
+                            <option value="{$cl1['id']}" {if condition="isset($vo['trueValue'][0]) AND $vo['trueValue'][0] == $cl1['id']"}selected{/if}>{$cl1['name']}</option>
+                            {/volist}
+                        </select>
+                        <select class="el-input_select_inner" name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="cascade_level2_{$vo.id}" onchange="getCascadeLevel3_{$vo.id}(this.value);">
+                            <option value="-1">请选择</option>
+                            {volist name="$vo.cascade_level2" id="cl2"}
+                            <option value="{$cl2['id']}" {if condition="isset($vo['trueValue'][1]) AND $vo['trueValue'][1] == $cl2['id']"}selected{/if}>{$cl2['name']}</option>
+                            {/volist}
+                        </select>
+                        <select class="el-input_select_inner" name="{$vo.fieldArr}[{$vo.name|default=''}][]" id="cascade_level3_{$vo.id}">
+                            <option value="-1">请选择</option>
+                            {volist name="$vo.cascade_level3" id="cl3"}
+                            <option value="{$cl3['id']}" {if condition="isset($vo['trueValue'][2]) AND $vo['trueValue'][2] == $cl3['id']"}selected{/if}>{$cl3['name']}</option>
+                            {/volist}
+                        </select>
+                        <span class="err"></span>
+                        <p class="notic">{$vo.remark|default=''}</p>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function getCascadeLevel2_{$vo.id}(parent_id) {
+                        var $level2 = $('#cascade_level2_{$vo.id}');
+                        var $level3 = $('#cascade_level3_{$vo.id}');
+                        $level2.empty().html('<option value="-1">请选择</option>');
+                        $level3.empty().html('<option value="-1">请选择</option>');
+                        if (!parent_id || parent_id == '-1') return;
+                        $.ajax({
+                            url: "{:url('home/Ajax/ajax_get_cascade_data')}",
+                            data: {parent_id: parent_id, field_id: {$vo.id}, _ajax: 1},
+                            type: 'post',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code == 1) {
+                                    var opts = '<option value="-1">请选择</option>' + res.html;
+                                    $level2.empty().html(opts);
+                                }
+                            }
+                        });
+                    }
+                    function getCascadeLevel3_{$vo.id}(parent_id) {
+                        var $level3 = $('#cascade_level3_{$vo.id}');
+                        $level3.empty().html('<option value="-1">请选择</option>');
+                        if (!parent_id || parent_id == '-1') return;
+                        $.ajax({
+                            url: "{:url('home/Ajax/ajax_get_cascade_data')}",
+                            data: {parent_id: parent_id, field_id: {$vo.id}, _ajax: 1},
+                            type: 'post',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code == 1) {
+                                    var opts = '<option value="-1">请选择</option>' + res.html;
+                                    $level3.empty().html(opts);
+                                }
+                            }
+                        });
+                    }
+                </script>
+                <!-- 联动选择 end -->
+            {/case}
+
             {case value="text"}
                 <!-- 单行文本框 start -->
                 <div class="item-from-row">

@@ -40,7 +40,7 @@
         {/eq}
         {eq name="'Member@log_off_index'|is_check_access" value="1"}
         <li>
-            <a {if condition="in_array($Request.action, ['log_off_index'])"}class="active"{/if} href='{:url("Member/log_off_index")}'>会员注销</a>
+            <a {if condition="in_array($Request.action, ['log_off_index','log_off_set'])"}class="active"{/if} href='{:url("Member/log_off_index")}'>会员注销</a>
         </li>
         {/eq}
     </ul>

@@ -151,25 +151,6 @@ if (!function_exists('set_typeseotitle'))
     }
 }
 
-if (!function_exists('getArcLevelName')) 
-{
-    /**
-     * 获取文档会员权限对应的名称
-     */
-    function getArcLevelName($arc_level_id = 0)
-    {
-        $level_name = '';
-        static $users_level_list = null;
-        if (null === $users_level_list) {
-            $users_level_list = model('UsersLevel')->getList('level_id, level_name', [], 'level_id');
-        }
-        if (!empty($users_level_list[$arc_level_id])) {
-            $level_name = $users_level_list[$arc_level_id]['level_name'];
-        }
-        return $level_name;
-    }
-}
-
 if (!function_exists('get_list_only_pageurl')) 
 {
     /**
@@ -214,6 +195,9 @@ if (!function_exists('get_list_only_pageurl'))
                         $pageurl = preg_replace('/\/lists_(\d+)_(\d+)\.html$/i', '', $pageurl);
                         $pageurl .= $rulelist;
                     } else {
+                        if (!preg_match('/\.html$/i', $pageurl)) {
+                            $pageurl = rtrim($pageurl, '/') . '.html';
+                        }
                         $pageurl = preg_replace('/\/lists_(\d+)_(\d+)\.html$/i', '.html', $pageurl);
                         $pageurl = preg_replace('/\.html$/i', "/lists_{$typeid}_{$page}.html", $pageurl);
                     }

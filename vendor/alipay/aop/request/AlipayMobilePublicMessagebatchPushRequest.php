@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.mobile.public.messagebatch.push request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 20:29:38
+ * @since 1.0, 2025-08-13 18:57:41
  */
 class AlipayMobilePublicMessagebatchPushRequest
 {

@@ -118,6 +118,7 @@ class Hook
 
         $method = Loader::parseName($tag, 1, false);
 
+        $result = '';
         if ($class instanceof \Closure) {
             $result = call_user_func_array($class, [ & $params, $extra]);
             $class  = 'Closure';

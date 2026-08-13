@@ -90,9 +90,18 @@ class WxPayDataBase
 			throw new WxPayException("xml数据异常！");
 		}
         //将XML转为array
-        //禁止引用外部xml实体
-        @libxml_disable_entity_loader(true);
-        $this->values = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        //禁止引用外部xml实体（兼容 PHP 5.4 - 8.2）
+        if (version_compare(PHP_VERSION, '8.0.0', '<')) {
+            if (function_exists('libxml_disable_entity_loader')) {
+                @libxml_disable_entity_loader(true);
+            }
+        }
+        // 使用 LIBXML_NONET 禁止网络访问，LIBXML_NOCDATA 处理 CDATA
+        $options = LIBXML_NOCDATA;
+        if (defined('LIBXML_NONET')) {
+            $options |= LIBXML_NONET;
+        }
+        $this->values = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', $options)), true);
 		return $this->values;
 	}
 	

@@ -82,7 +82,7 @@
 
                             <td style="width: 100%">
                                 <div class="text-l10">
-                                    <a href="javascript:void(0);" data-href="{:url('UsersNotice/admin_notice_edit',array('content_id'=>$vo['content_id']))}" onclick="OpenNotice('{$vo.content_id}', '{$vo.is_read}', this);">{eq name="$vo.is_read" value="0"}<span style="color: red;" id="content_id_{$vo.content_id}" class="notread1620347507">[未读]</span>{/eq} {$vo.content_title}</a>
+                                    <a id="a_content_id_{$vo.content_id}" href="javascript:void(0);" data-href="{:url('UsersNotice/admin_notice_edit',array('content_id'=>$vo['content_id']))}" onclick="OpenNotice('{$vo.content_id}', '{$vo.is_read}', this);">{eq name="$vo.is_read" value="0"}<span style="color: red;" id="content_id_{$vo.content_id}" class="notread1620347507">[未读]</span>{/eq} {$vo.content_title}</a>
                                 </div>
                             </td>
 
@@ -148,6 +148,12 @@
         $('.fa-refresh').click(function(){
             location.href = location.href;
         });
+
+        var open_id = {$open_id|default=0};
+        if (0 < open_id) {
+            var obj = document.getElementById('a_content_id_'+open_id);
+            OpenNotice(open_id, 1, obj);
+        }
     });
 
     function OpenNotice(ContentID, IsRead, obj) {

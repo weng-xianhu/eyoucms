@@ -225,257 +225,25 @@
                  </div>
                  <div class="on-off_list" id="wendangxiagnguan_child" style="display: block;">
                      <ul class="flex-dir-row  flex-wrap">
-                         {eq name="'Arctype@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_1001" {if condition="in_array('1001',$admin_menu_id_arr) || in_array('1001',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont f-20 e-lanmuguanli col-848484" ></i>
+                        {volist name="$menuGroupList[1]" id="vo"}
+                            {if condition="1 == $vo['opt_access']"}
+                                 <li class="more_li" id="li_{$vo['menu_id']}" {if condition="in_array($vo['menu_id'], $admin_menu_id_arr) || in_array($vo['menu_id'], $not_role_menu_id_arr)"}style="display:none"{/if}>
+                                     <div class="flex-dir-row flex-a-center">
+                                         <div class="icon_bg icon_bg_no">
+                                             <i class="f-20 col-848484 {$vo['litpic']}" ></i>
+                                         </div>
+                                         <div class="ml-8">
+                                             <a href="javascript:void(0);" data-href="{$vo['href']}"  onclick="gourl2(this,1);">{$vo['title']}</a>
+                                         </div>
                                      </div>
-                                     <div class="ml-8">
-                                         <a href="javascript:void(0);" data-href="{:url('Arctype/index')}"  onclick="gourl2(this,1);">栏目管理</a>
+                                    {notempty name="$is_founder"}
+                                     <div class="icon-link_add">
+                                         <div title="加入导航显示" data-menu_id="{$vo['menu_id']}" class="iconfont e-jiahao2"></div>
                                      </div>
-                                 </div>
-                                {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="1001" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                {/notempty}
-                             </li>
-                         {/eq}
-
-                         {eq name="'Archives@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_1002" {if condition="in_array('1002',$admin_menu_id_arr) || in_array('1002',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont  e-neirongwendang f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8">
-                                         <a href="javascript:void(0);" data-href="{:url('Archives/index')}"  onclick="gourl2(this,1);">内容管理</a>
-                                     </div>
-                                 </div>
-                                {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="1002" class="iconfont e-jiahao2 "></div>
-                                 </div>
-                                {/notempty}
-                            </li>
-                         {/eq}
-
-                         {eq name="'Archives@index_draft'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_1004" {if condition="in_array('1004',$admin_menu_id_arr) || in_array('1004',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont  e-tougao f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8">
-                                         <a href="javascript:void(0);" data-href="{:url('Archives/index_draft')}"  onclick="gourl2(this,1);">待审文档</a>
-                                     </div>
-                                 </div>
-                                {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="1004"  class="iconfont e-jiahao2 "></div>
-                                 </div>
-                                {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         <!-- {eq name="'Archives@index_reback'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_1006" {if condition="in_array('1006',$admin_menu_id_arr) || in_array('1006',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont  e-tougao f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8">
-                                         <a href="javascript:void(0);" data-href="{:url('Archives/index_reback')}"  onclick="gourl2(this,1);">退回文档</a>
-                                     </div>
-                                 </div>
-                                {notempty name="$is_founder"}
-                                    <div class="icon-link_add">
-                                         <div title="加入导航显示" data-menu_id="1006"  class="iconfont e-jiahao2 "></div>
-                                    </div>
-                                {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq} -->
-
-                         {eq name="'AdPosition@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_1003" {if condition="in_array('1003',$admin_menu_id_arr) || in_array('1003',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-guanggao f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('AdPosition/index')}"  onclick="gourl2(this,1);">广告管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="1003" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                         {/eq}
-
-                         {eq name="'Tags@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_2004011" {if condition="in_array('2004011',$admin_menu_id_arr) || in_array('2004011',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-TAGguanli f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Tags/index')}"  onclick="gourl2(this,1);">TAG管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004011" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                         {/eq}
-
-                         {eq name="'Search@conf'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004022" {if condition="in_array('2004022',$admin_menu_id_arr) || in_array('2004022',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-soguanjianci f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Search/conf')}"  onclick="gourl2(this,1);">搜索管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004022" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Field@arctype_index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004004" {if condition="in_array('2004004',$admin_menu_id_arr) || in_array('2004004',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-lanmuziduan f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Field/arctype_index')}"  onclick="gourl2(this,1);">栏目字段</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004004" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Channeltype@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004007" {if condition="in_array('2004007',$admin_menu_id_arr) || in_array('2004007',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-pindaomoxing f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Channeltype/index')}"  onclick="gourl2(this,1);">频道模型</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004007" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'ArchivesFlag@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004008" {if condition="in_array('2004008',$admin_menu_id_arr) || in_array('2004008',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont  e-wendangshuxing f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8">
-                                         <a href="javascript:void(0);" data-href="{:url('ArchivesFlag/index')}"  onclick="gourl2(this,1);">文档属性</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004008" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'System@water'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004009" {if condition="in_array('2004009',$admin_menu_id_arr) || in_array('2004009',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="f-20 iconfont  e-shuiyinpeizhi col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('System/water')}" onclick="gourl2(this,1);">图片水印</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004009" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'System@thumb'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004010" {if condition="in_array('2004010',$admin_menu_id_arr) || in_array('2004010',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-suolvetupeizhi f-20  col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('System/thumb')}" onclick="gourl2(this,1);">缩略图设置</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004010" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Navigation@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004013"  {if condition="in_array('2004013',$admin_menu_id_arr) || in_array('2004013',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-daohangguanli f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Navigation/index')}"  onclick="gourl2(this,1);">导航管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004013" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
+                                    {/notempty}
+                                 </li>
+                            {/if}
+                        {/volist}
                      </ul>
                  </div>
              </div>
@@ -486,321 +254,25 @@
                  </div>
                  <div class="on-off_list" id="gaojixuanxiang_child" style="display: block;">
                      <ul class="flex-dir-row  flex-wrap">
-                         {eq name="'Security@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004017" {if condition="in_array('2004017',$admin_menu_id_arr) || in_array('2004017',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-anquan f-20 col-f3398cc" ></i>
+                        {volist name="$menuGroupList[2]" id="vo"}
+                            {if condition="1 == $vo['opt_access']"}
+                                 <li class="more_li" id="li_{$vo['menu_id']}" {if condition="in_array($vo['menu_id'], $admin_menu_id_arr) || in_array($vo['menu_id'], $not_role_menu_id_arr) || empty($vo['show_status'])"}style="display:none"{/if}>
+                                     <div class="flex-dir-row flex-a-center">
+                                         <div class="icon_bg icon_bg_no">
+                                             <i class="f-20 col-848484 {$vo['litpic']}" ></i>
+                                         </div>
+                                         <div class="ml-8">
+                                             <a href="javascript:void(0);" data-href="{$vo['href']}" data-menu_id="{$vo['menu_id']}" onclick="gourl2(this,1);">{$vo['title']}</a>
+                                         </div>
                                      </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Security/index')}"  onclick="gourl2(this,1);">安全中心</a>
+                                    {notempty name="$is_founder"}
+                                     <div class="icon-link_add">
+                                         <div title="加入导航显示" data-menu_id="{$vo['menu_id']}" class="iconfont e-jiahao2"></div>
                                      </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004017" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-                         {eq name="'System@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_2001"  {if condition="in_array('2001',$admin_menu_id_arr) || in_array('2001',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-shezhi f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('System/web')}"  onclick="gourl2(this,1);">基本信息</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2001" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                         {/eq}
-
-                         {eq name="'Admin@admin_pwd'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004001" {if condition="in_array('2004001',$admin_menu_id_arr) || in_array('2004001',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-guanliyuan  f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Admin/index')}"  onclick="gourl2(this,1);">管理员</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004001" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'RecycleBin@arctype_index'|is_check_access" value="1"}
-                             {neq name="$global['web_recycle_switch']" value='1'}
-                             <li class="more_li" id="li_2004006" {if condition="in_array('2004006',$admin_menu_id_arr) || in_array('2004006',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-huishouzhan f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('RecycleBin/archives_index')}"  onclick="gourl2(this,1);">回收站</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004006" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/neq}
-                         {/eq}
-
-                         {eq name="'Tools@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004002" {if condition="in_array('2004002',$admin_menu_id_arr) || in_array('2004002',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-beifenhuanyuan f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Tools/index')}"  onclick="gourl2(this,1);">备份还原</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004002" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Vertify@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004015" {if condition="in_array('2004015',$admin_menu_id_arr) || in_array('2004015',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-yanzhengmaguanli f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Vertify/index')}"  onclick="gourl2(this,1);">验证码管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004015" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Filemanager@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004003" {if condition="in_array('2004003',$admin_menu_id_arr) || in_array('2004003',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-mobanguanli f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Filemanager/index')}" data-menu_id="2004003" onclick="gourl2(this,1);">模板管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004003" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Member@users_index'|is_check_access" value="1"}
-                            {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2006" {if condition="in_array('2006',$admin_menu_id_arr) || in_array('2006',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-gerenzhongxin f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Member/users_index')}"  onclick="gourl2(this,1);">会员中心</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2006" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Citysite@index'|is_check_access" value="1"}
-                             {if condition="$main_lang == $admin_lang"}
-                             <li class="more_li" id="li_2004019" {if condition="in_array('2004019',$admin_menu_id_arr) || in_array('2004019',$not_role_menu_id_arr) || empty($global.web_citysite_open)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-chengshifenzhan f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Citysite/index')}"  onclick="gourl2(this,1);">城市分站</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004019" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/if}
-                         {/eq}
-
-                         {eq name="'Weapp@index'|is_check_access" value="1"}
-                            {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2005" {if condition="in_array('2005',$admin_menu_id_arr) || in_array('2005',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-chajian f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Weapp/index')}"  onclick="gourl2(this,1);">插件应用</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2005" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                            {/eq}
-                         {/eq}
-            
-                         {eq name="'Order@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004021" {if condition="in_array('2004021',$admin_menu_id_arr) || in_array('2004021',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-dingdanguanli f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Order/index')}"  onclick="gourl2(this,1);">订单管理</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004021" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Uiset@ui_index'|is_check_access" value="1"}
-                             {notempty name="$is_show_uiset"}
-                             <li class="more_li" id="li_2002" {if condition="in_array('2002',$admin_menu_id_arr) || in_array('2002',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-keshihuabianji f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Uiset/ui_index')}"  onclick="gourl2(this,1);">可视编辑</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2002" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/notempty}
-                        {/eq}
-
-                        {if condition="in_array('memgift', $useFunc) && $php_servicemeal > 1 && !empty($usersConfig['memgift_open']) && $main_lang == $admin_lang"}
-                            {eq name="'Memgift@gift_exchange_list'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2004023" {if condition="in_array('2004023',$admin_menu_id_arr) || in_array('2004023',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-lipinduihuan col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Memgift/gift_exchange_list')}"  onclick="gourl2(this,1);">积分兑换</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2004023" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                            {/eq}
-                        {/if}
-
-                        {eq name="'Form@index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2004018" {if condition="in_array('2004018',$admin_menu_id_arr) || in_array('2004018',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-biaodanguanli col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Form/index')}"  onclick="gourl2(this,1);">留言管理</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2004018" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                             </li>
-                        {/eq}
-
-                        {eq name="'Index@theme_index'|is_check_access" value="1"}
-                            {eq name='$main_lang' value='$admin_lang'}
-                            <li class="more_li" id="li_2004025" {if condition="in_array('2004025',$admin_menu_id_arr) || in_array('2004025',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-zhutifengge col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Index/theme_index')}"  onclick="gourl2(this,1);">主题风格</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2004025" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                             </li>
-                             {/eq}
-                        {/eq}
-
-                        {eq name="'Foreign@index'|is_check_access" value="1"}
-                            {if condition="($php_servicemeal >= 1 || $foreign_authorize == 1) && $main_lang == $admin_lang"}
-                            <li class="more_li" id="li_2004026" {if condition="in_array('2004026',$admin_menu_id_arr) || in_array('2004026',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-waimaoshezhi col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Foreign/index')}"  onclick="gourl2(this,1);">外贸助手</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2004026" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
+                                    {/notempty}
+                                 </li>
                             {/if}
-                        {/eq}
+                        {/volist}
                      </ul>
                  </div>
              </div>
@@ -812,133 +284,25 @@
                 </div>
                 <div class="on-off_list" id="shangchengmokuai_child" style="display: block;">
                     <ul class="flex-dir-row  flex-wrap">
-                        {eq name="'Shop@index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008" {if condition="in_array('2008',$admin_menu_id_arr) || in_array('2008',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                            <div class="flex-dir-row flex-a-center">
-                                <div class="icon_bg icon_bg_no">
-                                    <i class="iconfont f-20 e-shangcheng col-848484" ></i>
-                                </div>
-                                <div class="ml-8 white-space">
-                                    <a href="javascript:void(0);" data-href="{:url('Shop/home',['conceal'=>'1'])}"  onclick="gourl2(this,1);">商城中心</a>
-                                </div>
-                            </div>
-                            {notempty name="$is_founder"}
-                            <div class="icon-link_add">
-                                <div title="加入导航显示" data-menu_id="2008" class="iconfont e-jiahao2"></div>
-                            </div>
-                            {/notempty}
-                            </li>
-                        {/eq}
-
-                        {eq name="'Statistics@index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008001" {if condition="in_array('2008001',$admin_menu_id_arr) || in_array('2008001',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-shujutongji col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Statistics/index',['conceal'=>'1'])}"  onclick="gourl2(this,1);">数据统计</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008001" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                        {/eq}
-
-                        {eq name="'ShopProduct@index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008002" {if condition="in_array('2008002',$admin_menu_id_arr) || in_array('2008002',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-shangpinguanli col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('ShopProduct/index',['conceal'=>'1'])}"  onclick="gourl2(this,1);">商品管理</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008002" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                        {/eq}
-
-                        {eq name="'ShopProduct@attrlist_index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008003" {if condition="in_array('2008003',$admin_menu_id_arr) || in_array('2008003',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-shangpincanshu col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('ShopProduct/attrlist_index',['conceal'=>'1'])}"  onclick="gourl2(this,1);">商品参数</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008003" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                        {/eq}
-
-                        {eq name="'Shop@home'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008008" {if condition="in_array('2008008',$admin_menu_id_arr) || in_array('2008008',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-shangpinguige col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Shop/spec_index')}"  onclick="gourl2(this,1);">商品规格</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008008" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                        {/eq}
-
-                        {eq name="'Shop@conf'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008004" {if condition="in_array('2008004',$admin_menu_id_arr) || in_array('2008004',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-shangchengpeizhi col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Shop/conf',['conceal'=>'1'])}"  onclick="gourl2(this,1);">商城配置</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008004" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                        {/eq}
-
-                        {if condition="true || !empty($marketFunc)"}
-                            {eq name="'Shop@market_index'|is_check_access" value="1"}
-                            <li class="more_li" id="li_2008005" {if condition="in_array('2008005',$admin_menu_id_arr) || in_array('2008005',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                <div class="flex-dir-row flex-a-center">
-                                    <div class="icon_bg icon_bg_no">
-                                        <i class="iconfont f-20 e-yingxiaogongneng col-848484" ></i>
-                                    </div>
-                                    <div class="ml-8 white-space">
-                                        <a href="javascript:void(0);" data-href="{:url('Shop/market_index',['conceal'=>'1'])}"  onclick="gourl2(this,1);">营销功能</a>
-                                    </div>
-                                </div>
-                                {notempty name="$is_founder"}
-                                <div class="icon-link_add">
-                                    <div title="加入导航显示" data-menu_id="2008005" class="iconfont e-jiahao2"></div>
-                                </div>
-                                {/notempty}
-                            </li>
-                            {/eq}
-                        {/if}
+                        {volist name="$menuGroupList[3]" id="vo"}
+                            {if condition="1 == $vo['opt_access']"}
+                                 <li class="more_li" id="li_{$vo['menu_id']}" {if condition="in_array($vo['menu_id'], $admin_menu_id_arr) || in_array($vo['menu_id'], $not_role_menu_id_arr) || empty($vo['show_status'])"}style="display:none"{/if}>
+                                     <div class="flex-dir-row flex-a-center">
+                                         <div class="icon_bg icon_bg_no">
+                                             <i class="f-20 col-848484 {$vo['litpic']}" ></i>
+                                         </div>
+                                         <div class="ml-8">
+                                             <a href="javascript:void(0);" data-href="{$vo['href']}"  onclick="gourl2(this,1);">{$vo['title']}</a>
+                                         </div>
+                                     </div>
+                                    {notempty name="$is_founder"}
+                                     <div class="icon-link_add">
+                                         <div title="加入导航显示" data-menu_id="{$vo['menu_id']}" class="iconfont e-jiahao2"></div>
+                                     </div>
+                                    {/notempty}
+                                 </li>
+                            {/if}
+                        {/volist}
                     </ul>
                 </div>
             </div>
@@ -950,85 +314,25 @@
                  </div>
                  <div class="on-off_list" id="seomokuai_child" style="display: block;">
                      <ul class="flex-dir-row  flex-wrap">
-                         {eq name="'Seo@seo'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2003" {if condition="in_array('2003',$admin_menu_id_arr) || in_array('2003',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont f-20 e-seo col-848484" ></i>
+                        {volist name="$menuGroupList[4]" id="vo"}
+                            {if condition="1 == $vo['opt_access']"}
+                                 <li class="more_li" id="li_{$vo['menu_id']}" {if condition="in_array($vo['menu_id'], $admin_menu_id_arr) || in_array($vo['menu_id'], $not_role_menu_id_arr) || empty($vo['show_status'])"}style="display:none"{/if}>
+                                     <div class="flex-dir-row flex-a-center">
+                                         <div class="icon_bg icon_bg_no">
+                                             <i class="f-20 col-848484 {$vo['litpic']}" ></i>
+                                         </div>
+                                         <div class="ml-8">
+                                             <a href="javascript:void(0);" data-href="{$vo['href']}"  onclick="gourl2(this,1);">{$vo['title']}</a>
+                                         </div>
                                      </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Seo/seo')}"  onclick="gourl2(this,1);">SEO设置</a>
+                                    {notempty name="$is_founder"}
+                                     <div class="icon-link_add">
+                                         <div title="加入导航显示" data-menu_id="{$vo['menu_id']}" class="iconfont e-jiahao2"></div>
                                      </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2003" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Seo@build'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2004016" {if condition="in_array('2004016',$admin_menu_id_arr) || in_array('2004016',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont f-20 e-jingtaishengcheng col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Seo/build')}"  onclick="gourl2(this,1);">html生成</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2004016" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-
-                             </li>
-                             {/eq}
-                         {/eq}
-
-                         {eq name="'Sitemap@index'|is_check_access" value="1"}
-                             {eq name='$main_lang' value='$admin_lang'}
-                             <li class="more_li" id="li_2003002" {if condition="in_array('2003002',$admin_menu_id_arr) || in_array('2003002',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-Sitemap f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Sitemap/index')}"  onclick="gourl2(this,1);">Sitemap</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2003002" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-
-                             </li>
-                             {/eq}
-                         {/eq}
-                         
-                         {eq name="'Links@index'|is_check_access" value="1"}
-                             <li class="more_li" id="li_2003003" {if condition="in_array('2003003',$admin_menu_id_arr) || in_array('2003003',$not_role_menu_id_arr)"}style="display:none"{/if}>
-                                 <div class="flex-dir-row flex-a-center">
-                                     <div class="icon_bg icon_bg_no">
-                                         <i class="iconfont e-youqinglianjie1 f-20 col-848484" ></i>
-                                     </div>
-                                     <div class="ml-8 white-space">
-                                         <a href="javascript:void(0);" data-href="{:url('Links/index')}"  onclick="gourl2(this,1);">友情链接</a>
-                                     </div>
-                                 </div>
-                                 {notempty name="$is_founder"}
-                                 <div class="icon-link_add">
-                                     <div title="加入导航显示" data-menu_id="2003003" class="iconfont e-jiahao2"></div>
-                                 </div>
-                                 {/notempty}
-                             </li>
-                         {/eq}
+                                    {/notempty}
+                                 </li>
+                            {/if}
+                        {/volist}
                      </ul>
                  </div>
              </div>
@@ -1578,24 +882,61 @@
             var menu_id = $(obj).data('menu_id');
             if (2004003 == menu_id) {
                 if (0 == security_ask_open) {
-                    showConfirm('需要设置密保问题验证才可以继续', {btn:['去设置', '取消']}, function(){
-                        layer.closeAll();
-                        var iframes = layer.open({
-                            type: 2,
-                            title: '安全验证中心',
-                            fixed: true, //不固定
-                            shadeClose: false,
-                            shade: layer_shade,
-                            offset: 'auto',
-                            // maxmin: true, //开启最大化最小化按钮
-                            area: ['100%', '100%'],
-                            content: "{:url('Security/second_ask_init', ['gourl'=>url('Filemanager/index')])}",
-                            success: function(layero, index){
+                    layer.confirm(
+                        '<div style="padding:20px 0;line-height:1.8;color:#666;">' +
+                        '<div style="text-align:center;margin-bottom:20px;">' +
+                        '<i class="fa fa-shield" style="font-size:48px;color:#ff9800;"></i>' +
+                        '</div>' +
+                        '<div style="font-size:15px;color:#333;margin-bottom:15px;font-weight:bold;text-align:center;">安全提示</div>' +
+                        '<div style="font-size:14px;">为了保护您的数据安全，访问此功能需要先设置密保问题。</div>' +
+                        '<div style="font-size:14px;margin-top:10px;">设置后，访问敏感功能时需要验证密保答案，有效防止未授权访问。</div>' +
+                        '</div>',
+                        {
+                            title: false,
+                            closeBtn: 0,
+                            shade: [0.6, '#fafafa'],
+                            area: ['480px', 'auto'],
+                            btn: ['<i class="fa fa-cog"></i> 去设置', '<i class="fa fa-times"></i> 稍后再说'],
+                            btnAlign: 'c',
+                            success: function(layero, index) {
+                                layero.find('.layui-layer-btn0').css({
+                                    'background': '#67c23a',
+                                    'border-color': '#67c23a',
+                                    'color': '#fff',
+                                    'padding': '0 25px',
+                                    'border-radius': '4px'
+                                });
+                                layero.find('.layui-layer-btn1').css({
+                                    'background': '#fff',
+                                    'border': '1px solid #dcdfe6',
+                                    'color': '#606266',
+                                    'padding': '0 25px',
+                                    'border-radius': '4px'
+                                });
+                            },
+                            yes: function(index) {
+                                layer.closeAll();
+                                var iframes = layer.open({
+                                    type: 2,
+                                    title: '安全验证中心',
+                                    fixed: true, //不固定
+                                    shadeClose: false,
+                                    shade: layer_shade,
+                                    offset: 'auto',
+                                    // maxmin: true, //开启最大化最小化按钮
+                                    area: ['100%', '100%'],
+                                    content: "{:url('Security/second_ask_init', ['gourl'=>url('Filemanager/index')])}",
+                                    success: function(layero, index){
 
+                                    }
+                                });
+                                layer.full(iframes);
+                            },
+                            btn2: function(index) {
+                                layer.close(index);
                             }
-                        });
-                        layer.full(iframes);
-                    });
+                        }
+                    );
                     return false;
                 }
             }

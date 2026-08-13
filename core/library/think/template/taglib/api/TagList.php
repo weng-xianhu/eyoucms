@@ -41,7 +41,7 @@ class TagList extends Base
      */
     public function getList($param = array())
     {
-        $field = 'a.*,b.typename';
+        $field = "a.*, b.typename";
         $param['typeid'] = $typeid = !empty($param['typeid']) ? $param['typeid'] : $this->tid;
         $titlelen = !empty($param['titlelen']) ? intval($param['titlelen']) : 100;
         $infolen = !empty($param['infolen']) ? intval($param['infolen']) : 160;
@@ -49,6 +49,12 @@ class TagList extends Base
         $orderby = !empty($param['orderby']) ? trim($param['orderby']) : '';
         $arcrank = empty($param['arcrank']) ? 'off' : $param['arcrank'];
         $page = !empty($param['page']) ? intval($param['page']) : 1;
+        $Customfieldname = empty($param['Customfieldname']) ? '' : preg_replace('/([^\w\-]*)/i', '', $param['Customfieldname']);
+        $Customfieldvalue = empty($param['Customfieldvalue']) ? '' : trim($param['Customfieldvalue']);
+        $Customfieldvalue = addslashes($Customfieldvalue);
+        if (!empty($Customfieldname)) {
+            $field .= ", c.{$Customfieldname}";
+        }
         if (!empty($param['limit'])) {
             $pagesize = !empty($param['limit']) ? intval($param['limit']) : 15;
         } else {
@@ -118,13 +124,20 @@ class TagList extends Base
             }
             $param['channel'] = $channeltype;
         }
-
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }  
         // 查询条件
         $condition = array();
         foreach (array('keywords','keyword','typeid','notypeid','flag','noflag','channel','content') as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
-                    array_push($condition, "a.title LIKE '%{$param[$key]}%'");
+                    $keywords = trim($param[$key]);
+                    $keywords = str_replace(['<','>','"',';',',','@','&'], '', $keywords);
+                    $keywords = addslashes($keywords);
+                    $condition[] = Db::raw('a.title LIKE "%'.$keywords.'%"');
                 } elseif ($key == 'keyword' && !empty($param[$key])) {
                     $keyword = str_replace('，', ',', $param[$key]);
                     $keywordArr = explode(',', $keyword);
@@ -157,29 +170,18 @@ class TagList extends Base
                     }
                 } elseif ($key == 'notypeid') {
                     $param[$key] = str_replace('，', ',', $param[$key]);
-                    array_push($condition, "a.typeid NOT IN (".$param[$key].")");
+                    $notypeidArr = array_filter(array_map('intval', explode(',', $param[$key])), function ($v) {
+                        return $v > 0;
+                    });
+                    if (!empty($notypeidArr)) {
+                        array_push($condition, "a.typeid NOT IN (".implode(',', $notypeidArr).")");
+                    }
                 } elseif ($key == 'flag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -189,25 +191,9 @@ class TagList extends Base
                 } elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -215,7 +201,7 @@ class TagList extends Base
                         array_push($condition, $where_flag_str);
                     }
                 } else {
-                    array_push($condition, "a.{$key} = '".$param[$key]."'");
+                    array_push($condition, "a.{$key} = '".addslashes(trim($param[$key]))."'");
                 }
             }
         }
@@ -248,16 +234,40 @@ class TagList extends Base
         $paginate = array(
             'page'  => $page,
         );
+
+        // 执行查询并使用分页
+        $builder = Db::name('archives')->field($field)->alias('a')->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT');
+        if (!empty($Customfieldname)) { // 筛选逻辑用到
+            $builder->join('product_content c', 'a.aid = c.aid', 'LEFT');
+        }
+        $builder->whereRaw($where_str);  // 使用动态的where条件
+        $builder->orderRaw($orderby);  // 使用动态的排序
+        $pages = $builder->paginate($pagesize, false, $paginate);  // 分页
     
-        $pages = Db::name('archives')
-            ->field($field)
-            ->alias('a')
-            ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
-            ->where($where_str)
-            ->orderRaw($orderby)
-            ->paginate($pagesize, false, $paginate);
-        $result = $pages->toArray();
-     
+        // 获取分页数据
+        if (!empty($Customfieldname)) {
+            $result = $pages->toArray();  // 获取查询结果的实际数据部分
+            $filteredData = array_filter($result['data'], function($item) use ($Customfieldvalue, $Customfieldname) {
+                return isset($item[$Customfieldname]) && $item[$Customfieldname] === $Customfieldvalue;
+            });
+        
+            $filteredData = array_values($filteredData);
+            $total = count($filteredData);
+            $currentPage = $pages->currentPage();
+            $perPage = $pages->listRows();
+            $offset = ($currentPage - 1) * $perPage;
+            $currentPageData = array_slice($filteredData, $offset, $perPage);
+        
+            $result = [
+                'data' => $currentPageData,
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $currentPage,
+                'last_page' => ceil($total / $perPage),
+            ];
+        } else {
+            $result = $pages->toArray();
+        }
         $users = model('v1.User')->getUser(false);
         $aidArr = $adminArr = $usersArr = $mediaArr = [];
  
@@ -462,6 +472,135 @@ class TagList extends Base
         //     /*--end*/
         // }
         /*--end*/
+
+        // 添加 customField 格式化处理（参考 TagTagList.php）
+        if (!empty($result['data']) && !empty($aidArr)) {
+            // 批量获取自定义字段数据
+            $customFieldFormatData = [];
+            
+            // 获取所有文章的栏目ID
+            $typeids = array_unique(array_column($result['data'], 'typeid'));
+            
+            // 获取栏目对应的模型ID和表名
+            $arctypeList = Db::name('arctype')
+                ->where('id', 'in', $typeids)
+                ->field('id, current_channel')
+                ->select();
+            
+            $channelTypeMap = [];
+            foreach ($arctypeList as $arctype) {
+                $channelTypeMap[$arctype['id']] = $arctype['current_channel'];
+            }
+            
+            // 根据模型ID获取对应的表名
+            $channelList = Db::name('channeltype')->field('id, table, ifsystem')->select();
+            $channelTableMap = [];
+            $channelSystemMap = [];
+            foreach ($channelList as $channel) {
+                $channelTableMap[$channel['id']] = $channel['table'];
+                $channelSystemMap[$channel['id']] = $channel['ifsystem'];
+            }
+            
+            // 按文章查询自定义字段
+            foreach ($result['data'] as $article) {
+                $channelId = isset($channelTypeMap[$article['typeid']]) ? $channelTypeMap[$article['typeid']] : 0;
+                $tableName = isset($channelTableMap[$channelId]) ? $channelTableMap[$channelId] . '_content' : '';
+                
+                if (!empty($tableName)) {
+                    try {
+                        $customData = Db::name($tableName)
+                            ->where('aid', $article['aid'])
+                            ->find();
+                        if (!empty($customData)) {
+                            // 格式化自定义字段数据
+                            $detailExt = $this->fieldLogic->getChannelFieldList($customData, $channelId);
+                            
+                            // 处理自定义模型的content字段
+                            if (empty($channelSystemMap[$channelId])) { // 自定义模型
+                                if (!isset($detailExt['content'])) {
+                                    $contentField = Db::name('channelfield')->where([
+                                            'channel_id'    => $channelId,
+                                            'dtype'         => 'htmltext',
+                                        ])->value('name');
+                                    $detailExt['content'] = !empty($detailExt[$contentField]) ? $detailExt[$contentField] : '';
+                                }
+                            }
+                            
+                            // 处理手机端内容
+                            if (isset($detailExt['content_ey_m']) && !empty($detailExt['content_ey_m'])) {
+                                $detailExt['content'] = $detailExt['content_ey_m'];
+                                unset($detailExt['content_ey_m']);
+                            }
+                            
+                            // 获取自定义字段的详细信息
+                            $customFieldFormat = [];
+                            if (!empty($detailExt)) {
+                                $field = 'name, title, dtype';
+                                $customFieldInfo = Db::name('channelfield')->field($field)->where([
+                                    'name' => ['IN', array_keys($detailExt)],
+                                    'channel_id' => $channelId,
+                                    'ifeditable' => 1
+                                ])->getAllWithIndex('name');
+                                
+                                if (!empty($customFieldInfo)) {
+                                    foreach ($customFieldInfo as $key => $value) {
+                                        if ('img' == $value['dtype']) {
+                                            $customFieldFormat[$key] = [
+                                                'name' => $value['name'],
+                                                'title' => $value['title'],
+                                                'dtype' => $value['dtype'],
+                                                'value' => $this->get_default_pic($detailExt[$key])
+                                            ];
+                                        } else if ('media' == $value['dtype']) {
+                                            $customFieldFormat[$key] = [
+                                                'name' => $value['name'],
+                                                'title' => $value['title'],
+                                                'dtype' => $value['dtype'],
+                                                'value' => $this->get_default_pic($detailExt[$key])
+                                            ];
+                                        } else if ('imgs' == $value['dtype']) {
+                                            $imgsValue = $detailExt[$key];
+                                            if (is_array($imgsValue)) {
+                                                foreach ($imgsValue as $kk => $vv) {
+                                                    if (isset($vv['image_url'])) {
+                                                        $imgsValue[$kk]['image_url'] = $this->get_default_pic($vv['image_url']);
+                                                    }
+                                                }
+                                            }
+                                            $customFieldFormat[$key] = [
+                                                'name' => $value['name'],
+                                                'title' => $value['title'],
+                                                'dtype' => $value['dtype'],
+                                                'value' => $imgsValue
+                                            ];
+                                        } else {
+                                            $customFieldFormat[$key] = [
+                                                'name' => $value['name'],
+                                                'title' => $value['title'],
+                                                'dtype' => $value['dtype'],
+                                                'value' => $detailExt[$key]
+                                            ];
+                                        }
+                                    }
+                                }
+                            }
+                            $customFieldFormatData[$article['aid']] = array_values($customFieldFormat);
+                        }
+                    } catch (\Exception $e) {
+                        // 表不存在或查询失败，继续处理下一个
+                    }
+                }
+            }
+            
+            // 将 customField 添加到结果数据中
+            foreach ($result['data'] as $key => $val) {
+                if (isset($customFieldFormatData[$val['aid']])) {
+                    $result['data'][$key]['customField'] = $customFieldFormatData[$val['aid']];
+                } else {
+                    $result['data'][$key]['customField'] = false;
+                }
+            }
+        }
 
         empty($result['data']) && $result['data'] = false;
         

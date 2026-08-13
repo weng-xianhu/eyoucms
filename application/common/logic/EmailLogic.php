@@ -14,6 +14,9 @@
 namespace app\common\logic;
 
 use think\Db;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 /**
  * Description of SmsLogic
@@ -198,8 +201,41 @@ class EmailLogic
                 return array('code'=>1 , 'msg'=>'发送成功');
             }
         } catch (\Exception $e) {
-            return array('code'=>0 , 'msg'=>'发送失败: '.$e->errorMessage());
+            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
+            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
         }
+    }
+
+    /**
+     * 将邮件发送的英文错误信息转换为易懂的中文提示
+     * @param string $msg 原始错误信息
+     * @param int $port SMTP端口
+     * @return string 中文提示
+     */
+    private function translateMailError($msg, $port = 0)
+    {
+        if (stristr($msg, 'smtp connect() failed') || stristr($msg, 'Could not connect to SMTP host')) {
+            if (465 == $port) {
+                return '无法连接邮件服务器：<br/>1.请检查SMTP服务器地址和端口是否正确<br/>2.空间是否开启函数fsockopen<br/>3.尝试切换PHP不同版本重试';
+            }
+            return '无法连接邮件服务器，请检查SMTP端口填写是否正确，一般默认是465端口，其次25端口，具体请参看各SMTP服务商的设置说明。';
+        }
+        if (stristr($msg, 'Could not authenticate')) {
+            return '邮箱账号或密码验证失败：请检查发件邮箱和密码是否正确（QQ/163等邮箱需使用“SMTP授权码”，不是登录密码）';
+        }
+        if (stristr($msg, 'Invalid address')) {
+            return '邮箱地址格式错误，请检查发件人/收件人邮箱是否填写正确';
+        }
+        if (stristr($msg, 'recipients failed')) {
+            return '收件人地址无效或被邮件服务器拒收，请检查收件邮箱是否正确';
+        }
+        if (stristr($msg, 'Data not accepted')) {
+            return '邮件内容被服务器拒绝（可能被判定为垃圾邮件），请稍后重试或更换邮件内容';
+        }
+        if (stristr($msg, 'Could not instantiate mail function')) {
+            return '服务器未开启mail函数，请联系空间商处理';
+        }
+        return $msg;
     }
 
     /**
@@ -211,36 +247,123 @@ class EmailLogic
      * @throws Exception
      */
     private function send_phpmailer($to='', $subject='', $data='', $scene=1){
-        vendor('phpmailer.PHPMailerAutoload');
+        //判断openssl是否开启
+        $openssl_funcs = get_extension_funcs('openssl');
+        if(!$openssl_funcs){
+            return array('code'=>0 , 'msg'=>'请先开启php的openssl扩展');
+        }
+
+        //判断openssl是否开启
+        // $sockets_funcs = get_extension_funcs('sockets');
+        // if(!$sockets_funcs){
+        //     return array('code'=>0 , 'msg'=>'请先开启php的sockets扩展');
+        // }
+
+        if (version_compare(PHP_VERSION, '5.5.0', '<')) {
+            return $this->phpmailer_5_4_0($to, $subject, $data, $scene);
+        } else {
+            return $this->phpmailer_5_5_0($to, $subject, $data, $scene);
+        }
+    }
+
+    /**
+     * php版本5.5或以上
+     */
+    private function phpmailer_5_5_0($to='', $subject='', $data='', $scene=1){
         try {
-            //判断openssl是否开启
-            $openssl_funcs = get_extension_funcs('openssl');
-            if(!$openssl_funcs){
-                return array('code'=>0 , 'msg'=>'请先开启php的openssl扩展');
+            $mail = new PHPMailer(true);
+            //Enable SMTP debugging
+            // 0 = off (for production use)
+            // 1 = client messages
+            // 2 = client and server messages
+            $mail->SMTPDebug = SMTP::DEBUG_OFF;                         //Enable verbose debug output
+            $mail->CharSet  = PHPMailer::CHARSET_UTF8;                  //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
+            $mail->isSMTP();                                            //Send using SMTP
+            $mail->Host       = $this->config['smtp_server'];           //Set the SMTP server to send through
+            $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+            $mail->Username   = $this->config['smtp_user'];             //SMTP username
+            $mail->Password   = $this->config['smtp_pwd'];              //SMTP password
+            $mail->Port       = intval($this->config['smtp_port']);     //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+            // 使用安全协议
+            switch ($mail->Port) {
+                case 465:
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    break;
+                
+                case 587:
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    break;
+
+                default:
+                    break;
             }
 
-            //判断openssl是否开启
-            // $sockets_funcs = get_extension_funcs('sockets');
-            // if(!$sockets_funcs){
-            //     return array('code'=>0 , 'msg'=>'请先开启php的sockets扩展');
-            // }
+            //Set who the message is to be sent from
+            $mail->setFrom($this->config['smtp_user']);
+            //接收者邮件
+            empty($to) && $to = $this->config['smtp_from_eamil'];
+            $to = explode(',', $to);
+            //接收邮件方
+            if(is_array($to)){
+                foreach ($to as $v){
+                    $mail->addAddress($v);
+                }
+            }else{
+                $mail->addAddress($to);
+            }
+            //回复地址
+            // $mail->addReplyTo('info@example.com', 'Information');
+            // $mail->addCC('cc@example.com');
+            // $mail->addBCC('bcc@example.com');
+        
+            //Attachments
+            // $mail->addAttachment('/var/tmp/file.tar.gz');         //Add attachments
+            // $mail->addAttachment('/tmp/image.jpg', 'new.jpg');    //Optional name
+        
+            //Content
+            $mail->isHTML(true);                                  //Set email format to HTML
+            //标题
+            $mail->Subject = $subject;
+            //HTML内容转换
+            $content = $this->replaceContent($scene, $data);
+            $mail->Body    = $content;
+            //Replace the plain text body with one created manually
+            // $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+        
+            //send the message, check for errors
+            $result = $mail->send();
+            if (!$result) {
+                $msg = $this->translateMailError($mail->ErrorInfo, $mail->Port);
+                return array('code'=>0 , 'msg'=>'发送失败:'.$msg);
+            } else {
+                return array('code'=>1 , 'msg'=>'发送成功');
+            }
+        } catch (\Exception $e) {
+            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
+            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
+        }
+    }
 
+    /**
+     * php5.4版本或以下
+     */
+    private function phpmailer_5_4_0($to='', $subject='', $data='', $scene=1){
+        vendor('phpmailer.PHPMailerAutoload');
+        try {
             $mail = new \PHPMailer;
-            $mail->CharSet  = 'UTF-8'; //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
-            $mail->isSMTP();
+            //调试输出格式
+            //$mail->Debugoutput = 'html';
             //Enable SMTP debugging
             // 0 = off (for production use)
             // 1 = client messages
             // 2 = client and server messages
             $mail->SMTPDebug = 0;
-            //调试输出格式
-            //$mail->Debugoutput = 'html';
-            //接收者邮件
-            empty($to) && $to = $this->config['smtp_from_eamil'];
-            $to = explode(',', $to);
-            //smtp服务器
+            $mail->CharSet  = 'UTF-8'; //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
+            $mail->isSMTP();
             $mail->Host = $this->config['smtp_server'];
-            //端口 - likely to be 25, 465 or 587
+            $mail->SMTPAuth = true;
+            $mail->Username = $this->config['smtp_user'];
+            $mail->Password = $this->config['smtp_pwd'];
             $mail->Port = intval($this->config['smtp_port']);
             // 使用安全协议
             switch ($mail->Port) {
@@ -253,19 +376,14 @@ class EmailLogic
                     break;
 
                 default:
-                    # code...
                     break;
             }
-            //Whether to use SMTP authentication
-            $mail->SMTPAuth = true;
-            //用户名
-            $mail->Username = $this->config['smtp_user'];
-            //密码
-            $mail->Password = $this->config['smtp_pwd'];
+
             //Set who the message is to be sent from
             $mail->setFrom($this->config['smtp_user']);
-            //回复地址
-            //$mail->addReplyTo('replyto@example.com', 'First Last');
+            //接收者邮件
+            empty($to) && $to = $this->config['smtp_from_eamil'];
+            $to = explode(',', $to);
             //接收邮件方
             if(is_array($to)){
                 foreach ($to as $v){
@@ -274,34 +392,32 @@ class EmailLogic
             }else{
                 $mail->addAddress($to);
             }
-
-            $mail->isHTML(true);// send as HTML
+            //回复地址
+            // $mail->addReplyTo('info@example.com', 'Information');
+            //Attachments
+            //$mail->addAttachment('images/phpmailer_mini.png');
+        
+            //Content
+            $mail->isHTML(true);                                  //Set email format to HTML
             //标题
             $mail->Subject = $subject;
             //HTML内容转换
             $content = $this->replaceContent($scene, $data);
             $mail->msgHTML($content);
             //Replace the plain text body with one created manually
-            //$mail->AltBody = 'This is a plain-text message body';
-            //添加附件
-            //$mail->addAttachment('images/phpmailer_mini.png');
+            // $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+        
             //send the message, check for errors
             $result = $mail->send();
             if (!$result) {
-                $msg = $mail->ErrorInfo;
-                if (stristr($msg, 'smtp connect() failed')) {
-                    if (465 == $mail->Port) {
-                        $msg = '<br/>1.请检查配置是否正确<br/>2.空间是否开启函数fsockopen<br/>3.尝试切换PHP不同版本重试';
-                    } else {
-                        $msg = '请检查SMTP端口填写是否正确，一般默认是465端口，其次25端口，具体请参看各STMP服务商的设置说明。';
-                    }
-                }
+                $msg = $this->translateMailError($mail->ErrorInfo, $mail->Port);
                 return array('code'=>0 , 'msg'=>'发送失败:'.$msg);
             } else {
                 return array('code'=>1 , 'msg'=>'发送成功');
             }
         } catch (\Exception $e) {
-            return array('code'=>0 , 'msg'=>'发送失败: '.$e->errorMessage());
+            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
+            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
         }
     }
 }

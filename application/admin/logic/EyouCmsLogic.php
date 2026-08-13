@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -158,12 +158,14 @@ class EyouCmsLogic extends Model
         foreach ($quickentryList as $key => $val) {
             $code = $val['controller'].'@'.$val['action'].'@'.$val['vars'];
             $quickentryList[$key]['vars'] = !empty($val['vars']) ? $val['vars']."&lang=".$this->admin_lang : "lang=".$this->admin_lang;
+            $quickentryList[$key]['unit'] = '个';
             if ($code == 'Form@index@') // 留言列表
             {
                 $map = [
                     'lang'    => $this->admin_lang,
                 ];
                 $quickentryList[$key]['total'] = Db::name('guestbook')->where($map)->count();
+                $quickentryList[$key]['unit'] = '条';
             }
             else if (1 == $val['groups']) // 模型内容统计
             {
@@ -236,6 +238,7 @@ class EyouCmsLogic extends Model
                     }
                 }
                 $val['total'] = !empty($archivesTotalRow[$vars['channel']]['total']) ? intval($archivesTotalRow[$vars['channel']]['total']) : 0;
+                $val['unit'] = (2 == $vars['channel']) ? '个' : '条';
                 $quickentryList[$key] = $val;
             }
             else if ($code == 'AdPosition@index@') // 广告
@@ -252,6 +255,7 @@ class EyouCmsLogic extends Model
                     'lang'    => $this->admin_lang,
                 ];
                 $quickentryList[$key]['total'] = Db::name('links')->where($map)->count();
+                $quickentryList[$key]['unit'] = '条';
             }
             else if ($code == 'Tags@index@') // Tags标签
             {
@@ -312,6 +316,10 @@ class EyouCmsLogic extends Model
             $mysqlinfo = Db::query('select * from "v$version"');
             $sys_info['mysql_version']  = $mysqlinfo[0]['BANNER'];
             $sys_info['dbtype'] ='Dm(达梦)';
+        } elseif (config('database.type') == 'kingbase') { //人大金仓优化
+            $mysqlinfo = Db::query("SELECT version() as version");
+            $sys_info['mysql_version']  = $mysqlinfo[0]['version'];
+            $sys_info['dbtype'] ='Kingbase(人大金仓)';
         } else {
             $mysqlinfo = Db::query("SELECT VERSION() as version");
             $sys_info['mysql_version']  = $mysqlinfo[0]['version'];
@@ -491,6 +499,9 @@ class EyouCmsLogic extends Model
             $h5_qrcodeurl = "{$this->root_dir}/".$filepath;
         }
         $assign_data['h5_qrcodeurl'] = $h5_qrcodeurl;
+
+        // 服务器信息
+        $assign_data['sys_info'] = $this->get_sys_info($globalConfig);
     }
 
     // 近七日成交量成交额折线图数据
@@ -527,10 +538,11 @@ class EyouCmsLogic extends Model
      */
     public function shouye($globalConfig = [])
     {
+        $root_dir = ROOT_DIR;
         $inletStr = '/index.php';
         $seo_inlet = config('ey_config.seo_inlet');
         1 == intval($seo_inlet) && $inletStr = '';
-
+/*
         $web_basehost = preg_replace('/^(([^\:\.]+):)?(\/\/)?([^\/\:]*)(.*)$/i', '${4}', config('tpcache.web_basehost'));
         if (!empty($web_basehost)) {
             $host_port = !stristr($website_host, ':') ? '' : $this->request->port();
@@ -542,7 +554,15 @@ class EyouCmsLogic extends Model
         } else {
             $website_host = $this->request->domain();
         }
-        $home_url = $website_host.ROOT_DIR.'/index.php';  // 支持子目录
+        $home_url = $website_host.$root_dir.'/index.php';  // 支持子目录
+*/
+
+        /*临时逻辑，替换上面注释的逻辑：用户输入什么就什么，不要做任何处理，错了再说 start*/
+        $root_dir = '';
+        $website_host = rtrim(config('tpcache.web_basehost'));
+        $home_url = $website_host.'/index.php';  // 支持子目录
+        /*临时逻辑，替换上面注释的逻辑：用户输入什么就什么，不要做任何处理，错了再说 end*/
+
         $home_default_lang = config('ey_config.system_home_default_lang');
         //默认前台语言，链接中不需要带语言参数；非默认前台语言，链接中需要带语言参数
         if ($home_default_lang != $this->admin_lang) {
@@ -550,7 +570,7 @@ class EyouCmsLogic extends Model
             if (empty($home_url)) {
                 $seo_pseudo = !empty($globalConfig['seo_pseudo']) ? $globalConfig['seo_pseudo'] : config('ey_config.seo_pseudo');
                 if (1 == $seo_pseudo) {
-                    $home_url = $website_host.ROOT_DIR.$inletStr; // 支持子目录
+                    $home_url = $website_host.$root_dir.$inletStr; // 支持子目录
                     if (!empty($inletStr)) {
                         $home_url .= '?';
                     } else {
@@ -558,7 +578,7 @@ class EyouCmsLogic extends Model
                     }
                     $home_url .= http_build_query(['lang'=>$this->admin_lang]);
                 } else {
-                    $home_url = $website_host.ROOT_DIR.$inletStr.'/'.$this->admin_lang; // 支持子目录
+                    $home_url = $website_host.$root_dir.$inletStr.'/'.$this->admin_lang; // 支持子目录
                 }
             }
         }
@@ -1054,5 +1074,107 @@ EOF;
             ];
         }
         return $arr[$value];
+    }
+
+    /**
+     * 内置AI欢迎页主题
+     * @return [type] [description]
+     */
+    public function welcome_ai(&$assign_data = [], $globalConfig = [], $usersConfig = [])
+    {
+        // 同步导航与内容统计的状态
+        $this->syn_open_quickmenu($globalConfig, $usersConfig);
+        
+        // 服务器信息
+        $assign_data['sys_info'] = $this->get_sys_info($globalConfig);
+
+        // 实时概况（内容统计）
+        $assign_data['contentTotal'] = $this->contentTotalList();
+        $assign_data['current_time'] = date('Y-m-d H:i:s');
+
+        // 常用功能
+        $quickMenu = model('Quickentry')->getMenuGroupList(['where'=>['checked'=>1], 'order'=>'sort_order asc, id asc']);
+        foreach ($quickMenu as $key => $val) {
+            if (empty($val['opt_access']) || empty($val['show_status'])) {
+                unset($quickMenu[$key]);
+            }
+        }
+        $assign_data['quickMenu'] = $quickMenu;
+
+        // 应用导航
+        $weappMenuList = Db::name('weapp')->where([
+            'status'    => 1,
+            'checked'   => 1,
+        ])->order('quick_sort asc, id asc')->select();
+        foreach ($weappMenuList as $key => $val) {
+            if (!empty($val['config'])){
+                $val['config'] = json_decode($val['config'],true);
+                if (0 == $val['is_system']){
+                    $val['config']['litpic'] = get_default_pic($val['config']['litpic']);
+                }
+                if (empty($val['config']['management']['href'])) {
+                    if (!empty($val['config']['management']['controller']) && !empty($val['config']['management']['action'])) {
+                        $val['config']['management']['href'] = url($val['config']['management']['controller'].'/'.$val['config']['management']['action'], $val['config']['management']['param']);
+                    } else {
+                        $val['config']['management']['href'] = url('Weapp/execute',array('sm'=>$val['config']['code'],'sc'=>$val['config']['code'],'sa'=>'index'));
+                    }
+                }
+                $weappMenuList[$key] = $val;
+            }
+        }
+        $assign_data['weappMenuList'] = $weappMenuList;
+
+        //待办事项
+        $notice_where = [
+            'is_read' => 0,
+            'admin_id' => ['>', 0],
+        ];
+        $assign_data['notice_list'] = Db::name('users_notice_tpl_content')->where($notice_where)->order('content_id desc')->select();
+
+        // 15天日期列表
+        $datesArr = [];
+        for ($i=0; $i < 15; $i++) {
+            $dates = date("m-d", strtotime("-{$i} day"));
+            $datesArr[$i] = $dates;
+        };
+        $datesArr = !empty($datesArr) ? array_reverse($datesArr) : [];
+        $datesList = !empty($datesArr) ? json_encode($datesArr) : '';
+        $assign_data['datesList'] = $datesList;
+
+        // 最近15天的情况
+        $lineChartData = $this->AiGetLineChartData();
+        $assign_data['ChartNum'] = $lineChartData['num'];
+        $assign_data['ChartAmount'] = $lineChartData['amount'];
+    }
+
+    // 近15日折线图数据
+    private function AiGetLineChartData()
+    {
+        $now_day = strtotime(date("Y-m-d"));
+        $min_time = $now_day - (14*86400);
+        $dataNum = $dataAmount = [];
+        $result = Db::name('statistics_data')->field('type,date,num,total')->where([
+                'type'=>['IN', [1,6,7]],
+                'date'=>['egt', $min_time],
+                'lang'=>$this->admin_lang,
+            ])->order('type asc, date desc')->select();
+        $statistics_data = [];
+        foreach ($result as $key => $val) {
+            $statistics_data[$val['type']][$val['date']] = $val;
+        }
+
+        foreach ($statistics_data as $key => $val) {
+            for ($i = 0;$i<15;$i++){
+                $time = $now_day - $i*86400;
+                // 数量系列
+                $dataNum[$key][$i] = empty($val[$time]) ? 0 : $val[$time]['num'];
+                // 金额系列
+                $dataAmount[$key][$i] = empty($val[$time]) ? 0 : $val[$time]['total'];
+            }
+            $dataNum[$key] = array_reverse($dataNum[$key]);
+            $dataAmount[$key] = array_reverse($dataAmount[$key]);
+        }
+
+        return ['num'=>$dataNum,'amount'=>$dataAmount];
     }
 }

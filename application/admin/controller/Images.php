@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -119,7 +119,10 @@ class Images extends Base
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.aid desc";
         } else {
             $orderby = "a.aid desc";
@@ -317,7 +320,11 @@ class Images extends Base
                 $post['stypeid'] = str_replace(",{$post['typeid']},", ',', ",{$post['stypeid']},");
                 $post['stypeid'] = trim($post['stypeid'], ',');
             }
-
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // --存储数据
             $newData = array(
                 'typeid'=> empty($post['typeid']) ? 0 : $post['typeid'],
@@ -331,6 +338,7 @@ class Images extends Base
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
                 'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -345,6 +353,7 @@ class Images extends Base
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'  => strtotime($post['add_time']),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
 
@@ -573,7 +582,11 @@ class Images extends Base
                 $post['stypeid'] = str_replace(",{$typeid},", ',', ",{$post['stypeid']},");
                 $post['stypeid'] = trim($post['stypeid'], ',');
             }
-
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // --存储数据
             $newData = array(
                 'typeid'=> $typeid,
@@ -587,6 +600,7 @@ class Images extends Base
                 'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
                 'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -597,6 +611,7 @@ class Images extends Base
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'     => getTime(),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
 

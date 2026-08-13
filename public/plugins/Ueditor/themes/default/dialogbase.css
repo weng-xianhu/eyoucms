@@ -62,11 +62,12 @@ body {
     padding: 0 5px;
     height: 30px;
     border: 1px solid #ccc;
-    background: url("images/dialog-title-bg.png") repeat-x;
+    background: #EEE;
     text-align: center;
     line-height: 30px;
     cursor: pointer;
     *margin-right: 5px;
+    border-radius: 3px 3px 0 0;
 }
 
 .tabhead span.focus {
@@ -92,7 +93,6 @@ a.button {
     width: 95px;
     border: 0;
     color: #838383;
-    background: url(../../themes/default/images/icons-all.gif) no-repeat;
 }
 
 a.button:hover {

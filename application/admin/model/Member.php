@@ -363,8 +363,15 @@ class Member extends Model
                 $tables_del_data = ['archives','article_order','ask','ask_answer','ask_answer_like','download_log','download_order','guestbook','media_log','media_order','media_play_record','memgiftget','search_locking','search_word','shop_address','shop_cart','shop_coupon_use','shop_order','shop_order_comment','shop_order_details','shop_order_log','shop_order_service','shop_order_service_log','shop_order_unified_pay','smtp_record','users_collection','users_footprint','users_forward','users_like','users_list','users_login_log','users_money','users_notice','users_notice_read','users_notice_tpl_content','users_score','users_signin','wx_users'];
                 // 同步删除插件数据
                 $Prefix = config('database.prefix');
+                $dbType = config('database.type');
                 if (is_dir('./weapp/Ask/')) {
-                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_ask\'');
+                    if ($dbType == 'dm') { // 达梦优化
+                        $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_ask'");
+                    } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                        $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_ask'");
+                    } else {
+                        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_ask\'');
+                    }
                     if (!empty($isTable)) {
                         $tables_del_data[] = 'weapp_ask';
                         $tables_del_data[] = 'weapp_ask_answer';
@@ -372,26 +379,50 @@ class Member extends Model
                     }
                 }
                 if (is_dir('./weapp/Comment/')) {
-                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_comment\'');
+                    if ($dbType == 'dm') { // 达梦优化
+                        $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_comment'");
+                    } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                        $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_comment'");
+                    } else {
+                        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_comment\'');
+                    }
                     if (!empty($isTable)) {
                         $tables_del_data[] = 'weapp_comment';
                         $tables_del_data[] = 'weapp_comment_like';
                     }
                 }
                 if (is_dir('./weapp/QqLogin/')) {
-                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_qqlogin\'');
+                    if ($dbType == 'dm') { // 达梦优化
+                        $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_qqlogin'");
+                    } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                        $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_qqlogin'");
+                    } else {
+                        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_qqlogin\'');
+                    }
                     if (!empty($isTable)) {
                         $tables_del_data[] = 'weapp_qqlogin';
                     }
                 }
                 if (is_dir('./weapp/WxLogin/')) {
-                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_wxlogin\'');
+                    if ($dbType == 'dm') { // 达梦优化
+                        $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_wxlogin'");
+                    } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                        $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_wxlogin'");
+                    } else {
+                        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_wxlogin\'');
+                    }
                     if (!empty($isTable)) {
                         $tables_del_data[] = 'weapp_wxlogin';
                     }
                 }
                 if (is_dir('./weapp/GoogleLogin/')) {
-                    $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_google_login\'');
+                    if ($dbType == 'dm') { // 达梦优化
+                        $isTable = Db::query("SELECT table_name FROM all_tables WHERE table_name = '{$Prefix}weapp_google_login'");
+                    } elseif ($dbType == 'kingbase') { // 人大金仓优化
+                        $isTable = Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = '{$Prefix}weapp_google_login'");
+                    } else {
+                        $isTable = Db::query('SHOW TABLES LIKE \''.$Prefix.'weapp_google_login\'');
+                    }
                     if (!empty($isTable)) {
                         $tables_del_data[] = 'weapp_google_login';
                     }

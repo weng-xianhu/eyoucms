@@ -62,17 +62,17 @@
             $arcrank = $row['arcrank'];
             $seo_pseudo = tpCache('seo.seo_pseudo');
             $lang = input('param.lang/s', 'cn');
-            $gourl = cookie('ENV_GOBACK_URL');
+            $gourl = cookie('ENV_GOBACK_URL'.INSTALL_DATE);
             $gourl = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', urldecode($gourl));
             $addurl = request()->baseFile()."?m=admin&c=Archives&a=add&typeid=".$data['tid']."&lang=".$lang;
-            $env_list_url = cookie('ENV_LIST_URL');
+            $env_list_url = cookie('ENV_LIST_URL'.INSTALL_DATE);
             $env_list_url = preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', urldecode($env_list_url));
             $listurl = $env_list_url."&typeid=".$data['tid'];
             if (empty($row['ifsystem'])) {
                 $listurl .= "&channel=".$data['channel'];
                 $addurl .= "&channel=".$data['channel'];
             }
-            $env_is_uphtml = cookie('ENV_IS_UPHTML');
+            $env_is_uphtml = cookie('ENV_IS_UPHTML'.INSTALL_DATE);
             $action_name = $push_zzbaidu_type = request()->action();
             $ctl_name = request()->controller();
             if ('add' == $action_name) {
@@ -130,7 +130,7 @@
         </script>
         {php}
             if (2 == $seo_pseudo && 1 != $env_is_uphtml) {
-                cookie('ENV_IS_UPHTML', 1);
+                cookie('ENV_IS_UPHTML'.INSTALL_DATE, 1);
         {/php}
         <script type="text/javascript">
             /* 生成静态页面代码 */

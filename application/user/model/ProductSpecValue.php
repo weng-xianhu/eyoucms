@@ -57,7 +57,7 @@ class ProductSpecValue extends Model
         if (!empty($OrderDetails)) {
             $ProductIdWhere = $SpecValueIdWhere = $Array_new = $ArcUpData =[];
             foreach ($OrderDetails as $key => $value) {
-                $value['data'] = unserialize($value['data']);
+                $value['data'] = safe_unserialize($value['data']);
                 if (!empty($value['data']['spec_value_id'])){
                     //多规格
                     $spec_value_id = htmlspecialchars_decode($value['data']['spec_value_id']);
@@ -99,8 +99,7 @@ class ProductSpecValue extends Model
 
             //还原规格库存
             if (!empty($ArcUpData)){
-                $ArchivesModel = new \app\user\model\Archives();
-                $ArchivesModel->saveAll($ArcUpData);
+                model('Archives')->saveAll($ArcUpData);
                 Db::name('archives')->where(['sales_num'=>['lt',0]])->update(['sales_num'=>0, 'update_time'=>getTime()]);
                 Db::name('archives')->where(['sales_all'=>['lt',0]])->update(['sales_all'=>0, 'update_time'=>getTime()]);
             }
@@ -141,7 +140,7 @@ class ProductSpecValue extends Model
                     Db::name('sharp_goods')->where('aid',$value['aid'])->update($SharpGoodsupdate);
                     return true;
                 }
-                $value['data'] = unserialize($value['data']);
+                $value['data'] = safe_unserialize($value['data']);
                 $spec_value_id = htmlspecialchars_decode($value['data']['spec_value_id']);
                 array_push($SpecValueIdWhere, $spec_value_id);
                 array_push($ProductIdWhere, $value['product_id']);

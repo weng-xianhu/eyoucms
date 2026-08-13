@@ -1,0 +1,30 @@
+img {
+	max-width: 100% ; /*图片自适应宽度*/
+	cursor: pointer;
+}
+body {
+	overflow-y: scroll !important;
+}
+body.view img{
+    max-width: 50%!important;
+    height: auto!important;
+}
+body.view img.anchorclass{
+    height: 16px!important;
+    width: 15px!important;
+}
+.view {
+    word-break: break-all;
+}
+.vote_area {
+    display: block;
+}
+.vote_iframe {
+    background-color: transparent;
+    border: 0 none;
+    height: 100%;
+}
+.edui-editor-imagescale {
+    display: none !important;
+}
+#edui1_imagescale{display:none !important;} /*去除点击图片后出现的拉伸边框*/

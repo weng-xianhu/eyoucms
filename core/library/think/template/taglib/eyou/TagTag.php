@@ -48,9 +48,10 @@ class TagTag extends Base
             $condition['a.aid'] = $aid;
             $result = Db::name('taglist')
                 ->alias('a')
-                ->field('a.*, a.tid AS tagid')
+                ->join('tagindex b', 'a.tid = b.id', 'LEFT')
+                ->field('a.*, a.tid AS tagid, b.litpic')
                 ->where($condition)
-                ->order('a.update_time asc')
+                ->order('a.tid asc')
                 ->limit($row)
                 ->select();
 

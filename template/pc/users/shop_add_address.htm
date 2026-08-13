@@ -16,7 +16,7 @@
         {eyou:static file="/public/static/common/js/jquery.min.js"/}
         {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
         {eyou:static file="/public/static/common/js/tag_global.js"/}
-        {eyou:static file="/public/static/common/js/shop_address.js"/}
+        {eyou:static file="/public/static/common/js/shop_address.js?v=1.0.2"/}
         <style>
             .address-list span {
                 display: inline-block;
@@ -34,10 +34,18 @@
 
     <body style="overflow-y:unset">
         <form name='theForm' id="theForm" method="post" onsubmit="return false;">
-            <div class="ey-dialog__wrapper address-modal" style="width: 660px;">
+            <div class="ey-dialog__wrapper address-modal" style="width: 660px;">                
                 <div aria-modal="true" class="ey-dialog">
                     <div class="ey-dialog__body">
-                        <div class="ey-dialog__inner">
+                        <div class="ey-dialog__inner">                            
+                            {if $weapp_ai !==false}
+                            <div class="h3-title">AI地址识别</div>
+                            <div class="address-add-ai">
+                                <textarea name="" id="weapp_ai_address" class="input-text" placeholder="「粘贴识别」或输入文本,智能拆分姓名,电话和地址"></textarea>
+                                <div class="identify"><button class="identify-btn" data-url="{:url('plugins/Ai/get_baidu_address')}" data-type="add" data-frm="1">智能识别</button></div>
+                            </div>
+                            <div class="h3-title">联系人信息</div>
+                            {/if}
                             <div class="address-add">
                                 <div class="item">
                                     <div class="col mr ey-input">
@@ -57,7 +65,7 @@
                                     <input type="hidden" name="district" id="district" value="0">
                                     <div class="col ey-input">
                                         <label for="address" class="input-label"></label>
-                                        <input type="text" id="address-title" onclick="showAddressWindow();" placeholder="选择省 / 市 / 区 / 街道" readonly="readonly" autocomplete="off" class="input-text show-placeholder">
+                                        <input type="text" id="address-title" value="" onclick="showAddressWindow();" placeholder="选择省 / 市 / 区 / 街道" readonly="readonly" autocomplete="off" class="input-text show-placeholder">
                                         <p class="msg msg-error" style="display: none;"></p>
                                     </div>
                                     <i class="iconfont iconfont-arrow-down-small"></i>

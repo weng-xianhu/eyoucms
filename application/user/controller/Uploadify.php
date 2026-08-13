@@ -31,11 +31,14 @@ class Uploadify extends Base {
     {
         parent::__construct();
         date_default_timezone_set("Asia/Shanghai");
-        $this->savePath = input('savepath/s','allimg').'/';
+        $savePath = input('savepath/s','allimg');
+        $savePath = preg_replace('#(\.\.|\.\\/|\\\\)#i', '', $savePath);
+        $savePath = preg_replace('#[^a-zA-Z0-9_\/\-]#', '', $savePath);
+        $this->savePath = $savePath.'/';
         error_reporting(E_ERROR | E_WARNING);
         header("Content-Type: text/html; charset=utf-8");
         
-        $this->sub_name = date('Ymd/');
+        $this->sub_name = getUploadSubDir();
         $this->imageExt = config('global.image_ext');
         $this->image_type = tpCache('basic.image_type');
         $this->image_type = !empty($this->image_type) ? str_replace('|', ',', $this->image_type) : $this->imageExt;
@@ -84,7 +87,11 @@ class Uploadify extends Base {
             $action = input('param.action/s','del');                
             $filename= input('param.filename/s');
             $filename= empty($filename) ? input('url') : $filename;
-            $filename= str_replace(['(',')',',',' ','../','..','./'],'',$filename);
+            // 安全修复: 循环过滤路径穿越字符，防止双写绕过（如 ....// -> ../）
+            do {
+                $oldFilename = $filename;
+                $filename = str_replace(['(',')',',',' ','../','..\\','..','./'], '', $filename);
+            } while ($oldFilename !== $filename);
             $filename= trim($filename,'.');
             $filename = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/)#i', '$2', $filename);
             if(eyPreventShell($filename) && $action=='del' && !empty($filename) && is_file('.'.$filename) && stristr($filename, 'uploads/')){
@@ -178,7 +185,7 @@ class Uploadify extends Base {
     }
     
     public function index(){
-        $CONFIG2 = json_decode(preg_replace("/\/\*[\s\S]+?\*\//", "", file_get_contents("./public/plugins/Ueditor/php/config.json")), true);
+        $CONFIG2 = json_decode(preg_replace("/\/\*[\s\S]+?\*\//", "", file_get_contents(ROOT_PATH."public/plugins/Ueditor/php/config.json")), true);
         
         /*---------------百度编辑器配置文件与后台设置关联 start----------------*/
         $CONFIG2['imageMaxSize'] = $CONFIG2['scrawlMaxSize'] = $CONFIG2['catcherMaxSize'] = $CONFIG2['videoMaxSize'] = $CONFIG2['fileMaxSize'] = $CONFIG2['fileMaxSize'] = intval(tpCache('basic.file_size') * 1024 * 1024);
@@ -354,7 +361,10 @@ class Uploadify extends Base {
             return json_encode(['state' =>$error]);
         }
 
+        // 获取配置的文件大小限制
         $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024);
+
+        // 获取允许的文件类型
         $fileExt = '';
         $image_type = tpCache('basic.image_type');
         !empty($image_type) && $fileExt .= '|'.$image_type;
@@ -364,21 +374,61 @@ class Uploadify extends Base {
         !empty($media_type) && $fileExt .= '|'.$media_type;
         $fileExt = !empty($fileExt) ? str_replace('||', '|', $fileExt) : config('global.image_ext');
         $fileExt = str_replace('|', ',', trim($fileExt, '|'));
+
         $result = $this->validate(
             ['file' => $file], 
             ['file'=>'fileSize:'.$max_file_size.'|fileExt:'.$fileExt],
             ['file.fileSize' => '上传文件过大','file.fileExt'=>'上传文件后缀名必须为'.$fileExt]
         );
-        // 文件后缀名
-        $file_ext = pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
 
-        /*验证图片一句话木马*/
-        if (in_array($file_ext, explode('|', $image_type))) {
-            if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
-                $result = '疑似木马图片！';
+        // 获取文件后缀
+        $file_ext = pathinfo($file->getInfo('name'), PATHINFO_EXTENSION);
+        $file_ext = strtolower($file_ext);
+    
+        // 二次校验文件类型
+        if (in_array($file_ext, explode('|', $image_type)) && function_exists('exif_imagetype')) {
+            $realImageType = exif_imagetype($file->getInfo('tmp_name'));
+            if (!$realImageType) {
+                return json_encode(['state' => '非法图像文件']);
+            }
+            
+            $allowImageTypes = [];
+            if (defined('IMAGETYPE_GIF')) $allowImageTypes[] = IMAGETYPE_GIF;
+            if (defined('IMAGETYPE_JPEG')) $allowImageTypes[] = IMAGETYPE_JPEG;
+            if (defined('IMAGETYPE_PNG')) $allowImageTypes[] = IMAGETYPE_PNG;
+            if (defined('IMAGETYPE_SWF')) $allowImageTypes[] = IMAGETYPE_SWF;
+            if (defined('IMAGETYPE_PSD')) $allowImageTypes[] = IMAGETYPE_PSD;
+            if (defined('IMAGETYPE_BMP')) $allowImageTypes[] = IMAGETYPE_BMP;
+            if (defined('IMAGETYPE_TIFF_II')) $allowImageTypes[] = IMAGETYPE_TIFF_II;
+            if (defined('IMAGETYPE_TIFF_MM')) $allowImageTypes[] = IMAGETYPE_TIFF_MM;
+            if (defined('IMAGETYPE_JPC')) $allowImageTypes[] = IMAGETYPE_JPC;
+            if (defined('IMAGETYPE_JP2')) $allowImageTypes[] = IMAGETYPE_JP2;
+            if (defined('IMAGETYPE_JPX')) $allowImageTypes[] = IMAGETYPE_JPX;
+            if (defined('IMAGETYPE_JB2')) $allowImageTypes[] = IMAGETYPE_JB2;
+            if (defined('IMAGETYPE_SWC')) $allowImageTypes[] = IMAGETYPE_SWC;
+            if (defined('IMAGETYPE_IFF')) $allowImageTypes[] = IMAGETYPE_IFF;
+            if (defined('IMAGETYPE_WBMP')) $allowImageTypes[] = IMAGETYPE_WBMP;
+            if (defined('IMAGETYPE_XBM')) $allowImageTypes[] = IMAGETYPE_XBM;
+            if (defined('IMAGETYPE_ICO')) $allowImageTypes[] = IMAGETYPE_ICO;
+            if (defined('IMAGETYPE_WEBP')) $allowImageTypes[] = IMAGETYPE_WEBP;
+            if (defined('IMAGETYPE_AVIF')) $allowImageTypes[] = IMAGETYPE_AVIF;
+            
+            if (!in_array($realImageType, $allowImageTypes)) {
+                return json_encode(['state' => '图像类型不匹配，可能存在安全风险']);
             }
         }
-        /*--end*/
+
+        if (in_array($file_ext, explode('|', $image_type))) {
+            if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
+                $result = base64_decode(config('global.mm_tips'));
+            }
+        }
+        else if (in_array($file_ext, explode('|', $file_type))) {
+            $this->savePath = preg_replace('/^allimg\//i', 'soft/', $this->savePath);
+        }
+        else if (in_array($file_ext, explode('|', $media_type))) {
+            $this->savePath = preg_replace('/^allimg\//i', 'media/', $this->savePath);
+        }
 
         if (true !== $result || empty($file)) {
             $state = "ERROR" . $result;
@@ -386,10 +436,10 @@ class Uploadify extends Base {
         }
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = $this->savePath.getUploadSubDir();
         // 使用自定义的文件保存规则
         $info = $file->rule(function ($file) {
-            return $this->admin_id.'-'.dd2char(date("ymdHis").mt_rand(100,999));
+            return (int)session('users_id') . '-'.dd2char(date("ymdHis").mt_rand(100,999));
         })->move(UPLOAD_PATH.$this->savePath);
 
         if (!empty($info)) {
@@ -397,7 +447,7 @@ class Uploadify extends Base {
             $data = array(
                 'state' => 'SUCCESS',
                 'url' => ROOT_DIR.$return_url,
-                'title' => '',//$info->getSaveName(),
+                'title' => $info->getSaveName(),
                 'original' => $file->getInfo('name'),
                 'time' => date("Y-m-d H:i:s"),
                 'type' => '.' . $info->getExtension(),
@@ -431,15 +481,36 @@ class Uploadify extends Base {
                 $data['height'] = $height;
 
                 $addData = [
-                    'aid'         =>0,
-                    'type_id'     =>0,
-                    'image_url'   =>$data['url'],
-                    'title'       => $data['original'],
+                    'aid'         => 0,
+                    'type_id'     => 0,
+                    'group_code'  => 'image',
+                    'image_url'   => $data['url'],
+                    'title'       => $data['title'],
                     'intro'       => '',
                     'width'       => $width,
                     'height'      => $height,
                     'filesize'    => $data['size'],
                     'mime'        => $mime,
+                    'users_id'    => (int)session('users_id'),
+                    'sort_order'  => 100,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
+                ];
+                $img_id = Db::name('uploads')->insertGetId($addData);
+                $data['img_id'] = $img_id;
+            }
+            else if (in_array($file_ext, explode('|', $media_type))) {
+                $addData = [
+                    'aid'         => 0,
+                    'type_id'     => 0,
+                    'group_code'  => 'video',
+                    'image_url'   => $data['url'],
+                    'title'       => $data['title'],
+                    'intro'       => '',
+                    'width'       => 0,
+                    'height'      => 0,
+                    'filesize'    => $data['size'],
+                    'mime'        => $file->getInfo('type'),
                     'users_id'    => (int)session('users_id'),
                     'sort_order'  => 100,
                     'add_time'    => getTime(),
@@ -469,10 +540,20 @@ class Uploadify extends Base {
             );
             return json_encode($data);
         }
+
+        // 检查是否为内网 IP
+        $validateResult = validateRemoteUrl($imgUrl);
+        if ($validateResult['code'] == 0) {
+            $data = array(
+                'state' => $validateResult['msg'],
+            );
+            return json_encode($data);
+        }
+
         //获取请求头并检测死链
-        $heads = get_headers($imgUrl);
-        if(!(stristr($heads[0],"200") && stristr($heads[0],"OK"))){
-            $data=array(
+        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
+        if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
+            $data = array(
                 'state' => '链接不可用',
             );
             return json_encode($data);
@@ -490,11 +571,7 @@ class Uploadify extends Base {
 
         //打开输出缓冲区并获取远程图片
         ob_start();
-        $context = stream_context_create(
-            array('http' => array(
-                'follow_location' => false // don't follow redirects
-            ))
-        );
+        $context = get_remote_stream_context($imgUrl);
         readfile($imgUrl,false,$context);
         $img = ob_get_contents();
         ob_end_clean();
@@ -517,7 +594,7 @@ class Uploadify extends Base {
         }
 
         //创建目录失败
-        if(!file_exists($dirname) && !mkdir($dirname,0777,true)){
+        if(!file_exists($dirname) && !mkdir($dirname,0755,true)){
             $data=array(
                 'state' => '目录创建失败',
             );
@@ -558,8 +635,9 @@ class Uploadify extends Base {
             $addData = [
                 'aid'         =>0,
                 'type_id'     =>0,
+                'group_code'  => 'image',
                 'image_url'   =>$data['url'],
-                'title'       => $data['original'],
+                'title'       => $data['title'],
                 'intro'       => '',
                 'width'       => $width,
                 'height'      => $height,
@@ -627,11 +705,9 @@ class Uploadify extends Base {
             $result = true;
         }
 
-        /*验证图片一句话木马*/
         if (false === check_illegal($file->getInfo('tmp_name'), false, $file_ext)) {
-            $result = '疑似木马图片！';
+            $result = base64_decode(config('global.mm_tips'));
         }
-        /*--end*/
 
         $return_url = '';
         if (true !== $result || empty($file)) {
@@ -712,33 +788,38 @@ class Uploadify extends Base {
                 $return_data['path'] = $path;
 
                 //同步到第三方对象存储空间
+                $is_del_local = false;
                 $bucket_data = SynImageObjectBucket($return_url);
                 if (!empty($bucket_data)) {
                     if (!empty($bucket_data['local_save']) && $bucket_data['local_save'] == 1) {
                         unset($info);//解除图片的进程占用
-                        $this->del_local($return_url);
+                        $is_del_local = $this->del_local($return_url);
                     }
                     unset($bucket_data['local_save']);
                     $return_data = array_merge($return_data, $bucket_data);
                 }
 
                 /*-------------------------保存上传图片记录 start-----------------------*/
-                $addData = [
-                    'aid'         => 0,
-                    'type_id'     => 0,
-                    'image_url'   => $return_data['url'],
-                    'title'       => $original,
-                    'intro'       => '',
-                    'width'       => $width,
-                    'height'      => $height,
-                    'filesize'    => $filesize,
-                    'mime'        => $mime,
-                    'users_id'    => (int)session('users_id'),
-                    'sort_order'  => 100,
-                    'add_time'    => getTime(),
-                    'update_time' => getTime(),
-                ];
-                $img_id = Db::name('uploads')->insertGetId($addData);
+                $img_id = 0;
+                if (false === $is_del_local) {
+                    $addData = [
+                        'aid'         => 0,
+                        'type_id'     => 0,
+                        'group_code'  => 'image',
+                        'image_url'   => $return_data['url'],
+                        'title'       => basename($return_url),
+                        'intro'       => '',
+                        'width'       => $width,
+                        'height'      => $height,
+                        'filesize'    => $filesize,
+                        'mime'        => $mime,
+                        'users_id'    => (int)session('users_id'),
+                        'sort_order'  => 100,
+                        'add_time'    => getTime(),
+                        'update_time' => getTime(),
+                    ];
+                    $img_id = Db::name('uploads')->insertGetId($addData);
+                }
                 $return_data['img_id'] = $img_id;
                 /*-------------------------保存上传图片记录 end-----------------------*/
             }
@@ -851,9 +932,9 @@ class Uploadify extends Base {
             return json_encode(['state' => $state]);
         }
 
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = $this->savePath.getUploadSubDir();
         $info = $file->rule(function ($file) {
-            return session('admin_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
+            return (int)session('users_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
         })->move(UPLOAD_PATH . $this->savePath);
 
         if ($info) {
@@ -873,40 +954,83 @@ class Uploadify extends Base {
     //未开启同步本地功能，并删除本地图片
     public function del_local($filenames = '')
     {
+        // 安全修复：严格的路径验证和权限检查
+        
+        // 1. 规范化输入
         $arr = explode('?', $filenames);
         $filenames = current($arr);
-        $arr = explode('/', $filenames);
-        if (!empty($arr)) {
-            $total = count($arr);
-            $filename = $arr[$total - 1];
-            $filename = str_replace('\\', '', $filename);
-            unset($arr[$total - 1]);
-            $filepath = implode('/', $arr);
-            if (!preg_match('/^([\w\-\_\/]+)$/i', $filepath)) {
-                return false;
-            }
-            $filename = $filepath.'/'.$filename;
-            $filename= trim($filename,'.');
-            $filename = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/|/public/static/admin/logo/)#i', '$2', $filename);
-            if(eyPreventShell($filename) && !empty($filename) && @is_file('.'.$filename) && stristr($filename, 'uploads/')){
-                $filename_new = trim($filename,'/');
-                $filetype = preg_replace('/^(.*)\.(\w+)$/i', '$2', $filename);
-                $phpfile = strtolower(strstr($filename,'.php'));  //排除PHP文件
-                $size = getimagesize($filename_new);
-                $fileInfo = explode('/',$size['mime']);
-                if( $phpfile ){
-                    return false;
-                }
-
-                if( @unlink('.'.$filename) ){
-                    return true;
-                }else{
-                    return false;
-                }
-            }
+        
+        if (empty($filenames)) {
+            return false;
+        }
+        
+        // 2. 移除多余的斜杠和点号，防止路径穿越
+        $filenames = trim($filenames, '/.');
+        $filenames = str_replace(['\\', '../', '..\\', './'], '', $filenames);
+        
+        // 3. 确保路径以 uploads/ 开头
+        if (0 !== strpos($filenames, 'uploads/')) {
+            return false;
+        }
+        
+        // 4. 验证路径中不包含非法字符
+        if (!preg_match('/^uploads\/[\w\-\/\.]+$/i', $filenames)) {
+            return false;
+        }
+        
+        // 5. 构建完整路径并使用 realpath 验证
+        $full_path = ROOT_PATH . $filenames;
+        $real_path = realpath($full_path);
+        $base_path = realpath(ROOT_PATH . 'uploads/');
+        
+        // 检查文件是否真实存在且在允许的目录内
+        if (false === $real_path || false === $base_path) {
+            return false;
+        }
+        
+        // 确保文件路径在 uploads 目录内（防止目录穿越）
+        if (0 !== strpos($real_path, $base_path)) {
+            return false;
+        }
+        
+        // 6. 验证文件类型（白名单）
+        $allowExts = '';
+        $image_type = tpCache('basic.image_type');
+        !empty($image_type) && $allowExts .= '|'.$image_type;
+        $file_type = tpCache('basic.file_type');
+        !empty($file_type) && $allowExts .= '|'.$file_type;
+        $media_type = tpCache('basic.media_type');
+        !empty($media_type) && $allowExts .= '|'.$media_type;
+        $allowExts = !empty($allowExts) ? str_replace('||', '|', $allowExts) : config('global.image_ext');
+        $allowExtsArr = explode('|', $allowExts);
+        $ext = strtolower(pathinfo($real_path, PATHINFO_EXTENSION));
+        // 禁止删除非图片、文件、视频文件
+        if (!in_array($ext, $allowExtsArr)) {
+            return false;
         }
 
-        return true;
+        // 7. 验证是否为图片文件（双重验证）
+        if (!@getimagesize($real_path)) {
+            return false;
+        }
+        
+        // 8. 验证文件所有权（用户只能删除自己上传的文件）
+        $users_id = (int)session('users_id');
+        if ($users_id <= 0) {
+            return false;
+        }
+        
+        // 检查文件路径是否包含用户ID（根据上传路径规则）
+        if (false === strpos($real_path, DIRECTORY_SEPARATOR . 'user' . DIRECTORY_SEPARATOR . $users_id . DIRECTORY_SEPARATOR)) {
+            return false;
+        }
+        
+        // 9. 执行删除操作
+        if (@unlink($real_path)) {
+            return true;
+        }
+        
+        return false;
     }
 
     //上传文件
@@ -943,36 +1067,33 @@ class Uploadify extends Base {
         if (true !== $result || empty($file)) {
             echo json_encode(['msg' => $result]);exit;
         }
-        /*--end*/
 
-        // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
-        // 定义文件名
         $fileName    = $file->getInfo('name');
-        // 提取文件名后缀
-        $file_ext    = pathinfo($fileName, PATHINFO_EXTENSION);
-        // 提取出文件名，不包括扩展名
-        $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
-        // 过滤文件名.\/的特殊字符，防止利用上传漏洞
-        $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
-        // 过滤后的新文件名
-        $fileName = $newfileName.'.'.$file_ext;
-        // 中文转码
-        $this->fileName = iconv("utf-8","gb2312//IGNORE",$fileName);
+        $file_ext    = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        // 使用自定义的文件保存规则
+        $dangerExts = ['php','php3','php4','php5','phtml','pht','jsp','asp','aspx','exe','sh','bat','cgi'];
+        if (in_array($file_ext, $dangerExts)) {
+            echo json_encode(['msg' => '禁止上传该类型文件']);exit;
+        }
+
+        $savePath = $this->upload_path.$this->savePath.getUploadSubDir();
+
+        $this->fileName = $this->users_id . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
+
         $info = $file->rule(function ($file) {
-            return  $this->fileName;
-        })->move(UPLOAD_PATH.$this->savePath);
+            return $this->fileName;
+        })->move($savePath);
+
         if($info){
-            // 拼装数据存入session
-            $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+            $file_path = $savePath.$info->getSaveName();
+            $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
+            $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
             $return = array(
                 'code'      => 1,
                 'msg'       => foreign_lang('system10'),
-                'file_url'  => '/' . UPLOAD_PATH.$this->savePath.$fileName,
+                'file_url'  => '/' . $file_path,
                 'file_mime' => $file->getInfo('type'),
-                'file_name' => $fileName,
+                'file_name' => $newfileName.'.'.$file_ext,
                 'file_ext'  => '.' . $file_ext,
                 'file_size' => $info->getSize(),
                 'uhash'     => $this->uhash($file_path),
@@ -1046,7 +1167,8 @@ class Uploadify extends Base {
         //获取视频时长end
 
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $this->savePath = $this->savePath.date('Ymd/');
+        $this->savePath = preg_replace('/^allimg\//i', 'media/', $this->savePath);
+        $this->savePath = $this->savePath.getUploadSubDir();
         // 使用自定义的文件保存规则
         $info = $file->rule(function ($file) {
             return $this->users_id . '-' . dd2char(date("ymdHis") . mt_rand(100, 999));
@@ -1066,7 +1188,7 @@ class Uploadify extends Base {
 
             $data = array(
                 'state'    => 'SUCCESS',
-                'url'      => '/' . $file_path,
+                'url'      => ROOT_DIR . '/' . $file_path,
                 'time'     => $fileduration,
                 'title'    => $newfileName,
                 'original' => $info->getSaveName(),
@@ -1075,7 +1197,26 @@ class Uploadify extends Base {
                 'mime'     => $file->getInfo('type'),
             );
 
-            $data['url'] = ROOT_DIR . $data['url']; // 支持子目录
+            /*-------------------------保存上传视频记录到ey_uploads表 start-----------------------*/
+            $addData = [
+                'aid'         => 0,
+                'type_id'     => 0,
+                'group_code'  => 'video',
+                'image_url'   => $data['url'],
+                'title'       => $info->getSaveName(),
+                'intro'       => '',
+                'width'       => 0,
+                'height'      => 0,
+                'filesize'    => $data['size'],
+                'mime'        => $data['mime'],
+                'users_id'    => (int)session('users_id'),
+                'sort_order'  => 100,
+                'add_time'    => getTime(),
+                'update_time' => getTime(),
+            ];
+            $img_id = Db::name('uploads')->insertGetId($addData);
+            $data['img_id'] = $img_id;
+            /*-------------------------保存上传视频记录到ey_uploads表 end-----------------------*/
         } else {
             $data = array('state' => 'ERROR' . $info->getError());
         }

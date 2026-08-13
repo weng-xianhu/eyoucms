@@ -68,7 +68,7 @@ class AuthRole extends Base {
                 'name'  => 'require',
             );
             $msg = array(
-                'name.require' => '权限组名称不能为空！',
+                'name.require' => '角色名称不能为空！',
             );
             $data = array(
                 'name' => trim(input('name/s')),
@@ -82,11 +82,11 @@ class AuthRole extends Base {
             $model = model('AuthRole');
             $count = $model->where('name', $data['name'])->count();
             if(! empty($count)){
-                $this->error('该权限组名称已存在，请检查');
+                $this->error('该角色名称已存在，请检查');
             }
             $role_id = $model->saveAuthRole(input());
             if($role_id){
-                adminLog('新增权限组：'.$data['name']);
+                adminLog('新增角色：'.$data['name']);
                 $admin_role_list = model('AuthRole')->getRoleAll();
                 $this->success('操作成功', url('AuthRole/index'), ['role_id'=>$role_id,'role_name'=>$data['name'],'admin_role_list'=>json_encode($admin_role_list)]);
             }else{
@@ -119,9 +119,11 @@ class AuthRole extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_list = Db::name('arctype')->where([
-                'is_del'    => 0,
-            ])->order("grade desc")->select();
+        $where = ['is_del'=>0];
+        if (empty($this->globalConfig['web_language_switch'])) {
+            $where['lang'] = $this->admin_lang;
+        }
+        $arctype_list = Db::name('arctype')->where($where)->order("grade desc")->select();
         $arctype_p_html = $arctype_child_html = "";
         $arctype_all = list_to_tree($arctype_list);
         foreach ($arctype_all as $key => $arctype) {
@@ -169,7 +171,7 @@ class AuthRole extends Base {
                 'name' => 'require',
             );
             $msg = array(
-                'name.require' => '权限组名称不能为空！',
+                'name.require' => '角色名称不能为空！',
             );
             $data = array(
                 'name' => trim(input('name/s')),
@@ -185,11 +187,11 @@ class AuthRole extends Base {
                 ->where('id', '<>', $id)
                 ->count();
             if (!empty($count)) {
-                $this->error('该权限组名称已存在，请检查');
+                $this->error('该角色名称已存在，请检查');
             }
             $role_id = $model->saveAuthRole(input(), true);
             if ($role_id) {
-                adminLog('编辑权限组：' . $data['name']);
+                adminLog('编辑角色：' . $data['name']);
                 $this->success('操作成功', url('AuthRole/index'), ['role_id' => $role_id, 'role_name' => $data['name']]);
             } else {
                 $this->error('操作失败');
@@ -223,9 +225,11 @@ class AuthRole extends Base {
         $this->assign('auth_rule_list', $auth_rule_list);
 
         // 栏目
-        $arctype_list = Db::name('arctype')->where([
-            'is_del' => 0,
-        ])->order("grade desc")->select();
+        $where = ['is_del'=>0];
+        if (empty($this->globalConfig['web_language_switch'])) {
+            $where['lang'] = $this->admin_lang;
+        }
+        $arctype_list = Db::name('arctype')->where($where)->order("grade desc")->select();
         $arctype_p_html = $arctype_child_html = "";
         $arctype_all = list_to_tree($arctype_list);
         foreach ($arctype_all as $key => $arctype) {
@@ -321,16 +325,16 @@ class AuthRole extends Base {
 
             $role = Db::name('auth_role')->where("pid",'IN',$id_arr)->select();
             if ($role) {
-                $this->error('请先清空该权限组下的子权限组');
+                $this->error('请先清空该角色下的子角色');
             }
 
             $role_admin = Db::name('admin')->where("role_id",'IN',$id_arr)->select();
             if ($role_admin) {
-                $this->error('请先清空所属该权限组的管理员');
+                $this->error('请先清空所属该角色的管理员');
             } else {
                 $r = Db::name('auth_role')->where("id",'IN',$id_arr)->delete();
                 if($r){
-                    adminLog('删除权限组');
+                    adminLog('删除角色');
                     $this->success('删除成功');
                 }else{
                     $this->error('删除失败');

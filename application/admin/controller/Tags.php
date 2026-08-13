@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -189,17 +189,14 @@ class Tags extends Base
     
     public function clearall()
     {
-        $r = Db::name('tagindex')->where([
-                'lang'  => $this->admin_lang,
-            ])->delete();
-        if(false !== $r){
-            Db::name('taglist')->where([
-                'lang'  => $this->admin_lang,
-            ])->delete();
+        $prefix = config('database.prefix');
+        $result = @Db::execute("TRUNCATE TABLE `{$prefix}tagindex`;");
+        if (false !== $result) {
+            @Db::execute("TRUNCATE TABLE `{$prefix}taglist`;");
             \think\Cache::clear('taglist');
             adminLog('清空Tags标签');
             $this->success('操作成功');
-        }else{
+        } else {
             $this->error('操作失败');
         }
     }

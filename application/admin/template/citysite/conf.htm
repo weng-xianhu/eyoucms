@@ -62,7 +62,7 @@
                         <label>SEO关键词</label>
                     </dt>
                     <dd class="opt" style="width: auto;">          
-                        <textarea rows="5" cols="60" id="site_seo_keywords" name="site_seo_keywords" style="height:20px;">{$row.site_seo_keywords|default=''}</textarea>
+                        <textarea rows="5" cols="60" id="site_seo_keywords" name="site_seo_keywords" style="height:20px;" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')">{$row.site_seo_keywords|default=''}</textarea>
                         <span class="err"></span>
                         <p class="notic"></p>
                     </dd>

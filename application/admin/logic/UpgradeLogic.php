@@ -81,8 +81,8 @@ class UpgradeLogic extends Model
             /*
             // 随机不同渠道 start
             $urls = [$service_ey];
-            array_push($urls, str_ireplace('service.', 'service.eyou001.', $service_ey));
-            array_push($urls, str_ireplace('service.', 'service.eyou002.', $service_ey));
+            array_push($urls, str_ireplace('service.', 'service-001.', $service_ey));
+            array_push($urls, str_ireplace('service.', 'service-002.', $service_ey));
             $index_key = mt_rand(0, count($urls) - 1);
             $service_ey = empty($urls[$index_key]) ? $service_ey : $urls[$index_key];
             // end
@@ -91,7 +91,7 @@ class UpgradeLogic extends Model
                 if ('weapp' == $url_type) {
                     $service_ey = preg_replace('/^([^\/]+)\/\/(.*)$/i', '${1}//service.weapp.5fa.cn', $service_ey);
                 } else {
-                    $service_ey = str_replace("//service.", "//service.{$url_type}.", $service_ey);
+                    $service_ey = str_replace("//service.", "//service-{$url_type}.", $service_ey);
                 }
             }
         } else {
@@ -150,7 +150,7 @@ class UpgradeLogic extends Model
                 } 
             }
         }
-        
+
         if(!empty($serviceVersionList))
         {
             $upgradeArr = array();
@@ -158,6 +158,9 @@ class UpgradeLogic extends Model
             $upgradeStr = '';
             foreach ($serviceVersionList as $key => $val) {
                 if (!is_numeric($key)) {
+                    if (preg_match('/^sys_/i', $key)) {
+                        tpSetting('sys', [$key=>$val], 'cn');
+                    }
                     unset($serviceVersionList[$key]);
                     continue;
                 }
@@ -167,6 +170,10 @@ class UpgradeLogic extends Model
             }
             $upgradeArr = array_unique($upgradeArr);
             $upgradeStr = implode('<br>', $upgradeArr); // 升级提示需要覆盖哪些文件
+
+            if (empty($serviceVersionList)) {
+                return ['code' => 1, 'msg' => '已是最新版'];
+            }
 
             $introArr = explode('<br>', $introStr);
             $introStr = '更新日志：';
@@ -397,6 +404,11 @@ class UpgradeLogic extends Model
             return ['code' => 0, 'msg' => '文件'.$this->version_txt_path.' 不可写，不能升级!!!'];
         }
         /*最新更新版本信息*/
+        foreach ($serviceVersionList as $key => $val) {
+            if (!is_numeric($key)) {
+                unset($serviceVersionList[$key]);
+            }
+        }
         $lastServiceVersion = $serviceVersionList[count($serviceVersionList) - 1];
         /*--end*/
         /*批量下载更新包*/
@@ -437,11 +449,11 @@ class UpgradeLogic extends Model
             /*--end*/
             
             if (!file_exists($this->data_path.'backup'.DS.$folderName.DS.'www'.DS.'data'.DS.'conf'.DS.'version.txt')) {
-                return ['code' => 0, 'msg' => "缺少version.txt文件，请联系客服"];
+                return ['code' => 0, 'msg' => "解压失败，请检查所有目录是否有读写权限"];
             }
 
             if (file_exists($this->data_path.'backup'.DS.$folderName.DS.'www'.DS.'application'.DS.'database.php')) {
-                return ['code' => 0, 'msg' => "不得修改数据库配置文件，请联系客服"];
+                return ['code' => 0, 'msg' => "不得修改数据库配置文件"];
             }
 
             /*更新的文件列表*/
@@ -495,20 +507,18 @@ class UpgradeLogic extends Model
                  */
                 try {
                     $counts = count($sqlFormat);
-
                     for ($i = 0; $i < $counts; $i++) {
                         $sql = trim($sqlFormat[$i]);
-
-                        if (stristr($sql, 'CREATE TABLE')) {
-                            Db::execute($sql);
-                        } else {
-                            if(trim($sql) == '')
-                               continue;
-                            Db::execute($sql);
+                        if (trim($sql) == '') {
+                            continue;
                         }
+                        if ($this->skipUpgradeFieldSql($sql)) {
+                            continue;
+                        }
+                        Db::execute($sql);
                     }
                 } catch (\Exception $e) {
-                    return ['code' => -2, 'msg' => "数据库执行中途失败，请查看官方解决教程，否则将影响后续的版本升级！"];
+                    return ['code' => -2, 'msg' => "数据库执行中途失败，请点击开始检测，数据库结构是否异常！"];
                 }
             }
         }
@@ -524,7 +534,7 @@ class UpgradeLogic extends Model
             $adminbasefile = preg_replace('/^(.*)\/([^\/]+)$/i', '$2', request()->baseFile());
             if ($login_php != $adminbasefile && is_writable($this->root_path.$adminbasefile)) {
                 if (!@copy($rootLoginFile, $this->root_path.$adminbasefile)) {
-                    return ['code' => 0, 'msg' => "更新入口文件失败，请第一时间请求技术支持，否则将影响部分功能的使用！"];
+                    return ['code' => 0, 'msg' => "更新入口文件失败，将影响部分功能的使用！"];
                 }
                 @unlink($this->root_path.$login_php);
             } 
@@ -583,6 +593,84 @@ class UpgradeLogic extends Model
                 }
             }
         }
+    }
+
+    private function skipUpgradeFieldSql($sql)
+    {
+        $matches = array();
+        $table = '';
+        $field = '';
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+ADD\s+(?:COLUMN\s+)?`?([^\s`,]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $field = $matches[2];
+            return $this->hasTableField($table, $field);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+DROP\s+(?:COLUMN\s+)?`?([^\s`,;]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $field = $matches[2];
+            return !$this->hasTableField($table, $field);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+ADD\s+(?:UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?(?:INDEX|KEY)\s+`?([^\s`(]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $index = $matches[2];
+            return $this->hasTableIndex($table, $index);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+DROP\s+(?:INDEX|KEY)\s+`?([^\s`,;]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $index = $matches[2];
+            return !$this->hasTableIndex($table, $index);
+        }
+
+        if (preg_match('/^CREATE\s+(?:UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?INDEX\s+`?([^\s`(]+)`?\s+ON\s+`?([^\s`(]+)`?/i', $sql, $matches)) {
+            $index = $matches[1];
+            $table = $matches[2];
+            return $this->hasTableIndex($table, $index);
+        }
+
+        return false;
+    }
+
+    private function hasTableField($table, $field)
+    {
+        if (empty($table) || empty($field)) {
+            return false;
+        }
+
+        $fields = Db::getTableFields($table);
+        if (empty($fields)) {
+            return false;
+        }
+
+        return in_array(strtolower($field), array_map('strtolower', $fields));
+    }
+
+    private function hasTableIndex($table, $index)
+    {
+        if (empty($table) || empty($index)) {
+            return false;
+        }
+
+        try {
+            $indexes = Db::query("SHOW INDEX FROM `{$table}`");
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        if (empty($indexes)) {
+            return false;
+        }
+
+        foreach ($indexes as $row) {
+            if (strtolower($row['Key_name']) === strtolower($index)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -741,7 +829,7 @@ class UpgradeLogic extends Model
         }
 
         if (preg_match('#__HALT_COMPILER()#i', $file)) {
-            return ['code' => 0, 'msg' => '下载包损坏，请联系官方客服！'];
+            return ['code' => 0, 'msg' => '下载包损坏，请检查所有目录是否有读写权限'];
         }
                                                           
         $fp = fopen($saveDir,'w');
@@ -749,7 +837,7 @@ class UpgradeLogic extends Model
         fclose($fp);
         if(!eyPreventShell($saveDir) || !file_exists($saveDir) || $md5File != md5_file($saveDir))
         {
-            return ['code' => 0, 'msg' => '下载升级包失败，请检查网站目录权限'];
+            return ['code' => 0, 'msg' => '下载升级包失败，请检查所有目录是否有读写权限'];
         }
         return ['code' => 1, 'msg' => '下载成功'];
     }            
@@ -760,7 +848,7 @@ class UpgradeLogic extends Model
 
         $constsant_path = APP_PATH.MODULE_NAME.'/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");

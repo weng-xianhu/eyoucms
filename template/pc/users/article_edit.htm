@@ -81,6 +81,12 @@
                                         </div>
                                     </div>
                                     <div class="item-from-row">
+                                        <div class="from-row-l"> 文章来源：</div>
+                                        <div class="from-row-r">
+                                            <input type="text" value="{$ArchivesData.origin}" name="origin" id="origin" class="el-input__inner w200">
+                                        </div>
+                                    </div>
+                                    <div class="item-from-row">
                                         <div class="from-row-l">
                                             <label for="title">TAG标签：</label>
                                         </div>
@@ -98,7 +104,7 @@
                                             <a href="javascript:void(0);" onclick="$('#litpicOnclick').trigger('click');" class="img-upload" title="点击上传">
                                                 <div class="y-line" id="litpicYline" {notempty name='$ArchivesData.litpic'} style="display: none;" {/notempty}></div>
                                                 <div class="x-line" id="litpicXline" {notempty name='$ArchivesData.litpic'} style="display: none;" {/notempty}></div>
-                                                <img src="{$ArchivesData.litpic}" id="litpicImgSrc" class="none" {notempty name='$ArchivesData.litpic'} style="display: block;" {/notempty}>
+                                                <img src="{$ArchivesData.litpic}" id="litpicImgSrc" {notempty name='$ArchivesData.litpic'} style="display: block;" {/notempty}>
                                             </a>
                                             <input type="hidden" name="litpic_inpiut" id="litpicInpiut" value="{$ArchivesData.litpic}">
                                             <input type="file" name="litpic_inpiut_file" id="litpicOnclick" onchange="litpicOnclickFile(this);" style="display: none;">
@@ -175,7 +181,7 @@
                                                   </a>
                                               </div>
                                               <!-- 上传图片显示的样板 start -->
-                                              <div class="images_upload_tpl none">
+                                              <div class="images_upload_tpl" style="display: none;">
                                                   <div class="images_upload">
                                                       <div class="images_upload_item">
                                                           <input type="hidden" name="imgupload[]" value="" />

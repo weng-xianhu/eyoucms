@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -15,8 +15,13 @@
 $serial_number = DEFAULT_SERIALNUMBER;
 $constsant_path = APP_PATH.'admin/conf/constant.php';
 if (file_exists($constsant_path)) {
-    require_once($constsant_path);
-    $serial_number = substr(SERIALNUMBER, -8);
+    $real_constsant_path = realpath($constsant_path);
+    // 验证路径安全性：必须在APP_PATH目录内且为.php文件
+    if ($real_constsant_path && pathinfo($real_constsant_path, PATHINFO_EXTENSION) === 'php'
+        && strpos($real_constsant_path, realpath(APP_PATH)) === 0) {
+        require_once($real_constsant_path);
+        $serial_number = substr(SERIALNUMBER, -8);
+    }
 }
 // end
 
@@ -54,16 +59,23 @@ if (false === $lang_switch_on && file_exists($citysite_file)) {
 $redis_enable = $cache_prefix = '';
 $redis_config_file = WEAPP_PATH.'Redis'.DS.'conf'.DS.'config.php';
 if (file_exists($redis_config_file)) {
-    require_once($redis_config_file);
-    if (defined('WEAPP_REDIS_OPEN') && WEAPP_REDIS_OPEN == 1) {
-        $redis_enable = 'redis';
-        if (defined('WEAPP_REDIS_CACHE_PREFIX')) {
-            $cache_prefix = WEAPP_REDIS_CACHE_PREFIX;
-        } else {
-            $cache_prefix = $serial_number.'_';
+    $real_redis_path = realpath($redis_config_file);
+    // 验证路径安全性：必须在WEAPP_PATH目录内且为.php文件
+    if ($real_redis_path && pathinfo($real_redis_path, PATHINFO_EXTENSION) === 'php'
+        && strpos($real_redis_path, realpath(WEAPP_PATH)) === 0) {
+        require_once($real_redis_path);
+        if (defined('WEAPP_REDIS_OPEN') && WEAPP_REDIS_OPEN == 1) {
+            $redis_enable = 'redis';
+            if (defined('WEAPP_REDIS_CACHE_PREFIX')) {
+                $cache_prefix = WEAPP_REDIS_CACHE_PREFIX;
+            } else {
+                $cache_prefix = $serial_number.'_';
+            }
         }
     }
 }
+$session_save_handler = @ini_get('session.save_handler');
+$session_path = (!$session_save_handler || in_array($session_save_handler, ['redis','memcache','memcached'])) ? '' : 'data/session_'.$serial_number;
 
 // session会话设置
 $session_conf = [
@@ -80,19 +92,24 @@ $session_conf = [
     // 'host'           => '127.0.0.1',
     // 端口
     // 'port'           => 11211,
-    'path'  => 'data/session_'.$serial_number,
+    'path'  => $session_path,
 ];
 $session_file = APP_PATH.'admin/conf/session_conf.php';
 if (file_exists($session_file)) {
-    require_once($session_file);
-    $session_conf_tmp = EY_SESSION_CONF;
-    if (!empty($session_conf_tmp)) {
-        $session_conf_tmp = json_decode($session_conf_tmp, true);
-        if (!empty($session_conf_tmp) && is_array($session_conf_tmp)) {
-            isset($session_conf_tmp['expire']) && $session_conf_tmp['expire'] = intval($session_conf_tmp['expire']);
-            $session_conf = array_merge($session_conf, $session_conf_tmp);
-        } else {
-            $session_conf = array_merge($session_conf, ['expire'=>7200]);
+    $real_session_path = realpath($session_file);
+    // 验证路径安全性：必须在APP_PATH目录内且为.php文件
+    if ($real_session_path && pathinfo($real_session_path, PATHINFO_EXTENSION) === 'php'
+        && strpos($real_session_path, realpath(APP_PATH)) === 0) {
+        require_once($real_session_path);
+        $session_conf_tmp = EY_SESSION_CONF;
+        if (!empty($session_conf_tmp)) {
+            $session_conf_tmp = json_decode($session_conf_tmp, true);
+            if (!empty($session_conf_tmp) && is_array($session_conf_tmp)) {
+                isset($session_conf_tmp['expire']) && $session_conf_tmp['expire'] = intval($session_conf_tmp['expire']);
+                $session_conf = array_merge($session_conf, $session_conf_tmp);
+            } else {
+                $session_conf = array_merge($session_conf, ['expire'=>7200]);
+            }
         }
     }
 }
@@ -326,6 +343,8 @@ return array(
         'httponly'  => '', // 设置为true时，通过阻止 JS 读取 Cookie 来 防止XSS 攻击
         // 是否使用 setcookie
         'setcookie' => true,
+        // 防止跨站请求伪造（CSRF）攻击
+        'samesite' => 'Lax', // 推荐 Lax 或 Strict，跨域需求用 None
     ),
     
     // +----------------------------------------------------------------------
@@ -432,7 +451,7 @@ return array(
     // 缓存的页面，规则：模块 控制器 方法名 参数名
     'HTML_CACHE_ARR'    => [
         // 首页
-        'home_Index_index'      => ['filename'=>'index', 'cache'=>7200],
+        'home_Index_index'      => ['filename'=>'index', 'p'=>array(), 'cache'=>7200],
         // [普通伪静态]文章
         'home_Article_index'    => ['filename'=>'channel', 'cache'=>7200],
         'home_Article_lists'    => ['filename'=>'lists', 'p'=>array('page','tid'), 'cache'=>7200],

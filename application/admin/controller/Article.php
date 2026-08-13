@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -124,7 +124,10 @@ class Article extends Base
         // 自定义排序
         $orderby = input('param.orderby/s');
         $orderway = input('param.orderway/s');
-        if (!empty($orderby) && !empty($orderway)) {
+        // 安全修复: 使用正则表达式验证，防止 SQL 注入
+        if (!empty($orderby) && !empty($orderway)
+            && preg_match('/^[\w\-]+$/', $orderby)
+            && preg_match('/^(asc|desc)$/i', $orderway)) {
             $orderby = "a.{$orderby} {$orderway}, a.aid desc";
         } else {
             $orderby = "a.aid desc";
@@ -342,20 +345,18 @@ class Article extends Base
                 $post['stypeid'] = str_replace(",{$post['typeid']},", ',', ",{$post['stypeid']},");
                 $post['stypeid'] = trim($post['stypeid'], ',');
             }
-            
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // 存储数据
             $newData = array(
                 'typeid' => empty($post['typeid']) ? 0 : $post['typeid'],
                 'channel'   => $this->channeltype,
-                'is_b'      => empty($post['is_b']) ? 0 : $post['is_b'],
-                'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
-                'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
-                'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
-                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
-                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
-                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
-                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_img_clear_link' => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'     => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -368,21 +369,29 @@ class Article extends Base
                 'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'users_price'      => empty($post['users_price']) ? 0 : floatval($post['users_price']),
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
+                'users_score'      => empty($post['users_score']) ? 0 : intval($post['users_score']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'  => strtotime($post['add_time']),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
+
             $aid = Db::name('archives')->insertGetId($data);
             if (!empty($aid)) {
                 $_POST['aid'] = $aid;
                 if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                     if (empty($post['size'])) {$post['size'] = 1;}
                     $free_content = !empty($post['free_content']) ? $post['free_content'] : '';
-                    if (!empty($post['part_free']) && 2 == $post['part_free']){
-                        $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
-                        $free_content = $this->SpLongBody($free_content, $post['size']);
-                        // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
-                        $free_content = htmlspecialchars($free_content);
+                    if (!empty($post['part_free'])){
+                        if (2 == $post['part_free']){
+                            $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
+                            $free_content = $this->SpLongBody($free_content, $post['size']);
+                            // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
+                            $free_content = htmlspecialchars($free_content);
+                        } else if (3 == $post['part_free']) {
+                            $post['size'] = 0;
+                            $free_content = $post['addonFieldExt']['content'];
+                        }
                     }
                     Db::name('article_pay')->insert([
                         'aid'          => $aid,
@@ -641,20 +650,18 @@ class Article extends Base
                 $post['stypeid'] = str_replace(",{$typeid},", ',', ",{$post['stypeid']},");
                 $post['stypeid'] = trim($post['stypeid'], ',');
             }
-
+            //自定义文档属性
+            $flag_fieldname_arr = Db::name('archives_flag')->where(['flag_fieldname'=>['NOTIN', ['is_jump']]])->column('flag_fieldname');
+            foreach ($flag_fieldname_arr as $key => $val) {
+                $post[$val] = empty($post[$val]) ? 0 : $post[$val];
+            }
             // 存储数据
             $newData = array(
                 'typeid'=> $typeid,
                 'channel'   => $channel,
-                'is_b'      => empty($post['is_b']) ? 0 : $post['is_b'],
-                'is_head'      => empty($post['is_head']) ? 0 : $post['is_head'],
-                'is_special'      => empty($post['is_special']) ? 0 : $post['is_special'],
-                'is_recom'      => empty($post['is_recom']) ? 0 : $post['is_recom'],
-                'is_roll'      => empty($post['is_roll']) ? 0 : $post['is_roll'],
-                'is_slide'      => empty($post['is_slide']) ? 0 : $post['is_slide'],
-                'is_diyattr'      => empty($post['is_diyattr']) ? 0 : $post['is_diyattr'],
                 'editor_remote_img_local'=> empty($post['editor_remote_img_local']) ? 0 : $post['editor_remote_img_local'],
-                'editor_img_clear_link'  => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_img_clear_link' => empty($post['editor_img_clear_link']) ? 0 : $post['editor_img_clear_link'],
+                'editor_ai_create' => empty($post['editor_ai_create']) ? 0 : $post['editor_ai_create'],
                 'is_jump'   => $is_jump,
                 'is_litpic'     => $is_litpic,
                 'jumplinks' => $jumplinks,
@@ -663,20 +670,28 @@ class Article extends Base
                 'crossed_price'     => empty($post['crossed_price']) ? 0 : floatval($post['crossed_price']),
                 'users_price'      => empty($post['users_price']) ? 0 : floatval($post['users_price']),
                 'old_price'      => empty($post['old_price']) ? 0 : floatval($post['old_price']),
+                'users_score'      => empty($post['users_score']) ? 0 : intval($post['users_score']),
                 'add_time'     => strtotime($post['add_time']),
                 'update_time'     => getTime(),
+                'removal_time'  => empty($post['removal_time']) ? 0 : strtotime($post['removal_time']),
             );
             $data = array_merge($post, $newData);
+            
             $r = Db::name('archives')->where(['aid' => $data['aid'], 'lang'  => $this->admin_lang])->update($data);
             if ($r !== false) {
                 if (!empty($post['restric_type']) && 0 < $post['restric_type']) {
                     if (empty($post['size'])) {$post['size'] = 1;}
                     $free_content = !empty($post['free_content']) ? $post['free_content'] : '';
-                    if (!empty($post['part_free']) && 2 == $post['part_free']){
-                        $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
-                        $free_content = $this->SpLongBody($free_content, $post['size']);
-                        // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
-                        $free_content = htmlspecialchars($free_content);
+                    if (!empty($post['part_free'])){
+                        if (2 == $post['part_free']){
+                            $free_content = htmlspecialchars_decode($post['addonFieldExt']['content']);
+                            $free_content = $this->SpLongBody($free_content, $post['size']);
+                            // $free_content = $this->SpLongBody($free_content,$post['size']*1024);
+                            $free_content = htmlspecialchars($free_content);
+                        } else if (3 == $post['part_free']) {
+                            $post['size'] = 0;
+                            $free_content = $post['addonFieldExt']['content'];
+                        }
                     }
                     $is_in = Db::name('article_pay')->where('aid',$data['aid'])->find();
                     $article_pay_data = [

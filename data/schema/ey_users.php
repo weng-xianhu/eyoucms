@@ -333,6 +333,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'users_notes' => 
+  array (
+    'name' => 'users_notes',
+    'type' => 'varchar(500)',
+    'notnull' => false,
+    'default' => '',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'sex' => 
   array (
     'name' => 'sex',

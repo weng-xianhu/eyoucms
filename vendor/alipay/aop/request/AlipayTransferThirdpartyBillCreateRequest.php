@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.transfer.thirdparty.bill.create request
  *
  * @author auto create
- * @since 1.0, 2014-06-25 17:00:56
+ * @since 1.0, 2024-07-04 16:38:08
  */
 class AlipayTransferThirdpartyBillCreateRequest
 {

@@ -4,62 +4,64 @@
 <div id="ajaxwaitid"></div>
 <div class="page">
     {include file="bar.htm" /}
+    
+    <!-- 数据表格区域 -->
     <div class="flexigrid">
+        <!-- 工具栏 -->
         <div class="mDiv">
             <div class="ftitle">
                 <div class="fbutton">
-                    <a href="javascript:void(0);" data-href="{:weapp_url('Sample/Sample/add')}" onclick="openFullframe(this, '新增链接');">
+                    <a href="javascript:void(0);" data-href="{:weapp_url('Sample/Sample/add')}" 
+                       onclick="openFullframe(this, '新增数据');">
                         <div class="add">
-                            <span><i class="layui-icon layui-icon-addition"></i>新增链接</span>
+                            <span><i class="layui-icon layui-icon-addition"></i>新增数据</span>
                         </div>
                     </a>
                 </div>
             </div>
-            <form class="navbar-form form-inline" action="{:weapp_url('Sample/Sample/index')}" method="get" onsubmit="layer_loading('正在处理');">
+            <!-- 搜索表单 -->
+            <form class="navbar-form form-inline" action="{:weapp_url('Sample/Sample/index')}" 
+                  method="get" onsubmit="layer_loading('正在处理');">
                 {$searchform.hidden|default=''}
                 <div class="sDiv">
                     <div class="sDiv2">
-                        <input type="text" size="30" name="keywords" class="qsbox" placeholder="搜索相关数据...">
+                        <select name="position" class="select" style="margin:0px 5px;">
+                            <option value="">默认全部</option>
+                        </select>
+                    </div>
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" class="qsbox" 
+                               placeholder="搜索相关数据..." value="{$keywords|default=''}">
                         <input type="submit" class="btn" value="搜索">
                         <i class="fa fa-search"></i>
                     </div>
                 </div>
             </form>
         </div>
+        
+        <!-- 表头 -->
         <div class="hDiv">
             <div class="hDivBox">
                 <table cellspacing="0" cellpadding="0" style="width: 100%">
                     <thead>
                     <tr>
-                        <th class="sign w40" axis="col0">
+                        <th class="sign w40">
                             <div class="tc"><input type="checkbox" autocomplete="off" class="checkAll"></div>
                         </th>
-                        <th abbr="article_show" axis="col5" class="w40">
-                            <div class="tc">ID</div>
-                        </th>
-                        <th abbr="article_title" axis="col3" class="w250">
-                            <div class="tc">网站名称</div>
-                        </th>
-                        <th abbr="ac_id" axis="col4">
-                            <div style="text-align: left; padding-left: 10px;" class="">链接地址</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w100">
-                            <div class="tc">新窗口</div>
-                        </th>
-                        <th abbr="article_time" axis="col6" class="w160">
-                            <div class="tc">更新时间</div>
-                        </th>
-                        <th axis="col1" class="w120">
-                            <div class="tc">操作</div>
-                        </th>
-                        <th abbr="article_show" axis="col5" class="w60">
-                            <div class="tc">排序</div>
-                        </th>
+                        <th class="w40"><div class="tc">ID</div></th>
+                        <th class="w250"><div class="tc">网站名称</div></th>
+                        <th><div class="tl" style="padding-left: 10px;">链接地址</div></th>
+                        <th class="w100"><div class="tc">新窗口</div></th>
+                        <th class="w160"><div class="tc">更新时间</div></th>
+                        <th class="w120"><div class="tc">操作</div></th>
+                        <th class="w60"><div class="tc">排序</div></th>
                     </tr>
                     </thead>
                 </table>
             </div>
         </div>
+        
+        <!-- 数据内容 -->
         <div class="bDiv" style="height: auto;">
             <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
                 <table style="width: 100%">
@@ -79,21 +81,17 @@
                                 <div class="w40 tc"><input type="checkbox" name="ids[]" value="{$vo.id}"></div>
                             </td>
                             <td class="sort">
-                                <div class="w40 tc">
-                                    {$vo.id}
-                                </div>
+                                <div class="w40 tc">{$vo.id}</div>
                             </td>
-                            <td class="">
+                            <td>
                                 <div class="w250 tc">
                                     <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}">{$vo.title}</a>
                                 </div>
                             </td>
-                            <td class="" style="width: 100%;">
-                                <div class="tl" style="padding-left: 10px;">
-                                    {$vo.url}
-                                </div>
+                            <td style="width: 100%;">
+                                <div class="tl" style="padding-left: 10px;">{$vo.url}</div>
                             </td>
-                            <td class="">
+                            <td>
                                 <div class="w100 tc">
                                     {eq name="$vo['target']" value='1'}
                                         <span class="yes" onClick="changeTableVal('weapp_sample','id','{$vo.id}','target',this);"><i class="fa fa-check-circle"></i>是</span>
@@ -102,21 +100,23 @@
                                     {/eq}
                                 </div>
                             </td>
-                            <td class="">
-                                <div class="w160 tc">
-                                    {$vo.update_time|MyDate='Y-m-d H:i:s',###}
-                                </div>
+                            <td>
+                                <div class="w160 tc">{$vo.update_time|MyDate='Y-m-d H:i:s',###}</div>
                             </td>
                             <td class="operation">
                                 <div class="w120 tc">
                                     <a href="{:weapp_url('Sample/Sample/edit',array('id'=>$vo['id']))}" class="btn blue">编辑</a>
                                     <i></i>
-                                    <a class="btn red"  href="javascript:void(0)" data-url="{:weapp_url('Sample/Sample/del')}" data-id="{$vo.id}" onClick="delfun(this);">删除</a>
+                                    <a class="btn red" href="javascript:void(0)" 
+                                       data-url="{:weapp_url('Sample/Sample/del')}" 
+                                       data-id="{$vo.id}" onClick="delfun(this);">删除</a>
                                 </div>
                             </td>
                             <td class="sort">
                                 <div class="w60 tc">
-                                    <input style="text-align: left;" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');" onchange="changeTableVal('weapp_sample','id','{$vo.id}','sort_order',this);" size="4"  value="{$vo.sort_order}" />
+                                    <input type="text" size="4" value="{$vo.sort_order}" 
+                                           onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'');"
+                                           onchange="changeTableVal('weapp_sample','id','{$vo.id}','sort_order',this);" />
                                 </div>
                             </td>
                         </tr>
@@ -127,6 +127,8 @@
             </div>
             <div class="iDiv" style="display: none;"></div>
         </div>
+        
+        <!-- 底部操作栏 -->
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -134,15 +136,11 @@
                 </div>
                 <div class="fbutton">
                     <a onclick="batch_del(this, 'ids');" data-url="{:weapp_url('Sample/Sample/del')}">
-                        <div class="add">
-                            <span>批量删除</span>
-                        </div>
+                        <div class="add"><span>批量删除</span></div>
                     </a>
                 </div>
                 <div class="fbuttonr">
-                    <div class="pages">
-                       {$pageStr}
-                    </div>
+                    <div class="pages">{$pageStr}</div>
                 </div>
                 <div class="fbuttonr">
                     <div class="total">
@@ -153,7 +151,6 @@
                                 <option {if condition="$pager->listRows == 50"} selected {/if} value="50">50</option>
                                 <option {if condition="$pager->listRows == 100"} selected {/if} value="100">100</option>
                                 <option {if condition="$pager->listRows == 200"} selected {/if} value="200">200</option>
-                                <!-- <option {if condition="$pager->listRows == 500"} selected {/if} value="500">500</option> -->
                             </select>
                        </h5>
                     </div>
@@ -165,16 +162,6 @@
 </div>
 <script>
     $(document).ready(function(){
-        // 表格行点击选中切换
-        $('#flexigrid > table>tbody >tr').click(function(){
-            $(this).toggleClass('trSelected');
-        });
-
-        // 点击刷新数据
-        $('.fa-refresh').click(function(){
-            location.href = location.href;
-        });
-        
         $('input[name*=ids]').click(function(){
             if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
                 $('.checkAll').prop('checked','checked');

@@ -99,6 +99,15 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
+  'is_multiselect' => 
+  array (
+    'name' => 'is_multiselect',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
   'is_release' => 
   array (
     'name' => 'is_release',

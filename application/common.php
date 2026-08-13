@@ -18,6 +18,22 @@ error_reporting(0);
 
 include_once EXTEND_PATH."function.php";
 
+// hash_equals 兼容 PHP 5.4/5.5
+if (!function_exists('hash_equals')) {
+    function hash_equals($known_string, $user_string)
+    {
+        $known_string = (string)$known_string;
+        $user_string  = (string)$user_string;
+        $known_len = strlen($known_string);
+        $user_len  = strlen($user_string);
+        $result = $known_len ^ $user_len;
+        for ($i = 0; $i < $known_len; $i++) {
+            $result |= ord($known_string[$i]) ^ ord($user_string[$i % $user_len]);
+        }
+        return $result === 0;
+    }
+}
+
 // 应用公共文件
 
 if (!function_exists('switch_exception')) 
@@ -64,7 +80,16 @@ if (!function_exists('adminLog'))
             
             $admin_id = session('admin_id');
             $admin_id = !empty($admin_id) ? $admin_id : -1;
-            if ($admin_id > 0) {
+            
+            // 允许记录安全相关日志，即使未登录
+            $is_security_log = false;
+            if (strpos($log_info, '暴力破解') !== false || 
+                strpos($log_info, '登录失败') !== false || 
+                strpos($log_info, '检测到异常') !== false) {
+                $is_security_log = true;
+            }
+            
+            if ($admin_id > 0 || $is_security_log) {
                 $add['log_time'] = getTime();
                 $add['admin_id'] = $admin_id;
                 $add['log_info'] = htmlspecialchars($log_info);
@@ -105,7 +130,7 @@ if (!function_exists('adminlogin_lock_clear'))
             }
             $r = \think\Db::name('setting')->where($where)->delete();
             if ($r !== false) {
-                if (config('database.type') != 'dm') { // 达梦优化
+                if (!in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓优化
                     \think\Db::query("REPAIR TABLE " . config('database.prefix') . "setting");
                     \think\Db::query("ALTER TABLE " . config('database.prefix') . " AUTO_INCREMENT 1");
                 }
@@ -523,13 +548,23 @@ if (!function_exists('write_html_cache'))
                 if (!preg_match('/^([\w\-]+)$/', $param['aid'])) {
                     abort(404,'页面不存在');
                 }
+            } else if (isset($param['tagid'])) {
+                if (is_numeric($param['tagid']) && $param['tagid'] == 0) {
+                    abort(404,'页面不存在');
+                }
             }
 
+            $php_agentcode = config('tpcache.php_agentcode');
             $m_c_a_str = $request->module().'_'.$request->controller().'_'.$request->action(); // 模块_控制器_方法
             $m_c_a_str = strtolower($m_c_a_str);
             //exit('write_html_cache写入缓存<br/>');
             foreach($html_cache_arr as $mca=>$val)
             {
+                if (1 == $php_agentcode) {
+                    if ('home_Index_index' == $mca) {
+                        !in_array('aid', $val['p']) && array_push($val['p'], 'aid');
+                    }
+                }
                 $mca = strtolower($mca);
                 if($mca != $m_c_a_str) //不是当前 模块 控制器 方法 直接跳过
                     continue;
@@ -682,13 +717,23 @@ if (!function_exists('read_html_cache'))
                 if (!preg_match('/^([\w\-]+)$/', $param['aid'])) {
                     abort(404,'页面不存在');
                 }
+            } else if (isset($param['tagid'])) {
+                if (is_numeric($param['tagid']) && $param['tagid'] == 0) {
+                    abort(404,'页面不存在');
+                }
             }
 
+            $php_agentcode = config('tpcache.php_agentcode');
             $m_c_a_str = $request->module().'_'.$request->controller().'_'.$request->action(); // 模块_控制器_方法
             $m_c_a_str = strtolower($m_c_a_str);
             //exit('read_html_cache读取缓存<br/>');
             foreach($html_cache_arr as $mca=>$val)
             {
+                if (1 == $php_agentcode) {
+                    if ('home_Index_index' == $mca) {
+                        !in_array('aid', $val['p']) && array_push($val['p'], 'aid');
+                    }
+                }
                 $mca = strtolower($mca);
                 if($mca != $m_c_a_str) //不是当前 模块 控制器 方法 直接跳过
                     continue;
@@ -798,7 +843,6 @@ if (!function_exists('read_html_cache'))
                         'prefix'    => $cache_tag,
                     );
                     $html = html_cache($filename, '', $options);
-                    // $html = $html_cache->get($filename);
                     if($html)
                     {
                         echo $html;
@@ -936,7 +980,7 @@ if (!function_exists('get_default_pic'))
                 $domain = '';
             }
             
-            $pic_url = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/public/static/|/uploads/|/weapp/)#i', '$2', $pic_url); // 支持子目录
+            $pic_url = preg_replace('#^(/[/\w\-]+)?(/public/(upload|plugins|static)/|/uploads/|/weapp/)#i', '$2', $pic_url); // 支持子目录
             $realpath = realpath(ROOT_PATH.trim($pic_url, '/'));
             if ( is_file($realpath) && file_exists($realpath) ) {
                 $pic_url = $domain . ROOT_DIR . $pic_url;
@@ -973,17 +1017,17 @@ if (!function_exists('handle_subdir_pic'))
                 $domain = false;
             }
         }
+        static $weappList = null;
         switch ($type) {
             case 'img':
                 if (!is_http_url($str) && !empty($str)) {
-                    $str = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/public/static/|/uploads/|/weapp/)#i', $add_root_dir.'$2', $str);
+                    $str = preg_replace('#^(/[/\w\-]+)?(/public/(upload|static|plugins)/|/uploads/|/weapp/)#i', $add_root_dir.'$2', $str);
                 }else if (is_http_url($str) && !empty($str)) {
                     $StrData = parse_url($str);
                     if (empty($StrData['scheme']) && $request->host(true) != $StrData['host']) {
-                        $StrData['path'] = preg_replace('#^(/[/\w\-]+)?(/public/upload/|/uploads/|/public/static/)#i', '$2', $StrData['path']);
-                        if (preg_match('#^(/public/upload/|/public/static/|/uploads/|/weapp/)#i', $StrData['path']) && file_exists('.'.$StrData['path'])) {
+                        $StrData['path'] = preg_replace('#^(/[/\w\-]+)?(/public/(upload|static|plugins)/|/uploads/)#i', '$2', $StrData['path']);
+                        if (preg_match('#^(/public/(upload|static|plugins)/|/uploads/|/weapp/)#i', $StrData['path']) && file_exists('.'.$StrData['path'])) {
                             // 插件列表
-                            static $weappList = null;
                             if (null == $weappList) {
                                 $weappList = \think\Db::name('weapp')->where([
                                     'status'    => 1,
@@ -1052,7 +1096,6 @@ if (!function_exists('handle_subdir_pic'))
                 $imgArr = empty($imginfo[0]) ? [] : $imginfo[0];
                 if (!empty($imgArr)) {
                     // 插件列表
-                    static $weappList = null;
                     if (null == $weappList) {
                         $weappList = \think\Db::name('weapp')->where([
                             'status'    => 1,
@@ -1060,27 +1103,37 @@ if (!function_exists('handle_subdir_pic'))
                         ->getAllWithIndex('code');
                     }
                     foreach ($imgArr as $key => $value) {
-                        preg_match_all("#src=('|\")(.*)('|\")#isU", $value, $img_val);
+                        $value = htmlspecialchars_decode($value);
+                        preg_match_all("#src=('|\"|&quot;)(.*)('|\"|&quot;)#isU", $value, $img_val);
                         if (isset($img_val[2][0]) && !is_http_url($img_val[2][0])) { // 是否本地图片
-                            $handle_img = preg_replace('#(/[/\w\-]+)?(/public/upload/|/public/static/|/uploads/|/weapp/)#i', $add_root_dir.'$2', $value);
+                            $domainStr = '';
+                            if (false === $domain) {
+                                $domainStr = '';
+                            } else if (true === $domain) {
+                                $domainStr = $request->domain();
+                            } else {
+                                $domainStr = $domain;
+                            }
+                            $handle_img = preg_replace('#(/[/\w\-]+)?(/public/(upload|static|plugins)/|/uploads/|/weapp/)#i', $domainStr.$add_root_dir.'$2', $value);
                             $str = str_ireplace($value, $handle_img, $str);
-                        } else if (isset($img_val[2][0]) && is_http_url($img_val[2][0])) {
+                        }
+                        else if (isset($img_val[2][0]) && is_http_url($img_val[2][0])) {
                             $StrData = parse_url($img_val[2][0]);
                             if (!empty($weappList['Qiniuyun']) && 1 == $weappList['Qiniuyun']['status']) {
                                 $qnyData = json_decode($weappList['Qiniuyun']['data'], true);
-                                $weappConfig = json_decode($weappList['Qiniuyun']['config'], true);
-                                if ($qnyData['domain'] != $StrData['host']) {
+                                $qnyData['old_domain_list'] = empty($qnyData['old_domain_list']) ? [] : $qnyData['old_domain_list'];
+                                if (trim($qnyData['domain']) != trim($StrData['host']) && in_array($StrData['host'], $qnyData['old_domain_list'])) {
                                     // 若切换了存储空间或访问域名，与数据库中存储的图片路径域名不一致时，访问本地路径，保证图片正常
-                                    $str = str_ireplace('//' . $StrData['host'], '', $str);
-                                    $str = str_ireplace('http://' . $StrData['host'], '', $str);
                                     $str = str_ireplace('https://' . $StrData['host'], '', $str);
+                                    $str = str_ireplace('http://' . $StrData['host'], '', $str);
+                                    $str = str_ireplace('//' . $StrData['host'], '', $str);
                                 }
                             }
                         }
                     }
                 }
                 
-                // $str = preg_replace('#(.*)(\#39;|&quot;|"|\')(/[/\w\-]+)?(/public/upload/|/public/plugins/|/uploads/)(.*)#iU', '$1$2'.$add_root_dir.'$4$5', $str);
+                // $str = preg_replace('#(.*)(\#39;|&quot;|"|\')(/[/\w\-]+)?(/public/(upload|static|plugins)/|/uploads/)(.*)#iU', '$1$2'.$add_root_dir.'$4$5', $str);
                 break;
 
             case 'soft':
@@ -1091,7 +1144,6 @@ if (!function_exists('handle_subdir_pic'))
                     $StrData['path'] = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $StrData['path']);
                     if ($request->host(true) != $StrData['host'] && preg_match('#^(/public/upload/soft/|/uploads/soft/)#i', $StrData['path'])) {
                         // 插件列表
-                        static $weappList = null;
                         if (null == $weappList) {
                             $weappList = \think\Db::name('weapp')->where([
                                 'status'    => 1,
@@ -1161,7 +1213,7 @@ if (!function_exists('handle_subdir_pic'))
                 break;
         }
 
-        if (!empty($str) && !is_http_url($str)) {
+        if (!empty($str) && !is_http_url($str) && !in_array($type, ['html'])) {
             if (false !== $domain) {
                 if (true === $domain) {
                     static $domain_new = null;
@@ -1329,7 +1381,7 @@ if (!function_exists('thumb_img'))
 
             $img_thumb_name = $img_thumb_name . '.' . $image->type();
             // 生成缩略图
-            !is_dir($path) && mkdir($path, 0777, true);
+            !is_dir($path) && mkdir($path, 0755, true);
             // 填充颜色
             $thumb_color = !empty($thumbConfig['thumb_color']) ? $thumbConfig['thumb_color'] : $thumbextra['color'];
             // 生成方式参考 vendor/topthink/think-image/src/Image.php
@@ -1774,7 +1826,7 @@ if (!function_exists('handle_arctype_data'))
             if (!empty($release_typeids_pre) && !in_array($val['id'], $release_typeids_pre) && $val['has_children'] == 0){
                 continue;
             }
-            $select_html .= '<option value="' . $val['id'] . '" data-grade="' . $val['grade'] . '" data-current_channel="' . $val['current_channel'] . '"';
+            $select_html .= '<option value="' . $val['id'] . '" data-has_children="' . $val['has_children'] . '" data-grade="' . $val['grade'] . '" data-current_channel="' . $val['current_channel'] . '"';
             $select_html .= (in_array($val['id'], $selected)) ? ' selected="true"' : '';
             if ((!empty($allow_release_channel) && !in_array($val['current_channel'], $allow_release_channel)) || (!empty($release_typeids_pre) && !in_array($val['id'], $release_typeids_pre) ) ) {
                 $select_html .= ' disabled="true" style="background-color:#f5f5f5;"';
@@ -1784,7 +1836,7 @@ if (!function_exists('handle_arctype_data'))
             {
                 $select_html .= str_repeat('&nbsp;', $val['grade'] * 4);
             }
-            $select_html .= htmlspecialchars_decode($val['typename']) . '</option>';
+            $select_html .= safe_htmlspecialchars_decode($val['typename']) . '</option>';
 
             if (empty($val['children'])) {
                 continue;
@@ -2060,7 +2112,7 @@ if (!function_exists('switch_language'))
         \think\Lang::setLangCookieVar($langCookieVar);
 
         /*单语言执行代码 - 排序不要乱改，影响很大*/
-        $langRow = $language_db->field('title,mark,is_home_default')
+        $langRow = $language_db->field('*')
             ->order('id asc')
             ->cache(true, EYOUCMS_CACHE_TIME, 'language')
             ->select();
@@ -2838,7 +2890,7 @@ if (!function_exists('GetEamilSendData'))
             $SmtpOpen = \think\Db::name('smtp_tpl')->where($where)->getField('is_open');
             
             // 发送给后台，选择邮件配置中的邮箱地址
-            $email = !empty($SmtpConfig['smtp_from_eamil']) ? $SmtpConfig['smtp_from_eamil'] : null;
+            $email = !empty($SmtpConfig['smtp_from_eamil']) ? trim($SmtpConfig['smtp_from_eamil']) : trim($SmtpConfig['smtp_user']);
         } else if (in_array($type, [2])) {
             $send_scene = 6;
             $where = [
@@ -3040,14 +3092,18 @@ if (!function_exists('download_file'))
         @ini_set('memory_limit','-1');
         @ini_set('max_execution_time', '0');
 
-        $down_path = iconv("utf-8", "gb2312//IGNORE", $down_path);
+        $display_path = $down_path;
+        // 判断是否是远程 URL，如果不是才进行本地路径处理
+        if (!is_http_url($down_path)) {
+            $down_path = iconv("utf-8", "GBK//IGNORE", $down_path);
 
-        /*支持子目录*/
-        $down_path = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $down_path);
-        /*--end*/
+            /*支持子目录*/
+            $down_path = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $down_path);
+            /*--end*/
+        }
 
         // 原文件名下载--部分文件名称下载异常
-        $filename = basename($down_path);
+        $filename = basename($display_path);
         if (!empty($file_name)) {
             $arr = explode('.', $filename);
             $ext = end($arr);
@@ -3067,6 +3123,11 @@ if (!function_exists('download_file'))
         //     $filename = implode('.', $arr).'.'.$ext;
         // }
 
+        // 处理协议相对 URL，补全为 https 协议
+        if (preg_match('/^\/\//', $down_path)) {
+            $down_path = 'https:' . $down_path;
+        }
+
         //文件大小
         preg_match("/^((\w)*:)?(\/\/).*$/", $down_path, $match);
         if (empty($match)) { // 本地文件
@@ -3075,17 +3136,27 @@ if (!function_exists('download_file'))
             $header_array = get_headers($down_path, true);
             $filesize = !empty($header_array['Content-Length']) ? $header_array['Content-Length'] : 0;
         }
+
+        // 清空输出缓冲区，避免污染文件内容
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
         //告诉浏览器这是一个文件流格式的文件
-        // header("Content-type: ".$file_mime);    
+        // header("Content-type: ".$file_mime);
         //因为不知道文件是什么类型的，告诉浏览器输出的是字节流
         header('content-type:application/octet-stream');
         //请求范围的度量单位
         Header("Accept-Ranges: bytes");
         //Content-Length是指定包含于请求或响应中数据的字节长度
-        Header("Accept-Length: " . $filesize);
+        if ($filesize > 0) {
+            Header("Content-Length: " . $filesize);
+        }
         //用来告诉浏览器，文件是可以当做附件被下载，下载后的文件名称为$filename该变量的值。
-        Header("Content-Disposition: attachment; filename=" . basename($filename)); 
-        
+        $download_name = basename($filename);
+        $fallback_name = preg_replace('/[^\x20-\x7E]/', '_', $download_name);
+        Header("Content-Disposition: attachment; filename=\"" . addslashes($fallback_name) . "\"; filename*=UTF-8''" . rawurlencode($download_name));
+
         //针对大文件，规定每次读取文件的字节数为2MB，直接输出数据
         $read_buffer = 1024 * 1024 * 2; // 2MB
         if (is_http_url($down_path)) {
@@ -3093,16 +3164,16 @@ if (!function_exists('download_file'))
         } else {
             $file = fopen('.' . $down_path, 'rb');
         }
-        //总的缓冲的字节数
-        $sum_buffer = 0;
-        //只要没到文件尾，就一直读取
-        while(!feof($file) && $sum_buffer < $filesize) {
-            echo fread($file,$read_buffer);
-            $sum_buffer += $read_buffer;
+
+        if ($file) {
+            //只要没到文件尾，就一直读取
+            while(!feof($file)) {
+                echo fread($file, $read_buffer);
+                flush(); // 立即输出到浏览器
+            }
+            //关闭句柄
+            fclose($file);
         }
-    
-        //关闭句柄
-        fclose($file);
         exit;
     }
 }
@@ -3674,32 +3745,47 @@ if (!function_exists('getAllArctypeCount'))
 
         if (1 == $method_mode) { // 方法1
             $count_type = [];
-            $archivesList = \think\Db::name('archives')->alias('a')->field("typeid,stypeid")->where($map_arc)->order('typeid asc')->select();
-            foreach ($archivesList as $key => $val) {
-                if (!isset($count_type[$val['typeid']])) {
+            if (empty($web_stypeid_open)) {
+                // P1-3优化：未开启副栏目时，用COUNT+GROUP BY替代全表扫描
+                $countResult = \think\Db::name('archives')->alias('a')
+                    ->field('typeid, COUNT(*) as count')
+                    ->where($map_arc)
+                    ->group('typeid')
+                    ->select();
+                foreach ($countResult as $val) {
                     $count_type[$val['typeid']] = [
-                        'typeid'    => $val['typeid'],
-                        'count' => 1,
+                        'typeid' => $val['typeid'],
+                        'count'  => intval($val['count']),
                     ];
-                } else {
-                    $count_type[$val['typeid']]['count']++;
                 }
-
-                // 开启副栏目
-                if (!empty($web_stypeid_open) && !empty($val['stypeid'])) {
-                    $stypeids = explode(',', $val['stypeid']);
-                    $arr_index = array_search($val['typeid'], $stypeids);
-                    if (is_numeric($arr_index) && 0 <= $arr_index) {
-                        unset($stypeids[$arr_index]);
+            } else {
+                // 开启副栏目时保持原逻辑（需要读取stypeid字段）
+                $archivesList = \think\Db::name('archives')->alias('a')->field("typeid,stypeid")->where($map_arc)->order('typeid asc')->select();
+                foreach ($archivesList as $key => $val) {
+                    if (!isset($count_type[$val['typeid']])) {
+                        $count_type[$val['typeid']] = [
+                            'typeid'    => $val['typeid'],
+                            'count' => 1,
+                        ];
+                    } else {
+                        $count_type[$val['typeid']]['count']++;
                     }
-                    foreach ($stypeids as $_k => $_v) {
-                        if (!isset($count_type[$_v])) {
-                            $count_type[$_v] = [
-                                'typeid'    => $_v,
-                                'count' => 1,
-                            ];
-                        } else {
-                            $count_type[$_v]['count']++;
+
+                    if (!empty($val['stypeid'])) {
+                        $stypeids = explode(',', $val['stypeid']);
+                        $arr_index = array_search($val['typeid'], $stypeids);
+                        if (is_numeric($arr_index) && 0 <= $arr_index) {
+                            unset($stypeids[$arr_index]);
+                        }
+                        foreach ($stypeids as $_k => $_v) {
+                            if (!isset($count_type[$_v])) {
+                                $count_type[$_v] = [
+                                    'typeid'    => $_v,
+                                    'count' => 1,
+                                ];
+                            } else {
+                                $count_type[$_v]['count']++;
+                            }
                         }
                     }
                 }
@@ -4286,6 +4372,13 @@ if (!function_exists('getOrderBy'))
     // 特别注意：如新增排序规则，请加上括号里的内容！！！ (, a.add_time desc)
     //根据tags-list规则，获取查询排序，用于标签文件 TagArclist / TagList
     function getOrderBy($orderby,$ordermode,$isrand=false){
+
+        // 加固：ordermode 白名单
+        $ordermode = strtolower(trim($ordermode));
+        if (!in_array($ordermode, ['asc', 'desc'])) {
+            $ordermode = 'desc';
+        }
+        
         switch ($orderby) {
             case 'hot':
             case 'click':
@@ -4657,7 +4750,7 @@ if (!function_exists('GetTagIndexRanking'))
 if (!function_exists('weapptaglib')) 
 {
     /**
-     * 通用 - 插件模板标签 
+     * 通用 - 插件模板标签
      */
     function weapptaglib($weapp_code = '', $act = '', $vars = [])
     {
@@ -4665,7 +4758,17 @@ if (!function_exists('weapptaglib'))
         if (empty($weapp_code) || empty($act) || !is_dir("./weapp/{$weapp_code}/")) {
             return '';
         }
-        
+
+        // 安全验证：方法名只能包含字母、数字和下划线，且必须以字母开头
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $act)) {
+            return '';
+        }
+        // 安全验证：禁止调用魔术方法和危险方法
+        $forbiddenMethods = array('__construct', '__destruct', '__call', '__callStatic', '__get', '__set', '__isset', '__unset', '__sleep', '__wakeup', '__toString', '__invoke', '__clone', '__debugInfo');
+        if (in_array(strtolower($act), $forbiddenMethods)) {
+            return '';
+        }
+
         $is_exist = false;
         if (file_exists("./weapp/{$weapp_code}/logic/{$weapp_code}Logic.php")) {
             $class = '\weapp\\'.$weapp_code.'\logic\\'.$weapp_code.'Logic';
@@ -4796,7 +4899,7 @@ if (!function_exists('pay_success_logic'))
                         'order_id' => $orderData['order_id']
                     ];
                     $detailsData = \think\Db::name('shop_order_details')->where($where)->getField('data');
-                    $detailsData = !empty($detailsData) ? unserialize($detailsData) : [];
+                    $detailsData = !empty($detailsData) ? safe_unserialize($detailsData) : [];
                     $pointsGoodsBuyField = !empty($detailsData['pointsGoodsBuyField']) ? json_decode($detailsData['pointsGoodsBuyField'], true) : [];
                     if (!empty($pointsGoodsBuyField['goodsTotalPoints'])) {
                         $insert = [
@@ -4819,6 +4922,7 @@ if (!function_exists('pay_success_logic'))
                 $autoSendGoods = $PayModel->afterVirtualProductPay($orderData, $config);
 
                 $data = [];
+                // if (false === $autoSendGoods/* && true === $notify*/) {  // 用户修复的问题，先不放出去，等用户用一段时间再观察
                 if (false === $autoSendGoods && true === $notify) {
                     $users = !empty($users) ? $users : \think\Db::name('users')->find($orderData['users_id']);
                     // 邮箱发送
@@ -5147,7 +5251,11 @@ if (!function_exists('usershomeurl'))
             $weappInfo = \think\Db::name('weapp')->field('data,status')->where(['code' => 'Users'])->find();
             if (!empty($weappInfo['status'])) {
                 $is_users_weapp = true;
-                $weappInfo['data'] = unserialize($weappInfo['data']);
+                $weappInfo['data'] = safe_unserialize($weappInfo['data']);
+                if (false === $weappInfo['data']) {
+                    // 处理错误
+                    $weappInfo['data'] = [];
+                }
                 $users_seo_pseudo = !empty($weappInfo['data']['seo_pseudo']) ? intval($weappInfo['data']['seo_pseudo']) : 1;
             }
         }
@@ -5411,23 +5519,24 @@ if (!function_exists('GetSortData'))
         if (empty($Param)) {
             $Param = request()->param();
         }
-
-        $sort_asc = !empty($Param['sort_asc']) ? $Param['sort_asc'] : 'desc';
-        
-        if (!empty($Param['sort']) && 'sales' == $Param['sort']) {
-            $orderby = 'a.sales_all ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'price' == $Param['sort']) {
-            $orderby = 'a.users_price ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'appraise' == $Param['sort']) {
-            $orderby = 'a.appraise ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'new' == $Param['sort']) {
-            $orderby = 'a.add_time ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'collection' == $Param['sort']) {
-            $orderby = 'a.collection ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'click' == $Param['sort']) {
-            $orderby = 'a.click ' . $sort_asc . ', ' . $orderby;
-        } else if (!empty($Param['sort']) && 'download' == $Param['sort']) {
-            $orderby = 'a.downcount ' . $sort_asc . ', ' . $orderby;
+        // sort_asc 白名单
+        $sort_asc = !empty($Param['sort_asc']) ? strtolower(trim($Param['sort_asc'])) : 'desc';
+        if (!in_array($sort_asc, ['asc', 'desc'])) {
+            $sort_asc = 'desc';
+        }
+        // sort 白名单 + 字段映射
+        $sort = !empty($Param['sort']) ? trim($Param['sort']) : '';
+        $sort_map = [
+            'sales'      => 'a.sales_all',
+            'price'      => 'a.users_price',
+            'appraise'   => 'a.appraise',
+            'new'        => 'a.add_time',
+            'collection' => 'a.collection',
+            'click'      => 'a.click',
+            'download'   => 'a.downcount',
+        ];
+        if (isset($sort_map[$sort])) {
+            $orderby = $sort_map[$sort] . ' ' . $sort_asc . ', ' . $orderby;
         }
         return $orderby;
     }
@@ -5582,9 +5691,9 @@ if (!function_exists('adminLoginAfter')) {
                     ->where('a.id','eq', $role_id)
                     ->find();
                 if (!empty($auth_role_info)) {
-                    $auth_role_info['language'] = unserialize($auth_role_info['language']);
-                    $auth_role_info['cud'] = unserialize($auth_role_info['cud']);
-                    $auth_role_info['permission'] = unserialize($auth_role_info['permission']);
+                    $auth_role_info['language'] = safe_unserialize($auth_role_info['language']);
+                    $auth_role_info['cud'] = safe_unserialize($auth_role_info['cud']);
+                    $auth_role_info['permission'] = safe_unserialize($auth_role_info['permission']);
                     $role_name = $auth_role_info['name'];
                 }
             }
@@ -5823,7 +5932,7 @@ if (!function_exists('clearHtmlCache')) {
     /**
      * 清理文档和相关页面缓存、数据
      */
-    function clearHtmlCache($aids = [], $typeids = [])
+    function clearHtmlCache($aids = [], $typeids = [], $is_force = false)
     {
         $filelist = [];
         $all_typeids = [];
@@ -5839,7 +5948,7 @@ if (!function_exists('clearHtmlCache')) {
                     $typeids[] = $_v2;
                 }
             }
-            if (!isset($seoData['seo_uphtml_after_pernext13']) || !empty($seoData['seo_uphtml_after_pernext13'])) {
+            if (true === $is_force || !isset($seoData['seo_uphtml_after_pernext13']) || !empty($seoData['seo_uphtml_after_pernext13'])) {
                 // 文档
                 foreach ($aids as $_k => $_v) {
                     $arr = glob(HTML_ROOT.'view'.DS."*_{$_v}.html");
@@ -5860,7 +5969,7 @@ if (!function_exists('clearHtmlCache')) {
 
         // 文档涉及的所有相关栏目ID
         if (!empty($typeids)) {
-            if (!isset($seoData['seo_uphtml_after_channel13']) || !empty($seoData['seo_uphtml_after_channel13'])) {
+            if (true === $is_force || !isset($seoData['seo_uphtml_after_channel13']) || !empty($seoData['seo_uphtml_after_channel13'])) {
                 $arctypeM = new \app\common\model\Arctype;
                 $typeid_list = $arctypeM->getAllPidByids($typeids);
                 foreach ($typeid_list as $_k => $_v) {
@@ -5876,17 +5985,20 @@ if (!function_exists('clearHtmlCache')) {
             \think\Db::name('arctype')->where(['id'=>['IN', $all_typeids]])->update(['update_time'=>getTime()]);
         }
 
-
         // 删除页面缓存文件
         if (!empty($filelist) || !empty($aids) || !empty($typeids)) {
             foreach ($filelist as $_k => $_v) {
                 @unlink($_v);
             }
-            \think\Cache::clear();
+            // 修复：改为按标签清除内容缓存，避免清除全部缓存导致后台登录异常
+            \think\Cache::clear('buildhtml');
+            \think\Cache::clear('archives');
+            \think\Cache::clear('arctype');
+            \think\Cache::clear('taglist');
         }
 
         if (!empty($aids)) {
-            if (!isset($seoData['seo_uphtml_after_home13']) || !empty($seoData['seo_uphtml_after_home13'])) {
+            if (true === $is_force || !isset($seoData['seo_uphtml_after_home13']) || !empty($seoData['seo_uphtml_after_home13'])) {
                 delFile(HTML_ROOT.'index');
             }
         }
@@ -5961,9 +6073,9 @@ if (!function_exists('sitemap_all'))
     /**
      * 生成全部引擎sitemap
      */
-    function sitemap_all($type = 'all')
+    function sitemap_all($type = 'all',$is_langs=[])
     {
-        sitemap_xml($type);
+        sitemap_xml($type,$is_langs);
     }
 }
 
@@ -5976,7 +6088,7 @@ if (!function_exists('sitemap_xml'))
      * <mobile:mobile type="pc,mobile"/>：自适应网页  一个域名一个模板，
      * <mobile:mobile type="htmladapt"/>：代码适配    一个域名两个模板，手机端浏览和pc端浏览显示内容不一样（根据硬件判断）
      */
-    function sitemap_xml($type = 'all'){
+    function sitemap_xml($type = 'all',$is_langs=[]){
         $globalConfig = tpCache('global');
         if (empty($globalConfig['sitemap_xml']) && empty($globalConfig['sitemap_txt'])) {
             return '';
@@ -6063,6 +6175,8 @@ if (!function_exists('sitemap_xml'))
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0">
 </urlset>
 XML;
+        // 禁止引用外部xml实体，防止XXE攻击
+        @libxml_disable_entity_loader(true);
         if (function_exists('simplexml_load_string')) {
             $xml = @simplexml_load_string($xml_wrapper);
         } else if (class_exists('SimpleXMLElement')) {
@@ -6090,9 +6204,12 @@ XML;
         $sitemap_priority_index = !empty($globalConfig['sitemap_priority_index']) ? $globalConfig['sitemap_priority_index'] : '1.0';
         $sitemap_priority_list = !empty($globalConfig['sitemap_priority_list']) ? $globalConfig['sitemap_priority_list'] : '0.8';
         $sitemap_priority_view = !empty($globalConfig['sitemap_priority_view']) ? $globalConfig['sitemap_priority_view'] : '0.5';
-
+        $lang_where['status'] = 1;
+        if(!empty($is_langs) && is_array($is_langs)){
+            $lang_where['mark'] = ['in',$is_langs];
+        }
         $langRow = \think\Db::name('language')
-            ->where(['status'=>1])
+            ->where($lang_where)
             ->order('id asc')
             ->cache(true, EYOUCMS_CACHE_TIME, 'language')
             ->select();
@@ -6332,7 +6449,7 @@ XML;
                     ];
                     $mobile_domain = tpCache('global.web_mobile_domain');
                     $ask_seo_pseudo = 1;
-                    $Askow['data'] = unserialize($Askow['data']);
+                    $Askow['data'] = safe_unserialize($Askow['data']);
                     if (!empty($Askow['data']['seo_pseudo'])) {
                         $ask_seo_pseudo = intval($Askow['data']['seo_pseudo']);
                     }
@@ -6524,6 +6641,8 @@ if (!function_exists('get_typeurl'))
             $typeurl = auto_hide_index($typeurl);
         }
 
+        $typeurl = urldecode($typeurl);
+
         return $typeurl;
     }
 }
@@ -6577,7 +6696,7 @@ if (!function_exists('get_arcurl'))
                 $domain = str_replace($subDomain,$web_mobile_domain,$domain);
             }
         }
-        /*兼容采集没有归属栏目的文档*/
+        /*兼容采集没有归属模型的文档*/
         if (!empty($arcview_info) && empty($arcview_info['channel'])) {
             $channelRow = \think\Db::name('channeltype')->field('id as channel')
                 ->where('id',1)
@@ -6651,6 +6770,8 @@ if (!function_exists('get_arcurl'))
             // 自动隐藏index.php入口文件
             $arcurl = auto_hide_index($arcurl);
         }
+
+        $arcurl = urldecode($arcurl);
 
         return $arcurl;
     }
@@ -6731,13 +6852,45 @@ if (!function_exists('handleEyouFilterStr'))
     function handleEyouFilterStr($resultStr = '')
     {
         if (empty($resultStr)) return '请传入字符串';
-
-        $resultStr = htmlspecialchars_decode($resultStr);
-        $filterStr = ['javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base', 'svg'];
-        foreach ($filterStr as $value) {
-            $resultStr = preg_replace('/<(\s*)\b'.$value.'\b/i', '<', $resultStr);
+    
+        // 如果是数组则递归处理
+        if (is_array($resultStr)) {
+            foreach ($resultStr as $key => $val) {
+                $resultStr[$key] = handleEyouFilterStr($val);
+            }
+            return $resultStr;
         }
-        $resultStr = htmlspecialchars($resultStr);
+    
+        // 不是字符串则直接返回
+        if (!is_string($resultStr)) {
+            return $resultStr;
+        }
+
+        // 先解码再过滤，防止绕过
+        $resultStr = htmlspecialchars_decode($resultStr);
+    
+        // 扩展过滤标签列表
+        $filterStr = [
+            'javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 
+            'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 
+            'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base', 'svg',
+            'onmouseover', 'onmouseout', 'onerror', 'onload', 'onclick', 'onmouseup',
+            'onmousedown', 'ondblclick', 'onkeydown', 'onkeypress', 'onkeyup',
+            'onblur', 'onchange', 'onfocus', 'onreset', 'onselect', 'onsubmit'
+        ];
+
+        foreach ($filterStr as $value) {
+            // $resultStr = preg_replace('/<(\s*)\b'.$value.'\b/i', '<', $resultStr);
+            // 使用更严格的正则表达式
+            $resultStr = preg_replace('/(<[^>]*)\s*' . $value . '\s*([^>]*>)/i', '$1$2', $resultStr);
+            $resultStr = preg_replace('/(<[^>]*)\s*' . $value . '\s*=\s*([\'"]?).*?\\2\s*([^>]*>)/i', '$1$3', $resultStr);
+        }
+    
+        // 过滤data:协议，防止XSS绕过
+        $resultStr = preg_replace('/data\s*:\s*[^\s]*?base64/i', 'data-x:blocked', $resultStr);
+
+        // 最后进行HTML实体编码
+        $resultStr = htmlspecialchars($resultStr, ENT_QUOTES, 'UTF-8');
 
         return !empty($resultStr) ? $resultStr : false;
     }
@@ -6758,7 +6911,7 @@ if (!function_exists('auto_bind_wechatlogin'))
             if (empty($open_id)) {
                 // $shopMicro = getUsersConfigData('shop.shop_micro');
                 $weChatLoginConfig = getUsersConfigData('wechat.wechat_login_config');
-                $weChatLoginConfig = !empty($weChatLoginConfig) ? unserialize($weChatLoginConfig) : [];
+                $weChatLoginConfig = !empty($weChatLoginConfig) ? safe_unserialize($weChatLoginConfig) : [];
                 if (!empty($weChatLoginConfig['appid']) && !empty($weChatLoginConfig['appsecret'])/* && !empty($shopMicro)*/) {
                     // $callBack = urlencode(url('user/Shop/weChatAuthorizeAction', ['action' => 'authorize'], true, true));
                     $callBack = urlencode(url('user/Users/auto_bind_wechat_info', '', true, true));
@@ -6777,7 +6930,7 @@ if (!function_exists('auto_bind_wechatlogin'))
             //     }
             //     if (empty($users['open_id']) || (isset($wxlogin_info['openid']) && $users['open_id'] == $wxlogin_info['openid'])) {
             //         $wechat_login_config = getUsersConfigData('wechat.wechat_login_config');
-            //         $WeChatLoginConfig = !empty($wechat_login_config) ? unserialize($wechat_login_config) : [];
+            //         $WeChatLoginConfig = !empty($wechat_login_config) ? safe_unserialize($wechat_login_config) : [];
             //         // 微信授权登陆
             //         if (!empty($WeChatLoginConfig['appid']) && !empty($WeChatLoginConfig['appsecret'])) {
             //             // 判断登陆成功跳转的链接，若为空则默认会员中心链接并存入session
@@ -6912,7 +7065,7 @@ if (!function_exists('get_weixin_access_token'))
         } else{
             $data = \think\Db::name('weapp')->where(['code' => 'Logisticswx', 'status' => 1])->value('data');
             if (!empty($data)) {
-                 $decodedData = unserialize($data);    
+                 $decodedData = safe_unserialize($data);    
                 if (isset($decodedData['appid'])) {
                       $data = [
                             'appid' => $decodedData['appid'],
@@ -7038,8 +7191,16 @@ if (!function_exists('eyou_send_notice'))
         $result_id = !empty($params['result_id']) ? $params['result_id'] : 0;
         // 会员ID
         $users_id = !empty($params['users_id']) ? intval($params['users_id']) : 0;
+        // 问答回复通知
+        if ($send_scene == 20) {
+            // 公众号通知
+            $users_join = Db::name('weapp_ask_users_join')->where(['users_id' => $users_id, 'join_followed' => 1])->find();
+            if (!empty($users_join['join_open_id']) && !empty($users_join['join_followed'])) {
+                $apiModel->sendWechatNotice($result_id, $send_scene, ['wechat_open_id' => strval($users_join['join_open_id']), 'wechat_followed' => intval($users_join['join_followed'])]);
+            }
+        }
         // 订单付款通知
-        if ($send_scene == 9) {
+        else if ($send_scene == 9) {
             // 公众号通知
             $admin_list = Db::name('admin')->where(['wechat_followed'=>1])->select();
             foreach ($admin_list as $key => $admin_info) {
@@ -7216,6 +7377,169 @@ if (!function_exists('is_template_opt'))
         }
 
         return $template_opt;
+    }
+}
+
+if (!function_exists('schemaTable')) 
+{
+    /**
+     * 重新生成单个数据表缓存字段文件
+     */
+    function schemaTable($name)
+    {
+        $db_type = config('database.type');
+        if ($db_type == 'dm') { // 达梦优化
+            $dbtables = \think\Db::query('SELECT TABLE_NAME FROM USER_TABLES');
+            $dbtables = get_arr_column($dbtables, 'TABLE_NAME');
+        } elseif ($db_type == 'kingbase') { // 人大金仓优化
+            $dbtables = \think\Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+            $dbtables = get_arr_column($dbtables, 'tablename');
+        } else {
+            $dbtables = \think\Db::query('SHOW TABLE STATUS');
+            $dbtables = get_arr_column($dbtables, 'Name');
+        }
+        $prefix = \think\Config::get('database.prefix');
+        $table = $name;
+        if (!preg_match('/^'.$prefix.'/i', $name) || !in_array($name, $dbtables)) {
+            $table = $prefix.$name;
+        }
+        /*调用命令行的指令*/
+        \think\Console::call('optimize:schema', ['--table', $table]);
+        /*--end*/
+    }
+}
+
+if (!function_exists('schemaAllTable')) 
+{
+    /**
+     * 重新生成全部数据表缓存字段文件
+     */
+    function schemaAllTable()
+    {
+        try {
+            delFile(DATA_PATH.'schema/');
+        } catch (\Exception $e) {}
+        $db_type = config('database.type');
+        if ($db_type == 'dm') { // 达梦优化
+            $dbtables = \think\Db::query('SELECT TABLE_NAME FROM USER_TABLES');
+        } elseif ($db_type == 'kingbase') { // 人大金仓优化
+            $dbtables = \think\Db::query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        } else {
+            $dbtables = \think\Db::query('SHOW TABLE STATUS');
+        }
+        $prefix = \think\Config::get('database.prefix');
+        $tableList = [];
+        foreach ($dbtables as $k => $v) {
+            if ($db_type == 'dm') {
+                $tablename = $v['TABLE_NAME'];
+            } elseif ($db_type == 'kingbase') {
+                $tablename = $v['tablename'];
+            } else {
+                $tablename = $v['Name'];
+            }
+            if (preg_match('/^'.$prefix.'/i', $tablename)) {
+                /*调用命令行的指令*/
+                \think\Console::call('optimize:schema', ['--table', $tablename]);
+                /*--end*/
+            }
+        }
+    }
+}
+
+if (!function_exists('getArcLevelName')) 
+{
+    /**
+     * 获取文档会员权限对应的名称
+     */
+    function getArcLevelName($arc_level_id = 0)
+    {
+        $level_name = '';
+        static $users_level_list = null;
+        if (null === $users_level_list) {
+            $users_level_list = model('UsersLevel')->getList('level_id, level_name', [], 'level_id');
+        }
+        if (!empty($users_level_list[$arc_level_id])) {
+            $level_name = $users_level_list[$arc_level_id]['level_name'];
+        }
+        return $level_name;
+    }
+}
+
+if (!function_exists('free_taglib_handle')) 
+{
+    /**
+     * 付费内容隐藏
+     */
+    function free_taglib_handle($free_content = '', $artData = [], $mode = 'hide')
+    {
+        $taglib_name_start = '付费内容开始';
+        $taglib_name_end = '付费内容结束';
+        // 替换付费内容标签为隐藏提示
+        if ($mode == 'hide') {
+            if (stripos($free_content, "[{$taglib_name_start}]") !== false && stripos($free_content, "[/{$taglib_name_end}]") !== false) {
+                if (2 == $artData['restric_type']) {
+                    if (1 == $artData['no_vip_pay']) {
+                        $hide_text = '<span class="ey-paid-content-hide"><span class="ey-paid-content-hide-icon">!</span>此处内容已隐藏，请先开通 <font class="ey-paid-content-hide-vip">'.getArcLevelName($artData['arc_level_id']).'</font> 或单独支付 <font class="ey-paid-content-hide-price">￥'.$artData['users_price'].'</font> 查看完整内容</span>';
+                    } else {
+                        $hide_text = '<span class="ey-paid-content-hide"><span class="ey-paid-content-hide-icon">!</span>此处内容已隐藏，请先开通 <font class="ey-paid-content-hide-vip">'.getArcLevelName($artData['arc_level_id']).'</font> 查看完整内容</span>';
+                    }
+                } else if (3 == $artData['restric_type']) {
+                    $hide_text = '<span class="ey-paid-content-hide"><span class="ey-paid-content-hide-icon">!</span>此处内容已隐藏，请先开通 <font class="ey-paid-content-hide-vip">'.getArcLevelName($artData['arc_level_id']).'</font> 并支付 <font class="ey-paid-content-hide-price">￥'.$artData['users_price'].'</font> 查看完整内容</span>';
+                } else {
+                    $hide_text = '<span class="ey-paid-content-hide"><span class="ey-paid-content-hide-icon">!</span>此处内容已隐藏，请付费后查看</span>';
+                }
+                // 使用正则表达式匹配各种可能的包含付费标签的HTML结构
+                $patterns = [
+                    // 模式1：付费内容在p标签内
+                    '/(\<p[^>]*\>)\s*\['.$taglib_name_start.'\](.*?)\[\/'.$taglib_name_end.'\]\s*(<\/p>)/is',
+                    // 模式2：付费内容在span标签内
+                    '/(\<span[^>]*\>)\s*\['.$taglib_name_start.'\](.*?)\[\/'.$taglib_name_end.'\]\s*(<\/span>)/is',
+                    // 模式3：付费内容在div标签内
+                    '/(\<div[^>]*\>)\s*\['.$taglib_name_start.'\](.*?)\[\/'.$taglib_name_end.'\]\s*(<\/div>)/is',
+                    // 模式4：付费内容在其他标签内
+                    '/(\<([a-z]+)[^>]*\>)\s*\['.$taglib_name_start.'\](.*?)\[\/'.$taglib_name_end.'\]\s*(<\/\\2>)/is',
+                ];
+                
+                // 遍历模式尝试匹配
+                $matched = false;
+                foreach ($patterns as $pattern) {
+                    // 只处理一次，匹配成功后不再继续
+                    // if ($matched) break;
+                    
+                    if (preg_match($pattern, $free_content)) {
+                        $free_content = preg_replace_callback($pattern, function($matches) use ($hide_text) {
+                            $fullTag = $matches[1]; // 开始标签
+                            $content = isset($matches[3]) ? $matches[3] : $matches[2]; // 内容
+                            $endTag = isset($matches[4]) ? $matches[4] : $matches[3];  // 结束标签
+                            
+                            // 检查开始标签是否已有class
+                            if (stripos($fullTag, 'class="') !== false) {
+                                // 已有class，添加新class
+                                $fullTag = preg_replace('/(class=")([^"]*)(")/i', '$1$2 ey-paid-content-container$3', $fullTag);
+                            } else if (stripos($fullTag, "class='") !== false) {
+                                // 已有单引号class，添加新class
+                                $fullTag = preg_replace("/(class=')([^']*)(')/i", '$1$2 ey-paid-content-container$3', $fullTag);
+                            } else {
+                                // 没有class，添加class属性
+                                $fullTag = str_replace('>', ' class="ey-paid-content-container">', $fullTag);
+                            }
+                            
+                            // 返回替换后的结果
+                            return $fullTag . $hide_text . $endTag;
+                        }, $free_content);
+                        $matched = true;
+                    }
+                }
+                
+                // 如果以上模式都没匹配到，使用简单替换但不添加父级元素class
+                if (!$matched) {
+                    $pattern = '/\['.$taglib_name_start.'\](.*?)\[\/'.$taglib_name_end.'\]/is';
+                    $free_content = preg_replace($pattern, $hide_text, $free_content);
+                }
+            }
+        }
+
+        return $free_content;
     }
 }
 

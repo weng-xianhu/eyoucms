@@ -36,6 +36,64 @@ class SmtpmailLogic extends Model
     }
 
     /**
+     * 生成美化的HTML邮件模板
+     * @param string $title 邮件标题
+     * @param string $content 邮件内容
+     * @param string $type 邮件类型
+     * @param array $extra 额外信息
+     * @return string
+     */
+    private function buildEmailTemplate($title, $content, $type = 'default', $extra = [])
+    {
+        $web_name = tpCache('web.web_name') ?: '网站';
+        $year = date('Y');
+        $source = isMobile() ? '移动端' : '电脑端';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Microsoft YaHei',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <!-- 头部 -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:normal;">{$title}</h1>
+                        </td>
+                    </tr>
+                    <!-- 内容 -->
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <div style="color:#333333;font-size:14px;line-height:1.8;">
+                                {$content}
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- 底部 -->
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:20px 30px;border-radius:0 0 8px 8px;border-top:1px solid #eee;">
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">
+                                来源：{$source} | {$web_name}<br>
+                                &copy; {$year} {$web_name} 版权所有
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
+    }
+
+    /**
      * 发送邮件
      */
     public function send_email($email = '', $title = '', $type = 'reg', $scene = 2, $data = [])
@@ -209,43 +267,84 @@ class SmtpmailLogic extends Model
                 }
                 switch ($data['type']) {
                     case '1':
-                        $content = '您好，管理员。 会员(' . $data['nickname'] . ')使用'. $PayMethod .'对订单(' . $data['order_code'] . ')支付完成，请登录后台审查并及时发货。<br/>';
+                        // 订单付款提醒 - 发给管理员
                         $order_data = Db::name('shop_order')->where('order_code',$data['order_code'])->field('order_id,order_total_amount')->find();
-                        $order_detail = Db::name('shop_order_details')
-                            ->where('order_id',$order_data['order_id'])
-                            ->select();
+                        $order_detail = Db::name('shop_order_details')->where('order_id',$order_data['order_id'])->select();
+                        $products_html = '';
                         foreach ($order_detail as $k => $v) {
-                            $content .= "{$v['product_name']} ￥".floatval($v['product_price'])." x {$v['num']} = ￥".floatval($v['product_price']*$v['num']) .'<br/>';
+                            $products_html .= '<tr><td style="padding:10px;border-bottom:1px solid #eee;">'.$v['product_name'].'</td>';
+                            $products_html .= '<td style="padding:10px;border-bottom:1px solid #eee;text-align:center;">￥'.floatval($v['product_price']).'</td>';
+                            $products_html .= '<td style="padding:10px;border-bottom:1px solid #eee;text-align:center;">'.$v['num'].'</td>';
+                            $products_html .= '<td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">￥'.floatval($v['product_price']*$v['num']).'</td></tr>';
                         }
-                        $content .= "订单总额：￥" . floatval($order_data['order_total_amount']);
+                        $content = '<p style="margin-bottom:20px;">您好，管理员：</p>';
+                        $content .= '<p>会员 <strong style="color:#667eea;">'.$data['nickname'].'</strong> 使用 <strong>'.$PayMethod.'</strong> 完成了订单支付，请及时处理发货。</p>';
+                        $content .= '<div style="background:#f8f9fa;border-radius:6px;padding:15px;margin:20px 0;">';
+                        $content .= '<p style="margin:0 0 10px;"><strong>订单编号：</strong>'.$data['order_code'].'</p>';
+                        $content .= '<table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">';
+                        $content .= '<tr style="background:#eee;"><th style="padding:10px;text-align:left;">商品名称</th><th style="padding:10px;text-align:center;">单价</th><th style="padding:10px;text-align:center;">数量</th><th style="padding:10px;text-align:right;">小计</th></tr>';
+                        $content .= $products_html;
+                        $content .= '</table>';
+                        $content .= '<p style="margin:15px 0 0;text-align:right;font-size:16px;"><strong>订单总额：<span style="color:#e74c3c;">￥'.floatval($order_data['order_total_amount']).'</span></strong></p>';
+                        $content .= '</div>';
                         break;
                     case '2':
+                        // 订单发货提醒 - 发给用户
                         $url = request()->domain() . url('user/Shop/shop_order_details', ['order_id'=>$data['order_id']]);
-                        $chayue = '<a href="'. $url .'">查阅</a>';
-                        $content = '您好，' . $data['nickname'] . '。 管理员已对订单(' . $data['order_code'] . ')发货完成，请登录会员中心'. $chayue .'。';
+                        $content = '<p style="margin-bottom:20px;">您好，'.$data['nickname'].'：</p>';
+                        $content .= '<p>您的订单 <strong style="color:#667eea;">'.$data['order_code'].'</strong> 已发货，请注意查收。</p>';
+                        $content .= '<div style="text-align:center;margin:30px 0;">';
+                        $content .= '<a href="'.$url.'" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:12px 30px;border-radius:25px;text-decoration:none;font-weight:bold;">查看订单详情</a>';
+                        $content .= '</div>';
                         break;
                 }
             }
         }
         // 会员投稿提醒
         else if ('usersRelease' == $type) {
-            $content = !empty($emailtemp['tpl_title']) ? $emailtemp['tpl_title'] : '您有新的投稿文档，请及时查看！';
+            $content = '<p style="margin-bottom:20px;">您好，管理员：</p>';
+            $content .= '<p>您有新的投稿文档，请及时审核处理。</p>';
             if (!empty($data)) {
-                $content .= '<br/>文档标题：' . $data['title'] . '<br/>文档内容：' . $data['content'] . '<br/>投稿时间：' . $data['add_time'] . '<br/>文档审核：' . $data['arcrank'];
+                $content .= '<div style="background:#f8f9fa;border-radius:6px;padding:20px;margin:20px 0;">';
+                $content .= '<p style="margin:0 0 10px;"><strong>文档标题：</strong>'.$data['title'].'</p>';
+                $content .= '<p style="margin:0 0 10px;"><strong>投稿时间：</strong>'.$data['add_time'].'</p>';
+                $content .= '<p style="margin:0 0 10px;"><strong>审核状态：</strong>'.$data['arcrank'].'</p>';
+                $content .= '<p style="margin:0;"><strong>文档内容：</strong></p>';
+                $content .= '<div style="background:#fff;padding:15px;border-radius:4px;margin-top:10px;border:1px solid #eee;">'.$data['content'].'</div>';
+                $content .= '</div>';
             }
         }
 
-        // 判断标题拼接
-        $title = addslashes($title);
-        $web_name = $emailtemp['tpl_name'].'：'.$title.'-'.tpCache('web.web_name');
-        $content = !empty($content) ? $content : '感谢您的注册,您的邮箱验证码为: '.$datas['code'];
-        $html = "<p style='text-align: left;'>{$web_name}</p><p style='text-align: left;'>{$content}</p>";
+        // 生成邮件内容
+        $email_title = $emailtemp['tpl_name'];
 
-        if (isMobile()) {
-            $html .= "<p style='text-align: left;'>——来源：移动端</p>";
-        } else {
-            $html .= "<p style='text-align: left;'>——来源：电脑端</p>";
+        // 验证码类邮件（注册、绑定邮箱、找回密码）
+        if (empty($content) && !empty($datas['code'])) {
+            $type_text = '';
+            switch ($type) {
+                case 'reg':
+                    $type_text = '会员注册';
+                    break;
+                case 'bind_email':
+                    $type_text = '绑定邮箱';
+                    break;
+                case 'retrieve_password':
+                    $type_text = '找回密码';
+                    break;
+                default:
+                    $type_text = '验证';
+            }
+            $content = '<p style="margin-bottom:20px;">您好：</p>';
+            $content .= '<p>您正在进行 <strong>'.$type_text.'</strong> 操作，验证码如下：</p>';
+            $content .= '<div style="text-align:center;margin:30px 0;">';
+            $content .= '<div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-size:32px;font-weight:bold;letter-spacing:8px;padding:15px 40px;border-radius:8px;">'.$datas['code'].'</div>';
+            $content .= '</div>';
+            $content .= '<p style="color:#999;font-size:12px;">验证码有效期为10分钟，请勿将验证码告知他人。</p>';
+            $content .= '<p style="color:#999;font-size:12px;">如非本人操作，请忽略此邮件。</p>';
         }
+
+        // 使用美化模板
+        $html = $this->buildEmailTemplate($email_title, $content, $type);
 
         // 实例化类库，调用发送邮件
         $res = send_email($email, $emailtemp['tpl_title'], $html, $send_scene);

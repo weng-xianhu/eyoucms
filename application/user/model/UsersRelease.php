@@ -219,7 +219,7 @@ class UsersRelease extends Model
                 }
                 /*end*/
 
-                $key = preg_replace('/^(.*)(_eyou_is_remote|_eyou_remote|_eyou_local)$/', '$1', $key);
+                $key = preg_replace('/^(.*)(_eyou_local)$/', '$1', $key);
                 $dtype = !empty($fieldTypeList[$key]) ? $fieldTypeList[$key]['dtype'] : '';
                 switch ($dtype) {
 
@@ -263,6 +263,22 @@ class UsersRelease extends Model
                             } else {
                                 $val = trim($val);
                             }
+                        }
+                        break;
+                    }
+                    case 'cascade':
+                    {
+                        if (is_array($val)) {
+                            $new_val = [];
+                            foreach ($val as $_v) {
+                                $_v = trim($_v);
+                                if (!empty($_v) && $_v != '-1') {
+                                    $new_val[] = intval($_v);
+                                }
+                            }
+                            $val = implode(',', $new_val);
+                        } else {
+                            $val = trim($val);
                         }
                         break;
                     }
@@ -462,12 +478,19 @@ class UsersRelease extends Model
     public function showViewFormData($list, $formFieldStr, $addonRow = array())
     {
         if (!empty($list)) {
+            // 多选项、单选项、下拉框[checkboxs]
+            $fieldCustomParamList = array();
+            $fieldCustomParamRow = Db::name('field_custom_param')->field('id,dfvalue,name,channel_id')->order('dtype ASC, sort_order ASC, id ASC')->select();
+            foreach ($fieldCustomParamRow as $k => $v) {
+                $fieldCustomParamList[$v['channel_id']][$v['name']][$v['id']] = $v;
+            }
+
             foreach ($list as $key => $val) {
                 $val['fieldArr'] = $formFieldStr;
                 switch ($val['dtype']) {
                     case 'int':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = $addonRow[$val['name']];
                         } else {
                             if(preg_match("#[^0-9]#", $val['dfvalue']))
@@ -480,7 +503,7 @@ class UsersRelease extends Model
                     case 'float':
                     case 'decimal':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = $addonRow[$val['name']];
                         } else {
                             if(preg_match("#[^0-9\.]#", $val['dfvalue']))
@@ -495,8 +518,37 @@ class UsersRelease extends Model
                         $dfvalue = $val['dfvalue'];
                         $dfvalueArr = explode(',', $dfvalue);
                         $val['dfvalue'] = $dfvalueArr;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
+                        } else {
+                            $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+                            $val['trueValue'] = array();
+                        }
+                        break;
+                    }
+                    case 'selects':
+                    {
+                        $dfvalueArr = [];
+                        $fieldCustomParamInfo = empty($fieldCustomParamList[$val['channel_id']][$val['name']]) ? [] : $fieldCustomParamList[$val['channel_id']][$val['name']];
+                        foreach ($fieldCustomParamInfo as $_fpval) {
+                            $dfvalueArr[] = [
+                                'id' => $_fpval['id'],
+                                'name' => $_fpval['dfvalue'],
+                            ];
+                        }
+                        $val['dfvalue'] = $dfvalueArr;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $dfvalueArr2 = [];
+                            $field_param_ids = explode(',', $addonRow[$val['name']]);
+                            foreach ($field_param_ids as $_k => $_v) {
+                                if (!empty($fieldCustomParamInfo[$_v])) {
+                                    $dfvalueArr2[] = [
+                                        'id' => $fieldCustomParamInfo[$_v]['id'],
+                                        'name' => $fieldCustomParamInfo[$_v]['dfvalue'],
+                                    ];
+                                }
+                            }
+                            $val['trueValue'] = $dfvalueArr2;
                         } else {
                             $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
                             $val['trueValue'] = array();
@@ -508,8 +560,37 @@ class UsersRelease extends Model
                         $dfvalue = $val['dfvalue'];
                         $dfvalueArr = explode(',', $dfvalue);
                         $val['dfvalue'] = $dfvalueArr;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
+                        } else {
+                            $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+                            $val['trueValue'] = array($dfTrueValue);
+                        }
+                        break;
+                    }
+                    case 'radios':
+                    {
+                        $dfvalueArr = [];
+                        $fieldCustomParamInfo = empty($fieldCustomParamList[$val['channel_id']][$val['name']]) ? [] : $fieldCustomParamList[$val['channel_id']][$val['name']];
+                        foreach ($fieldCustomParamInfo as $_fpval) {
+                            $dfvalueArr[] = [
+                                'id' => $_fpval['id'],
+                                'name' => $_fpval['dfvalue'],
+                            ];
+                        }
+                        $val['dfvalue'] = $dfvalueArr;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $dfvalueArr2 = [];
+                            $field_param_ids = explode(',', $addonRow[$val['name']]);
+                            foreach ($field_param_ids as $_k => $_v) {
+                                if (!empty($fieldCustomParamInfo[$_v])) {
+                                    $dfvalueArr2[] = [
+                                        'id' => $fieldCustomParamInfo[$_v]['id'],
+                                        'name' => $fieldCustomParamInfo[$_v]['dfvalue'],
+                                    ];
+                                }
+                            }
+                            $val['trueValue'] = $dfvalueArr2;
                         } else {
                             $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
                             $val['trueValue'] = array($dfTrueValue);
@@ -518,7 +599,7 @@ class UsersRelease extends Model
                     }
                     case 'region':
                     {
-                        $dfvalue    = unserialize($val['dfvalue']);
+                        $dfvalue    = safe_unserialize($val['dfvalue']);
                         $RegionData = [];
                         $region_ids = explode(',', $dfvalue['region_ids']);
                         foreach ($region_ids as $id_key => $id_value) {
@@ -530,7 +611,7 @@ class UsersRelease extends Model
                         }
 
                         $val['dfvalue'] = $RegionData;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
                             if ( !empty($val['set_type']) && 1 == $val['set_type']){
@@ -583,23 +664,82 @@ class UsersRelease extends Model
                         $dfvalue = $val['dfvalue'];
                         $dfvalueArr = explode(',', $dfvalue);
                         $val['dfvalue'] = $dfvalueArr;
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['trueValue'] = explode(',', $addonRow[$val['name']]);
                         } else {
                             $val['trueValue'] = array();
                         }
                         break;
                     }
+                    case 'checkboxs':
+                    {
+                        $dfvalueArr = [];
+                        $fieldCustomParamInfo = empty($fieldCustomParamList[$val['channel_id']][$val['name']]) ? [] : $fieldCustomParamList[$val['channel_id']][$val['name']];
+                        foreach ($fieldCustomParamInfo as $_fpval) {
+                            $dfvalueArr[] = [
+                                'id' => $_fpval['id'],
+                                'name' => $_fpval['dfvalue'],
+                            ];
+                        }
+                        $val['dfvalue'] = $dfvalueArr;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $dfvalueArr2 = [];
+                            $field_param_ids = explode(',', $addonRow[$val['name']]);
+                            foreach ($field_param_ids as $_k => $_v) {
+                                if (!empty($fieldCustomParamInfo[$_v])) {
+                                    $dfvalueArr2[] = [
+                                        'id' => $fieldCustomParamInfo[$_v]['id'],
+                                        'name' => $fieldCustomParamInfo[$_v]['dfvalue'],
+                                    ];
+                                }
+                            }
+                            $val['trueValue'] = $dfvalueArr2;
+                        } else {
+                            $val['trueValue'] = array();
+                        }
+                        break;
+                    }
+                    case 'cascade':
+                    {
+                        // 加载一级选项
+                        $cascadeLevel1 = Db::name('field_cascade_data')->field('id,name')
+                            ->where(['field_id' => $val['id'], 'level' => 1])
+                            ->order('sort_order ASC, id ASC')
+                            ->select();
+                        $val['cascade_level1'] = $cascadeLevel1;
+                        $val['cascade_level2'] = [];
+                        $val['cascade_level3'] = [];
+                        $val['trueValue'] = ['', '', ''];
+                        if (array_key_exists($val['name'], $addonRow) && !empty($addonRow[$val['name']])) {
+                            $selectedIds = explode(',', $addonRow[$val['name']]);
+                            $val['trueValue'] = $selectedIds;
+                            // 加载二级选项
+                            if (!empty($selectedIds[0])) {
+                                $val['cascade_level2'] = Db::name('field_cascade_data')->field('id,name')
+                                    ->where(['field_id' => $val['id'], 'parent_id' => intval($selectedIds[0])])
+                                    ->order('sort_order ASC, id ASC')
+                                    ->select();
+                            }
+                            // 加载三级选项
+                            if (!empty($selectedIds[1])) {
+                                $val['cascade_level3'] = Db::name('field_cascade_data')->field('id,name')
+                                    ->where(['field_id' => $val['id'], 'parent_id' => intval($selectedIds[1])])
+                                    ->order('sort_order ASC, id ASC')
+                                    ->select();
+                            }
+                        }
+                        break;
+                    }
                     case 'img':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']]);
                         }
                         break;
                     }
                     case 'file':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']]);
                         }
                         $ext = tpCache('basic.file_type');
@@ -609,7 +749,7 @@ class UsersRelease extends Model
                     }
                     case 'media':
                     {
-                        if (isset($addonRow[$val['name']])) {
+                        if (array_key_exists($val['name'], $addonRow)) {
                             $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']],'media');
                         }
                         $val['upload_flag'] = 'local';
@@ -636,7 +776,7 @@ class UsersRelease extends Model
                         $val[$val['name'].'_eyou_imgupload_list'] = array();
                         if (isset($addonRow[$val['name']]) && !empty($addonRow[$val['name']])) {
                             if (preg_match('/^a\:(\d+)\:\{/', $addonRow[$val['name']])) {
-                                $eyou_imgupload_list = unserialize($addonRow[$val['name']]);
+                                $eyou_imgupload_list = safe_unserialize($addonRow[$val['name']]);
                             } else {
                                 $eyou_imgupload_list = explode(',', $addonRow[$val['name']]);
                                 foreach ($eyou_imgupload_list as $_k => $_v) {

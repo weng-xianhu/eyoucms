@@ -85,7 +85,7 @@
                                                     </td>
                                                     <td>
                                                         <div class="cell">
-                                                            <p class="red">￥{$vo.order_amount}</p>
+                                                            <p class="red">{notempty name="$vo.order_score"}{$vo.order_score}{$usersConfig.score_name}{else/}¥{$vo.order_amount}{/notempty}</p>
                                                         </div>
                                                     </td>
                                                     <td>

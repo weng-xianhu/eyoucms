@@ -25,7 +25,7 @@ function CartUnifiedAlgorithm(is_sold_out, aid, symbol, selected, spec_value_id,
         CartNum = Number(NumV.val()) - 1;
     }
     if (Number(is_sold_out) < Number(CartNum)) {
-        showErrorMsg('商品库存仅！'+is_sold_out+'件');
+        showErrorMsg(ey_foreign(ey_foreign_users51, is_sold_out));
         var pre_value = NumV.attr('data-pre_value');
         NumV.val(pre_value);
         return false;
@@ -41,7 +41,7 @@ function CartUnifiedAlgorithm(is_sold_out, aid, symbol, selected, spec_value_id,
     if ('change' == symbol) {
         if ('1' > NumV.val() || '' == NumV.val()) {
             NumV.val(1);
-            showErrorMsg('商品数量最少为1');
+            showErrorMsg(ey_foreign(ey_foreign_users52, 1));
         }
         // 计算单品小计
         var SubTotalNums = Number(PriceV.html()) * Number(NumV.val());
@@ -65,7 +65,7 @@ function CartUnifiedAlgorithm(is_sold_out, aid, symbol, selected, spec_value_id,
     } 
     // 商品数量最少为1
     else {
-        showErrorMsg('商品数量最少为1');
+        showErrorMsg(ey_foreign(ey_foreign_users52, 1));
         return false;
     }
 

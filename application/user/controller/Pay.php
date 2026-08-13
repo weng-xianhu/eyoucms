@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -196,7 +196,7 @@ class Pay extends Base
                 foreach ($payApiList as $key => $value) {
                     if (!empty($value['pay_info']) && 'wechat' == $value['pay_mark']) {
                         $is_open_wechat = 0;
-                        $payInfo = unserialize($value['pay_info']);
+                        $payInfo = safe_unserialize($value['pay_info']);
                         if ('wechat' == $value['pay_mark']) {
                             if (0 === intval($payInfo['is_open_wechat'])) {
                                 if (empty($payInfo['appid']) || empty($payInfo['mchid']) || empty($payInfo['key'])) $is_open_wechat = 1;
@@ -513,7 +513,7 @@ class Pay extends Base
                         // 非法提交，请正规合法提交订单-订单列表点击立即支付时检测判断-订单副表判断
                         if (empty($val['num'])) $this->error('非法提交，请正规合法提交订单，非法代码：404');
 
-                        $product_spec = unserialize($val['data']);
+                        $product_spec = safe_unserialize($val['data']);
                         $order_details[$key]['pointsGoodsBuyField'] = !empty($product_spec['pointsGoodsBuyField']) ? json_decode($product_spec['pointsGoodsBuyField'], true) : [];
                         if (!empty($product_spec['spec_value_id'])) {
                             $spec_value_id = explode('_', $product_spec['spec_value_id']);
@@ -594,7 +594,7 @@ class Pay extends Base
                 ];
                 $pay_alipay_config = Db::name('pay_api_config')->where($where)->getField('pay_info');
                 if (empty($pay_alipay_config)) return false;
-                $pay_alipay_config = unserialize($pay_alipay_config);
+                $pay_alipay_config = safe_unserialize($pay_alipay_config);
             }
             if (empty($pay_alipay_config)) $this->error('尚未配置支付宝支付配置');
             
@@ -843,7 +843,7 @@ class Pay extends Base
                 $pay_wechat_config = Db::name('pay_api_config')->where($where)->getField('pay_info');
                 if (empty($pay_wechat_config)) return false;
 
-                $pay_wechat_config = unserialize($pay_wechat_config);
+                $pay_wechat_config = safe_unserialize($pay_wechat_config);
                 $config_data['app_id'] = $pay_wechat_config['appid'];
                 $config_data['mch_id'] = $pay_wechat_config['mchid'];
                 $config_data['key']    = $pay_wechat_config['key'];
@@ -1147,7 +1147,7 @@ class Pay extends Base
                         'pay_mark' => 'wechat'
                     ];
                     $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
-                    if (!empty($PayInfo)) $PayInfo = unserialize($PayInfo);
+                    if (!empty($PayInfo)) $PayInfo = safe_unserialize($PayInfo);
                     if (empty($PayInfo) || 1 == $PayInfo['is_open_wechat']) {
                         // $querydata = [
                         //     'order_id'   => $unified_id,
@@ -1501,7 +1501,7 @@ class Pay extends Base
             $pay_wechat_config = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (empty($pay_wechat_config)) return false;
 
-            $pay_wechat_config = unserialize($pay_wechat_config);
+            $pay_wechat_config = safe_unserialize($pay_wechat_config);
             $config_data['app_id'] = $app_id;
             $config_data['mch_id'] = $pay_wechat_config['mchid'];
             $config_data['key']    = $pay_wechat_config['key'];
@@ -1516,8 +1516,10 @@ class Pay extends Base
                 if ($result['trade_state'] == 'SUCCESS' && !empty($result['transaction_id'])) {
                     if (1 == $transaction_type) {
                         // 充值处理
+                        // 安全修复: 添加用户归属验证，防止水平越权
                         $moneydata = $this->users_money_db->where([
                             'order_number' => $result['out_trade_no'],
+                            'users_id'     => $this->users_id,
                         ])->find();
 
                         // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
@@ -1603,7 +1605,7 @@ class Pay extends Base
 
                         // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
                         if ($moneydata['status'] == 1) {
-                            $cause = unserialize($moneydata['cause']);
+                            $cause = safe_unserialize($moneydata['cause']);
                             $UsersTypeData = M('users_type_manage')->where('type_id',$cause['type_id'])->find();
 
                             // 订单更新条件

@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -138,7 +138,6 @@ class BaiduPay
             $order = $this->getSystemOrder($post, $notify, $table);
             // 查询百度支付支付订单是否真实完成支付
             $jsonData = $this->queryOrderPayResult($order['unified_number']);
-            @file_put_contents(ROOT_PATH . "/a_jsonData_1.php", date("Y-m-d H:i:s") . "  " . json_encode($jsonData) . "\r\n", FILE_APPEND);
             if (isset($jsonData['errno']) && 0 === intval($jsonData['errno']) && isset($jsonData['msg']) && 'success' === trim($jsonData['msg'])) {
                 $jsonData = !empty($jsonData['data']) ? $jsonData['data'] : [];
                 // 支付成功

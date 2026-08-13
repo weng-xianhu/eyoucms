@@ -94,7 +94,7 @@
                         <label>SEO关键词</label>
                     </dt>
                     <dd class="opt" style="width: auto;">           
-                        <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" autocomplete="off"></textarea>
+                        <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" autocomplete="off" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')"></textarea>
                         <span class="err"></span>
                         <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
                     </dd>
@@ -192,12 +192,14 @@
             $('input[name=name]').focus();
             return false;
         }
+        var province_id = $('select[name=province_id]').val();
+        var city_id = $('select[name=city_id]').val();
         $(obj).html('正在处理');
         $.ajax({
             url: "{:url('Citysite/ajax_get_name_pinyin', ['_ajax'=>1])}",
             type: 'POST',
             dataType: 'JSON',
-            data: {name: name},
+            data: {name:name, province_id:province_id, city_id:city_id},
             success: function(res){
                 $(obj).html('获取拼音');
                 if (res.code == 1) {

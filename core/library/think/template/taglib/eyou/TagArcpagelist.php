@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -43,33 +43,39 @@ class TagArcpagelist extends Base
 
         empty($tips) && $tips = '没有数据了';
 
-        $tagidmd5 = $tagid.'_'.md5(serialize($arclistTag));
+        $tagidmd5 = $tagid.'_'.md5(json_encode($arclistTag));
         $arcmulti_db = Db::name('arcmulti');
         if (empty($pagesize)) {
             $arcmultiRow = $arcmulti_db->field('pagesize')->where(['tagid'=>$tagidmd5])->find();
             $pagesize = $arcmultiRow['pagesize'];
         }
 
+        $totalpage = 1;
         $arcmultiRow = $arcmulti_db->field('attstr,querysql')->where(['tagid'=>$tagidmd5])->find();
         if (empty($arcmultiRow)) {
             return [];
         } else {
             // 取出属性并解析为变量
-            $attarray = unserialize(stripslashes($arcmultiRow['attstr']));
+            $attarray = json_decode($arcmultiRow['attstr'], true);
 
             $querysql = preg_replace('#LIMIT(\s+)(\d+)(,\d+)?#i', '', $arcmultiRow['querysql']);
             $querysql = preg_replace('#SELECT(\s+)(.*)(\s+)FROM#i', 'SELECT COUNT(*) AS totalNum FROM', $querysql);
             $queryRow = Db::query($querysql);
             $totalNum = !empty($queryRow) ? $queryRow[0]['totalNum'] : 0;
+            $totalpage = ceil($totalNum / $pagesize);
             if (intval($attarray['row']) >= $totalNum) {
                 return [];
             }
         }
 
+        empty($totalpage) && $totalpage = 1;
+
         $result = [];
         $version = getCmsVersion();
         $keywords = input('param.keywords/s');
-        $result['onclick'] = ' data-page="1" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" data-tagidmd5="'.$tagidmd5.'" data-lang="'.self::$home_lang.'" data-keywords="'.$keywords.'"  onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).',\''.$callback.'\');" ';
+        $result['totalpage'] = $totalpage;
+        $result['pagesize'] = $pagesize;
+        $result['onclick'] = ' data-page="1" data-totalpage="'.$totalpage.'" data-tips="'.$tips.'" data-loading="'.$loading.'" data-root_dir="'.$this->root_dir.'" data-tagidmd5="'.$tagidmd5.'" data-lang="'.self::$home_lang.'" data-keywords="'.$keywords.'"  onClick="tag_arcpagelist_multi(this,\''.$tagid.'\','.intval($pagesize).',\''.$callback.'\');" ';
         $srcurl = get_absolute_url("{$this->root_dir}/public/static/common/js/tag_arcpagelist.js?v={$version}");
         $result['js'] = <<<EOF
 <script language='javascript' type='text/javascript' src='{$srcurl}'></script>

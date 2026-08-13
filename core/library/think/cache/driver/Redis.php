@@ -41,7 +41,7 @@ class Redis extends Driver
     public function __construct($options = [])
     {
         if (!extension_loaded('redis')) {
-            throw new \BadFunctionCallException('请检查是否安装或启用redis');
+            throw new \BadFunctionCallException("请检查php版本是否安装或启用redis扩展，<a href='https://www.eyoucms.com/plus/view.php?aid=31686' target='_blank'>查看教程</a>");
         }
         $redis_config_file = WEAPP_PATH.'Redis'.DS.'conf'.DS.'config.php';
         if (file_exists($redis_config_file)) {
@@ -59,7 +59,11 @@ class Redis extends Driver
         if ($this->options['persistent']) {
             $this->handler->pconnect($this->options['host'], $this->options['port'], $this->options['timeout'], 'persistent_id_' . $this->options['select']);
         } else {
-            $this->handler->connect($this->options['host'], $this->options['port'], $this->options['timeout']);
+            try {
+                $this->handler->connect($this->options['host'], $this->options['port'], $this->options['timeout']);
+            } catch (\Exception $e) {
+                throw new \BadFunctionCallException($e->getMessage()." <a href='https://www.eyoucms.com/plus/view.php?aid=31687' target='_blank'>查看教程</a>");
+            }
         }
 
         if ('' != $this->options['password']) {
@@ -97,7 +101,26 @@ class Redis extends Driver
         }
 
         try {
-            $result = 0 === strpos($value, 'think_serialize:') ? unserialize(substr($value, 16)) : $value;
+            if (0 === strpos($value, 'think_serialize:')) {
+                $serialized = substr($value, 16);
+                // 安全修复: 使用安全的反序列化（兼容 PHP 5.4+）
+                if (function_exists('safe_unserialize')) {
+                    $result = safe_unserialize($serialized);
+                } else {
+                    if (PHP_VERSION_ID >= 70000) {
+                        $result = unserialize($serialized, ['allowed_classes' => false]);
+                    } else {
+                        // PHP 5.4-5.6: 检查是否包含对象
+                        if (preg_match('/O:\d+:"/', $serialized) || preg_match('/[rR]:\d+;/', $serialized)) {
+                            $result = $default;
+                        } else {
+                            $result = unserialize($serialized);
+                        }
+                    }
+                }
+            } else {
+                $result = $value;
+            }
         } catch (\Exception $e) {
             $result = $default;
         }

@@ -23,6 +23,8 @@ use think\Request;
  */
 class UsersRelease extends Base
 {
+    public $editor;
+
     public function _initialize() {
         parent::_initialize();
         $this->archives_db = Db::name('archives');
@@ -60,6 +62,10 @@ class UsersRelease extends Base
 
         // 会员投稿配置
         $this->assign('UsersConfig', $this->usersConfig);
+        // 编辑器配置
+        $this->editor = tpSetting('editor');
+        if (empty($this->editor['editor_select'])) $this->editor['editor_select'] = 1;
+        $this->assign('editor', $this->editor);
     }
 
     // 会员投稿--文章首页
@@ -281,6 +287,13 @@ class UsersRelease extends Base
         $assign_data['users_level'] = model('UsersLevel')->getList('level_id, level_name, level_value');
         //视频模型 需要数据 结束
 
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_0'] = !empty($system_originlist) ? $system_originlist[0] : "";
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
+
         // 加载数据
         $this->assign($assign_data);
         $html = $this->fetch('users/article_add');
@@ -349,7 +362,7 @@ EOF;
         $aid = input('param.aid/d');
         $channel_id = Db::name('archives')->where('aid', $aid)->getField('channel');
         $info = model('UsersRelease')->getInfo($aid, null, false);
-        if (!empty($info['users_id']) && intval($info['users_id']) !== intval($this->users_id)) {
+        if (empty($info) || intval($info['users_id']) !== intval($this->users_id)) {
             $this->error('文档不存在！');
         }
 
@@ -416,6 +429,12 @@ EOF;
         // 会员等级信息
         $assign_data['users_level'] = model('UsersLevel')->getList('level_id, level_name, level_value');
         //视频模型 需要数据 结束
+
+        // 来源列表
+        $system_originlist = tpSetting('system.system_originlist');
+        $system_originlist = json_decode($system_originlist, true);
+        $system_originlist = !empty($system_originlist) ? $system_originlist : [];
+        $assign_data['system_originlist_str'] = implode(PHP_EOL, $system_originlist);
 
         $this->assign($assign_data);
         $html = $this->fetch('users/article_edit');
@@ -535,7 +554,8 @@ EOF;
         $result = [
             'html' => $html,
             'htmltextField' => $assign_data['htmltextField'],
-            'is_litpic_users_release' => $this->channelData['is_litpic_users_release']
+            'is_litpic_users_release' => $this->channelData['is_litpic_users_release'],
+            'editor_select' => $this->editor['editor_select']
         ];
         $channel_id = !empty($channel_id) ? $channel_id : 0;
         $channel_data = $this->channel_addonextitem($channel_id);
@@ -569,7 +589,7 @@ EOF;
             $data['download']['attr_field'] = $attr_field;
             $data['download']['servername_use'] = $servername_use;
 
-            $servername_arr = unserialize(tpCache('download.download_select_servername'));
+            $servername_arr = safe_unserialize(tpCache('download.download_select_servername'));
             $data['download']['default_servername'] = $servername_arr?$servername_arr[0]:'立即下载';
             $weapp = Db::name('weapp')->where('code','in',['Qiniuyun','AliyunOss','Cos','AwsOss'])->where('status',1)->getAllWithIndex('code');
             $config = Db::name('channeltype')->where('nid','download')->value('data');
@@ -658,8 +678,9 @@ EOF;
             /*封装表单验证隐藏域*/
             static $request = null;
             if (null == $request) { $request = Request::instance(); }  
-            $token = $request->token();
-            $assign_data['TokenValue'] = " <input type='hidden' name='__token__' value='{$token}'/> ";
+            $token_name = "__token__".md5('users_release_token_'.getTime().uniqid(mt_rand(), true));
+            $token = $request->token($token_name);
+            $assign_data['TokenValue'] = " <input type='hidden' name='{$token_name}' value='{$token}'/> ";
             /* END */
         }
 
@@ -689,9 +710,18 @@ EOF;
             if(!empty($count)) $this->error('文档标题不允许重复！', null, 'title');
         }
 
+        // 数据验证 - 提取表单令牌的token变量名
+        $token = '__token__';
+        foreach ($post as $key => $val) {
+            if (preg_match('/^__token__/i', $key)) {
+                $token = $key;
+                break;
+            }
+        }
+
         // 数据验证
         $rule = [
-            'title' => 'require|token',
+            'title' => 'require|token:'.$token,
         ];
         $message = [
             'title.require' => '不可为空！',

@@ -153,7 +153,7 @@ function eyou_lang(key, str) {
     langArr['Error of parameters']='参数有误';
     langArr['Yes']='是';
     langArr['Confirmation of submission']='确认提交';
-    langArr['Lack of system parameters: ID, type, page, try to request technical support']='缺少系统参数：id、type、page，尝试请求技术支持';
+    langArr['Lack of system parameters: ID, type, page, try to request technical support']='缺少系统参数：id、type、page';
     langArr['The following box list']='下列框列表';
 
     return langArr[key];

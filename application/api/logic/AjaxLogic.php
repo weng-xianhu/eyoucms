@@ -150,7 +150,7 @@ class AjaxLogic extends Model
         if (empty($type)) {
            $qqlogin = 0;
            if (!empty($result['QqLogin']['data'])) {
-               $qqData = unserialize($result['QqLogin']['data']);
+               $qqData = safe_unserialize($result['QqLogin']['data']);
                if (!empty($qqData['login_show'])) {
                    $qqlogin = 1;
                }
@@ -158,7 +158,7 @@ class AjaxLogic extends Model
            
            $wxlogin = 0;
            if (!empty($result['WxLogin']['data'])) {
-               $wxData = unserialize($result['WxLogin']['data']);
+               $wxData = safe_unserialize($result['WxLogin']['data']);
                if (!empty($wxData['login_show'])) {
                    $wxlogin = 1;
                }
@@ -166,7 +166,7 @@ class AjaxLogic extends Model
            
            $wblogin = 0;
            if (!empty($result['Wblogin']['data'])) {
-               $wbData = unserialize($result['Wblogin']['data']);
+               $wbData = safe_unserialize($result['Wblogin']['data']);
                if (!empty($wbData['login_show'])) {
                    $wblogin = 1;
                }
@@ -178,21 +178,21 @@ class AjaxLogic extends Model
         } else {
             if ('qq' == $type) {
                 if (!empty($result['QqLogin']['data'])) {
-                   $qqData = unserialize($result['QqLogin']['data']);
+                   $qqData = safe_unserialize($result['QqLogin']['data']);
                    if (!empty($qqData['login_show'])) {
                        $value = 1;
                    }
                 }
             } else if ('wx' == $type) {
                 if (!empty($result['WxLogin']['data'])) {
-                   $wxData = unserialize($result['WxLogin']['data']);
+                   $wxData = safe_unserialize($result['WxLogin']['data']);
                    if (!empty($wxData['login_show'])) {
                        $value = 1;
                    }
                 }
             } else if ('wb' == $type) {
                 if (!empty($result['Wblogin']['data'])) {
-                   $wbData = unserialize($result['Wblogin']['data']);
+                   $wbData = safe_unserialize($result['Wblogin']['data']);
                    if (!empty($wbData['login_show'])) {
                        $value = 1;
                    }

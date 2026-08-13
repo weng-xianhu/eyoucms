@@ -35,7 +35,7 @@ function btn_upgrade(obj, type)
     var curent_version = $(obj).data('curent_version');
     var intro = $("#upgrade_intro").html();
     var notice = $("#upgrade_notice").html();
-    intro += '<style type="text/css">.layui-layer-content{height:270px!important;text-align:left!important;}</style>';
+    intro += '<style type="text/css">.layui-layer-dialog .layui-layer-content{height:270px!important;text-align:left!important;}.layui-layer-dialog .layui-layer-content::-webkit-scrollbar{width:6px;height:6px;}.layui-layer-dialog .layui-layer-content::-webkit-scrollbar-track{background:#f1f1f1;border-radius:3px;}.layui-layer-dialog .layui-layer-content::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:3px;}.layui-layer-dialog .layui-layer-content::-webkit-scrollbar-thumb:hover{background:#a8a8a8;}</style>';
     // 截图前50个文件记录
     var filelist_arr = filelist.split('<br>');
     if (filelist_arr.length > 50) {
@@ -131,8 +131,25 @@ function checkdir(obj) {
             } else {
                 //提示框
                 if (2 == res.data.code) { 
-                    var alert = parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
-                        window.parent.open('https://www.eyoucms.com/plus/view.php?aid=9105');
+                    parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['开始检测']}, function(){
+                        parent.layer.closeAll();
+                        window.parent.db_repair_done = false;
+                        var db_check_url = eyou_basefile + '?m=' + module_name + '&c=Upgrade&a=database_check';
+                        parent.layer.open({
+                            type: 2,
+                            title: '数据库结构检测与修正',
+                            shade: 0.3,
+                            area: ['750px', '600px'],
+                            content: db_check_url,
+                            end: function() {
+                                if (window.parent.db_repair_done === true) {
+                                    window.parent.db_repair_done = false;
+                                    setTimeout(function(){
+                                        upgrade($(obj));
+                                    }, 500);
+                                }
+                            }
+                        });
                     });
                 } else {
                     var confirm = parent.layer.confirm(res.msg, {
@@ -195,11 +212,11 @@ function upgrade(obj){
                             var title = res.msg;
                             var btn = ['关闭'];
                         }else if (version < max_version) { // 当前升级之后的版本还不是官方最新版本，将继续连续更新
-                            var title = '已升级版本：'+version+'，官方最新版本：'+max_version+'。';
-                            var btn = ['开始检测'];
+                            var title = '已成功升级到'+version+'节点版本，系统最新版本为'+max_version;
+                            var btn = ['点击继续'];
                         } else { // 升级版本是官方最新版本，将引导到备份新数据
                             finish = true;
-                            var title = '已升级最新版本！';
+                            var title = '升级完成～<br/>点 “关闭” 回到后台，继续高效建站！';
                             var btn = ['关闭'];
                             $('#a_upgrade', window.parent.document).hide(); // 隐藏顶部的更新提示
                         }
@@ -246,8 +263,25 @@ function upgrade(obj){
             }
             else if (-2 == res.data.code) {
                 parent.layer.closeAll();
-                parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['立即查看']}, function(){
-                    window.parent.open('https://www.eyoucms.com/plus/view.php?aid=9105');
+                parent.layer.alert(res.msg, {icon: 2, title:false, btn: ['开始检测']}, function(){
+                    parent.layer.closeAll();
+                    window.parent.db_repair_done = false;
+                    var db_check_url = eyou_basefile + '?m=' + module_name + '&c=Upgrade&a=database_check';
+                    parent.layer.open({
+                        type: 2,
+                        title: '数据库结构检测与修正',
+                        shade: 0.3,
+                        area: ['750px', '600px'],
+                        content: db_check_url,
+                        end: function() {
+                            if (window.parent.db_repair_done === true) {
+                                window.parent.db_repair_done = false;
+                                setTimeout(function(){
+                                    upgrade(obj);
+                                }, 500);
+                            }
+                        }
+                    });
                 });
             }
             else if (-3 == res.data.code) {
@@ -302,16 +336,20 @@ function upgrade_buy_tips(obj)
 }
 
 function layer_loading2(msg){
-    var loading = parent.layer.msg(
-    msg+'...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请勿刷新页面', 
-    {
-        icon: 1,
-        time: 3600000, //1小时后后自动关闭
-        shade: [0.2] //0.1透明度的白色背景
-    });
-    //loading层
-    var index = parent.layer.load(3, {
-        shade: [0.1,'#fff'] //0.1透明度的白色背景
+    var content = '<div style="display:flex;align-items:center;justify-content:center;padding:15px 30px;font-size:15px;">' +
+        '<i class="layui-layer-ico layui-layer-ico1"></i>' +
+        '<span style="margin-left:12px;">' + msg + '...</span>' +
+        '<span style="margin:0 18px;width:60px;height:24px;background:url(' + __root_dir__ + '/public/plugins/layer-v3.1.0/theme/default/loading-0.gif) no-repeat center;"></span>' +
+        '<span>请勿刷新页面</span>' +
+        '</div>';
+    var loading = parent.layer.open({
+        type: 1,
+        title: false,
+        closeBtn: 0,
+        shadeClose: false,
+        content: content,
+        time: 3600000,
+        shade: [0.2]
     });
 
     return loading;

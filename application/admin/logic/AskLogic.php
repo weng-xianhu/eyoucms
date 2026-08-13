@@ -121,7 +121,7 @@ class AskLogic extends Model
                 $dirinfos .= "<br />";
             }
             $title = "本次升级需要在下面文件夹写入更新文件，已检测站点有 <font color='red'>{$n}</font> 处没有写入权限：<br />";
-            $title .= "<font color='red'>问题分析（如有问题，请咨询技术支持）：<br />";
+            $title .= "<font color='red'>问题分析：<br />";
             $title .= "1、检查站点目录的用户组与所有者，禁止是 root ;<br />";
             $title .= "2、检查站点目录的读写权限，一般权限值是 0755 ;<br />";
             $title .= "</font>涉及更新目录列表如下：<br />";
@@ -437,7 +437,7 @@ class AskLogic extends Model
         }
 
         if (preg_match('#__HALT_COMPILER()#i', $file)) {
-            return ['code' => 0, 'msg' => '问答模板包损坏，请联系官方客服！'];
+            return ['code' => 0, 'msg' => '问答模板包损坏，请检查所有目录是否有读写权限'];
         }
                                                             
         $fp = fopen($saveDir,'w');
@@ -445,7 +445,7 @@ class AskLogic extends Model
         fclose($fp);
         if(!eyPreventShell($saveDir) || !file_exists($saveDir) || $md5File != md5_file($saveDir))
         {
-            return ['code' => 0, 'msg' => '下载问答模板包失败，请检查网站目录权限'];
+            return ['code' => 0, 'msg' => '下载问答模板包失败，请检查所有目录是否有读写权限'];
         }
         return ['code' => 1, 'msg' => '下载成功'];
     }                
@@ -456,7 +456,7 @@ class AskLogic extends Model
 
         $constsant_path = APP_PATH.MODULE_NAME.'/conf/constant.php';
         if (file_exists($constsant_path)) {
-            require_once($constsant_path);
+            safe_require_once($constsant_path);
             defined('SERIALNUMBER') && $serial_number = SERIALNUMBER;
         }
         $mysqlinfo = \think\Db::query("SELECT VERSION() as version");

@@ -1,0 +1,85 @@
+.wrapper {
+    width: 600px;
+    padding: 10px;
+    height: 352px;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid #F2F2F2
+}
+
+.wrapper .image-info {
+    display: flex;
+    align-items: center;
+}
+
+.wrapper .image-info .input {
+    flex-grow: 1;
+    display: flex;
+}
+
+.wrapper .image-info .input input {
+    display: block;
+    border: 1px solid #CCC;
+    height: 23px;
+    border-radius: 3px;
+    flex-grow: 1;
+    outline: none;
+}
+
+.wrapper .image-info .copy {
+    width: 60px;
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+.wrapper .image-info .copy div {
+    height: 30px;
+    font-size: 12px;
+    line-height: 28px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #F8F8F8;
+    border: 1px solid #EEE;
+}
+
+.wrapper .image-info .action {
+    width: 100px;
+    cursor: pointer;
+}
+
+.wrapper .image-info .action .save-from-local {
+    position: relative;
+    height: 30px;
+    font-size: 12px;
+    line-height: 28px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #F8F8F8;
+    border: 1px solid #EEE;
+}
+
+.wrapper .image-info .action .save-from-local input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.wrapper .image-manual {
+    background: #EEE;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    line-height: 2;
+}
+
+.wrapper .image-manual .title {
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.wrapper .image-manual .body {
+}

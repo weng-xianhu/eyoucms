@@ -25,6 +25,7 @@
             var eyou_basefile = "{$Request.baseFile}";
             var module_name = "{$Think.const.MODULE_NAME}";
             var __root_dir__ = "__ROOT_DIR__";
+            var __lang__ = "{$admin_lang}";
         </script>
         <style type="text/css">
             #layui-laydate1.layui-laydate{
@@ -202,26 +203,37 @@
                             
                         }
                     });
-                    // 加载解析方法
-                    var evaljs = '';
-                    evaljs += 'if (undefined != window.top.$("iframe#workspace")[0]) {'; // 一级框架内，比如：栏目管理
-                    evaljs += '  if (undefined != window.top.$("iframe#workspace")[0].contentWindow.$("iframe#content_body")[0]) {'; // 二级框架，比如：内容管理框架
-                    evaljs += '     if (undefined != window.top.$("iframe#workspace")[0].contentWindow.$("iframe#content_body")[0].contentWindow.$("iframe[name^=layui-layer-iframe]")[0]) {'; // 内容管理的下一级框架
-                    evaljs += '        console.log(1);window.top.$("iframe#workspace")[0].contentWindow.$("iframe#content_body")[0].contentWindow.$("iframe[name^=layui-layer-iframe]")[0].contentWindow.'+callback+'(fileurl_tmp,filename_tmp)';
-                    evaljs += '     } else {';
-                    evaljs += '        console.log(2);window.top.$("iframe#workspace")[0].contentWindow.$("iframe#content_body")[0].contentWindow.'+callback+'(fileurl_tmp,filename_tmp)';
-                    evaljs += '     }';
-                    evaljs += '  } else {'; // 二级的layer框架里，比如：广告管理的新增广告，是额外弹出一个 layer.open
-                    evaljs += '     if (undefined != window.top.$("iframe#workspace")[0].contentWindow.$("iframe[name^=layui-layer-iframe]")[0]) {'; // 二级框架，新增广告
-                    evaljs += '        console.log(3);window.top.$("iframe#workspace")[0].contentWindow.$("iframe[name^=layui-layer-iframe]")[0].contentWindow.'+callback+'(fileurl_tmp,filename_tmp)';
-                    evaljs += '     } else {';
-                    evaljs += '        console.log(4);window.top.$("iframe#workspace")[0].contentWindow.'+callback+'(fileurl_tmp,filename_tmp)';
-                    evaljs += '     }';
-                    evaljs += '  }';
-                    evaljs += '} else {';
-                    evaljs += '  console.log(5);window.parent.'+callback+'(fileurl_tmp,filename_tmp)';
-                    evaljs += '}';
-                    eval(evaljs);
+                    // 安全的回调执行 - 替代 eval
+                    var targetWindow = null;
+                    var workspace = window.top.$("iframe#workspace")[0];
+                    if (undefined != workspace) {
+                        var contentBody = workspace.contentWindow.$("iframe#content_body")[0];
+                        if (undefined != contentBody) {
+                            var layerIframe = contentBody.contentWindow.$("iframe[name^=layui-layer-iframe]")[0];
+                            if (undefined != layerIframe) {
+                                console.log(1);
+                                targetWindow = layerIframe.contentWindow;
+                            } else {
+                                console.log(2);
+                                targetWindow = contentBody.contentWindow;
+                            }
+                        } else {
+                            var layerIframe2 = workspace.contentWindow.$("iframe[name^=layui-layer-iframe]")[0];
+                            if (undefined != layerIframe2) {
+                                console.log(3);
+                                targetWindow = layerIframe2.contentWindow;
+                            } else {
+                                console.log(4);
+                                targetWindow = workspace.contentWindow;
+                            }
+                        }
+                    } else {
+                        console.log(5);
+                        targetWindow = window.parent;
+                    }
+                    if (targetWindow && typeof targetWindow[callback] === 'function') {
+                        targetWindow[callback](fileurl_tmp, filename_tmp);
+                    }
                     if ('uploadImgProimgCallBack' !== String(callback)) {
                         window.parent.layer.closeAll();
                     }

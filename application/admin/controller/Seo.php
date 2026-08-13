@@ -28,6 +28,10 @@ class Seo extends Base
         parent::_initialize();
         $this->language_access(); // 多语言功能操作权限
         $this->buildhtmlLogic = new BuildhtmlLogic;
+        if (in_array(ACTION_NAME, ['site','channel','article']) && isMobile()) {
+            // 要支持，需改底层控制器 Controller.php 300行左右，放开注释
+            $this->error('不支持在手机上生成静态');
+        }
     }
     /*
      * 生成总站
@@ -40,8 +44,8 @@ class Seo extends Base
         if (!empty($param['is_buildhtml'])) {
             /*多语言*/
             $seoConfig = [];
-            $seoConfig['seo_maxpagesize'] = !empty($param['seo_maxpagesize']) ? intval($param['seo_maxpagesize']) : 50; // 栏目每页生成文件
-            $seoConfig['seo_pagesize'] = !empty($param['seo_pagesize']) ? intval($param['seo_pagesize']) : 20; // 文档每页生成文件
+            $seoConfig['seo_maxpagesize'] = !empty($param['seo_maxpagesize']) ? intval($param['seo_maxpagesize']) : 100; // P1-2优化：栏目每页生成文件（原值50）
+            $seoConfig['seo_pagesize'] = !empty($param['seo_pagesize']) ? intval($param['seo_pagesize']) : 100; // P7优化：文档每页生成文件（原值20→50→100）
             $seoConfig['seo_start_time'] = !empty($param['seo_start_time']) ? $param['seo_start_time'] : ""; // 起始时间
             $seoConfig['seo_startid2'] = !empty($param['seo_startid2']) ? intval($param['seo_startid2']) : ""; // 起始id
             if (is_language()) {
@@ -104,7 +108,7 @@ class Seo extends Base
             $seoConfig = [];
             $seoConfig['seo_startid'] = !empty($param['seo_startid']) ? intval($param['seo_startid']) : 0; // 文档ID开始
             $seoConfig['seo_endid'] = !empty($param['seo_endid']) ? intval($param['seo_endid']) : 0; // 文档ID结束
-            $seoConfig['seo_pagesize'] = !empty($param['seo_pagesize']) ? intval($param['seo_pagesize']) : 20; // 每页生成文件
+            $seoConfig['seo_pagesize'] = !empty($param['seo_pagesize']) ? intval($param['seo_pagesize']) : 100; // P7优化：每页生成文件（原值20→100）
             if (is_language()) {
                 $langRow = \think\Db::name('language')->order('id asc')
                     ->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -142,9 +146,9 @@ class Seo extends Base
         /*多语言*/
         // 恢复设置默认值
         $seoConfig = [];
-        $seoConfig['seo_maxpagesize'] = 50;
+        $seoConfig['seo_maxpagesize'] = 50; // 防504超时（原值100）
         $seoConfig['seo_upnext'] = 1;
-        $seoConfig['seo_pagesize'] = 20;
+        $seoConfig['seo_pagesize'] = 20; // 防504超时（原值100）
         if (is_language()) {
             $langRow = \think\Db::name('language')->order('id asc')
                 ->cache(true, EYOUCMS_CACHE_TIME, 'language')
@@ -306,7 +310,11 @@ class Seo extends Base
             $this->update_paginatorfile();
 
             delFile(HTML_ROOT);
-            \think\Cache::clear();
+            // 修复：改为按标签清除内容缓存，避免清除全部缓存导致后台登录异常
+            \think\Cache::clear('buildhtml');
+            \think\Cache::clear('archives');
+            \think\Cache::clear('arctype');
+            \think\Cache::clear('taglist');
             $this->success('操作成功', url('Seo/seo'));
         }
         $this->error('操作失败');
@@ -362,7 +370,7 @@ class Seo extends Base
                     $replace = 'htmlentities($url) . \'" data-ey_fc35fdc="html" data-tmp="1\'';
                     $strContent = str_replace('htmlentities($url)', $replace, $strContent);
                     if (function_exists('chmod')) {
-                        @chmod($file,0777);
+                        @chmod($file,0755);
                     }
                     @file_put_contents($file, $strContent);
                 }

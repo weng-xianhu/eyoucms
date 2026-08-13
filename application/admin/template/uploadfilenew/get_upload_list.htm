@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- Apple devices fullscreen -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>本地附件</title>
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadimgnew/layui/css/layui.css?v={$version}">
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugins/uploadfilenew/css/file-upload.css?v={$version}">
+        <link href="__SKIN__/font/css/font-awesome.min.css?v={$version}" rel="stylesheet" />
+        {if condition="file_exists(ROOT_PATH.'public/static/admin/css/theme_style.css')"}
+            <link href="__SKIN__/css/theme_style.css?v={$version}_{$global['web_theme_style_uptime']|default=0}" rel="stylesheet" type="text/css">
+        {elseif condition="file_exists(APP_PATH.'admin/template/public/theme_css.htm') && function_exists('hex2rgba')" /}
+            {include file="public/theme_css" /}
+        {/if}
+        <script type="text/javascript" src="__STATIC__/common/js/jquery.min.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/layui/layui.js?v={$version}"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/jquery.cookie.js?v={$version}"></script>
+        <script type="text/javascript">
+            var eyou_basefile = "{$Request.baseFile}";
+            var module_name = "{$Think.const.MODULE_NAME}";
+            var __root_dir__ = "__ROOT_DIR__";
+            var __lang__ = "{$admin_lang}";
+            
+            // 根据文件扩展名获取 Font Awesome 图标类
+            function getFileIconClass(filename) {
+                if (!filename) return 'fa-file-o';
+                var ext = filename.split('.').pop().toLowerCase();
+                var iconMap = {
+                    // 文档
+                    'pdf': 'fa-file-pdf-o',
+                    'doc': 'fa-file-word-o',
+                    'docx': 'fa-file-word-o',
+                    'xls': 'fa-file-excel-o',
+                    'xlsx': 'fa-file-excel-o',
+                    'ppt': 'fa-file-powerpoint-o',
+                    'pptx': 'fa-file-powerpoint-o',
+                    'txt': 'fa-file-text-o',
+                    'rtf': 'fa-file-text-o',
+                    // 压缩文件
+                    'zip': 'fa-file-archive-o',
+                    'rar': 'fa-file-archive-o',
+                    '7z': 'fa-file-archive-o',
+                    'gz': 'fa-file-archive-o',
+                    'tar': 'fa-file-archive-o',
+                    'iso': 'fa-file-archive-o',
+                    // 图片
+                    'jpg': 'fa-file-image-o',
+                    'jpeg': 'fa-file-image-o',
+                    'png': 'fa-file-image-o',
+                    'gif': 'fa-file-image-o',
+                    'bmp': 'fa-file-image-o',
+                    'svg': 'fa-file-image-o',
+                    // 音频
+                    'mp3': 'fa-file-audio-o',
+                    'wav': 'fa-file-audio-o',
+                    'wma': 'fa-file-audio-o',
+                    'flac': 'fa-file-audio-o',
+                    // 视频
+                    'mp4': 'fa-file-video-o',
+                    'avi': 'fa-file-video-o',
+                    'mov': 'fa-file-video-o',
+                    'wmv': 'fa-file-video-o',
+                    'flv': 'fa-file-video-o',
+                    // 代码
+                    'html': 'fa-file-code-o',
+                    'htm': 'fa-file-code-o',
+                    'css': 'fa-file-code-o',
+                    'js': 'fa-file-code-o',
+                    'php': 'fa-file-code-o',
+                    'java': 'fa-file-code-o',
+                    'py': 'fa-file-code-o',
+                    'xml': 'fa-file-code-o',
+                    'json': 'fa-file-code-o',
+                };
+                return iconMap[ext] || 'fa-file-o';
+            }
+        </script>
+        <style type="text/css">
+            #layui-laydate1.layui-laydate{
+                right: 7px;
+                left: unset !important;
+            }
+            .file-thumbnail {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                background: #000;
+            }
+            .file-icon {
+                font-size: 48px;
+                color: #666;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                background: #f5f5f5;
+            }
+            .file-icon.fa-file-pdf-o { color: #d32f2f; }
+            .file-icon.fa-file-word-o { color: #2b579a; }
+            .file-icon.fa-file-excel-o { color: #1d6f42; }
+            .file-icon.fa-file-powerpoint-o { color: #d04423; }
+            .file-icon.fa-file-archive-o { color: #ff9800; }
+            .file-icon.fa-file-text-o { color: #757575; }
+            .video-play-icon {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 40px;
+                color: rgba(255,255,255,0.8);
+                z-index: 1;
+            }
+        </style>
+        {php}
+        // 根据文件扩展名获取 Font Awesome 图标类
+        function getFileIconClass($filename) {
+            if (empty($filename)) return 'fa-file-o';
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $iconMap = [
+                // 文档
+                'pdf' => 'fa-file-pdf-o',
+                'doc' => 'fa-file-word-o',
+                'docx' => 'fa-file-word-o',
+                'xls' => 'fa-file-excel-o',
+                'xlsx' => 'fa-file-excel-o',
+                'ppt' => 'fa-file-powerpoint-o',
+                'pptx' => 'fa-file-powerpoint-o',
+                'txt' => 'fa-file-text-o',
+                'rtf' => 'fa-file-text-o',
+                // 压缩文件
+                'zip' => 'fa-file-archive-o',
+                'rar' => 'fa-file-archive-o',
+                '7z' => 'fa-file-archive-o',
+                'gz' => 'fa-file-archive-o',
+                'tar' => 'fa-file-archive-o',
+                'iso' => 'fa-file-archive-o',
+            ];
+            return isset($iconMap[$ext]) ? $iconMap[$ext] : 'fa-file-o';
+        }
+        {/php}
+    </head>
+
+    <body>
+        <div class="upload-box ui-layout-center">
+            <div class="upload-body">
+                <div class="upload-main">
+                    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                        <div class="layui-tab-content" style="height: 100%;">
+                            <div class="layui-tab-item layui-show"  id="bendi_cont">
+                                <div class="upload-con" style="overflow-y: auto;">
+                                    <div class="images-con">
+                                        <div class="image-header">
+                                            <div class="image-header-l"  id="topbar">
+                                                <button type="button" class="addfile layui-btn layui-btn-normal"><i class="layui-icon layui-icon-upload-drag"></i><span class="text addfiletext">上传附件</span></button>
+                                                <div class="img-about">
+                                                    <span class="tag-left"></span>
+                                                    <span class="text">存储于{$storageTitle}，建议&lt;{$basicConfig.file_size}{$basicConfig.max_sizeunit}</span>
+                                                </div>
+                                            </div>
+                                            <form id="searchForm" action="{:url('Uploadfilenew/get_upload_list')}" method="get" onsubmit="layer_loading('正在处理');">
+                                                {$searchform.hidden|default=''}
+                                                <div class="image-header-r">
+                                                    <div class="layui-form">
+                                                        <div class="layui-form-item">
+                                                            <div class="layui-inline">
+                                                                <div class="layui-input-inline" style="width: 190px;margin-right:5px;">
+                                                                    <i class="glyphicon glyphicon-calendar fa fa-calendar" style=" position: absolute; font-size: 14px; vertical-align: baseline; margin-right: 4px; top: 9px; right: 5px; color: #ababab; "></i>
+                                                                    <input type="text" name="eytime" class="layui-input" id="eytime" placeholder="选择上传时间" autocomplete="off" value="{$Request.param.eytime}">
+                                                                </div>
+                                                                <div class="layui-input-inline" style="width: 150px; margin-right:0; position: relative;">
+                                                                    <input type="text" name="keywords" class="layui-input" id="keywords" placeholder="搜索附件名称" autocomplete="off" value="{$Request.param.keywords}" style="padding-right: 35px;">
+                                                                    <button type="submit" class="layui-btn layui-btn-sm" style="position: absolute; right: 0; top: 0; height: 30px; padding: 0 10px; background: transparent; border: none; color: #333; cursor: pointer;">
+                                                                        <i class="layui-icon layui-icon-search" style="font-size: 16px;"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <input type="hidden" name="lang" value="{$info.lang}">
+                                                                <input type="hidden" name="num" value="{$info.num}">
+                                                                <input type="hidden" name="input" value="{$info.input}">
+                                                                <input type="hidden" name="path" value="{$info.path}">
+                                                                <input type="hidden" name="func" value="{$info.func}">
+                                                                <input type="hidden" name="type_id" value="{$type_id}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        {empty name="$videolist"}
+                                            <ul class="image-list" id="file_list">
+                                                <div style="width: 100%;height: 300px;line-height: 20;text-align: center;">
+                                                    <img id='litpic_img' src="__PUBLIC__/static/common/images/null-data.png"/>
+                                                </div>
+                                            </ul>
+                                        {else /}
+                                            <ul class="image-list" id="file_list">
+                                                {volist name="$videolist" id="vo"}
+                                                    {php}$fileIconClass = getFileIconClass($vo['title']);{/php}
+                                                    <li data-img="{$vo.image_url}" data-title="{$vo.title}" data-id="{$vo.img_id}" data-filesize="{$vo.filesize|default=0}">
+                                                        <div class="picbox">
+                                                            <i class="fa {$fileIconClass} file-icon" title="{$vo.title}"></i>
+                                                            <div class="image-select-layer">
+                                                                <i class="layui-icon layui-icon-ok-circle"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="namebox" style="height: 15px;">
+                                                            <span class="eyou_imgtime">{$vo.title}</span>
+                                                            <!-- <span class="eyou_imgname">
+                                                                {notempty name="vo.width"}{$vo.width} x {$vo.height}{else /}未知尺寸{/notempty}
+                                                            </span> -->
+                                                        </div>
+                                                        <div class="tools layer">
+                                                            <i class="layui-icon layui-icon-close-fill close" onclick="delimg(this,'{$vo.img_id}')" title="从附件上传列表里移除，文件不会被删除"></i>
+                                                        </div>
+                                                    </li>
+                                                {/volist}
+                                            </ul>
+                                        {/empty}
+                                        <div class="image-pages">
+                                            <div class="image-pages-l">
+                                                <label><input type="checkbox" class="checkAll" autocomplete="off" onclick="choose_all(this);">&nbsp;全选</label>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="moving(this);" title="移动附件到其他分组">移动</a>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="batch_delimg(this);" title="从附件列表里移除，文件不会被删除，可以继续被其他页面引用">移除</a>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="batch_delimg_completely(this);" title="彻底删除附件文件，将同时删除服务器上的文件以节省空间">彻底删除</a>
+                                            </div>
+                                            <div class="image-pages-r"><div id="page">{$pageStr}</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var type_id = "{$type_id|default=0}";
+            var UploadUpUrl = "{$info.upload}&unneed_syn={$Request.param.unneed_syn}";
+            var UploadTypeListUrl = "{:url('Uploadfilenew/get_type')}";
+            var UpdateTypeIdUrl = "{:url('Uploadfilenew/update_type_id')}";
+            var callback = "{$info.func}";
+            var num = "{$info.num|default=1}";
+            var upload_num = num;
+            if (!upload_num || upload_num < 1) { upload_num = 100; }
+            else if (num == 1) { upload_num = 100; }
+            var input = "{$info.input|default=''}";
+            var file_accept = "{$info.file_accept}";
+            var countfile = "{$countvideo|default=0}";
+            var eytime = "{$eytime|default=''}";
+            var keywords = "{$keywords|default=''}";
+
+            // 若后端生成的 UploadUpUrl 带其它域名，强制换成本域，避免 404
+            if (/^https?:\/\//i.test(UploadUpUrl)) {
+                var link = document.createElement('a');
+                link.href = UploadUpUrl;
+                var path = link.pathname + link.search + link.hash;
+                UploadUpUrl = window.location.origin + path;
+            }
+
+            // 数值化
+            type_id = parseInt(type_id, 10) || 0;
+            num = parseInt(num, 10) || 1;
+            upload_num = parseInt(upload_num, 10) || 100;
+            countfile = parseInt(countfile, 10) || 0;
+        </script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadfilenew/js/get_upload_list.js?v={$version}"></script>
+    </body>
+</html>
+
+

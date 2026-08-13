@@ -1,0 +1,102 @@
+{include file="public/layout" /}
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page atta min-hg-c-10">
+    {include file="seo/bar" /}
+    <div class="explanation" id="">
+        <ul>
+            <li>1、遵守Robots限制协议，文件内容中可以指定哪些目录或文件不能被访问，如输入内容"/"，那么所有文件都不允许访问；多个目录或文件请用回车换行。</li>
+            <li>2、建议选择全部开放，默认数据 “Disallow: /目录”请不要删除，指的是不让Robots抓取的目录，保护不想公开的内容。</li>
+            <li>3、robots.txt可以告诉谷歌及其它搜素引擎您网站的哪些页面可以被抓取，哪些页面不可以被抓取。</li>
+            <li>4、你可以通过下方Robots工具来创建、校验、更新网站robots.txt文件，让你的站点在搜索排名里有更好的表现。</li>
+        </ul>
+    </div>
+    <form class="form-horizontal" method="post" id="post_form" action="{:url('Robots/edit')}" enctype="multipart/form-data" name="form1">
+        <div class="ncap-form-default">
+            <dl class="row">
+                <dt class="tit">
+                    <label for="robots_mode">选择代码</label>
+                </dt>
+                <dd class="opt">
+                   <select name="robots_mode" id="robots_mode">
+                       <option value="1" {if condition="!empty($global['robots_mode']) && $global['robots_mode'] == 1"} selected="true" {/if}>全部关闭</option>
+                       <option value="2" {if condition="!empty($global['robots_mode']) && $global['robots_mode'] == 2"} selected="true" {/if}>全部开放</option>
+                       <option value="3" {if condition="!empty($global['robots_mode']) && $global['robots_mode'] == 3"} selected="true" {/if}>仅开放国外</option>
+                       <!-- <option value="4" {if condition="!empty($global['robots_mode']) && $global['robots_mode'] == 4"} selected="true" {/if}>仅开放国内</option> -->
+                       <option value="5" {if condition="!empty($global['robots_mode']) && $global['robots_mode'] == 5"} selected="true" {/if}>AI爬虫专属</option>
+                       <option value="0" {if condition="empty($global['robots_mode'])"} selected="true" {/if}>自定义</option>
+                   </select>
+                </dd>
+            </dl>
+            <dl class="row">
+                <dt class="tit">
+                    <label for="robots_content">Robots内容</label>
+                </dt>
+                <dd class="opt">
+                    <textarea name="robots_content" autocomplete="off" spellcheck="false" placeholder="请填写robots文件内容" rows="2" class="input-txt" style="height: 316px; min-height: 316px; max-height: 370px;width: 800px !important;">{$global['robots_content']|default=''}</textarea>
+                    <!-- 全部关闭 -->
+                    <textarea id="robots_content_1" style="display: none;">{$robots_content_1}</textarea>
+                    <!-- 全部开放 -->
+                    <textarea id="robots_content_2" style="display: none;">{$robots_content_2}</textarea>
+                    <!-- 仅开放国外 -->
+                    <textarea id="robots_content_3" style="display: none;">{$robots_content_3}</textarea>
+                    <!-- 仅开放国内 -->
+                    <!-- <textarea id="robots_content_4" style="display: none;">{$robots_content_4}</textarea> -->
+                    <!-- AI爬虫专属 -->
+                    <textarea id="robots_content_5" style="display: none;">{$robots_content_5}</textarea>
+                    <!-- 原来的值 -->
+                    <textarea id="robots_content_0" style="display: none;">{$global['robots_content']|default=''}</textarea>
+                </dd>
+            </dl>
+            <div class="bot">
+                <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="checkForm();">确认提交</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $(function(){
+        $('select[name=robots_mode]').change(function(){
+            var robots_mode = $(this).val();
+            var robots_content = $('#robots_content_'+robots_mode).val();
+            $('textarea[name=robots_content]').val(robots_content);
+        });
+    });
+
+    function checkForm(){
+        layer_loading('正在处理');
+        $.ajax({
+            type : 'post',
+            url : "{:url('Robots/edit', ['_ajax'=>1])}",
+            data : $('#post_form').serialize(),
+            dataType : 'json',
+            success : function(res){
+                if(res.code == 1){
+                    $.ajax({
+                        url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_ai_content_index_html&lang="+__lang__,
+                        type: "POST",
+                        dataType: "json",
+                        data: {is_auto:'off', _ajax:1},
+                        success: function(res) {
+                            layer.closeAll();
+                            layer.msg(res.msg, {shade: layer_shade, time: 1000}, function(){
+                                window.location.reload();
+                            });
+                        }
+                    });
+                }else{
+                    layer.closeAll();
+                    showErrorMsg(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showErrorAlert(e.responseText);
+            }
+        });
+    }
+</script>
+
+{include file="public/footer" /}

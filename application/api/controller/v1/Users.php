@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -30,7 +30,319 @@ class Users extends Base
         $this->users    = $this->getUser();   // 用户信息
         $this->users_id = !empty($this->users['users_id']) ? intval($this->users['users_id']) : null;
         if (empty($this->users_id)) $this->error('请先登录');
+        
+        // 用户登录后检查拼团状态并处理退款
+        $this->checkAndProcessUserExpiredGroups();
     }
+    
+    /**
+     * 检查并处理用户相关的过期拼团退款
+     */
+    private function checkAndProcessUserExpiredGroups()
+    {
+        try {
+            // 检查是否安装了拼团插件
+            if (!is_dir(ROOT_PATH . 'weapp/Groupbuy/')) {
+                return;
+            }
+            
+            // 检查拼团插件是否启用
+            $groupBuyPlugin = Db::name('weapp')->where([
+                'code' => 'Groupbuy',
+                'status' => 1
+            ])->find();
+            
+            if (empty($groupBuyPlugin)) {
+                return;
+            }
+            
+            $currentTime = time();
+            
+            // 查找当前用户参与的所有过期拼团
+            $userExpiredTeams = Db::name('weapp_groupbuy_team_member')->alias('m')
+                ->join('__WEAPP_GROUPBUY_TEAM__ t', 'm.team_id = t.id')
+                ->where([
+                    'm.user_id' => $this->users_id,
+                    't.status' => 0, // 拼团中
+                    't.expire_time' => ['<', $currentTime] // 已过期
+                ])
+                ->field('t.*')
+                ->select();
+            
+            if (empty($userExpiredTeams)) {
+                return;
+            }
+            
+            // 记录日志
+            file_put_contents('./error_log.php', '用户 ' . $this->users_id . ' 登录检查：发现 ' . count($userExpiredTeams) . ' 个过期拼团需要处理退款' . PHP_EOL, FILE_APPEND);
+            
+            foreach ($userExpiredTeams as $team) {
+                // 更新团单状态为失败
+                Db::name('weapp_groupbuy_team')->where('id', $team['id'])->update([
+                    'status' => 2, // 拼团失败
+                    'fail_time' => $currentTime,
+                    'update_time' => $currentTime
+                ]);
+                
+                // 处理退款
+                $this->processGroupFailureRefund($team['id']);
+                
+                // 记录日志
+                file_put_contents('./error_log.php', '用户登录检查：拼团ID ' . $team['id'] . ' 已过期，已处理退款' . PHP_EOL, FILE_APPEND);
+            }
+            
+        } catch (\Exception $e) {
+            // 记录异常但不影响正常业务
+            file_put_contents('./error_log.php', '用户登录检查拼团状态异常：' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+        }
+    }
+    
+    /**
+     * 处理拼团失败退款
+     */
+    private function processGroupFailureRefund($team_id)
+    {
+        try {
+            $currentTime = time();
+            
+            // 获取团单下所有相关订单
+            $orders = Db::name('shop_order')->where([
+                'group_id' => $team_id
+            ])->select();
+            
+            if (empty($orders)) {
+                // 如果没有找到订单，尝试使用其他条件再次查询
+                $orders = Db::name('shop_order')->where([
+                    'group_id' => $team_id,
+                    'prom_type' => 3 // 拼团订单类型
+                ])->select();
+                
+                if (empty($orders)) {
+                    file_put_contents('./error_log.php', '用户退款：拼团ID ' . $team_id . ' 未找到相关订单' . PHP_EOL, FILE_APPEND);
+                    return false;
+                }
+            }
+            
+            foreach ($orders as $order) {
+                // 只处理已支付的订单
+                if ($order['order_status'] == 1) {
+                    // 检查订单是否已经退款过
+                    $orderStatus = Db::name('shop_order')->where('order_id', $order['order_id'])->value('order_status');
+                    
+                    if ($orderStatus == -1) {
+                        // 订单已退款，跳过
+                        continue;
+                    }
+                    
+                    // 开启事务
+                    Db::startTrans();
+                    
+                    try {
+                        // 更新订单状态为已退款
+                        $updateResult = Db::name('shop_order')->where('order_id', $order['order_id'])->update([
+                            'order_status' => -1, // 已退款
+                            'refund_time' => $currentTime,
+                            'refund_way' => 1, // 退款到余额
+                            'order_source' => 0, // 改为普通订单
+                            'update_time' => $currentTime
+                        ]);
+                        
+                        if (!$updateResult) {
+                            throw new \Exception('更新订单状态失败');
+                        }
+                        
+                        // 退款到用户余额
+                        $refundAmount = floatval($order['order_amount']);
+                        if ($refundAmount > 0) {
+                            // 获取用户当前余额
+                            $userInfo = Db::name('users')->where('users_id', $order['users_id'])->find();
+                            if (!$userInfo) {
+                                throw new \Exception('用户不存在');
+                            }
+                            
+                            // 增加用户余额
+                            $newBalance = floatval($userInfo['users_money']) + $refundAmount;
+                            $updateUserResult = Db::name('users')->where('users_id', $order['users_id'])->update([
+                                'users_money' => $newBalance,
+                                'update_time' => $currentTime
+                            ]);
+                            
+                            if (!$updateUserResult) {
+                                throw new \Exception('更新用户余额失败');
+                            }
+                            
+                            // 记录余额变动（如果函数存在的话）
+                            if (function_exists('UsersMoneyRecording')) {
+                                UsersMoneyRecording(
+                                    $order['order_code'],
+                                    $userInfo,
+                                    $refundAmount,
+                                    '拼团失败自动退款',
+                                    2
+                                );
+                            }
+                            
+                            // 添加订单操作记录（如果函数存在的话）
+                            if (function_exists('AddOrderAction')) {
+                                AddOrderAction($order['order_id'], $order['users_id'], 0, -1, 0, 0, '拼团失败自动退款', '拼团超时失败，系统自动退款到余额');
+                            }
+                            
+                            file_put_contents('./error_log.php', '用户退款：订单ID ' . $order['order_id'] . ' 退款成功，金额：' . $refundAmount . PHP_EOL, FILE_APPEND);
+                        }
+                        
+                        // 恢复库存
+                        $this->restoreGroupGoodsStock($order);
+                        
+                        // 更新团成员状态
+                        Db::name('weapp_groupbuy_team_member')->where([
+                            'order_id' => $order['order_id']
+                        ])->update([
+                            'status' => -1, // 已退款
+                            'update_time' => $currentTime
+                        ]);
+                        
+                        // 提交事务
+                        Db::commit();
+                        
+                    } catch (\Exception $e) {
+                        // 回滚事务
+                        Db::rollback();
+                        file_put_contents('./error_log.php', '用户退款失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                    }
+                } elseif ($order['order_status'] == 0) {
+                    // 未支付订单：直接取消并恢复库存
+                    try {
+                        // 开启事务
+                        Db::startTrans();
+                        
+                        // 恢复库存
+                        $this->restoreGroupGoodsStock($order);
+                        
+                        // 更新订单状态
+                        Db::name('shop_order')->where('order_id', $order['order_id'])->update([
+                            'order_status' => 5, // 已取消
+                            'cancel_time' => $currentTime,
+                            'order_source' => 0,
+                            'update_time' => $currentTime
+                        ]);
+                        
+                        // 更新团成员状态
+                        Db::name('weapp_groupbuy_team_member')->where([
+                            'order_id' => $order['order_id']
+                        ])->update([
+                            'status' => 3, // 拼团失败
+                            'update_time' => $currentTime
+                        ]);
+                        
+                        // 提交事务
+                        Db::commit();
+                        
+                    } catch (\Exception $e) {
+                                            // 回滚事务
+                    Db::rollback();
+                    file_put_contents('./error_log.php', '取消订单失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                    }
+                }
+            }
+            
+            // 更新所有团成员状态为失败
+            Db::name('weapp_groupbuy_team_member')->where([
+                'team_id' => $team_id,
+                'status' => ['not in', [-1, 3]] // 不包括已退款和已取消的
+            ])->update([
+                'status' => 3, // 拼团失败
+                'update_time' => $currentTime
+            ]);
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            file_put_contents('./error_log.php', '用户退款处理异常：' . $e->getMessage() . '，拼团ID：' . $team_id . PHP_EOL, FILE_APPEND);
+            return false;
+        }
+    }
+    
+    /**
+     * 恢复拼团商品库存
+     */
+    private function restoreGroupGoodsStock($order)
+    {
+        try {
+            // 获取订单详情
+            $orderDetail = Db::name('shop_order_details')->where('order_id', $order['order_id'])->find();
+            if (empty($orderDetail)) {
+                file_put_contents('./error_log.php', '恢复库存失败：订单详情不存在，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                return;
+            }
+            
+            // 获取拼团商品信息
+            $groupGoods = Db::name('weapp_groupbuy_goods')->where('aid', $orderDetail['aid'])->find();
+            if (empty($groupGoods)) {
+                file_put_contents('./error_log.php', '恢复库存失败：拼团商品不存在，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                return;
+            }
+            
+            // 构造库存恢复数据
+            $stockData = [
+                'aid' => $orderDetail['aid'],
+                'goods_id' => $groupGoods['goods_id'],
+                'goodsBuyNumber' => $orderDetail['num'],
+                'goodsSpecKeys' => '' // 默认单规格
+            ];
+            
+            // 添加调试日志
+            file_put_contents('./error_log.php', '用户退款准备恢复库存，数据：' . json_encode($stockData) . PHP_EOL, FILE_APPEND);
+            
+            // 直接更新库存，不使用模型方法
+            $this->directUpdateStock($stockData);
+            
+            file_put_contents('./error_log.php', '拼团订单退款，已恢复库存，订单ID：' . $order['order_id'] . '，商品ID：' . $groupGoods['goods_id'] . '，数量：' . $orderDetail['num'] . PHP_EOL, FILE_APPEND);
+            
+        } catch (\Exception $e) {
+            file_put_contents('./error_log.php', '恢复拼团商品库存失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+        }
+    }
+    
+    /**
+     * 直接更新库存，绕过模型方法
+     */
+    private function directUpdateStock($stockData)
+    {
+        try {
+            $aid = intval($stockData['aid']);
+            $goods_id = intval($stockData['goods_id']);
+            $goodsBuyNumber = intval($stockData['goodsBuyNumber']);
+            
+            // 1. 更新系统商品库存（archives表）
+            $updateResult1 = Db::name('archives')->where('aid', $aid)->update([
+                'stock_count' => Db::raw('stock_count+' . $goodsBuyNumber),
+                'sales_num' => Db::raw('sales_num-' . $goodsBuyNumber),
+                'update_time' => time()
+            ]);
+            
+            file_put_contents('./error_log.php', '系统商品库存更新结果：' . ($updateResult1 ? '成功' : '失败') . '，AID：' . $aid . PHP_EOL, FILE_APPEND);
+            
+            // 2. 更新拼团商品库存（weapp_groupbuy_goods表）
+            $updateResult2 = Db::name('weapp_groupbuy_goods')->where('goods_id', $goods_id)->update([
+                'goods_stock' => Db::raw('goods_stock+' . $goodsBuyNumber),
+                'update_time' => time()
+            ]);
+            
+            file_put_contents('./error_log.php', '拼团商品库存更新结果：' . ($updateResult2 ? '成功' : '失败') . '，商品ID：' . $goods_id . PHP_EOL, FILE_APPEND);
+            
+            // 3. 验证库存是否真的增加了
+            $newStock = Db::name('weapp_groupbuy_goods')->where('goods_id', $goods_id)->value('goods_stock');
+            file_put_contents('./error_log.php', '拼团商品更新后库存：' . $newStock . PHP_EOL, FILE_APPEND);
+            
+        } catch (\Exception $e) {
+            file_put_contents('./error_log.php', '直接更新库存失败：' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+        }
+    }
+    
+    /**
+     * 写入调试日志到文件
+     */
+
 
     /**
      * 我的订单列表
@@ -132,24 +444,42 @@ class Users extends Base
     public function order_detail($order_id)
     {
         if (IS_AJAX) {
-            // 是否安装使用快递100查询插件
+            // 检查 Querykd 插件是否安装
             $is_querykd = 0;
-            $is_Logisticswx = 0;
             if (is_dir('./weapp/Querykd/')) {
                 $count = Db::name('weapp')->where(['code'=>'Querykd', 'status'=>1])->count();
                 $is_querykd = empty($count) ? $is_querykd : 1;
             }
-            if (is_dir('./weapp/Logisticswx/')) {
-                $count = Db::name('weapp')->where(['code'=>'Logisticswx', 'status'=>1])->count();
-                $is_Logisticswx = empty($count) ? $is_Logisticswx : 1;
-            }
+            
             // 订单详情
             $detail = model('v1.Shop')->getOrderDetail($order_id, $this->users_id);
-            return $this->renderSuccess([
+            $assign_data = [
                 'order'   => $detail,  // 订单详情
                 'is_querykd' => $is_querykd,
                 'setting' => [],
-            ]);
+            ];
+            
+            // 微信物流助手插件
+            if (is_dir('./weapp/Logisticswx/')) {
+                if (file_exists('./weapp/Logisticswx/model/LogisticswxModel.php')) {
+                    $logisticswxModel = new \weapp\Logisticswx\model\LogisticswxModel;
+                    $logisticswxModel->api_order_detail($assign_data); 
+                } else {
+                    $is_Logisticswx = 0;
+                    // 获取该记录的 data 字段内容
+                    $data = Db::name('weapp')->where(['code' => 'Logisticswx', 'status' => 1])->value('data');
+                    // 如果 data 字段存在且不为空
+                    if (!empty($data)) {
+                        $dataArray = safe_unserialize($data);
+                        if (!empty($dataArray['logisticswx_open'])) {
+                            $is_Logisticswx = 1;
+                        }
+                    }
+                    $assign_data['is_Logisticswx'] = $is_Logisticswx;
+                }
+            }
+
+            return $this->renderSuccess($assign_data);
         }
         $this->error('订单读取失败！');
     }
@@ -349,13 +679,35 @@ class Users extends Base
     {
         if (IS_AJAX_POST) {
             $post = input('post.');
-            // 商城商品订单类型
-            $post['transaction_type'] = 2;
+            
+            // 处理订单类型参数
+            if (!empty($post['transaction_type'])) {
+                // 前端传递了transaction_type，直接使用
+                $post['transaction_type'] = intval($post['transaction_type']);
+            } else {
+                // 前端没有传递，默认为普通订单，并自动检测多商家订单
+                $post['transaction_type'] = 2;
+                
+                // 检查是否为多商家订单
+                if (!empty($post['order_id'])) {
+                    $unifiedPay = Db::name('shop_order_unified_pay')->where([
+                        'users_id' => $this->users_id,
+                        'pay_status' => 0
+                    ])->select();
+                    
+                    foreach ($unifiedPay as $unifiedPayItem) {
+                        $orderIds = !empty($unifiedPayItem['order_ids']) ? safe_unserialize($unifiedPayItem['order_ids']) : [];
+                        if (in_array($post['order_id'], $orderIds)) {
+                            $post['transaction_type'] = 99; // 多商家订单
+                            break;
+                        }
+                    }
+                }
+            }
 
             // 默认会员ID
             $post['users_id'] = $this->users_id;
             $post['openid']   = Db::name('wx_users')->where('users_id', $this->users_id)->getField('openid');
-
             // 抖音支付
             if (9 === intval($post['curPayType'])) {
                 model('TikTok')->tikTokAppletsPayDealWith($post);
@@ -978,7 +1330,8 @@ class Users extends Base
                     }
 
                     if ($ga_data['validate_type'] == 6 && !empty($value)) {
-                        $pattern  = "/^1\d{10}$/";
+                        $form_field_grep_list = config('global.form_field_grep_list');
+                        $pattern  = $form_field_grep_list['mobile']['value'];
                         if (!preg_match($pattern, $value)) {
                             $this->error($ga_data['attr_name'] . '格式不正确！');
                         }
@@ -1293,5 +1646,35 @@ class Users extends Base
         // dump($result);exit;
         return $this->renderSuccess($result);
     }
+     // 活动报名操作(集合方法)
+    public function actreg_userAction()
+    {
+        if (IS_AJAX) {
+           if (is_dir('./weapp/Actreg/')) {
+                // 是否安装活动报名插件
+                $weappInfo = model('ShopPublicHandle')->getWeappInfo('Actreg');
+                if (!empty($weappInfo)) {
+                    // 调用开源小程序逻辑层方法
+                    $ActregLogic = new \app\plugins\logic\ActregLogic($this->users);
+                    $ActregLogic->ActregUserAction($weappInfo);
+                }
+            } else {
+                $this->error('请先安装小程序活动报名插件！');
+            }
+        }
+         $this->error('请求错误！');
+    
+    }
 
+    // 招聘 - 用户接口（需要登录）
+    public function recruitment_user_action()
+    {
+        if (IS_AJAX) {
+            // 创建招聘逻辑层实例
+            $users = $this->getUser();
+            $recruitLogic = new \app\plugins\logic\RecruitLogic($users);
+            $recruitLogic->userAction([]);
+        }
+        $this->error('请求错误！');
+    }
 }

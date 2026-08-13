@@ -17,6 +17,7 @@
                         &nbsp;
                         <label class="curpoin"><input id="web_status1" name="web_status" value="1" type="radio" {if condition="isset($config.web_status) AND $config.web_status eq 1"} checked="checked"{/if}>关闭</label>
                         <input type="hidden" id="old_web_status" value="{$config.web_status|default='0'}">
+                        <p class="notic">控制网站是否对外开放。关闭后，访问者将看到您设置的提示信息。</p>
                         <!-- <p class="notic2 red none" id="web_status_tips" style="text-indent: 1em;">提示：关闭网站，系统会切换成动态URL模式！</p> -->
                         {eq name="$web_cmsmode" value="2"}
                         <dd class="variable">
@@ -77,6 +78,7 @@
                             <label class="curpoin">
                                 <input type="radio" name="web_status_mode" value="2" {if condition='!empty($config.web_status_mode) && 2 == $config.web_status_mode'}checked="checked"{/if}/>模板页面&nbsp;&nbsp;
                             </label>
+                            <p class="notic">选择关闭时的展示方式：<strong>文案显示</strong>显示提示文字；<strong>跳转链接</strong>跳转到指定网址；<strong>模板页面</strong>显示自定义页面。</p>
                         </dd>
                     </dl>
                     <dl class="row dl_web_status_mode {if condition='!empty($config.web_status_mode)'}none{/if}" id="dl_web_status_mode_0">
@@ -85,7 +87,7 @@
                         </dt>
                         <dd class="opt">
                             <input id="web_status_text" name="web_status_text" value="{if condition='!isset($config.web_status_text)'}网站暂时关闭，维护中……{else /}{$config.web_status_text}{/if}" class="input-txt" type="text" autocomplete="off" />
-                            <p class="notic"></p>
+                            <p class="notic">网站关闭时显示的提示文字，将展示在所有页面上。</p>
                         </dd>
                     </dl>
                     <dl class="row dl_web_status_mode {if condition='empty($config.web_status_mode) || 1 != $config.web_status_mode'}none{/if}" id="dl_web_status_mode_1">
@@ -94,7 +96,7 @@
                         </dt>
                         <dd class="opt">
                             <input id="web_status_url" name="web_status_url" value="{$config.web_status_url|default=''}" class="input-txt" type="text" placeholder="关闭后，访问网站跳转的URL，http://" autocomplete="off"/>
-                            <p class="notic">如果设置跳转URL，必须带有http:// 或 https://</p>
+                            <p class="notic">网站关闭时跳转的目标网址，必须以 http:// 或 https:// 开头。</p>
                         </dd>
                     </dl>
                     <dl class="row dl_web_status_mode {if condition='empty($config.web_status_mode) || 2 != $config.web_status_mode'}none{/if}" id="dl_web_status_mode_2">
@@ -103,7 +105,7 @@
                         </dt>
                         <dd class="opt">
                             <input id="web_status_tpl" name="web_status_tpl" value="{if condition="isset($config['web_status_tpl'])"}{$config.web_status_tpl|default=''}{else /}__SITE_URL____ROOT_DIR__/public/close.html{/if}" class="input-txt" type="text" placeholder="关闭后，访问网站显示的个性化页面，public/close.html" autocomplete="off"/>
-                            <p class="notic">静态模板路径前面不要带有子目录</p>
+                            <p class="notic">网站关闭时显示的自定义页面路径，格式：public/close.html（不要包含子目录前缀）。</p>
                         </dd>
                     </dl>
                 </div>
@@ -113,7 +115,7 @@
                     </dt>
                     <dd class="opt ui-web_name ui-text">
                         <input id="web_name" name="web_name" value="{$config.web_name|default=''}" class="input-txt ui-input" type="text" data-num="10" />
-                        <p class="notic">一般不超过10个字符</p>
+                        <p class="notic">网站的简短名称，用于页面标题等位置显示，建议不超过10个字符。</p>
                         <p class="ui-big-text none">一般不超过10个字符（<span class="ui-textTips">还可以输入10个字符</span>）</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
@@ -151,7 +153,7 @@
                                 }
                             </script>
                         </div>
-                        
+                        <p class="notic">上传网站LOGO图片，将显示在前台页面。建议使用PNG格式，宽度不超过200像素。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -210,7 +212,7 @@
                             </span>
                         </div>
                         <span class="err"></span>
-                        <p class="notic">建议尺寸 32 * 32 (像素) 的.ico文件。<br/>如果无法正常显示新上传图标，清空浏览器缓存后访问。</p>
+                        <p class="notic">上传网站图标，将显示在浏览器地址栏和标签页。支持ico/png/jpg格式（建议使用正方形图片），保存后会自动转换为favicon.ico，如无法显示请清空浏览器缓存。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -225,7 +227,7 @@
                     </dt>
                     <dd class="opt">
                         <input id="web_basehost" name="web_basehost" value="{$config.web_basehost|default=''}" placeholder="{$Request.scheme}://" class="input-txt" type="text" />
-                        <p class="notic"></p>
+                        <p class="notic">网站的完整访问地址。<br/>例如：https://www.example.com</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -240,7 +242,7 @@
                     </dt>
                     <dd class="opt">
                         <textarea cols="60" id="web_copyright" name="web_copyright" class="h20">{$config.web_copyright|default=''}</textarea>
-                        <p class="notic"></p>
+                        <p class="notic">网站版权信息，通常显示在网站底部。支持HTML代码。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -262,7 +264,7 @@
                         <input type="hidden" id="web_recordnum_mode" name="web_recordnum_mode" value="{$config.web_recordnum_mode|default='0'}">
                         &nbsp;[<a href="javascript:void(0);" onclick="show_recordnum(this);">{eq name='$config.web_recordnum_mode' value='
                         1'}普通模式{else /}代码模式{/eq}</a>]
-                        <p class="notic"></p>
+                        <p class="notic">ICP备案号，用于网站合规展示。可在"普通模式"下直接输入备案号，或在"代码模式"下输入HTML代码。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -284,7 +286,7 @@
                         <input type="hidden" id="web_garecordnum_mode" name="web_garecordnum_mode" value="{$config.web_garecordnum_mode|default='0'}">
                         &nbsp;[<a href="javascript:void(0);" onclick="show_garecordnum(this);">{eq name='$config.web_garecordnum_mode' value='
                         1'}普通模式{else /}代码模式{/eq}</a>]
-                        <p class="notic"></p>
+                        <p class="notic">公安备案号，用于网站合规展示。可在"普通模式"下直接输入备案号，或在"代码模式"下输入HTML代码。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -323,7 +325,7 @@
                         {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/admin_tpl/system/web_ai_tdk_btn.htm')" /}
                             {include file="/weapp/Ai/template/admin_tpl/system/web_ai_tdk_btn.htm" /}
                         {/if}
-                        <p class="notic">标题（Title）一般不超过80个字符</p>
+                        <p class="notic">网站首页标题，显示在浏览器标签页和搜索结果中，是SEO优化的核心。建议80个字符以内，包含核心关键词。</p>
                         <p class="ui-big-text none">一般不超过80个字符（<span class="ui-textTips">还可以输入80个字符</span>）</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
@@ -338,8 +340,8 @@
                         <label for="web_keywords">关键词</label>
                     </dt>
                     <dd class="opt ui-keyword ui-text">
-                        <input id="web_keywords" name="web_keywords" value="{$config.web_keywords|default=''}" class="input-txt ui-input" type="text" data-num="100" />
-                        <p class="notic">关键词（KeyWords）一般不超过100个字符</p>
+                        <input id="web_keywords" name="web_keywords" value="{$config.web_keywords|default=''}" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')" class="input-txt ui-input" type="text" data-num="100" />
+                        <p class="notic">网站首页关键词，用于SEO优化。建议100个字符以内，用逗号或空格分隔，选择与网站内容相关的核心词汇。</p>
                         <p class="ui-big-text none">一般不超过100个字符（<span class="ui-textTips">还可以输入100个字符</span>）</p>
 
     <!-- 
@@ -365,7 +367,7 @@
                     </dt>
                     <dd class="opt ui-web_description ui-text">
                         <textarea rows="5" cols="60" id="web_description" name="web_description" style="height:60px;" class="ui-input keywordsTextarea" data-num="200" onkeyup="monitorInputStr();" onkeypress="monitorInputStr();">{$config.web_description|default=''}</textarea>
-                        <p class="notic">描述（Description）建议不超过200个字符</p>
+                        <p class="notic">网站首页描述，显示在搜索结果中，影响点击率。建议200个字符以内，简洁准确地概括网站核心内容。</p>
                         <p class="ui-big-text {empty name='$config.web_keywords'}none{/empty}" id="beenWritten">你已输入<span id="beenWrittenStr">0</span>个字符</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
@@ -407,7 +409,7 @@
                     </dt>
                     <dd class="opt">
                         <textarea rows="5" cols="60" id="web_thirdcode_pc" name="web_thirdcode_pc" style="height:80px;">{$config.web_thirdcode_pc|default=''}</textarea>
-                        <p class="notic">代码会放在 &lt;/body&gt; 标签以上（一般用于放置百度商桥代码、站长统计代码、谷歌翻译代码等）</p>
+                        <p class="notic">电脑端第三方代码，将插入到页面底部。常用于放置统计代码、客服代码、广告代码等。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -422,7 +424,7 @@
                     </dt>
                     <dd class="opt">
                         <textarea rows="5" cols="60" id="web_thirdcode_wap" name="web_thirdcode_wap" style="height:80px;">{$config.web_thirdcode_wap|default=''}</textarea>
-                        <p class="notic">代码会放在 &lt;/body&gt; 标签以上（一般用于放置百度商桥代码、站长统计代码、谷歌翻译代码等）</p>
+                        <p class="notic">手机端第三方代码，将插入到页面底部。常用于放置统计代码、客服代码、广告代码等，可与电脑端使用不同代码。</p>
                     </dd>
                     {eq name="$web_cmsmode" value="2"}
                     <dd class="variable">
@@ -432,7 +434,7 @@
                     {/eq}
                 </dl>
                 <div class="bot">
-                    <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">确认提交</a>
+                    <a href="JavaScript:void(0);" class="ncap-btn-big ncap-btn-green" onclick="adsubmit();">保存配置</a>
                 </div>
             </div>
         </form>

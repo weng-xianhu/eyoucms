@@ -1,6 +1,11 @@
 /**
  * 外贸助手的JS文件的多语言包
  */
+function ey_foreign(string, ...args) {
+    return string.replace(/%([a-zA-Z0-9]{1,1})/g, function() {
+        return args.shift();
+    });
+}
 var ey_foreign_page1 = "首页";
 var ey_foreign_page2 = "上一页";
 var ey_foreign_page3 = "下一页";
@@ -27,6 +32,10 @@ var ey_foreign_gbook17 = "手机验证码";
 var ey_foreign_gbook18 = "获取验证码";
 var ey_foreign_gbook19 = "看不清？点击更换验证码";
 var ey_foreign_gbook20 = "看不清？%s点击更换%s";
+var ey_foreign_gbook21 = "请输入邮箱地址！";
+var ey_foreign_gbook22 = "请输入邮箱验证码！";
+var ey_foreign_gbook23 = "请输入正确的邮箱地址！";
+var ey_foreign_gbook24 = "邮箱验证码不正确，请重新输入！";
 var ey_foreign_system1 = "图";
 var ey_foreign_system2 = "确定";
 var ey_foreign_system3 = "取消";
@@ -92,3 +101,5 @@ var ey_foreign_users47 = "手机验证码已被使用或超时，请重新发送
 var ey_foreign_users48 = "晚上好～";
 var ey_foreign_users49 = "早上好～";
 var ey_foreign_users50 = "下午好～";
+var ey_foreign_users51 = "商品库存仅%s件！";
+var ey_foreign_users52 = "商品数量最少为%s";

@@ -99,7 +99,7 @@ class getid3_tar extends getid3_handler
 			if ($name == '') {
 				break;
 			}
-			$info['tar']['file_details'][$name] = array (
+			$info['tar']['file_details'][] = array (
 				'name'     => $name,
 				'mode_raw' => $mode,
 				'mode'     => self::display_perms($mode),
@@ -117,7 +117,7 @@ class getid3_tar extends getid3_handler
 				'devmajor' => $devmaj,
 				'devminor' => $devmin
 			);
-			$info['tar']['files'] = getid3_lib::array_merge_clobber($info['tar']['files'], getid3_lib::CreateDeepArray($info['tar']['file_details'][$name]['name'], '/', $size));
+			$info['tar']['files'] = getid3_lib::array_merge_clobber($info['tar']['files'], getid3_lib::CreateDeepArray($name, '/', $size));
 		}
 		return true;
 	}
@@ -141,6 +141,9 @@ class getid3_tar extends getid3_handler
 		else                    $type='u'; // UNKNOWN
 
 		// Determine permissions
+		$owner            = array();
+		$group            = array();
+		$world            = array();
 		$owner['read']    = (($mode & 00400) ? 'r' : '-');
 		$owner['write']   = (($mode & 00200) ? 'w' : '-');
 		$owner['execute'] = (($mode & 00100) ? 'x' : '-');

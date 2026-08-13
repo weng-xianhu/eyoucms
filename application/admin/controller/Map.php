@@ -37,6 +37,13 @@ class Map extends Base
         $coordinate = input('param.coordinate/s');
         $keyword =  input('param.keyword/s');
         $func =  input('param.func/s', 'undefined');
+
+        // 安全修复: 回调函数格式验证，防止 XSS/代码注入
+        // 允许格式: v_callback_ + 数字（如 v_callback_123）
+        if (!preg_match('/^v_callback_\d+$/', $func)) {
+            $func = 'undefined';
+        }
+
         $lng = 0;
         $lat = 0;
         if($coordinate && strpos($coordinate,',') !== false)

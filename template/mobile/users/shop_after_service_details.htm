@@ -67,7 +67,7 @@
                 </div>
                 {/eyou:eq}
 
-                {eyou:eq name="$eyou.field.status" value="2"}
+                {eyou:if condition='$eyou.field.status == 2 && $eyou.field.service_type_old != 3'}
                 <div class="ey-row p10 pt0 bgfff mt10 bor-5">
                     <div class="column-title"> <div class="column-title-l">商家收货信息</div> <div class="column-title-r"></div> </div>
                     <div class="order-progress-con">
@@ -118,7 +118,7 @@
                         </div>
                     </form>
                 </div>
-                {/eyou:eq}
+                {/eyou:if}
 
                 <div class="ey-row p10 pt0 bgfff mt10 bor-5">
                     <div class="column-title"> <div class="column-title-l">服务信息</div> <div class="column-title-r"></div> </div>
@@ -127,9 +127,15 @@
                         <div class="span-row"> <div class="span-row-l">申请类型：</div> <div class="span-row-r">{$eyou.field.service_type}</div> </div>
                         <div class="span-row"> <div class="span-row-l">申请时间：</div> <div class="span-row-r">{$eyou.field.add_time|date='Y-m-d H:i:s',###}</div> </div>
                         <div class="span-row"> <div class="span-row-l">当前状态：</div> <div class="span-row-r">{$eyou.field.StatusName}</div> </div>
+                        {if condition='!empty($eyou.field.consignee)'}
                         <div class="span-row"> <div class="span-row-l">您的姓名：</div> <div class="span-row-r">{$eyou.field.consignee}</div> </div>
+                        {/if}
+                        {if condition='!empty($eyou.field.mobile)'}
                         <div class="span-row"> <div class="span-row-l">您的手机：</div> <div class="span-row-r">{$eyou.field.mobile}</div> </div>
+                        {/if}
+                        {if condition='!empty($eyou.field.address)'}
                         <div class="span-row"> <div class="span-row-l">收货地址：</div> <div class="span-row-r">{$eyou.field.address}</div> </div>
+                        {/if}
                         <div class="span-row"> <div class="span-row-l">问题描述：</div> <div class="span-row-r">{$eyou.field.content}</div> </div>
                         <div class="span-row">
                             <div class="span-row-l"></div>

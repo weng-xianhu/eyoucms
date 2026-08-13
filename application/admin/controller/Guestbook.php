@@ -138,6 +138,8 @@ class Guestbook extends Base
             $attr_list = array();
             foreach ($row as $key => $val) {
                 $typeids[] = $val['typeid'];
+                // 前台提交的留言内容一律转义，后续分支拼接的图片/附件HTML不受影响
+                $val['attr_value'] = htmlspecialchars((string)$val['attr_value'], ENT_QUOTES, 'UTF-8');
                 if (9 == $val['attr_input_type']){
                     //如果是区域类型,转换名称
                     $val['attr_value'] = Db::name('region')->where('id','in',$val['attr_value'])->column('name');
@@ -229,15 +231,19 @@ class Guestbook extends Base
         $id_arr = eyIntval($id_arr);
         $form_type = input('param.form_type/d', 0);
         if (!empty($id_arr)) {
-            $r = Db::name('guestbook')->where([
+            $where = [
                 'aid'  => ['IN', $id_arr],
                 'form_type' => $form_type,
                 'lang' => $this->admin_lang,
-            ])->delete();
+            ];
+            $typeids = Db::name('guestbook')->where($where)->column('typeid');
+            $r = Db::name('guestbook')->where($where)->delete();
             if ($r !== false) {
                 // ---------后置操作
                 model('Guestbook')->afterDel($id_arr, $form_type);
-                model('Arctype')->hand_type_count(['aid'=>$id_arr]);//统计栏目文档数量
+                if (empty($form_type)) {
+                    model('Arctype')->hand_type_count(['typeid'=>$typeids], 'guestbook');//统计栏目文档数量
+                }
                 // ---------end
                 adminLog('删除留言-id：' . implode(',', $id_arr));
                 $this->success('删除成功');
@@ -615,7 +621,7 @@ class Guestbook extends Base
             if (!preg_match('/^([\x{4e00}-\x{9fa5}\w\"\:\{\}\;\，\,]*)$/u', $info['attr_values'])) {
                 $info['attr_values'] = '';
             }
-            $dfvalue = unserialize($info['attr_values']);
+            $dfvalue = safe_unserialize($info['attr_values']);
             if (is_array($dfvalue)) {
                 $dfvalue['region_id'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_id']);
                 $dfvalue['region_ids'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_ids']);
@@ -762,10 +768,12 @@ class Guestbook extends Base
         $this->assign('row', $row);
 
         // 留言属性
-        $attr_list = Db::name('guestbook_attribute')->where(['typeid'=>$row['typeid'],'form_type'=>$form_type])->order('attr_id asc')->select();
+        $attr_list = Db::name('guestbook_attribute')->where(['typeid'=>$row['typeid'],'form_type'=>$form_type,'is_del'=>0])->order('sort_order asc, attr_id asc')->select();
         $attr_values = Db::name('guestbook_attr')->field('attr_id,attr_value')->where(['aid'=>$aid,'form_type'=>$form_type])->getAllWithIndex('attr_id');
         foreach ($attr_list as $key => $val) {
             $val['attr_value'] = empty($attr_values[$val['attr_id']]) ? '' : $attr_values[$val['attr_id']]['attr_value'];
+            // 前台提交的留言内容一律转义，后续分支拼接的图片/附件HTML不受影响
+            $val['attr_value'] = htmlspecialchars((string)$val['attr_value'], ENT_QUOTES, 'UTF-8');
             $attr_list[$key] = $val;
         }
         foreach ($attr_list as $key => &$val) {
@@ -818,11 +826,14 @@ class Guestbook extends Base
         }
     }
 
-    /**    
+    /**
      * excel导出
      */
     public function ajax_excel_export()
     {
+        function_exists('set_time_limit') && set_time_limit(0);
+        @ini_set('memory_limit','-1');
+
         $id_arr          = input('aid/s');
         if (!empty($id_arr)) {
             $id_arr          = explode(',', $id_arr);
@@ -865,6 +876,32 @@ class Guestbook extends Base
         $title = Db::name('guestbook_attribute')->where($map)->order('sort_order asc, attr_id asc')->select();
 
         if ($row && $title) {
+            // 一次性查询所有属性值
+            $aids = array_column($row, 'aid');
+            $all_attr_values = Db::name('guestbook_attr')
+                ->alias('a')
+                ->field('a.*,b.attr_input_type')
+                ->where(['a.aid' => ['IN', $aids], 'a.lang' => $this->admin_lang])
+                ->join('guestbook_attribute b','a.attr_id = b.attr_id')
+                ->select();
+
+            // 按aid分组
+            $attr_map = [];
+            $region_ids = [];
+            foreach ($all_attr_values as $v) {
+                $attr_map[$v['aid']][$v['attr_id']] = $v;
+                if ($v['attr_input_type'] == 9 && !empty($v['attr_value'])) {
+                    $region_ids = array_merge($region_ids, explode(',', $v['attr_value']));
+                }
+            }
+
+            // 一次性查询所有区域
+            $region_map = [];
+            if (!empty($region_ids)) {
+                $regions = Db::name('region')->where('id','in', array_unique($region_ids))->column('name', 'id');
+                $region_map = $regions;
+            }
+
             $strTable .= '<tr>';
             $strTable .= '<td style="text-align:center;font-size:12px;" width="*">ID</td>';
             foreach ($title as &$key) {
@@ -875,23 +912,23 @@ class Guestbook extends Base
             $strTable .= '</tr>';
 
             foreach ($row as &$val) {
-                $attr_value = Db::name('guestbook_attr')
-                    ->alias('a')
-                    ->field('a.*,b.attr_input_type')
-                    ->where(['a.aid' => $val['aid'], 'a.lang' => $this->admin_lang])
-                    ->join('guestbook_attribute b','a.attr_id = b.attr_id')
-                    ->getAllWithIndex('attr_id');
+                $attr_value = isset($attr_map[$val['aid']]) ? $attr_map[$val['aid']] : [];
+
                 foreach ($attr_value as $k => $v){
                     if ($v['attr_input_type'] == 9){
-                        $v['attr_value'] = Db::name('region')->where('id','in',$v['attr_value'])->column('name');
-                        $attr_value[$k]['attr_value'] = implode('',$v['attr_value']);
-                    }else if(10 == $v['attr_input_type']){
-                        $attr_value[$k]['attr_value'] =  date('Y-m-d H:i:s',$v['attr_value']);
-                    }else if(in_array($v['attr_input_type'],[5,8])){     //单张图、附件
-                        if (!stristr($val['attr_value'], '|')){
+                        $ids = explode(',', $v['attr_value']);
+                        $names = [];
+                        foreach ($ids as $id) {
+                            if (isset($region_map[$id])) $names[] = $region_map[$id];
+                        }
+                        $attr_value[$k]['attr_value'] = implode('', $names);
+                    } else if(10 == $v['attr_input_type']){
+                        $attr_value[$k]['attr_value'] =  date('Y-m-d H:i:s', intval($v['attr_value']));
+                    } else if(in_array($v['attr_input_type'],[5,8])){
+                        if (!stristr($v['attr_value'], '|')){
                             $attr_value[$k]['attr_value'] = handle_subdir_pic($v['attr_value'],'img',true);
                         }
-                    }else if(11 == $v['attr_input_type']){  //多张图
+                    } else if(11 == $v['attr_input_type']){
                         $attr_value_arr = explode(",",$v['attr_value']);
                         foreach ($attr_value_arr as $attr_value_k => $attr_value_v){
                             $attr_value_arr[$attr_value_k] = handle_subdir_pic($attr_value_v,'img',true);
@@ -903,7 +940,7 @@ class Guestbook extends Base
                 $strTable   .= '<tr>';
                 $strTable   .= '<td style="text-align:center;font-size:12px;">' . $val['aid'] . '</td>';
                 foreach ($title as &$key) {
-                    $strTable .= '<td style="text-align:center;font-size:12px;" style=\'vnd.ms-excel.numberformat:@\' width="*">' . $attr_value[$key['attr_id']]['attr_value'] . '</td>';
+                    $strTable .= '<td style="text-align:center;font-size:12px;" style=\'vnd.ms-excel.numberformat:@\' width="*">' . (isset($attr_value[$key['attr_id']]) ? $attr_value[$key['attr_id']]['attr_value'] : '') . '</td>';
                 }
                 $strTable .= '<td style="text-align:left;font-size:12px;">' . date('Y-m-d H:i:s', $val['add_time']) . '</td>';
                 $strTable .= '<td style="text-align:left;font-size:12px;">' . date('Y-m-d H:i:s', $val['update_time']) . '</td>';

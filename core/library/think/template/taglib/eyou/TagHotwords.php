@@ -32,6 +32,10 @@ class TagHotwords extends Base
      */
     public function getHotwords($num = 0, $subday = 0, $maxlength = 0, $orderby = '', $ordermode = '', $screen = '')
     {
+        $searchConf = tpCache('search');
+        if (isset($searchConf['hot_search_open']) && $searchConf['hot_search_open'] == 0) {
+            return [];
+        }
         $nowtime = getTime();
         if(empty($subday)) $subday = 365;
         if(empty($num)) $num = 6;

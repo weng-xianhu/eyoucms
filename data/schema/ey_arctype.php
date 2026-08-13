@@ -48,7 +48,7 @@ return array (
   'typename' => 
   array (
     'name' => 'typename',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -57,7 +57,7 @@ return array (
   'dirname' => 
   array (
     'name' => 'dirname',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(250)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -66,7 +66,7 @@ return array (
   'dirpath' => 
   array (
     'name' => 'dirpath',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -75,7 +75,7 @@ return array (
   'diy_dirpath' => 
   array (
     'name' => 'diy_dirpath',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -102,7 +102,7 @@ return array (
   'englist_name' => 
   array (
     'name' => 'englist_name',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -120,7 +120,7 @@ return array (
   'typelink' => 
   array (
     'name' => 'typelink',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -129,7 +129,7 @@ return array (
   'litpic' => 
   array (
     'name' => 'litpic',
-    'type' => 'varchar(250)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -156,7 +156,7 @@ return array (
   'seo_title' => 
   array (
     'name' => 'seo_title',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
@@ -165,7 +165,7 @@ return array (
   'seo_keywords' => 
   array (
     'name' => 'seo_keywords',
-    'type' => 'varchar(200)',
+    'type' => 'varchar(500)',
     'notnull' => false,
     'default' => '',
     'primary' => false,

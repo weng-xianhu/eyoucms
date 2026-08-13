@@ -1,7 +1,7 @@
 
     <div class="fixed-bar">
         <div class="item-title">
-            <a class="back_xin" href="{:url('System/api_conf')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <a class="back_xin" href="{if $Request.param.gourl}{$Request.param.gourl}{else /}{:url('System/api_conf')}{/if}" title="返回"><i class="iconfont e-fanhui"></i></a>
             <div class="subject">
                 <h3>站内信</h3>
                 <h5></h5>
@@ -10,7 +10,7 @@
                 {eq name="'UsersNotice@admin_notice_index'|is_check_access" value="1"}
                 <li>
                     <a href="{:url('UsersNotice/admin_notice_index')}" {if condition="in_array($Request.action, ['admin_notice_index'])"}class="current"{/if}>
-                    <span>站长通知</span>
+                    <span>站长消息</span>
                     </a>
                 </li>
                 {/eq}
@@ -18,7 +18,7 @@
                 {eq name="'UsersNotice@index'|is_check_access" value="1"}
                 <li>
                     <a href="{:url('UsersNotice/index')}" {if condition="in_array($Request.action, ['index'])"}class="current"{/if}>
-                    <span>会员通知</span>
+                    <span>用户消息</span>
                     </a>
                 </li>
                 {/eq}

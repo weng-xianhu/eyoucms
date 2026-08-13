@@ -143,7 +143,7 @@ class TagLikearticle extends Base
                 $n++;
             }
         } else {
-            // return false;
+            return false;
         }
 
         //排序
@@ -299,10 +299,10 @@ class TagLikearticle extends Base
             }
             /*--end*/
             /*封面图*/
+            $val['litpic'] = $this->get_default_pic($val['litpic']);
             if ('on' == $thumb) { // 属性控制是否使用缩略图
                 $val['litpic'] = thumb_img($val['litpic']);
             }
-            $val['litpic'] = $this->get_default_pic($val['litpic']);
             /*--end*/
 
             $val['add_time_format'] = $this->time_format($val['add_time']);

@@ -1,62 +1,241 @@
 {include file="public/layout" /}
 <body class="bodystyle" style="overflow-y: scroll; cursor: default; -moz-user-select: inherit;">
 <style type="text/css">
-    .system_table{ border: 1px solid #dcdcdc; width: 100%;}
-    .system_table td{ height: 40px; line-height: 40px; font-size: 12px; color: #454545; border-bottom: 1px solid #dcdcdc; border-right: 1px solid #dcdcdc; width: 35%; padding-left: 1%;}
-    .system_table td.gray_bg{ background: #f7f7f7; width: 15%;}
+    .page {
+        background: unset;
+        padding: 15px ;
+    }
+    .order-details-container {
+        min-height: calc(100vh - 100px);
+    }
+    .order-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .order-card-body {
+        padding: 24px;
+    }
+    .info-section {
+        margin-bottom: 24px;
+    }
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    .info-section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #303133;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e4e7ed;
+        display: flex;
+        align-items: center;
+    }
+    .info-section-title::before {
+        content: '';
+        display: inline-block;
+        width: 4px;
+        height: 16px;
+        background: #667eea;
+        margin-right: 10px;
+        border-radius: 2px;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 0;
+    }
+    .info-label {
+        min-width: 100px;
+        font-size: 14px;
+        color: #909399;
+        font-weight: 500;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .info-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: #303133;
+        flex: 1;
+        word-break: break-all;
+    }
+    .info-value.unpaid {
+        color: #f56c6c;
+    }
+    .info-value.paid {
+        color: #67c23a;
+    }
+    .info-value.highlight {
+        color: #667eea;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .product-info {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    .product-info:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        object-fit: cover;
+        margin-right: 16px;
+        border: 2px solid #e4e7ed;
+        flex-shrink: 0;
+    }
+    .product-details {
+        flex: 1;
+    }
+    .product-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #303133;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+    .product-name a {
+        color: #303133;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .product-name a:hover {
+        color: #667eea;
+    }
+    .product-id {
+        font-size: 13px;
+        color: #909399;
+    }
+    .product-id strong {
+        color: #606266;
+        margin-right: 4px;
+    }
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .order-card-body {
+            padding: 16px;
+        }
+        .product-info {
+            flex-direction: column;
+            text-align: center;
+        }
+        .product-image {
+            margin-right: 0;
+            margin-bottom: 12px;
+        }
+    }
 </style>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 <div class="page">
-    <div class="flexigrid">
-        <form class="form-horizontal">
-            <div class="ncap-form-default">
-                <table cellpadding="0" cellspacing="0" class="system_table">
-                    <tbody>
-                        <tr>
-                            <td class="gray_bg">订单ID：</td>
-                            <td>{$OrderData.order_id}</td>
-                            <td class="gray_bg">订单编号：</td>
-                            <td>{$OrderData.order_code}</td>
-                        </tr>
+    <div class="order-details-container">
+        <div class="order-card">
+            <div class="order-card-body">
+                <!-- 订单基本信息 -->
+                <div class="info-section">
+                    <div class="info-section-title">订单信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">订单编号：</span>
+                            <span class="info-value">{$OrderData.order_code}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">订单ID：</span>
+                            <span class="info-value">{$OrderData.order_id}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">订单状态：</span>
+                            <span class="info-value {eq name='$OrderData.order_status' value='0'}unpaid{else/}paid{/eq}">
+                                {eq name="$OrderData.order_status" value="0"}未付款{else/}已付款{/eq}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">订单金额：</span>
+                            <span class="info-value highlight">
+                                {notempty name="$OrderData.order_score"}
+                                    {$OrderData.order_score} 积分
+                                {else/}
+                                    ￥{$OrderData.order_amount}
+                                {/notempty}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                        <tr>
-                            <td class="gray_bg">用户名：</td>
-                            <td>{$UsersData.username}</td>
-                            <td class="gray_bg">手机号码：</td>
-                            <td>{$UsersData.mobile}</td>
-                        </tr>
+                <!-- 用户信息 -->
+                <div class="info-section">
+                    <div class="info-section-title">用户信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">用户名：</span>
+                            <span class="info-value">{$UsersData.username}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">手机号码：</span>
+                            <span class="info-value">{$UsersData.mobile}</span>
+                        </div>
+                    </div>
+                </div>
 
-                        <tr>
-                            <td class="gray_bg">订单金额：</td>
-                            <td>￥{$OrderData.order_amount}</td>
-                            <td class="gray_bg">订单状态：</td>
-                            <td>{eq name="$OrderData.order_status" value="0"}未付款{else/}已付款{/eq}</td>
-                        </tr>
-                        
-                        <tr>
-                            <td class="gray_bg">下单时间：</td>
-                            <td>{$OrderData.add_time|MyDate='Y-m-d H:i:s',###}</td>
-                            <td class="gray_bg">付款时间：</td>
-                            <td>{neq name="$OrderData.pay_time" value="0"}{$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}{/neq}</td>
-                        </tr>
+                <!-- 时间信息 -->
+                <div class="info-section">
+                    <div class="info-section-title">时间信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">下单时间：</span>
+                            <span class="info-value">{$OrderData.add_time|MyDate='Y-m-d H:i:s',###}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">付款时间：</span>
+                            <span class="info-value">
+                                {neq name="$OrderData.pay_time" value="0"}
+                                    {$OrderData.pay_time|MyDate='Y-m-d H:i:s',###}
+                                {else/}
+                                    <span style="color: #c0c4cc;">未付款</span>
+                                {/neq}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                        <tr>
-                            <td class="gray_bg">商品ID：</td>
-                            <td>{$OrderData.product_id}</td>
-                            <td class="gray_bg">商品名称：</td>
-                            <td>
-                                <a href="{$OrderData.arcurl}" target="_blank">
-                                    <img src="{$OrderData.product_litpic}" style="width: 60px;height: 60px;">
-                                    &nbsp; &nbsp; &nbsp;
-                                    {$OrderData.product_name}
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- 商品信息 -->
+                <div class="info-section">
+                    <div class="info-section-title">文章信息</div>
+                    <div class="product-info">
+                        <a href="{$OrderData.arcurl}" target="_blank">
+                            <img src="{$OrderData.product_litpic}" alt="{$OrderData.product_name}" class="product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\'%3E%3Crect fill=\'%23e4e7ed\' width=\'80\' height=\'80\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'12\'%3E暂无图片%3C/text%3E%3C/svg%3E'">
+                        </a>
+                        <div class="product-details">
+                            <div class="product-name">
+                                <a href="{$OrderData.arcurl}" target="_blank">{$OrderData.product_name}</a>
+                            </div>
+                            <div class="product-id">
+                                <strong>文档ID：</strong>{$OrderData.product_id}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 {include file="public/footer" /}

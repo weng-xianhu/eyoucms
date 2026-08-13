@@ -34,7 +34,7 @@ class BhvuserABegin {
     }
 
     private function _initialize() {
-        if ('GET' == self::$method) {
+        if ('GET' == self::$method && !is_internal_network()) {
             $this->checkspview();
         }
     }

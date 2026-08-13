@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.marketing.campaign.activity.offline.create request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 18:22:19
+ * @since 1.0, 2022-06-27 11:32:00
  */
 class AlipayMarketingCampaignActivityOfflineCreateRequest
 {

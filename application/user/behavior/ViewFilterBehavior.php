@@ -33,7 +33,7 @@ class ViewFilterBehavior {
     private function _initialize(&$params) {
         $this->eyGlobalJs($params); // 全局JS
         // 外贸助手的语言包
-        model('ForeignPack')->appendForeignGlobalJs($params);
+        // model('ForeignPack')->appendForeignGlobalJs($params);
     }
     
     /**
@@ -44,19 +44,25 @@ class ViewFilterBehavior {
     {
         $root_dir = ROOT_DIR;
         $version   = getCmsVersion();
-        $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_footer.js?v={$version}");
+        // 追加JS到头部
+        $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_global.js?v={$version}");
+        $JsHtml_head = <<<EOF
+<script type="text/javascript" src="{$srcurl}"></script>
+EOF;
+        $params = str_ireplace('</head>', htmlspecialchars_decode($JsHtml_head)."\n</head>", $params);
+
+        // 追加JS到底部
+        $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_footer.js?v={$version}.0");
         if (isMobile()) {
             $usersGlobalJs = "<script type='text/javascript' src='{$root_dir}/public/static/common/js/mobile_global.js?t={$version}'></script>";
         } else {
             $usersGlobalJs = "<script type='text/javascript' src='{$root_dir}/public/static/common/js/tag_global.js?t={$version}'></script>";
         }
-        $JsHtml = <<<EOF
-<script type="text/javascript" src="{$root_dir}/public/static/common/js/ey_global.js?t={$version}"></script>
+        $JsHtml_foot = <<<EOF
 {$usersGlobalJs}
 <script type="text/javascript">var root_dir="{$root_dir}"; var ey_aid=0;</script>
 <script type="text/javascript" src="{$srcurl}"></script>
 EOF;
-        // 追加替换JS
-        $params = str_ireplace('</body>', htmlspecialchars_decode($JsHtml)."\n</body>", $params);
+        $params = str_ireplace('</body>', htmlspecialchars_decode($JsHtml_foot)."\n</body>", $params);
     }
 }

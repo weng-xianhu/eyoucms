@@ -96,7 +96,7 @@
         function check_submit()
         {
             if ($('input[name=id]').val() == '' || $('input[name=id]').val() == undefined || $('input[name=type]').val() == '' || $('input[name=page]').val() == '') {
-                parent.showErrorMsg('缺少系统参数：id、type、page，尝试请求技术支持！');
+                parent.showErrorMsg('缺少系统参数：id、type、page');
                 return false;
             }
 

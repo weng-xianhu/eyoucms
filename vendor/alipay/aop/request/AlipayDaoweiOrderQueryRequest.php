@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.daowei.order.query request
  *
  * @author auto create
- * @since 1.0, 2017-03-20 14:00:38
+ * @since 1.0, 2021-07-13 10:41:50
  */
 class AlipayDaoweiOrderQueryRequest
 {

@@ -5,28 +5,139 @@
 <div id="ajaxwaitid"></div>
 <div class="page">
     {include file="bar.htm" /}
-    <form class="form-horizontal" id="post_form" action="{:weapp_url('Sample/Sample/conf')}" method="post">
-        <div class="ncap-form-default">
-            <dl class="row">
-                <dt class="tit">
-                    <label>调用方式</label>
-                </dt>
-                <dd class="opt">
-                    <div class="onoff">
-                        <label for="tag_weapp1" class="cb-enable {if condition='!isset($row.tag_weapp) || $row.tag_weapp eq 1'}selected{/if}">系统自动</label>
-                        <label for="tag_weapp0" class="cb-disable {if condition='isset($row.tag_weapp) && $row.tag_weapp eq 2'}selected{/if}">手工调用</label>
-                        <input id="tag_weapp1" name="tag_weapp" value="1" type="radio" {if condition="!isset($row.tag_weapp) || $row.tag_weapp eq 1"} checked="checked"{/if}>
-                        <input id="tag_weapp0" name="tag_weapp" value="2" type="radio" {if condition="isset($row.tag_weapp) && $row.tag_weapp eq 2"} checked="checked"{/if}>
-                    </div>
-                    <p class="notic">自动调用会默认绑定weapp模板标签，手工调用请参考使用指南的调用方法。</p>
-                </dd>
-            </dl>
-            <div class="bot">
-                <input type="hidden" name="code" value="{$row.code}" />
-                <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
-            </div>
+    <div class="flexigrid">
+        <div class="explanation" style="width: auto;">
+            <ul>
+                <li>配置说明内容</li>
+            </ul>
         </div>
-    </form>
+        <form class="form-horizontal" id="post_form" action="{:weapp_url('Sample/Sample/conf')}" method="post">
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>调用方式</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="radio" name="tag_weapp" value="1" {if condition="!isset($row.tag_weapp) || $row.tag_weapp eq 1"} checked="checked"{/if}>系统自动</label>
+                        &nbsp;
+                        <label class="curpoin"><input type="radio" name="tag_weapp" value="2" {if condition="isset($row.tag_weapp) && $row.tag_weapp eq 2"} checked="checked"{/if}>手工调用</label>
+                        <p class="notic">自动调用会默认绑定weapp模板标签，手工调用请参考使用指南的调用方法。</p>
+                    </dd>
+                </dl>
+            </div>
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">
+                                    配置分组一
+                                </div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>单行文本框</label>
+                    </dt>
+                    <dd class="opt">
+                        <input class="w500" type="text" name="input_text" id="input_text" value="{$row['data']['input_text']|default=''}" placeholder="">
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>多行文本框</label>
+                    </dt>
+                    <dd class="opt">
+                        <textarea rows="5" cols="80" id="input_textarea" name="input_textarea" style="height:80px;" placeholder="">{$row['data']['input_textarea']|default=''}</textarea>
+                    </dd>
+                </dl>
+            </div>
+            <div class="hDiv">
+                <div class="hDivBox">
+                    <table cellspacing="0" cellpadding="0" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th class="sign w10" axis="col0">
+                                <div class="tc"></div>
+                            </th>
+                            <th abbr="article_title" axis="col3" class="w10">
+                                <div class="tc">
+                                    配置分组二
+                                </div>
+                            </th>
+                            <th abbr="ac_id" axis="col4">
+                                <div class=""></div>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="ncap-form-default">
+                <dl class="row">
+                    <dt class="tit">
+                        <label>下拉框</label>
+                    </dt>
+                    <dd class="opt">
+                        <select name="input_select" id="input_select">
+                            <option value="0">--请选择--</option>
+                            <option value="1" {if condition="!isset($row.data.input_select) || $row.data.input_select eq 1"} selected="true" {/if}>单选项值1</option>
+                            <option value="2" {if condition="!isset($row.data.input_select) || $row.data.input_select eq 2"} selected="true" {/if}>单选项值2</option>
+                        </select>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>多选项</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="checkbox" name="input_checkbox" value="1" {if condition="isset($row.data.input_checkbox) && $row.data.input_checkbox eq 1"} checked="checked"{/if}>单选项值1</label>
+                        &nbsp;
+                        <label class="curpoin"><input type="checkbox" name="input_checkbox" value="2" {if condition="isset($row.data.input_checkbox) && $row.data.input_checkbox eq 2"} checked="checked"{/if}>单选项值2</label>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>单选项</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="radio" name="input_radio" value="1" {if condition="!isset($row.data.input_radio) || $row.data.input_radio eq 1"} checked="checked"{/if}>单选项值1</label>
+                        &nbsp;
+                        <label class="curpoin"><input type="radio" name="input_radio" value="2" {if condition="isset($row.data.input_radio) && $row.data.input_radio eq 2"} checked="checked"{/if}>单选项值2</label>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <dl class="row">
+                    <dt class="tit">
+                        <label>状态</label>
+                    </dt>
+                    <dd class="opt">
+                        <label class="curpoin"><input type="radio" name="input_status" value="1" {if condition="!isset($row.data.input_status) || $row.data.input_status eq 1"} checked="checked"{/if}>启用</label>
+                        &nbsp;
+                        <label class="curpoin"><input type="radio" name="input_status" value="2" {if condition="isset($row.data.input_status) && $row.data.input_status eq 2"} checked="checked"{/if}>禁用</label>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
+                <div class="bot">
+                    <a href="JavaScript:void(0);" onclick="checkForm();" class="ncap-btn-big ncap-btn-green" id="submitBtn">确认提交</a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 <script type="text/javascript">
     // 判断输入框是否为空

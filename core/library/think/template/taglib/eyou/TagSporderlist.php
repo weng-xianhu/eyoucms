@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -172,7 +172,7 @@ class TagSporderlist extends Base
                     // 商品发布评价(单个商品)
                     $details[$kk]['CommentProduct'] = urldecode(url('user/ShopComment/product', ['details_id' => $vv['details_id']]));
                     // 无效订单商品处理(商品规格无效且订单未付款)
-                    $spec_data = !empty($vv['data']) ? unserialize($vv['data']) : [];
+                    $spec_data = !empty($vv['data']) ? safe_unserialize($vv['data']) : [];
                     $details[$kk]['pointsGoodsBuyField'] = !empty($spec_data['pointsGoodsBuyField']) ? json_decode($spec_data['pointsGoodsBuyField'], true) : [];
                     if (!in_array($vv['order_id'], $OrderIds) && 0 === intval($value['order_status']) && !empty($spec_data['spec_value_id'])) {
                         if (empty($specValueArray[$vv['product_id']]) || !in_array($spec_data['spec_value_id'], $specValueArray[$vv['product_id']])) {
@@ -193,8 +193,15 @@ class TagSporderlist extends Base
                         // 商品存在
                         $details[$kk]['arcurl'] = urldecode(arcurl('home/Product/view', $archives[$vv['product_id']]));
                     } else {
-                        // 商品不存在
-                        $details[$kk]['arcurl'] = urldecode(url('home/View/index', ['aid'=>$vv['product_id']]));
+                        // 商品不存在，重新查询商品数据
+                        $productInfo = Db::name('archives')->where('aid', $vv['product_id'])->find();
+                        if (!empty($productInfo)) {
+                            $arctypeInfo = Db::name('arctype')->where('id', $productInfo['typeid'])->find();
+                            $productData = !empty($arctypeInfo) ? array_merge($arctypeInfo, $productInfo) : $productInfo;
+                            $details[$kk]['arcurl'] = urldecode(arcurl('home/Product/view', $productData));
+                        } else {
+                            $details[$kk]['arcurl'] = urldecode(url('home/View/index', ['aid'=>$vv['product_id']]));
+                        }
                     }
                     $has_deleted = 0;
                     $msg_deleted = '';

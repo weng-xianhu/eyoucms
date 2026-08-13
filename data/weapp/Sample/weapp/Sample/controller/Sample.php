@@ -230,24 +230,30 @@ class Sample extends Weapp
     {
         if (IS_POST) {
             $post = input('post.');
-            if(!empty($post['code'])){
-                $data = array(
-                    'tag_weapp' => $post['tag_weapp'],
-                    'update_time' => getTime(),
-                );
-                $r = M('weapp')->where('code','eq',$post['code'])->update($data);
-                if ($r) {
-                    \think\Cache::clear('hooks');
-                    adminLog('编辑'.$this->weappInfo['name'].'：插件配置'); // 写入操作日志
-                    $this->success("操作成功!", weapp_url('Sample/Sample/conf'));
-                }
+
+            // 组装配置数据
+            $saveData = [
+                'tag_weapp' => empty($post['tag_weapp']) ? 0 : intval($post['tag_weapp']),
+                'data' => json_encode($post),
+                'update_time' => getTime(),
+            ];
+            
+            // 保存配置到插件data字段
+            $result = Db::name('weapp')
+                ->where('code', $this->weappInfo['code'])
+                ->update($saveData);
+            
+            if ($result !== false) {
+                adminLog('编辑配置：'.$this->weappInfo['name']);
+                $this->success("保存成功", weapp_url('Sample/Sample/conf'));
             }
-            $this->error("操作失败!");
+            $this->error("保存失败");
         }
-
-        $row = M('weapp')->where('code','eq','Sample')->find();
+        
+        // 加载配置
+        $row = Db::name('weapp')->where('code', $this->weappInfo['code'])->find();
+        $row['data'] = !empty($row['data']) ? json_decode($row['data'], true) : [];
         $this->assign('row', $row);
-
         return $this->fetch('conf');
     }
 }

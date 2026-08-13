@@ -13,14 +13,17 @@
 
 namespace app\home\controller;
 
+use think\Db;
+
 class Images extends Base
 {
     // 模型标识
     public $nid = 'images';
     // 模型ID
     public $channeltype = '';
-    
-    public function _initialize() {
+
+    public function _initialize()
+    {
         parent::_initialize();
         $channeltype_list = config('global.channeltype_list');
         $this->channeltype = $channeltype_list[$this->nid];
@@ -28,36 +31,44 @@ class Images extends Base
 
     public function lists($tid)
     {
+        $param = input('param.');
         $tid_tmp = $tid;
         $seo_pseudo = config('ey_config.seo_pseudo');
-    	if (empty($tid)) {
+        if (empty($tid)) {
             $map = array(
-                'channeltype'   => $this->channeltype,
+                'channeltype' => $this->channeltype,
                 'parent_id' => 0,
                 'is_hidden' => 0,
-                'status'    => 1,
+                'status' => 1,
             );
-    	} else {
+        } else {
+            $is_screen = false;
             if (3 == $seo_pseudo) {
-                $map = array('dirname'=>$tid);
+                $url_screen_var = config('global.url_screen_var');
+                if (!empty($param[$url_screen_var]) && 1 == intval($param[$url_screen_var])) {
+                    $is_screen = true;
+                    $map = array('id' => intval($tid));
+                } else {
+                    $map = array('dirname' => $tid);
+                }
             } else {
                 if (!is_numeric($tid) || strval(intval($tid)) !== strval($tid)) {
-                    abort(404,'页面不存在');
+                    abort(404, '页面不存在');
                 }
-                $map = array('id'=>$tid);
+                $map = array('id' => $tid);
             }
         }
         $map['lang'] = $this->home_lang; // 多语言
         $row = M('arctype')->field('id,dirname')->where($map)->order('sort_order asc')->limit(1)->find();
         $tid = !empty($row['id']) ? intval($row['id']) : 0;
         $dirname = !empty($row['dirname']) ? $row['dirname'] : '';
-        
+
         /*301重定向到新的伪静态格式*/
         $this->jumpRewriteFormat($tid, $dirname, 'lists');
         /*--end*/
 
         if (3 == $seo_pseudo) {
-            $tid = $dirname;
+            $tid = $is_screen ? $tid : $dirname;
         } else {
             $tid = $tid_tmp;
         }
@@ -67,16 +78,31 @@ class Images extends Base
 
     public function view($aid)
     {
+        $param = I('param.');
+        $aid = !empty($param['aid']) ? $param['aid'] : $aid;
+        if (!is_numeric($aid) || strval(intval($aid)) !== strval($aid)) {
+            if (!preg_match("/^[\x{4e00}-\x{9fa5}\w\-]+$/u", $aid)) {
+                abort(404, '页面不存在');
+            }
+            $aid = Db::name('archives')->where(['htmlfilename' => $aid])->value('aid');
+        } else {
+            $aid = intval($aid);
+        }
         $result = model('Images')->getInfo($aid);
         if (empty($result)) {
-            abort(404,'页面不存在');
+            abort(404, '页面不存在');
         } elseif ($result['arcrank'] == -1) {
-            $this->success('待审核稿件，你没有权限阅读！');
-            exit;
+            $admin_id = input('param.admin_id/d');
+            if ( (session('?admin_id') && !empty($admin_id)) || ($result['users_id'] > 0 && $result['users_id'] == (int)session('users_id')) ) {
+
+            }
+            else {
+                $this->success('待审核稿件，你没有权限阅读！', ROOT_DIR.'/');
+            }
         }
         // 外部链接跳转
         if ($result['is_jump'] == 1) {
-            header('Location: '.$result['jumplinks']);
+            header('Location: ' . $result['jumplinks']);
             exit;
         }
         /*--end*/

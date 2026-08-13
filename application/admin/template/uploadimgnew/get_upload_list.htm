@@ -58,9 +58,15 @@
                                                     <div class="layui-form">
                                                         <div class="layui-form-item">
                                                             <div class="layui-inline">
-                                                                <div class="layui-input-inline" style="width: 195px;margin-right:0px;">
+                                                                <div class="layui-input-inline" style="width: 190px;margin-right:5px;">
                                                                     <i class="glyphicon glyphicon-calendar fa fa-calendar" style=" position: absolute; font-size: 14px; vertical-align: baseline; margin-right: 4px; top: 9px; right: 5px; color: #ababab; "></i>
                                                                     <input type="text" name="eytime" class="layui-input" id="eytime" placeholder="选择上传时间" autocomplete="off" value="{$Request.param.eytime}">
+                                                                </div>
+                                                                <div class="layui-input-inline" style="width: 150px; margin-right:0; position: relative;">
+                                                                    <input type="text" name="keywords" class="layui-input" id="keywords" placeholder="搜索图片名称" autocomplete="off" value="{$Request.param.keywords}" style="padding-right: 35px;">
+                                                                    <button type="submit" class="layui-btn layui-btn-sm" style="position: absolute; right: 0; top: 0; height: 30px; padding: 0 10px; background: transparent; border: none; color: #333; cursor: pointer;">
+                                                                        <i class="layui-icon layui-icon-search" style="font-size: 16px;"></i>
+                                                                    </button>
                                                                 </div>
                                                                 <input type="hidden" name="lang" value="{$info.lang}">
                                                                 <input type="hidden" name="num" value="{$info.num}">
@@ -101,7 +107,7 @@
                                                             <span class="eyou_imgname">{$vo.width} x {$vo.height}</span>
                                                         </div>
                                                         <div class="tools layer">
-                                                            <i class="layui-icon layui-icon-close-fill close" onclick="delimg(this,'{$vo.img_id}')"></i>
+                                                            <i class="layui-icon layui-icon-close-fill close" onclick="delimg(this,'{$vo.img_id}')" title="从图片上传列表里移除，图片不会被删除"></i>
                                                         </div>
                                                     </li>
                                                 {/volist}
@@ -110,8 +116,9 @@
                                         <div class="image-pages">
                                             <div class="image-pages-l">
                                                 <label><input type="checkbox" class="checkAll" autocomplete="off" onclick="choose_all(this);">&nbsp;全选</label>
-                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="moving(this);">移动</a>
-                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="batch_delimg(this);">删除</a>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="moving(this);" title="移动图片到其他分组">移动</a>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="batch_delimg(this);" title="从图片上传列表里移除，图片不会被删除，可以继续被其他页面引用">移除</a>
+                                                <a class="ml5 basics-color" href="javascript:void(0);" onclick="batch_delimg_completely(this);" title="彻底删除图片文件，将同时删除服务器上的图片文件以节省空间">彻底删除</a>
                                             </div>
                                             <div class="image-pages-r"><div id="page">{$pageStr}</div></div>
                                         </div>
@@ -138,7 +145,8 @@
             var image_accept = "{$info.image_accept}";
             var countimg = {$countimg|default=0};
             var eytime = "{$eytime|default=''}";
+            var keywords = "{$keywords|default=''}";
         </script>
-        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/get_upload_list.js?v={$version}0"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugins/uploadimgnew/js/get_upload_list.js?v={$version}2"></script>
     </body>
 </html>

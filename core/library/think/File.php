@@ -150,7 +150,15 @@ class File extends SplFileObject
      */
     protected function checkPath($path)
     {
-        if (is_dir($path) || mkdir($path, 0755, true)) {
+        if (is_dir($path)) {
+            if (!is_writable($path)) {
+                $this->error = '没有写入权限，检查目录：'.$path;
+                return false;
+            }
+            return true;
+        }
+
+        if (@mkdir($path, 0755, true)) {
             return true;
         }
 

@@ -98,10 +98,11 @@
                         </div>
                         <div class="item-bottom">
                             <div class="item-bottom-r">
+                                {eyou:if condition="in_array($field.order_status, [1, 2, 3]) && isset($field.allow_service) && 0 == $field.allow_service"}
+                                <a href="{$field.ServiceList}" class="el-button el-button--primary is-round el-button--small">申请售后</a>
+                                {/eyou:if}
+
                                 {eyou:eq name="$field.order_status" value="3"}
-                                    {eyou:if condition="isset($field.allow_service) && 0 == $field.allow_service"}
-                                    <a href="{$field.ServiceList}" class="el-button el-button--primary is-round el-button--small">申请售后</a>
-                                    {/eyou:if}
                                     {eyou:if condition="0 == $field.is_comment && !empty($usersConfig.shop_open_comment)"}
                                     <a href="{$field.AddProduct}" class="el-button el-button--primary is-round el-button--small">评价商品</a>
                                     {/eyou:if}

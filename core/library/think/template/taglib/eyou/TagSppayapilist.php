@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -191,7 +191,7 @@ class TagSppayapilist extends Base
             foreach ($PayApiList as $key => $value) {
                 $PayApiList[$key]['pay_img'] = '';
                 $PayApiList[$key]['hidden'] = '';
-                $PayInfo = unserialize($value['pay_info']);
+                $PayInfo = safe_unserialize($value['pay_info']);
                 // 微信支付
                 if ('wechat' == $value['pay_mark']) {
                     $PayApiList[$key]['bgColor'] = '#22d465';

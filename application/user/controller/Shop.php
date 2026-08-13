@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -352,7 +352,8 @@ class Shop extends Base
 
     // 统一修改购物车数量
     // symbol 加或减数量或直接修改数量
-    public function cart_unified_algorithm(){
+    public function cart_unified_algorithm()
+    {
         if (IS_AJAX_POST) {
             $aid    = input('post.aid/d');
             $symbol = input('post.symbol');
@@ -398,7 +399,7 @@ class Shop extends Base
                         'a.selected' => 1,
                     ];
                     $CartData = $this->shop_cart_db
-                        ->field('a.product_num, b.users_price, c.spec_price')
+                        ->field('a.product_num, a.spec_value_id, b.aid, b.users_price, b.users_discount_type, c.spec_price')
                         ->alias('a') 
                         ->join('__ARCHIVES__ b', 'a.product_id = b.aid', 'LEFT')
                         ->join('__PRODUCT_SPEC_VALUE__ c', 'a.spec_value_id = c.spec_value_id and a.product_id = c.aid', 'LEFT')
@@ -414,6 +415,10 @@ class Shop extends Base
                             $spec_price += $value['product_num'] * $value['spec_price'];
                         } else {
                             if (!empty($level_discount)) $value['users_price'] = $value['users_price'] * $discount_price;
+                            // 查询会员折扣价
+                            if (empty($value['spec_value_id']) && !empty($this->users['level_id']) && 1 === intval($value['users_discount_type'])) {
+                                $value['users_price'] = model('ShopPublicHandle')->handleUsersDiscountPrice($value['aid'], $this->users['level_id']);
+                            }
                             $users_price += $value['product_num'] * $value['users_price'];
                         }
                         $num_new += $value['product_num'];
@@ -742,7 +747,7 @@ class Shop extends Base
                             //     'pay_mark' => 'wechat'
                             // ];
                             // $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
-                            // if (!empty($PayInfo)) $PayInfo = unserialize($PayInfo);
+                            // if (!empty($PayInfo)) $PayInfo = safe_unserialize($PayInfo);
 
                             // if (!empty($this->users['open_id']) && !empty($PayInfo) && 0 == $PayInfo['is_open_wechat']) {
                             //     $ReturnOrderData = [
@@ -791,7 +796,7 @@ class Shop extends Base
                                         'pay_mark' => 'alipay'
                                     ])->getField('pay_info');
                                 if (empty($PayInfo)) $this->error('请先配置支付宝！');
-                                $alipay = unserialize($PayInfo);
+                                $alipay = safe_unserialize($PayInfo);
                                 $vars = [
                                     'unified_number'   => $OrderData['order_code'],
                                     'unified_amount'   => $OrderData['order_amount'],
@@ -916,6 +921,23 @@ class Shop extends Base
             // 合并订单数据
             $OrderData = array_merge($OrderData, $retData['data']['OrderData']);
             $list = $retData['data']['list'];
+
+            /*优惠券抵扣处理（PC端/手机端），服务端重新校验，防止前端篡改*/
+            $couponInfo = [];
+            if (!empty($post['use_id']) && is_dir('./weapp/Coupons/')) {
+                $couponsFrontModel = new \weapp\Coupons\model\CouponsFrontModel;
+                if ($couponsFrontModel->isOpen()) {
+                    $couponInfo = $couponsFrontModel->checkOrderCoupon($post['use_id'], $list, $this->users);
+                    if (empty($couponInfo)) $this->error(show_foreign_lang('所选优惠券不可用，请重新选择'));
+                    $OrderData['coupon_id'] = $couponInfo['coupon_id'];
+                    $OrderData['use_id'] = $couponInfo['use_id'];
+                    $OrderData['coupon_price'] = $couponInfo['coupon_price'];
+                    $OrderData['order_amount'] = $OrderData['order_amount'] - $couponInfo['coupon_price'];
+                    if (0 > $OrderData['order_amount']) $OrderData['order_amount'] = 0;
+                    $OrderData['order_amount'] = unifyPriceHandle($OrderData['order_amount']);
+                }
+            }
+            /*--end*/
 
             // 订单物流类型(0:虚拟订单; 1:快递发货; 2:到店核销;)
             $OrderData['logistics_type'] = !empty($post['logistics_type']) ? intval($post['logistics_type']) : 1;
@@ -1055,6 +1077,12 @@ class Shop extends Base
                     // 产品库存、销量处理
                     $this->shop_model->ProductStockProcessing($UpSpecValue);
 
+                    // 下单成功后锁定优惠券
+                    if (!empty($couponInfo)) {
+                        $couponsFrontModel = new \weapp\Coupons\model\CouponsFrontModel;
+                        $couponsFrontModel->lockCoupon($couponInfo['use_id'], $this->users_id);
+                    }
+
                     // 添加订单操作记录
                     AddOrderAction($OrderId, $this->users_id);
                     
@@ -1093,7 +1121,7 @@ class Shop extends Base
                                 'pay_mark' => 'wechat'
                             ];
                             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
-                            if (!empty($PayInfo)) $PayInfo = unserialize($PayInfo);
+                            if (!empty($PayInfo)) $PayInfo = safe_unserialize($PayInfo);
 
                             if ((!empty($this->users['open_id']) || 0 === intval($this->users['thirdparty'])) && !empty($PayInfo) && 0 === intval($PayInfo['is_open_wechat'])) {
                                 $payment_type = $post['payment_type'];
@@ -1491,8 +1519,7 @@ class Shop extends Base
             } else {
                 $this->error(show_foreign_lang('操作失败'));
             }
-        }
-
+        }        
         $types = input('param.type');
         if ('list' == $types || 'order' == $types || 'order_new' == $types) {
             $Where = [
@@ -1512,15 +1539,14 @@ class Shop extends Base
             $this->assign('eyou',$eyou);
         }else{
             $this->error(show_foreign_lang('数据有误'));
-        }
-
+        }                
+        $this->weapp_ai('ai_bd_adr_open'); //百度地址识别       
         $this->assign('is_mobile', $this->is_mobile);
         $this->assign('add_addr_url', url("user/Shop/shop_get_wechat_addr"));
         // 将当前URL存入 session ，使用微信获取收货地址时需要验签加密
         session($this->users_id.'_EyouShopAddAddress', $this->request->url(true));
         return $this->fetch('users/shop_add_address');
     }
-
     // 更新收货地址
     public function shop_edit_address()
     {
@@ -1579,7 +1605,6 @@ class Shop extends Base
                 $this->error(show_foreign_lang('操作失败'));
             }
         }
-
         // 查询收货地址
         $addr_id = input('param.addr_id/d', 0);
         $where = [
@@ -1610,10 +1635,11 @@ class Shop extends Base
         $delAddressUrl = url('Shop/shop_del_address', ['type'=>$type, 'gourl'=>$gourl]);
         $address['delAddressUrl'] = $delAddressUrl;
 
+        $this->weapp_ai('ai_bd_adr_open'); //百度地址识别
         $eyou = [
             'field' => $address,
         ];
-        $this->assign('eyou', $eyou);
+        $this->assign('eyou', $eyou);        
         return $this->fetch('users/shop_edit_address');
     }
 
@@ -1840,7 +1866,7 @@ class Shop extends Base
     {
         if (IS_AJAX_POST) {
             // 微信配置信息
-            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
             $appid     = !empty($WeChatLoginConfig['appid']) ? $WeChatLoginConfig['appid'] : '';
             $appsecret = !empty($WeChatLoginConfig['appsecret']) ? $WeChatLoginConfig['appsecret'] : '';
             
@@ -2090,9 +2116,11 @@ class Shop extends Base
             if (empty($post)) $this->error('提交数据有误！');
             if (empty($post['service_type'])) $this->error('请选择服务类型！');
             if (empty($post['content'])) $this->error('请填写问题描述！');
-            if (empty($post['address'])) $this->error('请填写您的收货地址！');
-            if (empty($post['consignee'])) $this->error('请填写您的姓名！');
-            if (empty($post['mobile'])) $this->error('请填写您的手机号码！');
+            if (3 !== intval($post['service_type'])) {
+                if (empty($post['address'])) $this->error('请填写您的收货地址！');
+                if (empty($post['consignee'])) $this->error('请填写您的姓名！');
+                if (empty($post['mobile'])) $this->error('请填写您的手机号码！');
+            }
             $time = getTime();
             $post['order_id'] = intval($post['order_id']);
             $post['details_id'] = intval($post['details_id']);
@@ -2116,7 +2144,9 @@ class Shop extends Base
                 'update_time' => $time,
             ];
             if (2 === intval($post['service_type']) && !empty($post['refund_price'])) $data['refund_code'] = 'TK' . $time . rand(10,99);
-            $insert = array_merge($post, $data);
+            // 售后逻辑变动统一处理
+            $insert = model('ShopServiceHandle')->addServiceDataHandle(array_merge($post, $data));
+            // 添加售后订单
             $resultID = $this->shop_order_service_db->insertGetId($insert);
             if (!empty($resultID)) {
                 // 更新订单明细表中对应商品为申请服务
@@ -2127,8 +2157,7 @@ class Shop extends Base
                 $this->shop_order_details_db->where('details_id', $post['details_id'])->update($update);
 
                 // 添加订单服务记录
-                $LogNote = 1 == $post['service_type'] ? '用户提交换货申请，待审核！' : '用户提交退货申请，待审核！';
-                OrderServiceLog($resultID, $post['order_id'], $this->users_id, 0, $LogNote);
+                OrderServiceLog($resultID, $post['order_id'], $this->users_id, 0, '会员提交' . $insert['service_type_text'] . '申请，待管理员审核！');
 
                 // 返回结束
                 $this->success('已申请，待审核', url('user/Shop/after_service_details', ['service_id' => $resultID]));
@@ -2406,7 +2435,7 @@ class Shop extends Base
 
                 foreach ($result['list'][$key]['details'] as $kk => $vv) {
                     // 产品规格处理
-                    $spec_data = unserialize($vv['data']);
+                    $spec_data = safe_unserialize($vv['data']);
                     if (!in_array($vv['order_id'], $OrderIds) && 0 == $value['order_status']) {
                         if (!empty($spec_data['spec_value_id'])) {
                             $spec_value_id = $spec_data['spec_value_id'];

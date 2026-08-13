@@ -4,9 +4,9 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="order/left" /}
-<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0;">
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin">
-        <div class="header-bar">
+        <div class="header-bar mb20">
             <div class="more">
                 <div class="search">
                     <div class="content">
@@ -88,10 +88,6 @@
             </div>
         </div>
     </div>
-</div>
-
-
-<div class="page" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid  flexigrid-xin">
 		<div class="tableDiv " style="height: auto;">
 			<div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
@@ -150,7 +146,7 @@
 
                             <td> <div class=""> <a href="{:url('Ajax/toHomeView', ['aid'=>$vo['product_id']])}" target="_blank">{$vo.product_name}</a> </div> </td>
 
-                            <td> <div class="red"> ￥{$vo.order_amount} </div> </td>
+                            <td> <div class="red"> {notempty name="$vo.order_score"}{$vo.order_score}积分{else/}￥{$vo.order_amount}{/notempty} </div> </td>
 
                             <td class="sort">
                                 <div class="d-flex" style=" padding-left: 10px;">
@@ -281,10 +277,10 @@
             fixed: true, //不固定
             shadeClose: false,
             shade: layer_shade,
-            area: ['100%', '100%'],
+            area: ['80%', '85%'],
             content: url
         });
-        layer.full(iframes);
+        // layer.full(iframes); // 注释掉全屏，让80%宽度生效
     }
 
     // 订单操作

@@ -120,3 +120,18 @@
 	background-color: transparent;
 	border-color: #f96868;
 }
+.coupon-list {
+    display: inline-block;
+}
+.coupon-list span {
+    display: inline-block;
+    padding: 0 10px;
+    margin-right: 10px;
+    cursor: pointer;
+    border: 1px solid #ff547b;
+    height: 32px;
+    line-height: 32px;
+    color: #ff547b;
+    font-size: 14px;
+    box-sizing: border-box;
+}

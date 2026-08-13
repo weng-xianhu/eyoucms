@@ -39,6 +39,7 @@
         var eyou_basefile = "{$Request.baseFile}";
         var module_name = "{$Think.const.MODULE_NAME}";
         var __root_dir__ = "__ROOT_DIR__";
+        var __lang__ = "{$admin_lang}";
     </script> 
 </head>
 <body>
@@ -219,7 +220,9 @@
                 } else {
                     fileurl_tmp = images_array;
                 }
-                eval('window.parent.'+callback+'(fileurl_tmp)');
+                if (typeof window.parent[callback] === 'function') {
+                    window.parent[callback](fileurl_tmp);
+                }
                 window.parent.layer.closeAll();
             }
         });

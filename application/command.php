@@ -12,5 +12,6 @@
  */
 
 return array(
-    'app\plugins\controller\im\library\GatewayWorker\start'
+    'app\api\command\DdosAutoScan',
+    'app\plugins\controller\im\library\GatewayWorker\start',
 );

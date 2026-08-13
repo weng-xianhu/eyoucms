@@ -92,6 +92,7 @@
     <style>
             *{ padding: 0; margin: 0; }
             *{-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;}
+            a {text-decoration: none;}
             body{ background: #fff; font-family: '微软雅黑'; color: #CCC; font-size: 16px; }
             .system-message{ padding: 24px 30px; margin:auto; border: #e8e8e8 1px solid; top:50%; width: auto; max-width:640px; background-color: #fff;box-shadow: 0 0 8px rgba(0,0,0,0.1);border-radius: 4px;overflow: hidden; }
             .system-message h1{ font-size: 100px; font-weight: normal; line-height: 120px; margin-bottom: 5px; }
@@ -124,7 +125,7 @@
     
     <div class="system-message" style="margin-top: 223.333px;">
         <div class="tit">
-            <?php echo empty($message_arr[0]) ? '' : '<span class="tishi2">'.$message_arr[0].'</span>'; ?>
+            <?php echo empty($message_arr[0]) ? '' : '<span class="tishi2">'.htmlspecialchars_decode($message_arr[0]).'</span>'; ?>
             <?php echo empty($message_arr[1]) ? '' : '<span>[错误代码]'.$message_arr[1].'</span>'; ?>
             <?php echo '<span class="tishi1">'.sprintf('报错 %s', parse_file($file, $line)).'</span>'; ?>
         </div>

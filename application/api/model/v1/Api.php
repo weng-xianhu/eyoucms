@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -269,7 +269,7 @@ class Api extends Base
                                 $v['nickname'] = '匿名用户';
                             }
                             $v['add_time'] = date('Y-m-d H:i:s', $v['add_time']);
-                            $v['content'] = unserialize($v['content']);
+                            $v['content'] = safe_unserialize($v['content']);
                             $v['head_pic'] = get_default_pic($v['head_pic'], true);
                             $detail['comment_data'][$k] = $v;
                         }
@@ -335,7 +335,8 @@ class Api extends Base
                 unset($detail['downcount']);
                 // 视频附件列表
                 $mediaFileModel = new \app\home\model\MediaFile;
-                $media_list = $mediaFileModel->getMediaFile($aid);
+                $media_data = $mediaFileModel->getMediaFile([$aid]);
+                $media_list = !empty($media_data[$aid]) ? $media_data[$aid] : [];
                 foreach ($media_list as $key => $val) {
                     $val['file_url'] = handle_subdir_pic($val['file_url'], 'media');
                     $media_list[$key] = $val;
@@ -520,7 +521,7 @@ class Api extends Base
         }
 
         /*表单令牌*/
-        $token_name = md5('guestbookform_token_'.$typeid.md5(getTime().uniqid(mt_rand(), TRUE)));
+        $token_name = md5('guestbookform_token_'.$typeid.secure_random_string(16, true));
         $token_value = md5($_SERVER['REQUEST_TIME_FLOAT']);
         $session_path = \think\Config::get('session.path');
         $session_file = ROOT_PATH . $session_path . "/sess_".$token_name;
@@ -628,6 +629,9 @@ class Api extends Base
 
             foreach ($SpecData as $key => $value) {
                 foreach ($value['spec_data_new'] as $kk => $vv) {
+                    if (!empty($SpecData[$key]['spec_data_new'][$kk]['spec_image'])) {
+                        $SpecData[$key]['spec_data_new'][$kk]['spec_image'] = $this->get_default_pic( $SpecData[$key]['spec_data_new'][$kk]['spec_image']);
+                    }
                     // 追加默认规格class
                     if (in_array($vv['spec_value_id'], $SelectSpecData['spec_value_id'])) {
                         $SpecData[$key]['spec_data_new'][$kk]['checked'] = true;
@@ -723,7 +727,7 @@ class Api extends Base
 
         $result = Db::name($coupon_table)
             ->where($filter)
-            ->where("coupon_type = '1' OR FIND_IN_SET('{$arcData['typeid']}', arctype_id) OR FIND_IN_SET('{$arcData['aid']}', product_id)")
+            ->where("coupon_type = '1' OR FIND_IN_SET('".intval($arcData['typeid'])."', arctype_id) OR FIND_IN_SET('".intval($arcData['aid'])."', product_id)")
             ->order('sort_order asc,coupon_id desc')
             ->select();
         $coupon_ids = [];
@@ -1071,7 +1075,7 @@ class Api extends Base
                     $val['add_time'] = date('Y-m-d H:i:s', $val['add_time']);
                 }
                 if (!empty($val['upload_img'])){
-                    $val['upload_img'] = unserialize($val['upload_img']);
+                    $val['upload_img'] = safe_unserialize($val['upload_img']);
                     if (!empty($val['upload_img'])){
                         $val['upload_img'] = explode(',',$val['upload_img']);
                         foreach ($val['upload_img'] as $k => $v){
@@ -1084,7 +1088,7 @@ class Api extends Base
                     }
                 }
                 if (!empty($val['content'])){
-                    $val['content'] = unserialize($val['content']);
+                    $val['content'] = safe_unserialize($val['content']);
                 }
                 $result['data'][$key] = $val;
             }
@@ -1244,7 +1248,7 @@ class Api extends Base
                             $v['nickname'] = '匿名用户';
                         }
                         $v['add_time'] = date('Y-m-d H:i:s',$v['add_time']);
-                        $v['content'] = unserialize($v['content']);
+                        $v['content'] = safe_unserialize($v['content']);
                         $v['head_pic'] = get_default_pic($v['head_pic'],true);
                         $detail['comment_data'][$k] = $v;
                     }
@@ -1318,8 +1322,10 @@ class Api extends Base
     //添加文章评论
     public function addArticleComment($param = [],$users = [])
     {
+      
         $users_level_id = !empty($users['level_id']) ? $users['level_id'] : 0;//0-游客
         $comment_level_data = Db::name('weapp_comment_level')->where('users_level_id',$users_level_id)->find();
+        $openid = Db::name('wx_users')->where('users_id', $users['users_id'])->value('openid');
         if (empty($comment_level_data['is_comment'])){
             return ['code'=>0, 'msg'=>'您没有评论权限'];
         }
@@ -1338,6 +1344,12 @@ class Api extends Base
             $content_tmp = filterNickname($param['content']);
             if ($content_tmp != $param['content']) {
                 return ['code'=>0, 'msg'=>'不支持表情等特殊符号'];
+            }
+        }
+       
+         if('weixin' ==  self::$provider) {
+             if (!$this->checkWeixinContentSecurity($param['content'],$openid)) {
+                return ['code' => 0, 'msg' => '您的评论内容涉及违规信息，请修改后再试'];
             }
         }
         $comment_id = Db::name('weapp_comment')->insertGetId($param);
@@ -1363,6 +1375,83 @@ class Api extends Base
             return $data;
         }
         return ['code'=>0, 'msg'=>'添加评论失败'];
+    }
+ 
+        /**
+         * 获取微信 Access Token
+         * @return string
+         */
+        public function getWeixinAccessToken()
+        {
+            $cacheKey = 'weixin_access_token';
+            $accessToken = cache($cacheKey);
+            $inc = model('ShopPublicHandle')->getSpecifyAppletsConfig();
+            if (empty($inc['appid'])) {
+                $this->error('该开源插件未填写微信小程序配置');
+            }
+            if (!$accessToken) {
+                $appid = $inc['appid'];
+                $secret = $inc['appsecret'];
+                $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$appid}&secret={$secret}";
+                
+                $result = file_get_contents($url);
+                $data = json_decode($result, true);
+                
+                if (!empty($data['access_token'])) {
+                    $accessToken = $data['access_token'];
+                    cache($cacheKey, $accessToken, $data['expires_in'] - 200);
+                }
+            }
+        
+            return $accessToken;
+        }
+    /**
+     * 调用微信内容安全接口
+     * @param string $content 需要检测的内容
+     * @return bool  true=安全，false=违规
+     */
+    public function checkWeixinContentSecurity($content,$openid)
+    {
+        // 获取 access_token（你需要实现 getWeixinAccessToken 方法）
+        // 获取 access_token（你需要实现 getWeixinAccessToken 方法）
+        $accessToken = $this->getWeixinAccessToken();
+        if (!$accessToken) {
+            return false;
+        }
+        // 微信接口地址
+        $url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token={$accessToken}";
+        // 请求参数
+        $params = [
+            'content' => $content,
+            'version' =>2,
+            'scene' => 3,
+            'openid' => $openid,
+        ];
+        // 发送 POST 请求
+        $result = $this->httpRequest($url, json_encode($params, JSON_UNESCAPED_UNICODE));
+        // 解析返回数据
+        $response = json_decode($result, true);
+        return isset($response['result']) && $response['result']['suggest'] == 'pass';
+    }
+    /**
+     * 发送 HTTP 请求
+     * @param string $url 请求地址
+     * @param string $data POST 数据
+     * @return mixed
+     */
+     function httpRequest($url, $data = '')
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        $output = curl_exec($ch);
+        curl_close($ch);
+        return $output;
     }
     public function addArticleReply($param = [], $users = [])
     {
@@ -1599,7 +1688,7 @@ class Api extends Base
             // 存在指定模板并已开启则发送
             $template_info = Db::name('wechat_template')->where(['send_scene' => $send_scene])->find();
             if (!empty($result_id) && !empty($template_info['is_open'])) {
-                $tokenData = get_wechat_access_token();
+                $tokenData = get_wechat_access_token(true);
                 if (!empty($tokenData['code'])) {
                     $redata = $this->wechatTemplateKeywords($result_id, $template_info);
                     $post_data = [
@@ -1632,7 +1721,24 @@ class Api extends Base
         }
         $send_scene = $template_info['send_scene'];
         // 订单支付成功通知
-        if (9 == $send_scene) {
+        if (20 == $send_scene) {
+            $gourl = '';
+            $askInfo = Db::name('weapp_ask')->where(['ask_id' => $result_id])->find();
+            $askAnswerInfo = Db::name('weapp_ask_answer')->where(['ask_id' => $askInfo['ask_id']])->order('answer_id desc')->find();
+            $data = [
+                'thing4' => [
+                    'value' => msubstr($askInfo['ask_title'], 0, 16, '...'),
+                ],
+                'thing8' => [
+                    'value' => checkStrHtml(msubstr(htmlspecialchars_decode($askAnswerInfo['content']), 0, 16, '...')),
+                ],
+                'time20' => [
+                    'value' => MyDate('Y-m-d H:i:s', $askAnswerInfo['add_time']),
+                ],
+            ];
+        }
+        // 订单支付成功通知
+        else if (9 == $send_scene) {
             $gourl = url('user/Shop/shop_order_details', ['order_id' => $result_id]);
             $orderInfo = Db::name('shop_order')->where(['order_id' => $result_id])->find();
             $orderDetailsInfo = Db::name('shop_order_details')->where(['order_id' => $orderInfo['order_id']])->order('details_id asc')->select();

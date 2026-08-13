@@ -141,20 +141,7 @@
                 <dd class="opt">
                     <input type="hidden" name="video_id" {eq name="$ad_data.0.media_type" value="2"} value="{$ad_data.0.id}" {/eq} class="input-txt">
                     <input type="text" name="video_litpic" id="video_litpic" {eq name="$ad_data.0.media_type" value="2"} value="{$ad_data.0.litpic}" {/eq} class="input-txt">
-                    <input type="file" accept="{$file_upload_media_type}" id="courseware_file" data-type='local' onchange="upload_video_litpic_1615775137(this)" style="display: none;">
-                    {eq name="$WeappOpen.qny_open" value="1"}
-                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_video_litpic_qiniu" onclick="$('#courseware_file').attr('data-type', 'qiniu').trigger('click');">七牛云上传</a>
-                    {/eq}
-                    {eq name="$WeappOpen.oss_open" value="1"}
-                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_video_litpic_oss" onclick="$('#courseware_file').attr('data-type', 'oss').trigger('click');">oss上传</a>
-                    {/eq}
-                    {eq name="$WeappOpen.cos_open" value="1"}
-                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_video_litpic_cos" onclick="$('#courseware_file').attr('data-type', 'cos').trigger('click');">cos上传</a>
-                    {/eq}
-                    {eq name="$WeappOpen.aws_open" value="1"}
-                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="upload_video_litpic_aws" onclick="$('#courseware_file').attr('data-type', 'aws').trigger('click');">亚马逊S3上传</a>
-                    {/eq}
-                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green " id="upload_video_litpic_local" onclick="$('#courseware_file').attr('data-type', 'local').trigger('click');">本地上传</a>
+                    &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green " id="upload_video_litpic_local" onclick="openVideoLibraryForAd();">选择上传</a>
                     <input type="hidden" id="OpenPreviewVideoUrl" value="{:url('AdPosition/open_preview_video')}">
                     &nbsp;<a href="javascript:void(0);" class="ncap-btn ncap-btn-green" id="PreviewVideo" onclick="OpenPreviewVideo();">预览</a>
                 </dd>
@@ -288,348 +275,7 @@
         });
     }
 
-    // 上传媒体文件
-    function upload_video_litpic_1615775137(e) {
-        var data_type = $(e).attr('data-type');
-        if ('qiniu' == data_type) {
-            // 七牛云上传
-            upload_video_litpic_qiniu(e);
-        } else if ('oss' == data_type) {
-             // OSS上传
-            upload_video_litpic_oss(e);
-        } else if ('cos' == data_type) {
-             // COS上传
-            upload_video_litpic_cos(e);
-        } else if ('aws' == data_type) {
-             // 亚马逊S3上传
-            upload_video_litpic_aws(e);
-        } else {
-            // 本地上传
-            upload_video_litpic_local(e);
-        }
-    }
-
-    // 七牛云上传
-    function upload_video_litpic_qiniu(e) {
-        // 获取文件路径名
-        var file = $(e)[0].files[0];
-
-        // 验证上传格式
-        var fileName = file.name;
-        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
-        var ext = judgeExt(fileExt);
-        if (ext == -1) {
-            showErrorMsg('不支持选中的视频格式,可在附件设置中修改');
-            return false;
-        }
-
-        // 验证上传大小
-        var size = "{$upload_max_filesize}";
-        if (file.size > size) {
-            showErrorMsg('视频大小超过限制,可在附件设置中修改');
-            return false;
-        }
-
-        // 执行上传
-        layer_loading('上传七牛云');
-        $.ajax({
-            type: 'POST',
-            url: '__ROOT_DIR__/index.php?m=plugins&c=Qiniuyun&a=qiniu_upload',
-            data: {_ajax: 1},
-            dataType: "JSON",
-            success: function(res1) {
-                if (1 == res1.code) {
-                    var token  = res1.data.token;
-                    var formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('token', token);
-
-                    fileName = res1.data.filePath + fileExt;
-                    formData.append('key', fileName);
-                    $.ajax({
-                        url: res1.data.uphost,
-                        type: 'POST',
-                        dataType: 'JSON',
-                        data: formData,
-                        timeout: 1200000,
-                        cache: false,
-                        processData: false,
-                        contentType: false,
-                        xhr: function () {
-                            myXhr = $.ajaxSettings.xhr();
-                            if (myXhr.upload) {
-                                myXhr.upload.addEventListener('progress', function(e){
-                                    var curr = e.loaded;
-                                    var total = e.total;
-                                    process = parseInt(curr / total * 100);
-                                    $("#upload_video_litpic_qiniu").text('上传中...'+process+"%");
-                                });
-                            }
-                            return myXhr;
-                        },
-                        success: function(res2) {
-                            layer.closeAll();
-                            $("#upload_video_litpic_qiniu").text('上传成功');
-                            setTimeout(function() {
-                                $('#upload_video_litpic_qiniu').text('七牛云上传');
-                            }, 2000);
-                            var video_url = res1.data.domain + "/" + res2.key;
-                            $("#video_litpic").empty().val(video_url);
-                        },
-                        error: function(e) {
-                            layer.closeAll();
-                            showErrorMsg(e.responseText);
-                            return false;
-                        }
-                    });
-                } else {
-                    layer.closeAll();
-                    showErrorMsg(res1.msg);
-                }
-            },
-            error: function(e) {
-                layer.closeAll();
-                showErrorMsg(e.responseText);
-            }
-        });
-    }
-
-    // 阿里云OSS上传
-    function upload_video_litpic_oss(e) {
-        // 获取文件路径名
-        var file = $(e)[0].files[0];
-        
-        // 验证上传格式
-        var fileName = file.name;
-        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
-        var ext = judgeExt(fileExt);
-        if (ext == -1) {
-            showErrorMsg('不支持选中的视频格式,可在附件设置中修改');
-            return false;
-        }
-
-        // 验证上传大小
-        var size = "{$upload_max_filesize}";
-        if (file.size > size) {
-            showErrorMsg('视频大小超过限制,可在附件设置中修改');
-            return false;
-        }
-
-        // 执行上传
-        layer_loading('上传阿里云OSS');
-        $.ajax({
-            type: 'POST',
-            url: '__ROOT_DIR__/index.php?m=plugins&c=AliyunOss&a=oss_upload',
-            data: {_ajax: 1},
-            dataType: "JSON",
-            success: function(res1){
-                if (1 == res1.code){
-                    fileName = res1.data.filePath + fileExt;
-                    //组装发送数据
-                    var request = new FormData();
-                    request.append("OSSAccessKeyId",res1.data.accessid);
-                    request.append("policy",res1.data.policy);
-                    request.append("Signature",res1.data.signature);
-                    request.append("key",fileName);
-                    request.append("success_action_status",201);
-                    request.append('file', file);
-
-                    $.ajax({
-                        url : res1.data.host,
-                        data : request,
-                        processData: false,
-                        cache: false,
-                        contentType: false,
-                        dataType: 'xml',
-                        type : 'post',
-                        xhr: function () {
-                            myXhr = $.ajaxSettings.xhr();
-                            if (myXhr.upload) {
-                                myXhr.upload.addEventListener('progress', function(e){
-                                    var curr = e.loaded;
-                                    var total = e.total;
-                                    var process = parseInt(curr / total * 100);
-                                    $("#upload_video_litpic_oss").text('上传中...'+process+"%");
-                                });
-                            }
-                            return myXhr;
-                        },
-                        success : function(data) {
-                            layer.closeAll();
-                            var res = $(data).find('PostResponse');
-                            if (res) {
-                                var key = res.find('Key').text();
-                                $("#upload_video_litpic_oss").text('上传成功');
-                                setTimeout(function() {
-                                    $('#upload_video_litpic_oss').text('oss上传');
-                                }, 2000);
-                                var video_url = res1.data.domain + "/" + key;
-                                $("#video_litpic").val(video_url);
-                            } else {
-                                $("#upload_video_litpic_oss").text('上传失败');
-                                setTimeout(function() {
-                                    $('#upload_video_litpic_oss').text('oss上传');
-                                }, 2000);
-                            }
-                        },
-                        error : function(e) {
-                            layer.closeAll();
-                            console.log(e.responseText);
-                        }
-                    });
-                } else {
-                    layer.closeAll();
-                    showErrorMsg(res1.msg);
-                }
-            },
-            error: function(e) {
-                layer.closeAll();
-                showErrorMsg(e.responseText);
-            }
-        });
-    }
-
-    // 腾讯云COS上传
-    function upload_video_litpic_cos(e) {
-        // 获取文件路径名
-        var file = $(e)[0].files[0];
-        
-        // 验证上传格式
-        var fileName = file.name;
-        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
-        var ext = judgeExt(fileExt);
-        if (ext == -1) {
-            showErrorMsg('不支持选中的视频格式，可在附件设置中修改');
-            return false;
-        }
-
-        // 验证上传大小
-        var size = "{$upload_max_filesize}";
-        if (file.size > size) {
-            showErrorMsg('视频大小超过限制，可在附件设置中修改');
-            return false;
-        }
-
-        // 上传参数
-        var formData = new FormData();
-            formData.append('file', file);
-            formData.append('file_ext', fileExt);
-
-        // 执行上传
-        $.ajax({
-            type: 'post',
-            url: '__ROOT_DIR__/index.php?m=plugins&c=Cos&a=cos_upload&_ajax=1',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            xhr: function () {
-                myXhr = $.ajaxSettings.xhr();
-                if (myXhr.upload) {
-                    myXhr.upload.addEventListener('progress', function(e){
-                        var curr = e.loaded;
-                        var total = e.total;
-                        process = parseInt(curr / total * 100);
-                        if (100 == process) {
-                            process = 99;
-                            layer_loading('上传腾讯云COS');
-                        }
-                        $("#upload_video_litpic_cos").text('上传中...'+process+"%");
-                        
-                    });
-                }
-                return myXhr;
-            },
-            success: function(res) {
-                layer.closeAll();
-                if (1 == res.code) {
-                    $("#video_litpic").val(res.data.url);
-                    $("#upload_video_litpic_cos").text('上传成功');
-                } else {
-                    $("#upload_video_litpic_cos").text('上传失败');
-                }
-                setTimeout(function() {
-                    $('#upload_video_litpic_cos').text('cos上传');
-                }, 2000);
-            },
-            error: function(e) {
-                layer.closeAll();
-                showErrorMsg(e.responseText);
-            }
-        });
-    }
-
-    // 亚马逊S3上传
-    function upload_video_litpic_aws(e) {
-        // 获取文件路径名
-        var file = $(e)[0].files[0];
-        
-        // 验证上传格式
-        var fileName = file.name;
-        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
-        var ext = judgeExt(fileExt);
-        if (ext == -1) {
-            showErrorMsg('不支持选中的视频格式，可在附件设置中修改');
-            return false;
-        }
-
-        // 验证上传大小
-        var size = "{$upload_max_filesize}";
-        if (file.size > size) {
-            showErrorMsg('视频大小超过限制，可在附件设置中修改');
-            return false;
-        }
-
-        // 上传参数
-        var formData = new FormData();
-            formData.append('file', file);
-            formData.append('file_ext', fileExt);
-
-        // 执行上传
-        $.ajax({
-            type: 'post',
-            url: '__ROOT_DIR__/index.php?m=plugins&c=Aws&a=aws_upload&_ajax=1',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            xhr: function () {
-                myXhr = $.ajaxSettings.xhr();
-                if (myXhr.upload) {
-                    myXhr.upload.addEventListener('progress', function(e){
-                        var curr = e.loaded;
-                        var total = e.total;
-                        process = parseInt(curr / total * 100);
-                        if (100 == process) {
-                            process = 99;
-                            layer_loading('上传亚马逊S3');
-                        }
-                        $("#upload_video_litpic_aws").text('上传中...'+process+"%");
-                        
-                    });
-                }
-                return myXhr;
-            },
-            success: function(res) {
-                layer.closeAll();
-                if (1 == res.code) {
-                    $("#video_litpic").val(res.data.url);
-                    $("#upload_video_litpic_aws").text('上传成功');
-                } else {
-                    $("#upload_video_litpic_aws").text('上传失败');
-                }
-                setTimeout(function() {
-                    $('#upload_video_litpic_aws').text('亚马逊S3上传');
-                }, 2000);
-            },
-            error: function(e) {
-                layer.closeAll();
-                showErrorMsg(e.responseText);
-            }
-        });
-    }
-
-    // 本地上传
+    // 选择上传
     function upload_video_litpic_local(e) {
         // 获取文件路径名
         var file = $(e)[0].files[0];
@@ -679,7 +325,7 @@
                 layer.closeAll();
                 $("#upload_video_litpic_local").html('上传成功');
                 setTimeout(function() {
-                    $('#upload_video_litpic_local').html('本地上传');
+                    $('#upload_video_litpic_local').html('选择上传');
                 }, 2000);
                 if ("SUCCESS" == res.state) {
                     $("#video_litpic").val(res.url);
@@ -697,6 +343,34 @@
         extArr = type.split("|");
         var ext = ext.replace(".","");
         return extArr.indexOf(ext);
+    }
+</script>
+
+<script type="text/javascript">
+    var uploadVideoAdLayerUrl = "{:url('Uploadvideonew/upload', ['func'=>'uploadVideoAdCallback','path'=>'media','open_source'=>'bendi','num'=>1])}";
+
+    function openVideoLibraryForAd() {
+        layer.open({
+            type: 2,
+            title: '选择视频',
+            area: ['1000px', '625px'],
+            content: uploadVideoAdLayerUrl
+        });
+    }
+
+    function uploadVideoAdCallback(fileurl_tmp) {
+        var videoUrl = '';
+        if ($.isArray(fileurl_tmp)) {
+            videoUrl = fileurl_tmp.length ? fileurl_tmp[0] : '';
+        } else {
+            videoUrl = fileurl_tmp;
+        }
+        if (!videoUrl) {
+            return false;
+        }
+        $('#video_litpic').val(videoUrl);
+        VideoLitpicValue('#video_litpic');
+        return true;
     }
 </script>
 

@@ -34,7 +34,7 @@ class TagLang extends Base
     public function getLang($param = '')
     {
         $is_empty = true;
-        $param = unserialize($param);
+        $param = safe_unserialize($param);
         foreach ($param as $key => $val) {
             if (!empty($val)) {
                 $$key = strtolower($val);

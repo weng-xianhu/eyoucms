@@ -10,6 +10,7 @@
         {eyou:static file="users/skin/css/element/index.css" /}
         {eyou:static file="users/skin/css/e-user.css" /}
         {eyou:include file="users/skin/css/diy_css.htm"/}
+        {eyou:static file="/public/static/common/js/jquery.min.js"/}
     </head>
 
     <body class="centre">
@@ -42,7 +43,7 @@
                             </div>
                         </a>
                         <div class="balances-num">
-                            <p class="red">￥{$vo.order_amount}</p>
+                            <p class="red">{notempty name="$vo.order_score"}{$vo.order_score}{$usersConfig.score_name}{else/}¥{$vo.order_amount}{/notempty}</p>
                         </div>
                     </div>
                     {/eyou:volist}

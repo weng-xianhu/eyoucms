@@ -120,7 +120,11 @@ class TagArclist extends Base
             }
             $param['channel'] = $channeltype;
         }
-
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }  
         // 查询条件
         $condition = array();
         foreach (array('keywords','keyword','typeid','notypeid','flag','noflag','channel') as $key) {
@@ -153,24 +157,8 @@ class TagArclist extends Base
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -180,25 +168,9 @@ class TagArclist extends Base
                 } elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -241,6 +213,7 @@ class TagArclist extends Base
             ->field($field)
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
+           
             ->where($where_str)
             ->orderRaw($orderby)
             ->limit($limit)
@@ -260,7 +233,16 @@ class TagArclist extends Base
             $val['litpic'] = $this->get_default_pic($val['litpic']); // 默认封面图
             $val['add_time_format'] = $this->time_format($val['add_time']);
             $val['add_time'] = date('Y-m-d', $val['add_time']);
-
+           
+            $val['litpicCount'] = 0;
+            if($val['channel'] == 3) {
+                $litpicCount = Db::name('images_upload')
+                    ->where('aid', $val['aid'])  // 根据 aid 查找记录
+                    ->count();  // 获取该 aid 对应的记录总数
+                // 将记录总数赋值给 litpic 字段
+                $val['litpicCount'] = $litpicCount;  // 把数量赋给 litpic 字段
+            }
+         
             $val['old_price'] = unifyPriceHandle($val['users_price']);
             $val['crossed_price'] = model('ShopPublicHandle')->getGoodsSpecCrossedPrice($val['crossed_price'], $val['aid']);
             if (!empty($users)) {

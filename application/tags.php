@@ -2,12 +2,14 @@
 
 // 应用行为扩展定义文件
 
-$weappRow = \think\Db::name('weapp')->field('code')->where([
+$weappRow = \think\Db::name('weapp')->field('code,is_valid')->where([
     'status'    => 1,
 ])->cache(true, null, "weapp")->select();
 
 $app_init = [
     'app\\common\\behavior\\AppInitBehavior',
+    'app\\common\\behavior\\ConfigProtect',
+    'app\\common\\behavior\\FileProtect',
 ];
 $app_begin = [];
 $module_init = [];
@@ -16,6 +18,9 @@ $view_filter = [];
 $log_write = [];
 $app_end = [];
 foreach ($weappRow as $key => $val) {
+    if (empty($val['is_valid'])) {
+        continue;
+    }
     /*引入全部插件的app_init行为*/
     $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.'AppInitBehavior.php';
     if (file_exists($file)) {

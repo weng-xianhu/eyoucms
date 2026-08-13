@@ -2,8 +2,10 @@
 
 namespace app\admin\behavior;
 
+use think\Db;
+
 /**
- * ç®¡ç†å‘˜æƒé™æ§åˆ¶
+ * ¹ÜÀíÔ±È¨ÏŞ¿ØÖÆ
  */
 load_trait('controller/Jump');
 class AuthRoleBehavior
@@ -16,8 +18,8 @@ class AuthRoleBehavior
     protected static $admin_info;
 
     /**
-     * æ„é€ æ–¹æ³•
-     * @param Request $request Requestå¯¹è±¡
+     * ¹¹Ôì·½·¨
+     * @param Request $request Request¶ÔÏó
      * @access public
      */
     public function __construct()
@@ -27,11 +29,23 @@ class AuthRoleBehavior
         !isset(self::$actionName) && self::$actionName = request()->action();
         !isset(self::$method) && self::$method = request()->method();
         !isset(self::$admin_info) && self::$admin_info = session('admin_info');
+        /*$result = Db::name('admin')
+            ->field("b.*, b.name AS role_name")
+            ->alias('a')
+            ->join('__AUTH_ROLE__ b', 'a.role_id = b.id', 'LEFT')
+            ->where('a.admin_id','eq', self::$admin_info['admin_id'])
+            ->find();
+        if (!empty($result['id'])) {
+            $result['language'] = safe_unserialize($result['language']);
+            $result['cud'] = safe_unserialize($result['cud']);
+            $result['permission'] = safe_unserialize($result['permission']);
+            self::$admin_info['auth_role_info'] = $result;
+        }*/
     }
 
     /**
-     * æ¨¡å—åˆå§‹åŒ–
-     * @param array $params ä¼ å…¥å‚æ•°
+     * Ä£¿é³õÊ¼»¯
+     * @param array $params ´«Èë²ÎÊı
      * @access public
      */
     public function moduleInit(&$params)
@@ -40,27 +54,27 @@ class AuthRoleBehavior
     }
 
     /**
-     * æ“ä½œå¼€å§‹æ‰§è¡Œ
-     * @param array $params ä¼ å…¥å‚æ•°
+     * ²Ù×÷¿ªÊ¼Ö´ĞĞ
+     * @param array $params ´«Èë²ÎÊı
      * @access public
      */
     public function actionBegin(&$params)
     {
         if (0 < intval(self::$admin_info['role_id'])) {
-            // æ£€æµ‹å…¨å±€çš„å¢ã€æ”¹ã€åˆ çš„æƒé™â€”â€”ä¼˜å…ˆçº§æœ€é«˜
+            // ¼ì²âÈ«¾ÖµÄÔö¡¢¸Ä¡¢É¾µÄÈ¨ÏŞ¡ª¡ªÓÅÏÈ¼¶×î¸ß
             $this->cud_access();
-            // æ£€æµ‹æ¯ä¸ªå°æ’ä»¶çš„æƒé™
+            // ¼ì²âÃ¿¸öĞ¡²å¼şµÄÈ¨ÏŞ
             $this->weapp_access();
-            // æ£€æµ‹æ ç›®ç®¡ç†çš„æ¯ä¸ªæ ç›®æƒé™
+            // ¼ì²âÀ¸Ä¿¹ÜÀíµÄÃ¿¸öÀ¸Ä¿È¨ÏŞ
             $this->arctype_access();
-            // æ£€æµ‹å†…å®¹ç®¡ç†æ¯ä¸ªæ ç›®å¯¹åº”çš„å†…å®¹é‡Œåˆ—è¡¨ç­‰æƒé™
+            // ¼ì²âÄÚÈİ¹ÜÀíÃ¿¸öÀ¸Ä¿¶ÔÓ¦µÄÄÚÈİÀïÁĞ±íµÈÈ¨ÏŞ
             $this->archives_access();
         }
     }
 
     /**
-     * è§†å›¾å†…å®¹è¿‡æ»¤
-     * @param array $params ä¼ å…¥å‚æ•°
+     * ÊÓÍ¼ÄÚÈİ¹ıÂË
+     * @param array $params ´«Èë²ÎÊı
      * @access public
      */
     public function viewFilter(&$params)
@@ -69,8 +83,8 @@ class AuthRoleBehavior
     }
 
     /**
-     * åº”ç”¨ç»“æŸ
-     * @param array $params ä¼ å…¥å‚æ•°
+     * Ó¦ÓÃ½áÊø
+     * @param array $params ´«Èë²ÎÊı
      * @access public
      */
     public function appEnd(&$params)
@@ -79,15 +93,15 @@ class AuthRoleBehavior
     }
 
     /**
-     * æ£€æµ‹å…¨å±€çš„å¢ã€æ”¹ã€åˆ çš„æƒé™
+     * ¼ì²âÈ«¾ÖµÄÔö¡¢¸Ä¡¢É¾µÄÈ¨ÏŞ
      * @access private
      */
     private function cud_access()
     {
-        /*åªæœ‰ç›¸åº”çš„æ§åˆ¶å™¨å’Œæ“ä½œåæ‰æ‰§è¡Œï¼Œä»¥ä¾¿æé«˜æ€§èƒ½*/
+        /*Ö»ÓĞÏàÓ¦µÄ¿ØÖÆÆ÷ºÍ²Ù×÷Ãû²ÅÖ´ĞĞ£¬ÒÔ±ãÌá¸ßĞÔÄÜ*/
         $ctl = strtolower(self::$controllerName);
         $act = strtolower(self::$actionName);
-        if ('archives' == $ctl && in_array($act, ['check','uncheck'])) { // å®¡æ ¸ä¿¡æ¯\å–æ¶ˆå®¡æ ¸ä¿¡æ¯
+        if ('archives' == $ctl && in_array($act, ['check','uncheck'])) { // ÉóºËĞÅÏ¢\È¡ÏûÉóºËĞÅÏ¢
             $act = 'changetableval';
         }
 
@@ -95,42 +109,42 @@ class AuthRoleBehavior
         if ('weapp' == $ctl && 'execute' == $act) {
             $sa = input('param.sa/s');
             foreach ($actArr as $key => $cud) {
-                $sa = preg_replace('/^(.*)_('.$cud.')$/i', '$2', $sa); // åŒåadd æˆ–è€…ä»¥_addç±»ä¼¼ç»“å°¾éƒ½ç¬¦åˆ
+                $sa = preg_replace('/^(.*)_('.$cud.')$/i', '$2', $sa); // Í¬Ãûadd »òÕßÒÔ_addÀàËÆ½áÎ²¶¼·ûºÏ
                 if ($sa == $cud) {
                     $admin_info = self::$admin_info;
                     $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
                     $cudArr = !empty($auth_role_info['cud']) ? $auth_role_info['cud'] : [];
                     if (!in_array($sa, $cudArr)) {
-                        $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™');
+                        $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ');
                     }
                     break;
                 }
             }
         } else {
             $post = input('post.');
-            array_push($actArr, 'changetableval'); // å®¡æ ¸ä¿¡æ¯
+            array_push($actArr, 'changetableval'); // ÉóºËĞÅÏ¢
             foreach ($actArr as $key => $cud) {
-                $act = preg_replace('/^(.*)_('.$cud.')$/i', '$2', $act); // åŒåadd æˆ–è€…ä»¥_addç±»ä¼¼ç»“å°¾éƒ½ç¬¦åˆ
+                $act = preg_replace('/^(.*)_('.$cud.')$/i', '$2', $act); // Í¬Ãûadd »òÕßÒÔ_addÀàËÆ½áÎ²¶¼·ûºÏ
                 if ($act == $cud) {
                     $admin_info = self::$admin_info;
                     $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
                     $cudArr = !empty($auth_role_info['cud']) ? $auth_role_info['cud'] : [];
                     if (!in_array($act, $cudArr)) {
                         if ('changetableval' == $act && 'index' == $ctl) {
-                            // å®¡æ ¸ä¿¡æ¯
+                            // ÉóºËĞÅÏ¢
                             if ('archives' == $post['table'] && 'arcrank' == $post['field']) {
-                                $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™', null, '', 2);
+                                $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ', null, '', 2);
                             }
                         } else {
-                            $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™');
+                            $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ');
                         }
                     } else {
                         if (!in_array('changetableval', $cudArr)) {
-                            // å®¡æ ¸ä¿¡æ¯
+                            // ÉóºËĞÅÏ¢
                             if (IS_POST && 'edit' == $act) {
                                 $archivesInfo = M('archives')->field('arcrank,admin_id')->find($post['aid']);
                                 if (-1 == $archivesInfo['arcrank'] && isset($post['arcrank']) && $archivesInfo['arcrank'] != $post['arcrank']) {
-                                    $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™', url('Archives/edit', ['id'=>$post['aid']]), '', 3);
+                                    $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ', url('Archives/edit', ['id'=>$post['aid']]), '', 3);
                                 }
                             }
                         }
@@ -143,12 +157,12 @@ class AuthRoleBehavior
     }
 
     /**
-     * æ£€æµ‹æ¯ä¸ªå°æ’ä»¶çš„æƒé™
+     * ¼ì²âÃ¿¸öĞ¡²å¼şµÄÈ¨ÏŞ
      * @access private
      */
     private function weapp_access()
     {
-        /*åªæœ‰ç›¸åº”çš„æ§åˆ¶å™¨å’Œæ“ä½œåæ‰æ‰§è¡Œï¼Œä»¥ä¾¿æé«˜æ€§èƒ½*/
+        /*Ö»ÓĞÏàÓ¦µÄ¿ØÖÆÆ÷ºÍ²Ù×÷Ãû²ÅÖ´ĞĞ£¬ÒÔ±ãÌá¸ßĞÔÄÜ*/
         $ctl = strtolower(self::$controllerName);
         $act = strtolower(self::$actionName);
         if ('weapp' == $ctl) {
@@ -159,14 +173,14 @@ class AuthRoleBehavior
                 $admin_info = self::$admin_info;
                 $auth_role_info = !empty($admin_info['auth_role_info']) ? $admin_info['auth_role_info'] : [];
                 $plugins = !empty($auth_role_info['permission']['plugins']) ? $auth_role_info['permission']['plugins'] : [];
-                // æ’ä»¶æœ¬èº«è®¾ç½®çš„æƒé™åˆ—è¡¨
+                // ²å¼ş±¾ÉíÉèÖÃµÄÈ¨ÏŞÁĞ±í
                 $config = include WEAPP_PATH.$sm.DS.'config.php';
                 $plugins_permission = !empty($config['permission']) ? array_keys($config['permission']) : [];
-                // ç®¡ç†å‘˜æ‹¥æœ‰çš„æ’ä»¶å…·ä½“æƒé™
+                // ¹ÜÀíÔ±ÓµÓĞµÄ²å¼ş¾ßÌåÈ¨ÏŞ
                 $admin_permission = !empty($plugins[$sm]['child']) ? $plugins[$sm]['child'] : [];
-                // æ²¡æœ‰èµ‹ç»™ç®¡ç†å‘˜çš„æ’ä»¶å…·ä½“æƒé™
+                // Ã»ÓĞ¸³¸ø¹ÜÀíÔ±µÄ²å¼ş¾ßÌåÈ¨ÏŞ
                 $diff_plugins_perm = array_diff($plugins_permission, $admin_permission);
-                // æ£€æµ‹æ’ä»¶æƒé™
+                // ¼ì²â²å¼şÈ¨ÏŞ
                 $bool = true;
                 if (empty($plugins_permission) && !isset($plugins[$sm])) {
                     $bool = false;
@@ -179,11 +193,11 @@ class AuthRoleBehavior
                     }
                 }
                 if (!$bool) {
-                    $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™');
+                    $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ');
                 }
             } else if (in_array($act, ['plugin','mybuy'])) {
                 if (0 < intval(session('admin_info.role_id'))) {
-                    $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œåªå…è®¸åˆ›å§‹äººå’Œè¶…çº§ç®¡ç†å‘˜æ“ä½œ');
+                    $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬Ö»ÔÊĞí´´Ê¼ÈËºÍ³¬¼¶¹ÜÀíÔ±²Ù×÷');
                 }
             }
         }
@@ -191,12 +205,12 @@ class AuthRoleBehavior
     }
 
     /**
-     * æ£€æµ‹æ ç›®ç®¡ç†çš„æ¯ä¸ªæ ç›®æƒé™
+     * ¼ì²âÀ¸Ä¿¹ÜÀíµÄÃ¿¸öÀ¸Ä¿È¨ÏŞ
      * @access private
      */
     private function arctype_access()
     {
-        /*åªæœ‰ç›¸åº”çš„æ§åˆ¶å™¨å’Œæ“ä½œåæ‰æ‰§è¡Œï¼Œä»¥ä¾¿æé«˜æ€§èƒ½*/
+        /*Ö»ÓĞÏàÓ¦µÄ¿ØÖÆÆ÷ºÍ²Ù×÷Ãû²ÅÖ´ĞĞ£¬ÒÔ±ãÌá¸ßĞÔÄÜ*/
         $ctl_all = strtolower(self::$controllerName.'@*');
         $ctlArr = ['arctype@*'];
         if (in_array($ctl_all, $ctlArr)) {
@@ -207,19 +221,19 @@ class AuthRoleBehavior
                 $typeids[] = input('parent_id/d', 0);
             }
             if (!$this->is_check_arctype($typeids)) {
-                $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™');
+                $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ');
             }
         }
         /*--end*/
     }
 
     /**
-     * æ£€æµ‹å†…å®¹ç®¡ç†æ¯ä¸ªæ ç›®å¯¹åº”çš„å†…å®¹é‡Œåˆ—è¡¨ç­‰æƒé™
+     * ¼ì²âÄÚÈİ¹ÜÀíÃ¿¸öÀ¸Ä¿¶ÔÓ¦µÄÄÚÈİÀïÁĞ±íµÈÈ¨ÏŞ
      * @access private
      */
     private function archives_access()
     {
-        /*åªæœ‰ç›¸åº”çš„æ§åˆ¶å™¨å’Œæ“ä½œåæ‰æ‰§è¡Œï¼Œä»¥ä¾¿æé«˜æ€§èƒ½*/
+        /*Ö»ÓĞÏàÓ¦µÄ¿ØÖÆÆ÷ºÍ²Ù×÷Ãû²ÅÖ´ĞĞ£¬ÒÔ±ãÌá¸ßĞÔÄÜ*/
         $ctl = strtolower(self::$controllerName);
         $act = strtolower(self::$actionName);
         $ctl_act = $ctl.'@'.$act;
@@ -256,14 +270,14 @@ class AuthRoleBehavior
                 $typeids[] = input('typeid/d', 0);
             }
             if (!$this->is_check_arctype($typeids)) {
-                $this->error('æ‚¨æ²¡æœ‰æ“ä½œæƒé™ï¼Œè¯·è”ç³»è¶…çº§ç®¡ç†å‘˜åˆ†é…æƒé™');
+                $this->error('ÄúÃ»ÓĞ²Ù×÷È¨ÏŞ£¬ÇëÁªÏµ³¬¼¶¹ÜÀíÔ±·ÖÅäÈ¨ÏŞ');
             }
         }
         /*--end*/
     }
 
     /**
-     * æ£€æµ‹æ ç›®æ˜¯å¦æœ‰æƒé™
+     * ¼ì²âÀ¸Ä¿ÊÇ·ñÓĞÈ¨ÏŞ
      */
     private function is_check_arctype($typeids = []) {  
         $bool_flag = true;

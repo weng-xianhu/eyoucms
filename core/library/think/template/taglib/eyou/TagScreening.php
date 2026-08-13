@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -89,7 +89,7 @@ class TagScreening extends Base
 
         // 数据查询
         $row = $this->channelfield_db
-            ->field('a.id,a.title,a.name,a.dfvalue,a.dtype,a.set_type')
+            ->field('a.id,a.title,a.name,a.dfvalue,a.dtype,a.set_type,a.channel_id,a.is_multiselect')
             ->alias('a')
             ->join('__CHANNELFIELD_BIND__ b', 'b.field_id = a.id', 'LEFT')
             ->where($where)
@@ -125,7 +125,17 @@ class TagScreening extends Base
                 $param_query = request()->param();
             }
             // 生成静态页面代码
-            if (2 == $seo_pseudo && !isMobile()) {
+            // 增加对 EYOUCMS_BUILDING_HTML 常量的判断，支持手机后台生成静态
+            $is_building_html = defined('EYOUCMS_BUILDING_HTML') && EYOUCMS_BUILDING_HTML === true;
+            // 当正在生成静态页面时，需要从数据库重新读取seo_pseudo配置
+            // 因为在手机后台生成静态时，config('ey_config.seo_pseudo')可能返回错误的值
+            $real_seo_pseudo = $seo_pseudo;
+            if ($is_building_html) {
+                $real_seo_pseudo = tpCache('seo.seo_pseudo');
+            }
+            // 条件：静态模式(seo_pseudo=2) 且 (不是手机端 或 正在生成静态)
+            // 当正在生成静态时，强制使用静态模式的URL格式
+            if ((2 == $real_seo_pseudo && !isMobile()) || $is_building_html) {
                 $param_query['m'] = 'home';
                 $param_query['c'] = 'Lists';
                 $param_query['a'] = 'index';
@@ -133,6 +143,15 @@ class TagScreening extends Base
                 unset($param_query['id']);
                 unset($param_query['fid']);
                 // unset($param_query['lang']);
+                // 清理手机后台插件特有的参数，避免生成的URL包含多余参数
+                unset($param_query['sm']);
+                unset($param_query['sc']);
+                unset($param_query['sa']);
+                unset($param_query['isMobile']);
+                unset($param_query['weappAjax']);
+                unset($param_query['index']);
+                unset($param_query['findex']);
+                unset($param_query['achieve']);
             }
 
             // 筛选时，去掉url上的页码page参数
@@ -186,6 +205,10 @@ class TagScreening extends Base
                             $subLevelParam[$url_screen_var] = 1;
                             foreach (['index','findex','achieve','s'] as $_uk_1 => $_uv) {
                                 if (isset($subLevelParam[$_uk_1])) unset($subLevelParam[$_uk_1]);
+                            }
+                            // 清理手机后台插件特有的参数
+                            foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wk => $_wv) {
+                                if (isset($subLevelParam[$_wv])) unset($subLevelParam[$_wv]);
                             }
                             if (!empty($typeid)) {
                                 // 存在typeid表示在首页展示
@@ -263,6 +286,10 @@ class TagScreening extends Base
                         foreach (['index','findex','achieve','s'] as $_uk_1 => $_uv) {
                             if (isset($subLevelParam[$_uk_1])) unset($subLevelParam[$_uk_1]);
                         }
+                        // 清理手机后台插件特有的参数
+                        foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wk => $_wv) {
+                            if (isset($subLevelParam[$_wv])) unset($subLevelParam[$_wv]);
+                        }
                         if (!empty($typeid)) {
                             // 存在typeid表示在首页展示
                             foreach (['m','c','a','tid'] as $_uk_2 => $_uv) {
@@ -310,7 +337,7 @@ class TagScreening extends Base
                 // 处理后台添加的区域数据
                 $oneLevelArr = [];
                 // 反序列化参数值
-                $dfvalue = unserialize($value['dfvalue']);
+                $dfvalue = safe_unserialize($value['dfvalue']);
                 // 拆分ID值
                 $region_ids = explode(',', $dfvalue['region_ids']);
                 foreach ($region_ids as $id_key => $id_value) {
@@ -325,7 +352,8 @@ class TagScreening extends Base
                 $oneLevelArr = array_merge($all, $oneLevelArr);
 
                 // 处理参数输出
-                foreach ($oneLevelArr as $kk => $vv) {
+                foreach ($oneLevelArr as $dfk => $dfv) {
+                    $vv = $dfv;
                     // 参数拼装URL
                     if (!empty($vv['id'])) {
                         $param_query[$name] = $vv['id'];
@@ -337,6 +365,10 @@ class TagScreening extends Base
                     $param_query[$url_screen_var] = 1;
                     foreach (['index','findex','achieve','s'] as $_uk => $_uv) {
                         if (isset($param_query[$_uv])) unset($param_query[$_uv]);
+                    }
+                    // 清理手机后台插件特有的参数
+                    foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wk => $_wv) {
+                        if (isset($param_query[$_wv])) unset($param_query[$_wv]);
                     }
                     if (!empty($typeid)) {
                         // 存在typeid表示在首页展示
@@ -351,31 +383,239 @@ class TagScreening extends Base
                     $url = $this->auto_hide_index(urldecode($url), $seo_pseudo) . $anchor;
                     
                     // 拼装onClick事件
-                    $oneLevelArr[$kk]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
+                    $oneLevelArr[$dfk]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
                     // 拼装onchange参数
-                    $oneLevelArr[$kk]['SelectUrl'] = "data-url='{$url}'";
+                    $oneLevelArr[$dfk]['SelectUrl'] = "data-url='{$url}'";
                     // 初始化参数，默认未选中
-                    $oneLevelArr[$kk]['name']         = "{$vv['name']}";
-                    $oneLevelArr[$kk]['SelectValue']  = "";
-                    $oneLevelArr[$kk]['currentclass'] = $oneLevelArr[$kk]['currentstyle'] = "";
+                    $oneLevelArr[$dfk]['name']         = "{$vv['name']}";
+                    $oneLevelArr[$dfk]['SelectValue']  = "";
+                    $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = "";
                     // 选中时执行
                     if ($vv['id'] == $is_data[0]) {
-                        $oneLevelArr[$kk]['name']         = "<b>{$vv['name']}</b>";
-                        $oneLevelArr[$kk]['SelectValue']  = "selected";
-                        $oneLevelArr[$kk]['currentclass'] = $oneLevelArr[$kk]['currentstyle'] = $currentclass;
+                        $oneLevelArr[$dfk]['name']         = "<b>{$vv['name']}</b>";
+                        $oneLevelArr[$dfk]['SelectValue']  = "selected";
+                        $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = $currentclass;
                     } else if ($vv['name'] == $region_alltxt && $is_data[0] == $region_alltxt) {
-                        $oneLevelArr[$kk]['name']         = "<b>{$vv['name']}</b>";
-                        $oneLevelArr[$kk]['SelectValue']  = "selected";
-                        $oneLevelArr[$kk]['currentclass'] = $oneLevelArr[$kk]['currentstyle'] = $currentclass;
+                        $oneLevelArr[$dfk]['name']         = "<b>{$vv['name']}</b>";
+                        $oneLevelArr[$dfk]['SelectValue']  = "selected";
+                        $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = $currentclass;
                     }
 
-                    $oneLevelArr[$kk]['twoLevelArr'] = !empty($twoLevelArr[$vv['id']]) ? $twoLevelArr[$vv['id']] :  [];
+                    $oneLevelArr[$dfk]['twoLevelArr'] = !empty($twoLevelArr[$vv['id']]) ? $twoLevelArr[$vv['id']] :  [];
                 }
                 // 数据赋值到数组中
                 $row[$key]['dfvalue'] = $oneLevelArr;
+
+            } else if ('cascade' == $value['dtype']) {
+                // 联动选择类型筛选
+                $cascade_alltxt = $alltxt;
+                if (!empty($cascade_alltxt)) {
+                    if ('off' == $cascade_alltxt) $cascade_alltxt = '';
+                } else {
+                    $cascade_alltxt = '全部';
+                }
+                $all = [];
+                if (!empty($cascade_alltxt)) {
+                    $all[0] = [
+                        'id'   => '',
+                        'name' => $cascade_alltxt,
+                    ];
+                }
+
+                // 搜索点击的name值
+                $is_data = !empty($param[$name]) ? $param[$name] : '';
+                $is_data_arr = !empty($is_data) ? explode('_', $is_data) : [];
+
+                // 参数值安全过滤
+                if (!empty($is_data) && preg_match('#(\'|\"|;)#', $is_data)) abort(404,'页面不存在');
+
+                // 查询三级选项
+                $threeLevelArr = [];
+                if (!empty($is_data_arr[1]) && is_numeric($is_data_arr[1])) {
+                    $cascadeLevel3 = Db::name('field_cascade_data')->where([
+                        'field_id'  => $value['id'],
+                        'parent_id' => intval($is_data_arr[1]),
+                        'level'     => 3,
+                    ])->order('sort_order asc, id asc')->select();
+                    if (!empty($cascadeLevel3)) {
+                        $cascadeLevel3 = array_merge($all, $cascadeLevel3);
+                        $subLevelParam = $param_query;
+                        foreach ($cascadeLevel3 as $p_key_1 => $p_val_1) {
+                            if (!empty($p_val_1['id'])) {
+                                $subLevelParam[$name] = $is_data_arr[0] . '_' . $is_data_arr[1] . '_' . $p_val_1['id'];
+                            } else {
+                                $subLevelParam[$name] = $is_data_arr[0] . '_' . $is_data_arr[1];
+                                $cascadeLevel3[$p_key_1]['parent_id'] = intval($is_data_arr[1]);
+                            }
+                            unset($subLevelParam[$url_screen_var]);
+                            $subLevelParam[$url_screen_var] = 1;
+                            foreach (['index','findex','achieve','s'] as $_uv) {
+                                if (isset($subLevelParam[$_uv])) unset($subLevelParam[$_uv]);
+                            }
+                            foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wv) {
+                                if (isset($subLevelParam[$_wv])) unset($subLevelParam[$_wv]);
+                            }
+                            if (!empty($typeid)) {
+                                foreach (['m','c','a','tid'] as $_uv) {
+                                    if (isset($subLevelParam[$_uv])) unset($subLevelParam[$_uv]);
+                                }
+                                if (empty($subLevelParam['page'])) $subLevelParam['page'] = 1;
+                                $url = ROOT_DIR.'/index.php?m=home&c=Lists&a=index&tid='.$typeid.'&'.urlencode(http_build_query($subLevelParam));
+                            } else {
+                                $url = ROOT_DIR.'/index.php?'.urlencode(http_build_query($subLevelParam));
+                            }
+                            $url = $this->auto_hide_index(urldecode($url), $seo_pseudo) . $anchor;
+                            $cascadeLevel3[$p_key_1]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
+                            $cascadeLevel3[$p_key_1]['SelectUrl'] = "data-url='{$url}'";
+                            $cascadeLevel3[$p_key_1]['name']         = "{$p_val_1['name']}";
+                            $cascadeLevel3[$p_key_1]['SelectValue']  = "";
+                            $cascadeLevel3[$p_key_1]['currentclass'] = $cascadeLevel3[$p_key_1]['currentstyle'] = "";
+                            if (!empty($is_data_arr[2]) && $p_val_1['id'] == $is_data_arr[2]) {
+                                $cascadeLevel3[$p_key_1]['name']         = "<b>{$p_val_1['name']}</b>";
+                                $cascadeLevel3[$p_key_1]['SelectValue']  = "selected";
+                                $cascadeLevel3[$p_key_1]['currentclass'] = $cascadeLevel3[$p_key_1]['currentstyle'] = $currentclass;
+                            } else if (empty($p_val_1['id']) && empty($is_data_arr[2])) {
+                                $cascadeLevel3[$p_key_1]['name']         = "<b>{$p_val_1['name']}</b>";
+                                $cascadeLevel3[$p_key_1]['SelectValue']  = "selected";
+                                $cascadeLevel3[$p_key_1]['currentclass'] = $cascadeLevel3[$p_key_1]['currentstyle'] = $currentclass;
+                            }
+                        }
+                        $threeLevelArr = group_same_key($cascadeLevel3, 'parent_id');
+                    }
+                }
+
+                // 查询二级选项
+                $twoLevelArr = [];
+                if (!empty($is_data_arr[0]) && is_numeric($is_data_arr[0])) {
+                    $cascadeLevel2 = Db::name('field_cascade_data')->where([
+                        'field_id'  => $value['id'],
+                        'parent_id' => intval($is_data_arr[0]),
+                        'level'     => 2,
+                    ])->order('sort_order asc, id asc')->select();
+                    if (!empty($cascadeLevel2)) {
+                        $cascadeLevel2 = array_merge($all, $cascadeLevel2);
+                        $subLevelParam = $param_query;
+                        foreach ($cascadeLevel2 as $p_key_2 => $p_val_2) {
+                            if (!empty($p_val_2['id'])) {
+                                $subLevelParam[$name] = $is_data_arr[0] . '_' . $p_val_2['id'];
+                            } else {
+                                $subLevelParam[$name] = intval($is_data_arr[0]);
+                                $cascadeLevel2[$p_key_2]['parent_id'] = intval($is_data_arr[0]);
+                            }
+                            unset($subLevelParam[$url_screen_var]);
+                            $subLevelParam[$url_screen_var] = 1;
+                            foreach (['index','findex','achieve','s'] as $_uv) {
+                                if (isset($subLevelParam[$_uv])) unset($subLevelParam[$_uv]);
+                            }
+                            foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wv) {
+                                if (isset($subLevelParam[$_wv])) unset($subLevelParam[$_wv]);
+                            }
+                            if (!empty($typeid)) {
+                                foreach (['m','c','a','tid'] as $_uv) {
+                                    if (isset($subLevelParam[$_uv])) unset($subLevelParam[$_uv]);
+                                }
+                                if (empty($subLevelParam['page'])) $subLevelParam['page'] = 1;
+                                $url = ROOT_DIR.'/index.php?m=home&c=Lists&a=index&tid='.$typeid.'&'.urlencode(http_build_query($subLevelParam));
+                            } else {
+                                $url = ROOT_DIR.'/index.php?'.urlencode(http_build_query($subLevelParam));
+                            }
+                            $url = $this->auto_hide_index(urldecode($url), $seo_pseudo) . $anchor;
+                            $cascadeLevel2[$p_key_2]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
+                            $cascadeLevel2[$p_key_2]['SelectUrl'] = "data-url='{$url}'";
+                            $cascadeLevel2[$p_key_2]['name']         = "{$p_val_2['name']}";
+                            $cascadeLevel2[$p_key_2]['SelectValue']  = "";
+                            $cascadeLevel2[$p_key_2]['currentclass'] = $cascadeLevel2[$p_key_2]['currentstyle'] = "";
+                            if (!empty($is_data_arr[1]) && $p_val_2['id'] == $is_data_arr[1]) {
+                                $cascadeLevel2[$p_key_2]['name']         = "<b>{$p_val_2['name']}</b>";
+                                $cascadeLevel2[$p_key_2]['SelectValue']  = "selected";
+                                $cascadeLevel2[$p_key_2]['currentclass'] = $cascadeLevel2[$p_key_2]['currentstyle'] = $currentclass;
+                            } else if (empty($p_val_2['id']) && empty($is_data_arr[1])) {
+                                $cascadeLevel2[$p_key_2]['name']         = "<b>{$p_val_2['name']}</b>";
+                                $cascadeLevel2[$p_key_2]['SelectValue']  = "selected";
+                                $cascadeLevel2[$p_key_2]['currentclass'] = $cascadeLevel2[$p_key_2]['currentstyle'] = $currentclass;
+                            }
+                            $cascadeLevel2[$p_key_2]['threeLevelArr'] = !empty($threeLevelArr[$p_val_2['id']]) ? $threeLevelArr[$p_val_2['id']] : [];
+                        }
+                        $twoLevelArr = group_same_key($cascadeLevel2, 'parent_id');
+                    }
+                }
+
+                // 查询一级选项
+                $oneLevelArr = Db::name('field_cascade_data')->where([
+                    'field_id'  => $value['id'],
+                    'parent_id' => 0,
+                    'level'     => 1,
+                ])->order('sort_order asc, id asc')->select();
+                $oneLevelArr = array_merge($all, $oneLevelArr);
+
+                foreach ($oneLevelArr as $dfk => $dfv) {
+                    $vv = $dfv;
+                    if (!empty($vv['id'])) {
+                        $param_query[$name] = $vv['id'];
+                    } else {
+                        unset($param_query[$name]);
+                    }
+                    unset($param_query[$url_screen_var]);
+                    $param_query[$url_screen_var] = 1;
+                    foreach (['index','findex','achieve','s'] as $_uv) {
+                        if (isset($param_query[$_uv])) unset($param_query[$_uv]);
+                    }
+                    foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wv) {
+                        if (isset($param_query[$_wv])) unset($param_query[$_wv]);
+                    }
+                    if (!empty($typeid)) {
+                        foreach (['m','c','a','tid'] as $_uv) {
+                            if (isset($param_query[$_uv])) unset($param_query[$_uv]);
+                        }
+                        if (empty($param_query['page'])) $param_query['page'] = 1;
+                        $url = ROOT_DIR.'/index.php?m=home&c=Lists&a=index&tid='.$typeid.'&'.urlencode(http_build_query($param_query));
+                    } else {
+                        $url = ROOT_DIR.'/index.php?'.urlencode(http_build_query($param_query));
+                    }
+                    $url = $this->auto_hide_index(urldecode($url), $seo_pseudo) . $anchor;
+                    $oneLevelArr[$dfk]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
+                    $oneLevelArr[$dfk]['SelectUrl'] = "data-url='{$url}'";
+                    $oneLevelArr[$dfk]['name']         = "{$vv['name']}";
+                    $oneLevelArr[$dfk]['SelectValue']  = "";
+                    $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = "";
+                    if (!empty($is_data_arr[0]) && $vv['id'] == $is_data_arr[0]) {
+                        $oneLevelArr[$dfk]['name']         = "<b>{$vv['name']}</b>";
+                        $oneLevelArr[$dfk]['SelectValue']  = "selected";
+                        $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = $currentclass;
+                    } else if (empty($vv['id']) && empty($is_data_arr[0])) {
+                        $oneLevelArr[$dfk]['name']         = "<b>{$vv['name']}</b>";
+                        $oneLevelArr[$dfk]['SelectValue']  = "selected";
+                        $oneLevelArr[$dfk]['currentclass'] = $oneLevelArr[$dfk]['currentstyle'] = $currentclass;
+                    }
+                    $oneLevelArr[$dfk]['twoLevelArr'] = !empty($twoLevelArr[$vv['id']]) ? $twoLevelArr[$vv['id']] : [];
+                }
+                // 数据赋值到数组中
+                $row[$key]['dfvalue'] = $oneLevelArr;
+
             } else {
-                // 类型不为区域则执行
-                $dfvalue = explode(',', $value['dfvalue']);
+                // 多选项、单选项、下拉框[checkboxs]
+                if (in_array($value['dtype'], ['checkboxs','radios','selects'])) {
+                    static $fieldCustomParamList = null;
+                    if (null === $fieldCustomParamList) {
+                        $fieldCustomParamList = array();
+                        $fieldCustomParamRow = Db::name('field_custom_param')->field('id,dfvalue,name,channel_id')->order('dtype ASC, sort_order ASC, id ASC')->select();
+                        foreach ($fieldCustomParamRow as $k => $v) {
+                            $fieldCustomParamList[$v['channel_id']][$v['name']][$v['id']] = $v;
+                        }
+                    }
+                    $dfvalueArr = [];
+                    $fieldCustomParamInfo = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                    foreach ($fieldCustomParamInfo as $_fpval) {
+                        $dfvalueArr[] = [
+                            'id' => $_fpval['id'],
+                            'name' => $_fpval['dfvalue'],
+                        ];
+                    }
+                    $dfvalue = $dfvalueArr;
+                } else {
+                    $dfvalue = explode(',', $value['dfvalue']);
+                }
+
                 $all[0] = [];
                 if (!empty($alltxt)) {
                     // 等于OFF表示关闭，不需要此项
@@ -390,47 +630,86 @@ class TagScreening extends Base
                 // 参数值含有单引号、双引号、分号，直接跳转404
                 if (preg_match('#(\'|\"|;)#', $is_data)) abort(404,'页面不存在');
 
+                // 多选类型：解析已选中的多个值
+                $is_data_multi = [];
+                $is_multi_on = !empty($value['is_multiselect']);
+                if ($is_multi_on && in_array($value['dtype'], ['checkbox', 'select', 'checkboxs', 'selects'])) {
+                    $is_data_clean = rtrim($is_data, '|');
+                    $is_data_multi = (!empty($is_data_clean) && $is_data_clean != $alltxt) ? explode(',', $is_data_clean) : [];
+                }
+
                 // 合并数组
                 $dfvalue  = array_merge($all, $dfvalue);
                 // 处理参数输出
                 $data_new = [];
-                foreach ($dfvalue as $kk => $vv) {
+                foreach ($dfvalue as $dfk => $dfv) {
+                    if (is_array($dfv) && array_key_exists('name', $dfv)) {
+                        $vv_id = $dfv['id'];
+                        $vv = $dfv['name'];
+                    } else {
+                        $vv = $vv_id = $dfv;
+                    }
+
                     if ('off' == $alltxt && empty($vv)) {
                         continue;
                     }
-                    $param_query[$name]    = $vv;
-                    $data_new[$kk]['id']           = $vv;
-                    $data_new[$kk]['name']         = "{$vv}";
-                    $data_new[$kk]['SelectValue']  = "";
-                    $data_new[$kk]['currentclass'] = $data_new[$kk]['currentstyle'] = "";
+                    $param_query[$name]    = $vv_id;
+                    $data_new[$dfk]['id']           = $vv_id;
+                    $data_new[$dfk]['name']         = "{$vv}";
+                    $data_new[$dfk]['SelectValue']  = "";
+                    $data_new[$dfk]['currentclass'] = $data_new[$dfk]['currentstyle'] = "";
 
-                    // 目前单选类型选中和多选类型选中的数据处理是相同的，后续可能会有优化，暂时保留两个判断
-                    if ($vv == $is_data) {
-                        // 单选/下拉类型选中
-                        $data_new[$kk]['name']         = "<b>{$vv}</b>";
-                        $data_new[$kk]['SelectValue']  = "selected";
-                        $data_new[$kk]['currentclass'] = $data_new[$kk]['currentstyle'] = $currentclass;
-
-                    } else if ($vv.'|' == $is_data) {
-                        // 多选类型选中
-                        $data_new[$kk]['name']         = "<b>{$vv}</b>";
-                        $data_new[$kk]['SelectValue']  = "selected";
-                        $data_new[$kk]['currentclass'] = $data_new[$kk]['currentstyle'] = $currentclass;
-
-                    } else if ($vv == $all[0] && empty($is_data)) {
-                        // “全部” 按钮选中
-                        $data_new[$kk]['name']         = "<b>{$vv}</b>";
-                        $data_new[$kk]['SelectValue']  = "selected";
-                        $data_new[$kk]['currentclass'] = $data_new[$kk]['currentstyle'] = $currentclass;
-
+                    if ($is_multi_on && in_array($value['dtype'], ['checkbox', 'select', 'checkboxs', 'selects'])) {
+                        $check_val = (in_array($value['dtype'], ['checkboxs', 'selects'])) ? (string)$vv_id : (string)$vv;
+                        if (!empty($is_data_multi) && in_array($check_val, $is_data_multi)) {
+                            $data_new[$dfk]['name']         = "<b>{$vv}</b>";
+                            $data_new[$dfk]['SelectValue']  = "selected";
+                            $data_new[$dfk]['currentclass'] = $data_new[$dfk]['currentstyle'] = $currentclass;
+                        } else if ($vv == $all[0] && empty($is_data_multi)) {
+                            $data_new[$dfk]['name']         = "<b>{$vv}</b>";
+                            $data_new[$dfk]['SelectValue']  = "selected";
+                            $data_new[$dfk]['currentclass'] = $data_new[$dfk]['currentstyle'] = $currentclass;
+                        }
+                    } else {
+                        if ($vv_id == $is_data) {
+                            $data_new[$dfk]['name']         = "<b>{$vv}</b>";
+                            $data_new[$dfk]['SelectValue']  = "selected";
+                            $data_new[$dfk]['currentclass'] = $data_new[$dfk]['currentstyle'] = $currentclass;
+                        } else if ($vv == $all[0] && empty($is_data)) {
+                            $data_new[$dfk]['name']         = "<b>{$vv}</b>";
+                            $data_new[$dfk]['SelectValue']  = "selected";
+                            $data_new[$dfk]['currentclass'] = $data_new[$dfk]['currentstyle'] = $currentclass;
+                        }
                     }
 
                     if ($all[0] == $vv) {
-                        // 若选中 “全部” 按钮则清除这个字段参数
                         unset($param_query[$name]);
-                    } else if ('checkbox' == $value['dtype']) {
-                        // 等于多选类型，则拼装上-号，用于搜索时分割，可匹配数据
-                        $param_query[$name] = $vv.'|';
+                    } else if ($is_multi_on && in_array($value['dtype'], ['checkbox', 'select'])) {
+                        $toggle_val = (string)$vv;
+                        $new_multi = $is_data_multi;
+                        if (in_array($toggle_val, $new_multi)) {
+                            $new_multi = array_values(array_diff($new_multi, [$toggle_val]));
+                        } else {
+                            $new_multi[] = $toggle_val;
+                        }
+                        if (empty($new_multi)) {
+                            unset($param_query[$name]);
+                        } else {
+                            $param_query[$name] = implode(',', $new_multi) . '|';
+                        }
+                    } else if ($is_multi_on && in_array($value['dtype'], ['checkboxs', 'selects'])) {
+                        $toggle_val = (string)$vv_id;
+                        $new_multi = $is_data_multi;
+                        if (in_array($toggle_val, $new_multi)) {
+                            $new_multi = array_values(array_diff($new_multi, [$toggle_val]));
+                        } else {
+                            $new_multi[] = $toggle_val;
+                        }
+                        if (empty($new_multi)) {
+                            unset($param_query[$name]);
+                        } else {
+                            $param_query[$name] = implode(',', $new_multi) . '|';
+                        }
                     }
                     /* 筛选标识始终追加在最后 */
                     unset($param_query[$url_screen_var]);
@@ -440,6 +719,10 @@ class TagScreening extends Base
                         if (isset($param_query[$_uv])) {
                             unset($param_query[$_uv]);
                         }
+                    }
+                    // 清理手机后台插件特有的参数
+                    foreach (['sm','sc','sa','isMobile','weappAjax'] as $_wk => $_wv) {
+                        if (isset($param_query[$_wv])) unset($param_query[$_wv]);
                     }
                     // 参数拼装URL
                     if (!empty($typeid)) {
@@ -456,9 +739,9 @@ class TagScreening extends Base
                     }
                     $url = $this->auto_hide_index(urldecode($url), $seo_pseudo) . $anchor;
                     // 封装onClick
-                    $data_new[$kk]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
+                    $data_new[$dfk]['onClick'] = empty($anchor) ? $row[$key]['onClick']." data-url='{$url}'" : " href='{$url}' ";
                     // 封装onchange事件
-                    $data_new[$kk]['SelectUrl'] = "data-url='{$url}'";
+                    $data_new[$dfk]['SelectUrl'] = "data-url='{$url}'";
                 }
 
                 // 数据赋值到数组中

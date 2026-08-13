@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -56,7 +56,7 @@ class WechatLogic extends Model
     public function get_wechat_pay_config()
     {
         $pay_info = Db::name('pay_api_config')->where('pay_mark','wechat')->value('pay_info');
-        if (!empty($pay_info)) $pay_info = unserialize($pay_info);
+        if (!empty($pay_info)) $pay_info = safe_unserialize($pay_info);
         return !empty($pay_info['is_open_wechat']) ? [] : $pay_info;
     }
 
@@ -72,7 +72,7 @@ class WechatLogic extends Model
         }
         $pay_info = Db::name('pay_api_config')->where('pay_mark','wechat')->value('pay_info');
         if(!empty($pay_info)){
-            $pay_info = unserialize($pay_info);
+            $pay_info = safe_unserialize($pay_info);
         }
         // $info['appid'] = 'wxf0a192919a62bd1e';
         // $info['appsecret'] = '2d838af9f33173e41089c6040c238c18';
@@ -188,7 +188,7 @@ class WechatLogic extends Model
         }
 
         //创建目录失败
-        if(!file_exists($dirname) && !mkdir($dirname,0777,true)){
+        if(!file_exists($dirname) && !mkdir($dirname,0755,true)){
             $data=array(
                 'state' => '目录创建失败',
             );

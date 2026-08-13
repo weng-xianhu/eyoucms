@@ -42,7 +42,7 @@
                                         </div>
                                     </div>
 
-                                    {eyou:eq name="$eyou.field.status" value="2"}
+                                    {eyou:if condition='$eyou.field.status == 2 && $eyou.field.service_type_old != 3'}
                                     <form id="postForm">
                                         <input type="hidden" name="service_id" value="{$eyou.field.service_id}">
                                         <input type="hidden" name="details_id" value="{$eyou.field.details_id}">
@@ -106,7 +106,7 @@
                                             </div>
                                         </div>
                                     </form>
-                                    {/eyou:eq}
+                                    {/eyou:if}
 
                                     <div class="box-hd">
                                         <div class="progress_xin">
@@ -137,6 +137,14 @@
                                                         <div class="progress-xin"><div class="text">已取消</div></div>
                                                     </li>
                                                     {eyou:else/}
+                                                    {eyou:if condition='$eyou.field.service_type_old == 3'}
+                                                    <li class="step-xin step-first step-done {eyou:if condition='$eyou.field.status < 2'} step-active {/eyou:if} ">
+                                                        <div class="progress-xin"><div class="text">审核</div></div>
+                                                    </li>
+                                                    <li class="step-xin {eyou:if condition='$eyou.field.status > 1' } step-done {/eyou:if} {eyou:if condition='$eyou.field.status > 1 && $eyou.field.status < 6'} step-active {/eyou:if}">
+                                                        <div class="progress-xin"><div class="text">受理中</div></div>
+                                                    </li>
+                                                    {eyou:else/}
                                                     <li class="step-xin step-first step-done {eyou:if condition='$eyou.field.status < 4'} step-active {/eyou:if} ">
                                                         <div class="progress-xin"><div class="text">审核</div></div>
                                                     </li>
@@ -146,6 +154,7 @@
                                                     <li class="step-xin {eyou:if condition='$eyou.field.status > 4' } step-done {/eyou:if} {eyou:if condition='$eyou.field.status > 4 && $eyou.field.status < 6'} step-active {/eyou:if}">
                                                         <div class="progress-xin"><div class="text">受理中</div></div>
                                                     </li>
+                                                    {/eyou:if}
                                                     <li class="step-xin step-last {eyou:if condition='$eyou.field.status > 5' } step-done {/eyou:if} {eyou:if condition='$eyou.field.status > 5'} step-active {/eyou:if} ">
                                                         <div class="progress-xin"><div class="text">已完成</div></div>
                                                     </li>
@@ -220,9 +229,15 @@
                                                                 {/eyou:volist}
                                                             </td>
                                                         </tr>
+                                                        {if condition='!empty($eyou.field.consignee)'}
                                                         <tr> <th>联系人: </th> <td>{$eyou.field.consignee}</td> </tr>
+                                                        {/if}
+                                                        {if condition='!empty($eyou.field.mobile)'}
                                                         <tr> <th>联系电话: </th> <td>{$eyou.field.mobile}</td> </tr>
+                                                        {/if}
+                                                        {if condition='!empty($eyou.field.address)'}
                                                         <tr> <th>收货地址: </th> <td>{$eyou.field.address}</td> </tr>
+                                                        {/if}
                                                     </tbody>
                                                 </table>
                                             </div>

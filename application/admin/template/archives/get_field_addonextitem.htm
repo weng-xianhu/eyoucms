@@ -85,7 +85,8 @@
             content = UE.getEditor(elemtid).getContent();
             UE.getEditor(elemtid).destroy();
         }catch(e){}
-        var serverUrl = eyou_basefile+'?m=admin&c=Ueditor&a=index&savepath=ueditor&lang='+__lang__;
+        var serverUrl = "{:url('Ueditor/index', ['savepath'=>'ueditor'])}";
+        // var serverUrl = eyou_basefile+'?m=admin&c=Ueditor&a=index&savepath=ueditor&lang='+__lang__;
         var options = {
             serverUrl : serverUrl,
             zIndex: 999,
@@ -98,6 +99,10 @@
             autoHeightEnabled: false,
             toolbars: ueditor_toolbars
         };
-        eval("ue_"+elemtid+" = UE.getEditor(elemtid, options);ue_"+elemtid+".ready(function() {ue_"+elemtid+".setContent(content);});");
+        var editorKey = 'ue_' + elemtid;
+        window[editorKey] = UE.getEditor(elemtid, options);
+        window[editorKey].ready(function() {
+            window[editorKey].setContent(content);
+        });
     }
 </script>

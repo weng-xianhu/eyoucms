@@ -123,7 +123,11 @@ class TagCoupon extends Base
         } else {
             $ordermode = !empty($param['ordermode']) ? trim($param['ordermode']) : 'desc';
         }
-
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }  
         // 查询条件
         $condition = [];
         foreach (array('keywords','keyword','typeid','flag','noflag','aid') as $key) {
@@ -151,24 +155,8 @@ class TagCoupon extends Base
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -178,25 +166,9 @@ class TagCoupon extends Base
                 } elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {

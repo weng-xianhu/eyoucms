@@ -974,6 +974,7 @@ padding: 12px 0; margin-top: -1px; border-style: solid; border-width: 1px 0; bor
 .ncap-form-default p.notic-pic { line-height: 12px; line-height: 18px; color: #AAA; margin-top: 4px; clear: both; display: none;}
 .ncap-form-default dl.row:hover p.notic { color: #00B7EE; }
 .notic2{ font-size: 12px; line-height: 20px;color: #939799;}
+.ui_tan {margin-left: 10px;}
 .hui{ padding-left: 10px;color: #C0C0C0;}
 .ncap-form-default div.bot { display: block; padding: 12px 0 10px 135px; }
 .ncap-form-default.help div.bot { padding: 12px 0 10px 0;}
@@ -3863,6 +3864,11 @@ cursor: pointer; }
     line-height: 40px;
     font-size: 14px;
 }
+/* .header-bar>.more>.search .content .ey-form-item .users-form-item-content * {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+} */
 .header-bar>.more>.search .content .ey-form-item .users-form-item-content .users-select {
     display: inline-block;
     margin-right: 35px;
@@ -3898,6 +3904,7 @@ cursor: pointer; }
     font-size: 12px;
     background: #3398cc;
     border: 1px solid #3398cc;
+    box-sizing: border-box;
     cursor: pointer;
 }
 .header-bar>.more>.search .content .ey-form-item .bt-xin:last-child{
@@ -3916,6 +3923,7 @@ cursor: pointer; }
     padding: 1px 15px 1px 15px;
     font-size: 12px;
     border: 1px solid #8f8f8f;
+    box-sizing: border-box;
     cursor: pointer;
 }
 .fbutton .bt-xin-xia{
@@ -6555,6 +6563,7 @@ a:hover.lumping-btn-big {
 }
 .security-scan-r {
     display: flex;
+    flex-direction: column;
     align-items: center;
 }
 .security-scan-r .scan-btn {
@@ -6566,6 +6575,7 @@ a:hover.lumping-btn-big {
     display: inline-block;
     min-width: 90px;
     padding: 7px 16px;
+    margin-bottom: 10px;
     border: solid 1px #3398cc;
     border-radius: 20px;
     cursor: pointer;
@@ -6583,14 +6593,14 @@ a:hover.lumping-btn-big {
     justify-content: space-between;
 }
 .result .result-tip .scan-problem .scan-problem-btn {
-    font: bold 16px/20px "microsoft yahei", arial;
+    font: 13px "microsoft yahei", arial;
     color: #F60;
     background-color: #fff;
     text-align: center;
     vertical-align: middle;
     display: inline-block;
-    min-width: 90px;
-    padding: 7px 16px;
+    min-width: 80px;
+    padding: 5px 0px;
     border: solid 1px #F60;
     border-radius: 20px;
     cursor: pointer;
@@ -6760,6 +6770,230 @@ ul.expmenu li .menu {
 }
 
 
+/* 智能互联 */
+.ai-section {
+    margin-bottom: 30px;
+    border: 1px solid #f1f1f1;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.ai-section .ai-section-header {
+    background: #f5f7fa;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.ai-section .ai-section-header i {
+    margin-right: 5px;
+    color: #3b8cff;
+}
+
+.ai-section .ai-section-body {
+    padding: 15px;
+    background: #fff;
+}
+
+.ai-section .ai-feature {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #eee;
+}
+
+.ai-section .ai-feature:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.ai-section .ai-feature-title {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.ai-section .ai-feature-desc {
+    color: #666;
+    line-height: 24px;
+}
+
+.ai-section .ai-feature-path {
+    background: #f9f9f9;
+    border-left: 3px solid #3b8cff;
+    padding: 8px 12px;
+    margin: 8px 0;
+    color: #666;
+    display: flex;
+}
+
+.ai-section .ai-feature-path .red {
+    color: #ff5a5a !important;
+}
+
+.ai-section .ai-feature-list {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.ai-section .ai-feature-list li {
+    line-height: 24px;
+    position: relative;
+    padding-left: 18px;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.ai-section .ai-feature-list li:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    background: #3b8cff;
+    border-radius: 50%;
+}
+
+.ai-section .future-section {
+    background: #f0f7ff;
+}
+
+.faq-ad-tab-pane * {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.faq-list {
+}
+
+.faq-list .faq-item {
+    float: left;
+    width: calc((100% - 60px) / 4);
+    min-width: calc((100% - 60px) / 4);
+    max-width: calc((100% - 60px) / 4);
+    margin: 0 20px 20px 0;
+    cursor: move;
+}
+.faq-list .faq-item:nth-child(4n) {
+    margin-right: 0;
+}
+.faq-list .faq-item .ic {
+    width: 100%;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    position: relative;
+}
+.faq-list .faq-item .ic div.drag-handle {
+    width: 6%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+}
+.faq-list .faq-item .ic div.load_input {
+    width: 92%;
+    display: block;
+}
+
+.faq-list .faq-item .ic div.load_input textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    height: 50px;
+    float: left;
+    color: #444;
+    border-color: #ddd;
+    -webkit-appearance: none;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.065) inset;
+    transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1) 0s;
+}
+.faq-list .faq-item .ic div.load_input textarea.faq_title{
+    height: 30px;
+    line-height: 22px;
+    margin-bottom: 10px;
+}
+.faq-list .faq-item .ic .delect {
+    display: none;
+}
+.faq-list .faq-item .ic .delect::after {
+    position: relative;
+    content: "×";
+    font-size: 20px;
+    color: white;
+    top: -33px;
+    right: 15px;
+}
+.faq-list .faq-item .ic:hover .delect {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    width: 0px;
+    height: 0px;
+    border-top: 30px solid rgba(0, 0, 0, 0.5);
+    border-left: 30px solid transparent;
+}
+.faq-add {
+    float: left;
+    width: calc((100% - 60px) / 4);
+    min-width: calc((100% - 60px) / 4);
+    max-width: calc((100% - 60px) / 4);
+    height: 204px;
+    margin-right: 0;
+    background-color: #fafafa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.faq-add .y-line{
+    position: absolute;
+    width:50%;
+    height:1px;
+    background-color:#ccc;
+    left: 25%;
+    top:49%;
+    z-index: 5;
+}
+.faq-add .x-line{
+    position: absolute;
+    width:1px;
+    height:50%;
+    background-color:#ccc;
+    left: 49%;
+    top:25%;
+    z-index: 5;
+}
+
+#Language_index .dropdown-menu {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#Language_index .dropdown-menu .lang a {
+    display: block;
+    white-space: nowrap;
+}
+#Language_index .dropdown-menu #addlang {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 1;
+    padding-top: 8px;
+}
 
 
 

@@ -26,18 +26,10 @@ class FunctionLogic extends Model
 {
     use \traits\controller\Jump;
 
-    /**
-     * 验证功能版sq文件 - 应用于不加密的控制器文件
-     * @return [type] [description]
-     */
     public function validate_authorfile($pid = '') {
         $this->check_authorfile($pid);
     }
 
-    /**
-     * 验证功能版sq文件
-     * @return [type] [description]
-     */
     public function check_authorfile($pid = '') {
         $buypid = $this->getAuthortokenInfo('pid');
         if ($pid > $buypid) {
@@ -68,10 +60,6 @@ class FunctionLogic extends Model
         }
     }
 
-    /**
-     * 获取网站sq信息
-     * @return [type] [description]
-     */
     public function getAuthortokenInfo($field = '') {
         $authortokenInfo = tpCache('php.php_serviceinfo');
         $authortokenInfo = mchStrCode($authortokenInfo, 'DECODE');
@@ -82,7 +70,7 @@ class FunctionLogic extends Model
             if ('pid' == $field) {
                 tpCache('php', ['php_servicemeal' => $authortokenInfo[$field]]);
             } else if ('authormsg' == $field) {
-                $authortokenInfo[$field] = '如有疑问，联系客服！';
+                $authortokenInfo[$field] = '如有疑问，在问答社区提问';
             }
             return $authortokenInfo[$field];
         } else {
@@ -156,10 +144,10 @@ class FunctionLogic extends Model
             // 商品评价评分
             $value['order_total_score'] = Config::get('global.order_total_score')[$value['total_score']];
             // 评价的内容
-            $value['content'] = !empty($value['content']) ? htmlspecialchars_decode(unserialize($value['content'])) : '';
+            $value['content'] = !empty($value['content']) ? htmlspecialchars_decode(safe_unserialize($value['content'])) : '';
             $value['content'] = @msubstr($value['content'], 0, 60, true);
             // 回复的内容
-            $adminReply = !empty($value['admin_reply']) ? unserialize($value['admin_reply']) : [];
+            $adminReply = !empty($value['admin_reply']) ? safe_unserialize($value['admin_reply']) : [];
             $adminReply['adminReply'] = !empty($adminReply['adminReply']) ? htmlspecialchars_decode($adminReply['adminReply']) : '';
             $value['admin_reply'] = $adminReply;
         }

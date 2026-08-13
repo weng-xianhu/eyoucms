@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -149,21 +149,26 @@ class TagSppurchase extends Base
 
             foreach ($ReturnData as $key => $value) {
                 foreach ($value['spec_value'] as $kk => $vv) {
+                    // 支持子目录
+                    $vv["spec_image"] = handle_subdir_pic($vv["spec_image"]);
                     // 点击事件，title标题，规格值ID
-                    $ReturnData[$key]['spec_value'][$kk]['SpecData'] = " onclick=\"SpecSelect({$value['spec_mark_id']}, {$vv['spec_value_id']}, {$result['discount_price']}, '{$vv["spec_image"]}');\" title='{$vv['spec_value']}' data-spec_value_id='{$vv['spec_value_id']}' ";
+                    $vv['SpecData'] = " onclick=\"SpecSelect({$value['spec_mark_id']}, {$vv['spec_value_id']}, {$result['discount_price']}, '{$vv["spec_image"]}');\" title='{$vv['spec_value']}' data-spec_value_id='{$vv['spec_value_id']}' ";
                     // 规格Class
-                    $ReturnData[$key]['spec_value'][$kk]['SpecClass'] = " spec_mark_{$value['spec_mark_id']} spec_value_{$vv['spec_value_id']} ";
+                    $vv['SpecClass'] = " spec_mark_{$value['spec_mark_id']} spec_value_{$vv['spec_value_id']} ";
                     // 追加默认规格class
                     if (in_array($vv['spec_value_id'], $default_spec_value_id)) {
-                        $ReturnData[$key]['spec_value'][$kk]['SpecClass'] .= $currentclass;
+                        $vv['SpecClass'] .= $currentclass;
                     }
+                    $ReturnData[$key]['spec_value'][$kk] = $vv;
                 }
             }
             // 规格值数据包
             $result['ReturnData'] = $ReturnData;
         }
 
-        $result['sales_num'] = "<span id='sales_num'>".$archivesInfo['sales_num']."</span>";
+        // 无规格/单规格商品显示总销量（含虚拟销量），与列表页口径一致；多规格显示选中规格销量
+        $show_sales_num = empty($SpecData) ? $archivesInfo['sales_all'] : $archivesInfo['sales_num'];
+        $result['sales_num'] = "<span id='sales_num'>".$show_sales_num."</span>";
         $result['stock_code'] = "<span id='stock_code'>".$archivesInfo['stock_code']."</span>";
         $result['sales_all'] = "<span id='sales_all'>".$archivesInfo['sales_all']."</span>";
         $result['stock_count'] = "<span id='stock_count'>".$archivesInfo['stock_count']."</span>";
@@ -271,14 +276,14 @@ class TagSppurchase extends Base
             $merchant = Db::name('weapp_multi_merchant')->where($where)->field($field)->find();
             if (!empty($merchant)) {
                 // 商家头像处理
-                $merchant['merchant_pic'] = !empty($merchant['merchant_pic']) ? unserialize($merchant['merchant_pic']) : [];
+                $merchant['merchant_pic'] = !empty($merchant['merchant_pic']) ? safe_unserialize($merchant['merchant_pic']) : [];
                 if (isset($merchant['merchant_pic']['merchant_logo'])) {
                     $merchant['merchant_pic']['merchant_logo'] = handle_subdir_pic(get_default_pic($merchant['merchant_pic']['merchant_logo']));
                 } else {
                     $merchant['merchant_pic']['merchant_logo'] = handle_subdir_pic(get_default_pic());
                 }
                 // 商家地址信息处理
-                $merchant['merchant_contact'] = !empty($merchant['merchant_contact']) ? unserialize($merchant['merchant_contact']) : [];
+                $merchant['merchant_contact'] = !empty($merchant['merchant_contact']) ? safe_unserialize($merchant['merchant_contact']) : [];
                 if (!empty($merchant['merchant_contact'])) {
                     $contactProvince = get_province_name($merchant['merchant_contact']['contactProvince']);
                     $contactCity = get_city_name($merchant['merchant_contact']['contactCity']);
@@ -287,7 +292,7 @@ class TagSppurchase extends Base
                     $merchant['merchant_contact']['contactAddress'] =  $contactAddress . ' ' . $merchant['merchant_contact']['contactAddress'];
                 }
                 // 商家介绍信息处理
-                $merchant['merchant_content'] = !empty($merchant['merchant_content']) ? unserialize($merchant['merchant_content']) : [];
+                $merchant['merchant_content'] = !empty($merchant['merchant_content']) ? safe_unserialize($merchant['merchant_content']) : [];
                 // 商家URL
                 $merchant['merchant_url'] = url('home/MultiMerchant/merchant_index', ['merchant_id'=>$merchant['merchant_id']]);
                 // 覆盖商家原来的信息

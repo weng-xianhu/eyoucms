@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -158,6 +158,8 @@ class Form extends Base
                 ->getAllWithIndex();
             $attr_list = array();
             foreach ($row as $key => $val) {
+                // 前台提交的表单内容一律转义，后续分支拼接的图片/附件HTML不受影响
+                $val['attr_value'] = htmlspecialchars((string)$val['attr_value'], ENT_QUOTES, 'UTF-8');
                 if (9 == $val['attr_input_type']){
                     //如果是区域类型,转换名称
                     $val['attr_value'] = Db::name('region')->where('id','in',$val['attr_value'])->column('name');
@@ -260,8 +262,34 @@ class Form extends Base
         $assign_data['gbCountList'] = $gbCountList;
 
         // 获取留言类型(系统留言、可视化百度小程序留言、可视化微信小程序留言)
-        $gbTypeList = $this->getGbTypeList(1);
+        $gbTypeList = $this->getGbTypeList(1, $typeid, $form_type);
         $assign_data['gbTypeList'] = $gbTypeList;
+
+        // 获取表单名称列表（系统留言栏目 + 自由表单）
+        $formNameList = [];
+        $gbLang = $this->admin_lang;
+        // 统计各表单留言数量
+        $formCountArr = Db::name('guestbook')->field('typeid,form_type,count(aid) as num')->where(['lang' => $gbLang])->group('typeid,form_type')->select();
+        $formCountMap = [];
+        $totalCount = 0;
+        foreach ($formCountArr as $row) {
+            $formCountMap[$row['form_type'] . '_' . $row['typeid']] = intval($row['num']);
+            $totalCount += intval($row['num']);
+        }
+        $formNameList[] = ['typeid' => '', 'form_type' => '', 'name' => '全部表单', 'count' => $totalCount];
+        // 系统留言栏目（current_channel=8）
+        $arctypeRows = Db::name('arctype')->field('id,typename')->where(['current_channel' => 8, 'lang' => $gbLang])->order('id asc')->select();
+        foreach ($arctypeRows as $row) {
+            $cnt = isset($formCountMap['0_' . $row['id']]) ? $formCountMap['0_' . $row['id']] : 0;
+            $formNameList[] = ['typeid' => $row['id'], 'form_type' => 0, 'name' => $row['typename'], 'count' => $cnt];
+        }
+        // 自由表单
+        $formRows = Db::name('form')->field('form_id,form_name')->where(['lang' => $gbLang])->order('form_id asc')->select();
+        foreach ($formRows as $row) {
+            $cnt = isset($formCountMap['1_' . $row['form_id']]) ? $formCountMap['1_' . $row['form_id']] : 0;
+            $formNameList[] = ['typeid' => $row['form_id'], 'form_type' => 1, 'name' => $row['form_name'], 'count' => $cnt];
+        }
+        $assign_data['formNameList'] = $formNameList;
 
         // 加载数据
         $this->assign($assign_data);
@@ -545,7 +573,7 @@ class Form extends Base
             ->select();
 
         // 内容查询
-        $result = Db::name('weapp_bd_diyminipro_form_field')
+        $result = Db::name('diyminipro_form_field')
             ->field('b.*, a.field_name')
             ->alias('a')
             ->join('diyminipro_form_value b', 'b.field_id = a.field_id', 'LEFT')
@@ -711,21 +739,459 @@ class Form extends Base
     }
     /*end*/
 
+    /*可视化微信小程序(商城版)*/
+    // 可视化微信小程序留言列表
+    public function wechat_mall_diyminipro_index()
+    {
+        // 查询当前小程序 mini_id
+        $result = $this->getWechatMallDiyminiproInfo();
+
+        // 查询条件
+        $where = [
+            'a.lang' => $result['lang'],
+            'a.mini_id' => $result['mini_id']
+        ];
+
+        // 全部、已读、未读查询条件
+        $count_type = input('param.count_type/s', 'all');
+        if ('unread' == $count_type) {
+            $where['a.is_read'] = 0;
+        } else if ('read' == $count_type) {
+            $where['a.is_read'] = 1;
+        }
+        $assign_data['count_type'] = $count_type;
+
+        // 模糊查询
+        $keywords = input('param.keywords/s', 'all');
+        if (!empty($keywords)) {
+            $list_ids = Db::name('weapp_diyminipro_mall_form_value')->where(['field_value' => ['LIKE', "%{$keywords}%"]])->column('list_id');
+            if (!empty($list_ids)) $where['a.list_id'] = ['IN', array_unique($list_ids)];
+        }
+
+        // 如果有表单ID则指定查询
+        $form_id = input('param.form_id/d', 0);
+        if (!empty($form_id)) $where['a.form_id'] = $form_id;
+
+        // 分页查询
+        $count = Db::name('weapp_diyminipro_mall_form_list')->alias('a')->where($where)->join('weapp_diyminipro_mall_form b', 'a.form_id = b.form_id', 'LEFT')->count();
+        $Page = new Page($count, config('paginate.list_rows'));
+
+        // 数据查询
+        $list = Db::name('weapp_diyminipro_mall_form_list')
+            ->field('a.*, b.form_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_diyminipro_mall_form b', 'a.form_id = b.form_id', 'LEFT')
+            ->order('a.update_time desc, a.list_id desc')
+            ->limit($Page->firstRow.','.$Page->listRows)
+            ->select();
+
+        // 内容查询
+        $result = Db::name('weapp_diyminipro_mall_form_field')
+            ->field('b.*, a.field_name')
+            ->alias('a')
+            ->join('weapp_diyminipro_mall_form_value b', 'b.field_id = a.field_id', 'LEFT')
+            ->where(['b.list_id' => ['IN', get_arr_column($list, 'list_id')]])
+            ->order('b.value_id asc')
+            ->select();
+        $field_list = [];
+        foreach ($result as $key => $value) {
+            if ('checkbox' == $value['field_type'] && !empty($value['field_value'])) {
+                $value['field_value'] = str_replace(',', '] [', '['.$value['field_value'].']');
+            } else if ('datetime' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = date('Y-m-d H:i:s', $value['field_value']);
+            } else if ('location' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = htmlspecialchars_decode($value['field_value']);
+                $location_value = json_decode($value['field_value'], true);
+                $value['field_value'] = $location_value['address']. $location_value['number'];
+            }
+            $field_list[$value['list_id']][] = $value;
+        }
+
+        // 数据处理
+        foreach ($list as $key => $value) {
+            $value['field_list'] = isset($field_list[$value['list_id']]) ? $field_list[$value['list_id']] : [];
+            $list[$key] = $value;
+        }
+
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
+        $assign_data['page'] = $Page->show();
+
+        // 查询所有留言
+        unset($where['a.is_read']);
+        $formCountRow = Db::name('weapp_diyminipro_mall_form_list')->alias('a')->where($where)->select();
+        // 计算(全部、已读、未读)留言数量
+        $all = $read = $unread = 0;
+        foreach ($formCountRow as $value) {
+            $all++;
+            if (!empty($value['is_read'])) {
+                $read++;
+            } else {
+                $unread++;
+            }
+        }
+        $formCountList = [
+            'all' => [
+                'type'  => 'all',
+                'name'  => '全部',
+                'count' => intval($all),
+            ],
+            'read' => [
+                'type'  => 'read',
+                'name'  => '已读',
+                'count' => intval($read),
+            ],
+            'unread' => [
+                'type'  => 'unread',
+                'name'  => '未读',
+                'count' => intval($unread),
+            ],
+        ];
+        $assign_data['formCountList'] = $formCountList;
+
+        // 获取留言类型(系统留言、可视化百度小程序留言、可视化微信小程序留言)
+        $gbTypeList = $this->getGbTypeList(4);
+        $assign_data['gbTypeList'] = $gbTypeList;
+
+        // 加载数据
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    // 可视化微信小程序留言详情
+    public function wechat_mall_diyminipro_details()
+    {
+        $list_id = input('list_id/d', 0);
+        $form_id = input('form_id/d', 0);
+        if (empty($list_id) || empty($form_id)) $this->error('参数有误');
+
+        // 查询当前小程序 mini_id
+        $result = $this->getWechatMallDiyminiproInfo();
+
+        // 查询条件
+        $where = [
+            'a.list_id' => $list_id,
+            'a.form_id' => $form_id,
+            'a.lang' => $result['lang'],
+            'a.mini_id' => $result['mini_id']
+        ];
+
+        // 更新为已读
+        $update = [
+            'is_read' => 1,
+            'update_time' => getTime()
+        ];
+        Db::name('weapp_diyminipro_mall_form_list')->alias('a')->where($where)->update($update);
+
+        // 执行查询
+        $info = Db::name('weapp_diyminipro_mall_form_list')
+            ->field('a.*, b.form_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_diyminipro_mall_form b', 'a.form_id = b.form_id', 'LEFT')
+            ->find();
+        $assign_data['info'] = $info;
+
+        // 执行查询
+        $value_list = Db::name('weapp_diyminipro_mall_form_value')
+            ->field('a.*, b.field_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_diyminipro_mall_form_field b', 'a.field_id = b.field_id', 'LEFT')
+            ->select();
+        foreach ($value_list as $key => $value) {
+            if ('checkbox' == $value['field_type'] && !empty($value['field_value'])) {
+                $value_list[$key]['field_value'] = str_replace(',', '] [', '['.$value['field_value'].']');
+            } else if ('datetime' == $value['field_type'] && !empty($value['field_value'])){
+                $value_list[$key]['field_value'] = date('Y-m-d H:i:s', $value['field_value']);
+            } else if ('location' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = htmlspecialchars_decode($value['field_value']);
+                $location_value = json_decode($value['field_value'], true);
+                $value_list[$key]['field_value'] = $location_value['address']. $location_value['number'];
+            }
+        }
+        $assign_data['value_list'] = $value_list;
+
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    // 删除可视化微信小程序留言
+    public function wechat_mall_diyminipro_del()
+    {
+        if (IS_AJAX_POST) {
+            $list_id = input('post.list_id/d', 0);
+            if (empty($list_id)) $this->error('参数有误');
+
+            // 查询当前小程序 mini_id
+            $result = $this->getWechatMallDiyminiproInfo();
+
+            // 执行条件
+            $where = [
+                'list_id' => $list_id,
+                'lang' => $result['lang'],
+                'mini_id' => $result['mini_id']
+            ];
+
+            // 删除表单列表数据
+            $resultID = Db::name('weapp_diyminipro_mall_form_list')->where($where)->delete(true);
+            if (!empty($resultID)) {
+                // 同步删除表单下的字段
+                Db::name('weapp_diyminipro_mall_form_value')->where($where)->delete(true);
+                $this->success('删除成功');
+            } else {
+                $this->error('删除失败');
+            }
+        }
+    }
+
+    // 查询 可视化微信小程序 当前使用的 mini_id
+    private function getWechatMallDiyminiproInfo()
+    {
+        return Db::name('weapp_diyminipro_mall')->where(['is_del'=> 0])->order('mini_id desc')->find();
+    }
+    /*end*/
+
+    /*可视化抖音小程序*/
+    // 可视化抖音小程序留言列表
+    public function douyin_diyminipro_index()
+    {
+        // 查询当前小程序 mini_id
+        $result = $this->getDouyinDiyminiproInfo();
+
+        // 查询条件
+        $where = [
+            'a.lang' => $result['lang'],
+            'a.mini_id' => $result['mini_id']
+        ];
+
+        // 全部、已读、未读查询条件
+        $count_type = input('param.count_type/s', 'all');
+        if ('unread' == $count_type) {
+            $where['a.is_read'] = 0;
+        } else if ('read' == $count_type) {
+            $where['a.is_read'] = 1;
+        }
+        $assign_data['count_type'] = $count_type;
+
+        // 模糊查询
+        $keywords = input('param.keywords/s', 'all');
+        if (!empty($keywords)) {
+            $list_ids = Db::name('weapp_tt_diyminipro_form_value')->where(['field_value' => ['LIKE', "%{$keywords}%"]])->column('list_id');
+            if (!empty($list_ids)) $where['a.list_id'] = ['IN', array_unique($list_ids)];
+        }
+
+        // 如果有表单ID则指定查询
+        $form_id = input('param.form_id/d', 0);
+        if (!empty($form_id)) $where['a.form_id'] = $form_id;
+
+        // 分页查询
+        $count = Db::name('weapp_tt_diyminipro_form_list')->alias('a')->where($where)->join('weapp_diyminipro_mall_form b', 'a.form_id = b.form_id', 'LEFT')->count();
+        $Page = new Page($count, config('paginate.list_rows'));
+
+        // 数据查询
+        $list = Db::name('weapp_tt_diyminipro_form_list')
+            ->field('a.*, b.form_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_diyminipro_mall_form b', 'a.form_id = b.form_id', 'LEFT')
+            ->order('a.update_time desc, a.list_id desc')
+            ->limit($Page->firstRow.','.$Page->listRows)
+            ->select();
+
+        // 内容查询
+        $result = Db::name('weapp_tt_diyminipro_form_field')
+            ->field('b.*, a.field_name')
+            ->alias('a')
+            ->join('weapp_tt_diyminipro_form_value b', 'b.field_id = a.field_id', 'LEFT')
+            ->where(['b.list_id' => ['IN', get_arr_column($list, 'list_id')]])
+            ->order('b.value_id asc')
+            ->select();
+        $field_list = [];
+        foreach ($result as $key => $value) {
+            if ('checkbox' == $value['field_type'] && !empty($value['field_value'])) {
+                $value['field_value'] = str_replace(',', '] [', '['.$value['field_value'].']');
+            } else if ('datetime' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = date('Y-m-d H:i:s', $value['field_value']);
+            } else if ('location' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = htmlspecialchars_decode($value['field_value']);
+                $location_value = json_decode($value['field_value'], true);
+                $value['field_value'] = $location_value['address']. $location_value['number'];
+            }
+            $field_list[$value['list_id']][] = $value;
+        }
+
+        // 数据处理
+        foreach ($list as $key => $value) {
+            $value['field_list'] = isset($field_list[$value['list_id']]) ? $field_list[$value['list_id']] : [];
+            $list[$key] = $value;
+        }
+
+        $assign_data['list'] = $list;
+        $assign_data['pager'] = $Page;
+        $assign_data['page'] = $Page->show();
+
+        // 查询所有留言
+        unset($where['a.is_read']);
+        $formCountRow = Db::name('weapp_tt_diyminipro_form_list')->alias('a')->where($where)->select();
+        // 计算(全部、已读、未读)留言数量
+        $all = $read = $unread = 0;
+        foreach ($formCountRow as $value) {
+            $all++;
+            if (!empty($value['is_read'])) {
+                $read++;
+            } else {
+                $unread++;
+            }
+        }
+        $formCountList = [
+            'all' => [
+                'type'  => 'all',
+                'name'  => '全部',
+                'count' => intval($all),
+            ],
+            'read' => [
+                'type'  => 'read',
+                'name'  => '已读',
+                'count' => intval($read),
+            ],
+            'unread' => [
+                'type'  => 'unread',
+                'name'  => '未读',
+                'count' => intval($unread),
+            ],
+        ];
+        $assign_data['formCountList'] = $formCountList;
+
+        // 获取留言类型(系统留言、可视化百度小程序留言、可视化抖音小程序留言)
+        $gbTypeList = $this->getGbTypeList(5);
+        $assign_data['gbTypeList'] = $gbTypeList;
+
+        // 加载数据
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    // 可视化抖音小程序留言详情
+    public function douyin_mall_diyminipro_details()
+    {
+        $list_id = input('list_id/d', 0);
+        $form_id = input('form_id/d', 0);
+        if (empty($list_id) || empty($form_id)) $this->error('参数有误');
+
+        // 查询当前小程序 mini_id
+        $result = $this->getDouyinDiyminiproInfo();
+
+        // 查询条件
+        $where = [
+            'a.list_id' => $list_id,
+            'a.form_id' => $form_id,
+            'a.lang' => $result['lang'],
+            'a.mini_id' => $result['mini_id']
+        ];
+
+        // 更新为已读
+        $update = [
+            'is_read' => 1,
+            'update_time' => getTime()
+        ];
+        Db::name('weapp_tt_diyminipro_form_list')->alias('a')->where($where)->update($update);
+
+        // 执行查询
+        $info = Db::name('weapp_tt_diyminipro_form_list')
+            ->field('a.*, b.form_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_tt_diyminipro_form b', 'a.form_id = b.form_id', 'LEFT')
+            ->find();
+        $assign_data['info'] = $info;
+
+        // 执行查询
+        $value_list = Db::name('weapp_tt_diyminipro_form_value')
+            ->field('a.*, b.field_name')
+            ->alias('a')
+            ->where($where)
+            ->join('weapp_tt_diyminipro_form_field b', 'a.field_id = b.field_id', 'LEFT')
+            ->select();
+        foreach ($value_list as $key => $value) {
+            if ('checkbox' == $value['field_type'] && !empty($value['field_value'])) {
+                $value_list[$key]['field_value'] = str_replace(',', '] [', '['.$value['field_value'].']');
+            } else if ('datetime' == $value['field_type'] && !empty($value['field_value'])){
+                $value_list[$key]['field_value'] = date('Y-m-d H:i:s', $value['field_value']);
+            } else if ('location' == $value['field_type'] && !empty($value['field_value'])){
+                $value['field_value'] = htmlspecialchars_decode($value['field_value']);
+                $location_value = json_decode($value['field_value'], true);
+                $value_list[$key]['field_value'] = $location_value['address']. $location_value['number'];
+            }
+        }
+        $assign_data['value_list'] = $value_list;
+
+        $this->assign($assign_data);
+        return $this->fetch();
+    }
+
+    // 删除可视化抖音小程序留言
+    public function douyin_mall_diyminipro_del()
+    {
+        if (IS_AJAX_POST) {
+            $list_id = input('post.list_id/d', 0);
+            if (empty($list_id)) $this->error('参数有误');
+
+            // 查询当前小程序 mini_id
+            $result = $this->getDouyinDiyminiproInfo();
+
+            // 执行条件
+            $where = [
+                'list_id' => $list_id,
+                'lang' => $result['lang'],
+                'mini_id' => $result['mini_id']
+            ];
+
+            // 删除表单列表数据
+            $resultID = Db::name('weapp_tt_diyminipro_form_list')->where($where)->delete(true);
+            if (!empty($resultID)) {
+                // 同步删除表单下的字段
+                Db::name('weapp_tt_diyminipro_form_value')->where($where)->delete(true);
+                $this->success('删除成功');
+            } else {
+                $this->error('删除失败');
+            }
+        }
+    }
+
+    // 查询 可视化抖音小程序 当前使用的 mini_id
+    private function getDouyinDiyminiproInfo()
+    {
+        return Db::name('weapp_tt_diyminipro')->where(['is_del'=> 0])->order('mini_id desc')->find();
+    }
+    /*end*/
+
     // 获取留言类型(系统留言、可视化百度小程序留言、可视化微信小程序留言)
-    private function getGbTypeList($type = 1)
+    private function getGbTypeList($type = 1, $typeid = 0, $form_type = '')
     {
         $source = input('param.source/d', 1);
+        // 根据表单名称筛选条件
+        $extraWhere = [];
+        if (!empty($typeid)) {
+            $extraWhere['typeid'] = intval($typeid);
+            if ($form_type !== '') {
+                $extraWhere['form_type'] = intval($form_type);
+            }
+        }
         // 系统留言
+        $pcWhere = array_merge(['source'=>1, 'lang'=>$this->admin_lang], $extraWhere);
         $result['pc'] = [
             'url' => url('Form/index', ['source'=>1]),
             'name' => '电脑端',
-            'count' => Db::name('guestbook')->where(['source'=>1, 'lang'=>$this->admin_lang])->count(),
+            'count' => Db::name('guestbook')->where($pcWhere)->count(),
             'class' => 1 === intval($type) && 1 === intval($source) ? 'cur' : '',
         ];
+        $mobileWhere = array_merge(['source'=>2, 'lang'=>$this->admin_lang], $extraWhere);
         $result['mobile'] = [
             'url' => url('Form/index', ['source'=>2]),
             'name' => '手机端',
-            'count' => Db::name('guestbook')->where(['source'=>2, 'lang'=>$this->admin_lang])->count(),
+            'count' => Db::name('guestbook')->where($mobileWhere)->count(),
             'class' => 1 === intval($type) && 2 === intval($source) ? 'cur' : '',
         ];
 
@@ -750,7 +1216,7 @@ class Form extends Base
             if (!empty($data['status']) && 1 == $data['status']) {
                 $result['wechat'] = [
                     'url' => url('Form/wechat_diyminipro_index'),
-                    'name' => '可视化微信小程序',
+                    'name' => '可视化微信小程序(企业版)',
                     'count' => Db::name('diyminipro_form_list')->count(),
                     'class' => 3 === intval($type) ? 'cur' : '',
                 ];
@@ -758,14 +1224,42 @@ class Form extends Base
         }
 
         // 如果安装了可视化微信小程序插件则执行
-        if (is_dir('./weapp/Suibian/')) {
+        if (is_dir('./weapp/DiyminiproMall/')) {
             // 开启可视化微信小程序插件则执行
+            $data = model('Weapp')->getWeappList('DiyminiproMall');
+            if (!empty($data['status']) && 1 == $data['status']) {
+                $result['wechat_mall'] = [
+                    'url' => url('Form/wechat_mall_diyminipro_index'),
+                    'name' => '可视化微信小程序(商城版)',
+                    'count' => Db::name('weapp_diyminipro_mall_form_list')->count(),
+                    'class' => 4 === intval($type) ? 'cur' : '',
+                ];
+            }
+        }
+
+        // 如果安装了可视化抖音小程序插件则执行
+        if (is_dir('./weapp/TtDiyminipro/')) {
+            // 开启可视化抖音小程序插件则执行
+            $data = model('Weapp')->getWeappList('TtDiyminipro');
+            if (!empty($data['status']) && 1 == $data['status']) {
+                $result['douyin'] = [
+                    'url' => url('Form/douyin_diyminipro_index'),
+                    'name' => '可视化抖音小程序',
+                    'count' => Db::name('weapp_tt_diyminipro_form_list')->count(),
+                    'class' => 5 === intval($type) ? 'cur' : '',
+                ];
+            }
+        }
+
+        // 如果安装了小程序综合管理插件则执行
+        if (is_dir('./weapp/Suibian/')) {
+            // 开启小程序综合管理插件则执行
             $data = model('Weapp')->getWeappList('Suibian');
             if (!empty($data['status']) && 1 == $data['status']) {
                 $result['uniapp'] = [
                     'url' => url('Form/index', ['source'=>3]),
                     'name' => '开源小程序',
-                    'count' => Db::name('guestbook')->where(['source'=>3, 'lang'=>$this->admin_lang])->count(),
+                    'count' => Db::name('guestbook')->where(array_merge(['source'=>3, 'lang'=>$this->admin_lang], $extraWhere))->count(),
                     'class' => 1 === intval($type) && 3 === intval($source) ? 'cur' : '',
                 ];
             }
@@ -1322,7 +1816,7 @@ class Form extends Base
             if (!preg_match('/^([\x{4e00}-\x{9fa5}\w\"\:\{\}\;\，\,]*)$/u', $info['attr_values'])) {
                 $info['attr_values'] = '';
             }
-            $dfvalue = unserialize($info['attr_values']);
+            $dfvalue = safe_unserialize($info['attr_values']);
             if (is_array($dfvalue)) {
                 $dfvalue['region_id'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_id']);
                 $dfvalue['region_ids'] = preg_replace('/([^\d\,]+)/i', '', $dfvalue['region_ids']);

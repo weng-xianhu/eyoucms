@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.mobile.public.template.message.delete request
  *
  * @author auto create
- * @since 1.0, 2017-04-07 20:25:33
+ * @since 1.0, 2025-08-13 18:47:42
  */
 class AlipayMobilePublicTemplateMessageDeleteRequest
 {

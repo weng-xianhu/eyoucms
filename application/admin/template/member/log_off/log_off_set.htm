@@ -19,7 +19,11 @@
     <form class="form-horizontal" id="post_form" method="post">
         {$searchform.hidden|default=''}
         <div class="ncap-form-default">
-
+            <div class="explanation">
+                <ul>
+                    <li>开启注销功能后，前端会员中心>我的信息里将显示注销按钮，会员可自行申请注销</li>
+                </ul>
+            </div>
             <dl class="row">
                 <dt class="tit">
                     <label for="output_type">开启注销</label>
@@ -28,7 +32,7 @@
                     <label><input type="radio" name="data[users_open_log_off]" value="1" {if condition="!empty($data.users_open_log_off) && 1 == $data.users_open_log_off"}checked{/if}>开启</label>&nbsp;&nbsp;
                     <label><input type="radio" name="data[users_open_log_off]" value="0" {if condition="empty($data.users_open_log_off)"}checked{/if}>关闭</label>&nbsp;&nbsp;
                     <span class="err"></span>
-                    <p class="notic">设置关闭,则无法注销会员</p>
+                    <p class="notic"></p>
                 </dd>
             </dl>
 
@@ -40,7 +44,7 @@
                     <label><input type="radio" name="data[users_log_off_check]" value="0" {if condition="empty($data.users_log_off_check)"}checked{/if}>开启</label>&nbsp;&nbsp;
                     <label><input type="radio" name="data[users_log_off_check]" value="1" {if condition="!empty($data.users_log_off_check) && 1 == $data.users_log_off_check"}checked{/if}>关闭</label>&nbsp;&nbsp;
                     <span class="err"></span>
-                    <p class="notic">设置关闭,会员直接注销成功</p>
+                    <p class="notic">设置关闭,无需管理审核,会员直接注销成功</p>
                 </dd>
             </dl>
 

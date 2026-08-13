@@ -66,6 +66,14 @@
                             <th abbr="article_time" axis="col6" class="w120">
                                 <div class="">分类</div>
                             </th>
+                            {if condition="!empty($weappVerify['data']['enableMultiVerify'])"}
+                            <th abbr="verify_type" axis="col7" class="w80">
+                                <div class="tc">核销类型</div>
+                            </th>
+                            <th abbr="verify_times" axis="col8" class="w80">
+                                <div class="tc">核销次数</div>
+                            </th>
+                            {/if}
                             <th align="center" abbr="article_time" axis="col6" class="w80">
                                 <div class="tc">状态</div>
                             </th>
@@ -146,6 +154,32 @@
                                             </a>
                                         </div>
                                     </td>
+                                    
+                                    {if condition="!empty($weappVerify['data']['enableMultiVerify'])"}
+                                    <td class="w80">
+                                        <div class="tc">
+                                            {if condition="in_array(2, $vo.logistics_type)"}
+                                                {if condition="$vo.verify_type eq 2"}
+                                                    <span class="label label-warning">多次核销</span>
+                                                {else /}
+                                                    <span class="label label-info">单次核销</span>
+                                                {/if}
+                                            {else /}
+                                                <span class="text-muted">-</span>
+                                            {/if}
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="w80">
+                                        <div class="tc">
+                                            {if condition="in_array(2, $vo.logistics_type) and $vo.verify_type eq 2"}
+                                                {$vo.verify_times|default='1'}次
+                                            {else /}
+                                                <span class="text-muted">-</span>
+                                            {/if}
+                                        </div>
+                                    </td>
+                                    {/if}
 
                                     <td class="">
                                         <div class="tc">{egt name="$vo.arcrank" value="0" }销售中{else/}仓库中{/egt}</div>
@@ -227,7 +261,7 @@
 <script type="text/javascript">
     $(function(){
         try{
-            if (typeof(eval('is_conceal_1649209614'))=="function" && is_conceal_1649209614()){
+            if (typeof window.is_conceal_1649209614 === "function" && window.is_conceal_1649209614()){
                 $(".page").css("margin-left","10px");
             }else{
                 $(".page").css("margin-left","110px");

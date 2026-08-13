@@ -31,15 +31,30 @@ class Field extends Model
      * 获取全部字段类型
      * @author 小虎哥 by 2018-7-25
      */
-    public function getFieldTypeAll($field = '*', $index_key = '')
+    public function getFieldTypeAll($field = '*', $index_key = '', $channel_id = '')
     {
-        $cacheKey = md5("admin-Field-getFieldTypeAll-{$field}-{$index_key}");
+        $cacheKey = md5("admin-Field-getFieldTypeAll-{$field}-{$index_key}-{$channel_id}");
         $result = cache($cacheKey);
         if (!empty($result)) {
             return $result;
         }
 
-        $result = Db::name('FieldType')->field($field)->order('sort_order asc')->select();
+        $map = [];
+        // 如果用户没有创建过 多选项、单选项、下拉框[旧] 的类型，就直接排除不给用 start
+        if (!empty($channel_id)) {
+            $dtypes = ['checkbox','radio']; // ['checkbox','radio','select']; 用上test，到时要放开
+            $checkField = Db::name('channelfield')->where([
+                    'channel_id'=>$channel_id, 
+                    'ifsystem'=>0,
+                    'dtype'=>['IN', $dtypes]
+                ])->group('dtype')->column('dtype');
+            $diff_arr = array_diff($dtypes,$checkField);
+            if (!empty($diff_arr)) {
+                $map['name'] = ['NOTIN', $diff_arr];
+            }
+        }
+        // end
+        $result = Db::name('FieldType')->field($field)->where($map)->order('sort_order asc')->select();
 
         if (!empty($index_key)) {
             $result = convert_arr_key($result, $index_key);
@@ -146,7 +161,15 @@ class Field extends Model
         if (!empty($list)) {
             if (is_dir('./weapp/CompressContent/')) {                                            
                 $compressLogic = new \weapp\CompressContent\logic\CompressContentLogic;                
-            }   
+            }
+
+            // 多选项、单选项、下拉框[checkboxs]
+            $fieldCustomParamList = array();
+            $fieldCustomParamRow = Db::name('field_custom_param')->field('id,dfvalue,name,channel_id')->order('dtype ASC, sort_order ASC, id ASC')->select();
+            foreach ($fieldCustomParamRow as $k => $v) {
+                $fieldCustomParamList[$v['channel_id']][$v['name']][$v['id']] = $v;
+            }
+
             foreach ($list as $key => $val) {
                 $val['fieldArr'] = $formFieldStr;
                 switch ($val['dtype']) {
@@ -191,10 +214,41 @@ class Field extends Model
                         }
                         break;
                     }
+                    
+                    case 'selects':
+                    case 'radios':
+                    {
+                        $dfvalueArr = [];
+                        $fieldCustomParamInfo = empty($fieldCustomParamList[$val['channel_id']][$val['name']]) ? [] : $fieldCustomParamList[$val['channel_id']][$val['name']];
+                        foreach ($fieldCustomParamInfo as $_fpval) {
+                            $dfvalueArr[] = [
+                                'id' => $_fpval['id'],
+                                'name' => $_fpval['dfvalue'],
+                            ];
+                        }
+                        $val['dfvalue'] = $dfvalueArr;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $dfvalueArr2 = [];
+                            $field_param_ids = explode(',', $addonRow[$val['name']]);
+                            foreach ($field_param_ids as $_k => $_v) {
+                                if (!empty($fieldCustomParamInfo[$_v])) {
+                                    $dfvalueArr2[] = [
+                                        'id' => $fieldCustomParamInfo[$_v]['id'],
+                                        'name' => $fieldCustomParamInfo[$_v]['dfvalue'],
+                                    ];
+                                }
+                            }
+                            $val['trueValue'] = $dfvalueArr2;
+                        } else {
+                            $dfTrueValue = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+                            $val['trueValue'] = array($dfTrueValue);
+                        }
+                        break;
+                    }
 
                     case 'region':
                     {
-                        $dfvalue    = unserialize($val['dfvalue']);
+                        $dfvalue    = safe_unserialize($val['dfvalue']);
                         $RegionData = [];
                         $region_ids = explode(',', $dfvalue['region_ids']);
                         foreach ($region_ids as $id_key => $id_value) {
@@ -268,20 +322,73 @@ class Field extends Model
                         }
                         break;
                     }
+                    
+                    case 'checkboxs':
+                    {
+                        $dfvalueArr = [];
+                        $fieldCustomParamInfo = empty($fieldCustomParamList[$val['channel_id']][$val['name']]) ? [] : $fieldCustomParamList[$val['channel_id']][$val['name']];
+                        foreach ($fieldCustomParamInfo as $_fpval) {
+                            $dfvalueArr[] = [
+                                'id' => $_fpval['id'],
+                                'name' => $_fpval['dfvalue'],
+                            ];
+                        }
+                        $val['dfvalue'] = $dfvalueArr;
+                        if (array_key_exists($val['name'], $addonRow)) {
+                            $dfvalueArr2 = [];
+                            $field_param_ids = explode(',', $addonRow[$val['name']]);
+                            foreach ($field_param_ids as $_k => $_v) {
+                                if (!empty($fieldCustomParamInfo[$_v])) {
+                                    $dfvalueArr2[] = [
+                                        'id' => $fieldCustomParamInfo[$_v]['id'],
+                                        'name' => $fieldCustomParamInfo[$_v]['dfvalue'],
+                                    ];
+                                }
+                            }
+                            $val['trueValue'] = $dfvalueArr2;
+                        } else {
+                            $val['trueValue'] = array();
+                        }
+                        break;
+                    }
+
+                    case 'cascade':
+                    {
+                        // 加载一级选项
+                        $cascadeLevel1 = Db::name('field_cascade_data')->field('id,name')
+                            ->where(['field_id' => $val['id'], 'level' => 1])
+                            ->order('sort_order ASC, id ASC')
+                            ->select();
+                        $val['cascade_level1'] = $cascadeLevel1;
+                        $val['cascade_level2'] = [];
+                        $val['cascade_level3'] = [];
+                        $val['trueValue'] = ['', '', ''];
+                        if (array_key_exists($val['name'], $addonRow) && !empty($addonRow[$val['name']])) {
+                            $selectedIds = explode(',', $addonRow[$val['name']]);
+                            $val['trueValue'] = $selectedIds;
+                            // 加载二级选项
+                            if (!empty($selectedIds[0])) {
+                                $val['cascade_level2'] = Db::name('field_cascade_data')->field('id,name')
+                                    ->where(['field_id' => $val['id'], 'parent_id' => intval($selectedIds[0])])
+                                    ->order('sort_order ASC, id ASC')
+                                    ->select();
+                            }
+                            // 加载三级选项
+                            if (!empty($selectedIds[1])) {
+                                $val['cascade_level3'] = Db::name('field_cascade_data')->field('id,name')
+                                    ->where(['field_id' => $val['id'], 'parent_id' => intval($selectedIds[1])])
+                                    ->order('sort_order ASC, id ASC')
+                                    ->select();
+                            }
+                        }
+                        break;
+                    }
 
                     case 'img':
                     {
-                        $val[$val['name'].'_eyou_is_remote'] = 0;
-                        $val[$val['name'].'_eyou_remote'] = '';
                         $val[$val['name'].'_eyou_local'] = '';
                         if (array_key_exists($val['name'], $addonRow)) {
-                            if (is_http_url($addonRow[$val['name']])) {
-                                $val[$val['name'].'_eyou_is_remote'] = 1;
-                                $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
-                            } else {
-                                $val[$val['name'].'_eyou_is_remote'] = 0;
-                                $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
-                            }
+                            $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
                         }
                         break;
                     }
@@ -316,7 +423,7 @@ class Field extends Model
 
                         $val[$val['name'].'_eyou_imgupload_list'] = array();
                         if (array_key_exists($val['name'], $addonRow) && !empty($addonRow[$val['name']])) {
-                            $eyou_imgupload_list = @unserialize($addonRow[$val['name']]);
+                            $eyou_imgupload_list = @safe_unserialize($addonRow[$val['name']]);
                             if (false === $eyou_imgupload_list) {
                                 $eyou_imgupload_list = [];
                                 $eyou_imgupload_data = explode(',', $addonRow[$val['name']]);
@@ -340,23 +447,15 @@ class Field extends Model
 
                     case 'file':
                     {
-                        $val[$val['name'].'_eyou_is_remote'] = 0;
-                        $val[$val['name'].'_eyou_remote'] = '';
                         $val[$val['name'].'_eyou_local'] = '';
                         $val[$val['name'].'_filename'] = '';
                         if (array_key_exists($val['name'], $addonRow)) {
-                            if (is_http_url($addonRow[$val['name']])) {
-                                $val[$val['name'].'_eyou_is_remote'] = 1;
-                                $val[$val['name'].'_eyou_remote'] = handle_subdir_pic($addonRow[$val['name']]);
-                            } else {
-                                $val[$val['name'].'_eyou_is_remote'] = 0;
-                                if (!empty($addonRow[$val['name']]) && stristr($addonRow[$val['name']], '|')) {
-                                    $arr = explode('|', $addonRow[$val['name']]);
-                                    $addonRow[$val['name']] = $arr[0];
-                                    $val[$val['name'].'_filename'] = empty($arr[1]) ? '' : $arr[1];
-                                }
-                                $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
+                            if (!empty($addonRow[$val['name']]) && stristr($addonRow[$val['name']], '|')) {
+                                $arr = explode('|', $addonRow[$val['name']]);
+                                $addonRow[$val['name']] = $arr[0];
+                                $val[$val['name'].'_filename'] = empty($arr[1]) ? '' : $arr[1];
                             }
+                            $val[$val['name'].'_eyou_local'] = handle_subdir_pic($addonRow[$val['name']]);
                         }
                         $val['dfvalue'] = handle_subdir_pic($addonRow[$val['name']]);
                         $val['upload_flag'] = 'local';
@@ -462,7 +561,7 @@ class Field extends Model
                 }
                 /*end*/
 
-                $key = preg_replace('/^(.*)(_eyou_is_remote|_eyou_remote|_eyou_local)$/', '$1', $key);
+                $key = preg_replace('/^(.*)(_eyou_local)$/', '$1', $key);
                 $dtype = !empty($fieldTypeList[$key]) ? $fieldTypeList[$key]['dtype'] : '';
                 switch ($dtype) {
 
@@ -511,6 +610,24 @@ class Field extends Model
                         break;
                     }
 
+                    case 'cascade':
+                    {
+                        if (is_array($val)) {
+                            // 过滤空值和无效值
+                            $new_val = [];
+                            foreach ($val as $_v) {
+                                $_v = trim($_v);
+                                if (!empty($_v) && $_v != '-1') {
+                                    $new_val[] = intval($_v);
+                                }
+                            }
+                            $val = implode(',', $new_val);
+                        } else {
+                            $val = trim($val);
+                        }
+                        break;
+                    }
+
                     case 'switch':
                     case 'int':
                     {
@@ -520,12 +637,7 @@ class Field extends Model
 
                     case 'img':
                     {
-                        $is_remote = !empty($dataExt[$key.'_eyou_is_remote']) ? $dataExt[$key.'_eyou_is_remote'] : 0;
-                        if (1 == $is_remote) {
-                            $val = $dataExt[$key.'_eyou_remote'];
-                        } else {
-                            $val = $dataExt[$key.'_eyou_local'];
-                        }
+                        $val = $dataExt[$key.'_eyou_local'];
                         break;
                     }
 
@@ -549,14 +661,9 @@ class Field extends Model
 
                     case 'file':
                     {
-                        $is_remote = !empty($dataExt[$key.'_eyou_is_remote']) ? $dataExt[$key.'_eyou_is_remote'] : 0;
-                        if (1 == $is_remote) {
-                            $val = $dataExt[$key.'_eyou_remote'];
-                        } else {
-                            $val = $dataExt[$key.'_eyou_local'];
-                            if (!empty($dataExt[$key.'_filename'])) {
-                                $val .= '|' . $dataExt[$key.'_filename'];
-                            }
+                        $val = $dataExt[$key.'_eyou_local'];
+                        if (!empty($dataExt[$key.'_filename'])) {
+                            $val .= '|' . $dataExt[$key.'_filename'];
                         }
                         break;
                     }

@@ -52,7 +52,7 @@ class Special extends Model
         }
 
         // --处理专题节点
-        model('SpecialNode')->saveNode($aid, $post['specialNode'], $opt);
+        model('SpecialNode')->saveNode($aid, $post, $opt);
 
         // --处理TAG标签
         model('Taglist')->savetags($aid, $post['typeid'], $post['tags'], $post['arcrank'], $opt);

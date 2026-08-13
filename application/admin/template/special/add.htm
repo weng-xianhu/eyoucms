@@ -1,5 +1,4 @@
 {include file="public/layout" /}
-
 {eq name="$editor.editor_select" value="1"}
     {load href="__PUBLIC__/plugins/Ueditor/ueditor.config.js" /}
     {load href="__PUBLIC__/plugins/Ueditor/ueditor.all.min.js" /}
@@ -7,7 +6,6 @@
 {else/}
     {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
 {/eq}
-
 <body class="bodysy-w">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
@@ -160,6 +158,9 @@
                     {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/archives/ai_uploads_btn.htm')" /}
                         {include file="/weapp/Ai/template/archives/ai_uploads_btn.htm" /}
                     {/if}
+                    {if condition="file_exists(ROOT_PATH.'weapp/PexelsImg/template/archives/pexels_uploads_btn.htm')" /}
+                        {include file="/weapp/PexelsImg/template/archives/pexels_uploads_btn.htm" /}
+                    {/if}
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -190,6 +191,13 @@
                             <div class="special-item-l"><em>*</em>节点标识</div>
                             <div class="special-item-r">
                                 <input type="text" name="specialNode[code][]" value="default1" class="input-text" onkeyup="keyupNodeCodeUnique(this);" onkeyup="this.value=this.value.replace(/[^\w\-\_]/g,'');" onpaste="this.value=this.value.replace(/[^\w\-\_]/g,'')">
+                                <span class="err"></span>
+                            </div>
+                        </div>
+                        <div class="special-item">
+                            <div class="special-item-l">节点排序</div>
+                            <div class="special-item-r">
+                                <input type="text" name="specialNode[sort_order][]" value="100" class="input-text" onkeyup="keyupNodeCodeUnique(this);" onkeyup="this.value=this.value.replace(/[^\w\-\_]/g,'');" onpaste="this.value=this.value.replace(/[^\w\-\_]/g,'')">
                                 <span class="err"></span>
                             </div>
                         </div>
@@ -237,7 +245,7 @@
                         <div class="special-items-row">
                             <div class="special-item-l">节点文档列表</div>
                             <div class="special-item-r">
-                                <a href="javascript:void(0);" onclick="selectNodeArchives(this, 'specialNode_1_item');" class="ncap-btn ncap-btn-green">选择文档</a>
+                                <a href="javascript:void(0);" onclick="selectNodeArchives(this,1,'specialNode_1_item');" class="ncap-btn ncap-btn-green">选择文档</a>
                             </div>  
                         </div>
                         <div class="special-items-row" style="display: none;">
@@ -248,18 +256,19 @@
                                         <div class="ment-table ment-table-default" style="max-height: 307px;padding: 0 10px;overflow-y: auto;">
                                             <div class="ment-table-header">
                                                 <table cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
-                                                    <colgroup> <col width=""> <col width="60"> </colgroup>
+                                                    <colgroup> <col width=""> <col width="60"><col width="100"> </colgroup>
                                                     <thead>
                                                         <tr>
                                                             <th> <div class="ment-table-cell"><span>文档标题</span> </div> </th>
                                                             <th> <div class="ment-table-cell"><span>操作</span> </div> </th>
+                                                            <th> <div class="ment-table-cell"><span>排序</span> </div> </th>
                                                         </tr>
                                                     </thead>
                                                 </table>
                                             </div>
                                             <div class="ment-table-body">
                                                 <table cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
-                                                    <colgroup> <col width=""> <col width="60"> </colgroup>
+                                                    <colgroup> <col width=""> <col width="60"><col width="100"> </colgroup>
                                                     <input type="hidden" name="specialNode[aidlist][]" value="">
                                                     <input type="hidden" name="specialNode[htmllist][]" value="">
                                                     <tbody class="ment-table-tbody archivesTbody"></tbody>
@@ -292,7 +301,7 @@
                     <label>SEO关键词</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;"></textarea>
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')"></textarea>
                     <span class="err"></span>
                     <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
                 </dd>
@@ -373,6 +382,9 @@
                     <span class="err"></span>
                 </dd>
             </dl>
+            {if condition="file_exists(ROOT_PATH.'weapp/TimingTask/template/admin/archives/removal_time_add.htm')" /}
+                {include file="/weapp/TimingTask/template/admin/archives/removal_time_add.htm" /}
+            {/if}
             <dl class="row">
                 <dt class="tit">
                     <label for="tempview">文档模板</label>
@@ -546,13 +558,15 @@
     // 点击选择节点文章
     var tbodyTr;
     var nodeTagID;
+    var oldnId;
     var lists_node;
     var lists_html;
     // 节点文章预定义变量
     var nodeAidArr = [];
     var nodeAidStr = '';
     var nodeAidList = [];
-    function selectNodeArchives(obj, nodeid) {
+    function selectNodeArchives(obj, oldnid,nodeid) {
+        oldnId = oldnid;
         nodeTagID = nodeid;
         tbodyTr = $('#' + nodeTagID + ' .archivesTbody');
         lists_node = $('#' + nodeTagID).find("input[name='specialNode[aidlist][]']");
@@ -590,9 +604,14 @@
                     '<td class="">'+
                         '<div class="ment-table-cell ellipsis">' + nodeAidList[i]['title'] + '</div>'+
                     '</td>'+
-                    '<td class="">'+
+                    '<td class="w60">'+
                         '<div class="ment-table-cell">'+
                             '<a class="curpoin" href="javaScript:void(0);" data-aid="' + nodeAidList[i]['aid'] + '" data-id="' + nodeTagID + '" onclick="delNodeArchives(this);">删除</a>'+
+                        '</div>'+
+                    '</td>'+
+                    '<td class="w100">'+
+                        '<div class="ment-table-cell">'+
+                            '<input type="text" name="archivesSort['+oldnId+'][' + nodeAidList[i]['aid'] + '][]" value="' + nodeAidList[i]['sort_order'] + '" style="width:60px;">'+
                         '</div>'+
                     '</td>'+
                 '</tr>';
@@ -660,6 +679,7 @@
         node_itemid++;
         nodehtml = '<div class="special-items specialNodeItems" id="specialNode_'+itemid+'_item">'+nodehtml+'</div>';
         nodehtml = nodehtml.replace(new RegExp('specialNode_'+itemid+'_item', "g"), 'specialNode_'+node_itemid+'_item'); //第一个参数是正则表达式。
+        nodehtml = nodehtml.replace(new RegExp('this,'+itemid+'', "g"), 'this,'+node_itemid); //第一个参数是正则表达式。
         nodehtml = nodehtml.replace(new RegExp('specialNode\\[isauto\\]\\['+itemid+'\\]', "g"), 'specialNode[isauto]['+node_itemid+']'); //第一个参数是正则表达式。
         $($('.specialNodeItems')[0]).before(nodehtml);
 
@@ -684,7 +704,6 @@
 
     function checkNode() {
         var returnVal = true;
-
         var titleObj = $("input[name='specialNode[title][]']");
         $.each(titleObj, function (index, item) {
             if ($.trim($(item).val()) == '') {

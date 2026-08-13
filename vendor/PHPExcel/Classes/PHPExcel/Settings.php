@@ -354,35 +354,38 @@ class PHPExcel_Settings
 
     /**
      * Set options for libxml loader
+     * Security fix: Use secure defaults to prevent XXE attacks
      *
      * @param   int   $options   Options for libxml loader
      */
     public static function setLibXmlLoaderOptions($options = null)
     {
-        if (is_null($options) && defined('LIBXML_DTDLOAD')) {
-            $options = LIBXML_DTDLOAD | LIBXML_DTDATTR;
-        }
-        if (version_compare(PHP_VERSION, '5.2.11') >= 0) {
-            @libxml_disable_entity_loader((bool) $options);
+        if (is_null($options)) {
+            // Security: Use LIBXML_NONET to prevent network access
+            // Do NOT use LIBXML_DTDLOAD | LIBXML_DTDATTR as they enable DTD loading
+            $options = defined('LIBXML_NONET') ? LIBXML_NONET : 0;
         }
         self::$libXmlLoaderOptions = $options;
+        // Disable external entity loader for PHP 5.x - 7.x
+        // Note: libxml_disable_entity_loader is deprecated in PHP 8.0+
+        // but external entities are disabled by default in PHP 8.0+
+        if (version_compare(PHP_VERSION, '8.0.0', '<')) {
+            if (function_exists('libxml_disable_entity_loader')) {
+                @libxml_disable_entity_loader(true);
+            }
+        }
     }
 
     /**
      * Get defined options for libxml loader.
-     * Defaults to LIBXML_DTDLOAD | LIBXML_DTDATTR when not set explicitly.
+     * Security fix: Defaults to LIBXML_NONET to prevent XXE attacks
      *
      * @return int Default options for libxml loader
      */
     public static function getLibXmlLoaderOptions()
     {
-        if (is_null(self::$libXmlLoaderOptions) && defined('LIBXML_DTDLOAD')) {
-            self::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR);
-        } elseif (is_null(self::$libXmlLoaderOptions)) {
-            self::$libXmlLoaderOptions = true;
-        }
-        if (version_compare(PHP_VERSION, '5.2.11') >= 0) {
-            @libxml_disable_entity_loader((bool) self::$libXmlLoaderOptions);
+        if (is_null(self::$libXmlLoaderOptions)) {
+            self::setLibXmlLoaderOptions(null);
         }
         return self::$libXmlLoaderOptions;
     }

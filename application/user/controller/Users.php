@@ -35,7 +35,7 @@ class Users extends Base
         $this->smtp_record_db     = Db::name('smtp_record');// 发送邮箱记录表
         $this->sms_log_db         = Db::name('sms_log');// 发送手机记录表
         // 微信配置信息
-        $this->pay_wechat_config = unserialize(getUsersConfigData('pay.pay_wechat_config'));
+        $this->pay_wechat_config = safe_unserialize(getUsersConfigData('pay.pay_wechat_config'));
 
         // 查询部分模型开启信息 下载 视频 问答
         $partChannel = [];
@@ -338,7 +338,7 @@ EOF;
 
         // 若为微信端并且开启微商城模式则重定向
         if (isWeixin() && isMobile() && !empty($this->usersConfig['shop_micro'])) {
-            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
             if (!empty($WeChatLoginConfig)) {
                 $this->redirect($result['wechat_url']);
             }
@@ -372,7 +372,7 @@ EOF;
     // 使用ajax微信授权登陆
     public function ajax_wechat_login()
     {
-        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
         // 微信授权登陆
         if (!empty($WeChatLoginConfig['appid']) && !empty($WeChatLoginConfig['appsecret'])) {
             if (isMobile() && isWeixin()) {
@@ -410,10 +410,12 @@ EOF;
         $eyou_referurl = session('eyou_referurl');
         if (empty($eyou_referurl)) {
             $eyou_referurl = url('user/Users/index', '', true, true);
+        } else {
+            $eyou_referurl = htmlspecialchars_decode($eyou_referurl);
         }
 
         // 微信配置信息
-        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
         $appid  = $WeChatLoginConfig['appid'];
         $secret = $WeChatLoginConfig['appsecret'];
         $code   = input('param.code/s');
@@ -501,7 +503,7 @@ EOF;
     // 授权之后，获取会员信息
     public function get_wechat_info()
     {
-        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+        $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
 
         // 微信配置信息
         $appid  = $WeChatLoginConfig['appid'];
@@ -574,6 +576,8 @@ EOF;
             $eyou_referurl = session('eyou_referurl');
             if (empty($eyou_referurl)) {
                 $eyou_referurl = url('user/Users/index', '', true, true);
+            } else {
+                $eyou_referurl = htmlspecialchars_decode($eyou_referurl);
             }
             // 登录后的业务逻辑
             session('eyou_referurl', '');
@@ -631,6 +635,8 @@ EOF;
                 $eyou_referurl = session('eyou_referurl');
                 if (empty($eyou_referurl)) {
                     $eyou_referurl = url('user/Users/index', '', true, true);
+                } else {
+                    $eyou_referurl = htmlspecialchars_decode($eyou_referurl);
                 }
                 // 登录后的业务逻辑
                 session('eyou_referurl', '');
@@ -650,7 +656,7 @@ EOF;
         if ($this->users_id > 0) $this->redirect('user/Users/centre');
 
         // 回跳路径
-        $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
+        $referurl = input('param.referurl/s', null, 'urldecode');
         if (empty($referurl)) {
             if (isset($_SERVER['HTTP_REFERER']) && stristr($_SERVER['HTTP_REFERER'], $this->request->host())) {
                 $referurl = $_SERVER['HTTP_REFERER'];
@@ -659,19 +665,20 @@ EOF;
             }
         }
         $referurl = strip_tags($referurl);
+        $referurl = htmlspecialchars($referurl, ENT_QUOTES, 'UTF-8');
 
         // 切换账号后，在动态URL模式下登录404，与付费文档有关
-        $referurl_2 = input('param.referurl/s', null, 'htmlspecialchars_decode');
+        $referurl_2 = input('param.referurl/s');
         if (stristr($referurl_2, '&referurl=')) {
             parse_str($referurl_2, $parse);
-            $referurl = str_replace("&referurl={$parse['referurl']}", "&referurl=".urlencode($parse['referurl']), $referurl);
+            $referurl = str_replace("&referurl=".htmlspecialchars($parse['referurl'], ENT_QUOTES, 'UTF-8'), "&referurl=".urlencode($parse['referurl']), $referurl);
         }
 
         session('eyou_referurl', $referurl);
 
         // 若为微信端并且开启微商城模式则重定向直接使用微信登录
         if (isWeixin() && isMobile() && !empty($this->usersConfig['shop_micro'])) {
-            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? unserialize($this->usersConfig['wechat_login_config']) : [];
+            $WeChatLoginConfig = !empty($this->usersConfig['wechat_login_config']) ? safe_unserialize($this->usersConfig['wechat_login_config']) : [];
             if (!empty($WeChatLoginConfig) && !IS_AJAX) {
                 $this->redirect('user/Users/ajax_wechat_login');
                 exit;
@@ -715,12 +722,12 @@ EOF;
             }
 
             $where = [];
-            $rawStr = " username = '{$post['username']}' ";
             if (check_mobile($post['username'])) {
-                $rawStr .= " OR (mobile = '{$post['username']}' AND is_mobile = 1)";
+                $where[] = Db::raw(" username = :username1 OR (mobile = :username2 AND is_mobile = 1)");
+                $users = $this->users_db->where($where)->bind(['username1' => $post['username'], 'username2' => $post['username']])->find();
+            } else {
+                $users = $this->users_db->where('username', $post['username'])->find();
             }
-            $where[] = Db::raw($rawStr);
-            $users = $this->users_db->where($where)->find();
             if (!empty($users['is_del'])) $users = [];
 
             $uc_uid = 0;
@@ -775,6 +782,8 @@ EOF;
                     }elseif (!empty($users_config['users_login_jump_type']) && 4 == $users_config['users_login_jump_type']){
                         $referurl = htmlspecialchars_decode($users_config['users_login_jump_url']);//跳到自定义URL
                         $referurl = strip_tags($referurl);
+                    }else{
+                        $referurl = htmlspecialchars_decode($referurl);
                     }
                     // 是否绑定了微站点，否则自动绑定
                     auto_bind_wechatlogin($users, $referurl);
@@ -792,7 +801,7 @@ EOF;
         if (is_dir('./weapp/WxLogin/')) {
             $wx = Db::name('weapp')->field('data, status, config')->where(['code' => 'WxLogin'])->find();
             if (!empty($wx)) {
-                $wx['data'] = !empty($wx['data']) ? unserialize($wx['data']) : [];
+                $wx['data'] = !empty($wx['data']) ? safe_unserialize($wx['data']) : [];
                 if ($wx['status'] == 1 && !empty($wx['data']['login_show']) && $wx['data']['login_show'] == 1) $weapp_wxlogin = 1;
                 // 使用场景 0 PC+手机 1 手机 2 PC
                 $wx['config'] = json_decode($wx['config'], true);
@@ -812,7 +821,7 @@ EOF;
         if (is_dir('./weapp/GoogleLogin/')) {
             $googledata         = Db::name('weapp')->field('data,status,config')->where(['code' => 'GoogleLogin'])->find();
             if (!empty($googledata)) {
-                $googledata['data'] = !empty($googledata['data']) ? unserialize($googledata['data']) : [];
+                $googledata['data'] = !empty($googledata['data']) ? safe_unserialize($googledata['data']) : [];
                 if ($googledata['status'] == 1 && !empty($googledata['data']['login_show']) && $googledata['data']['login_show'] == 1) $weapp_googlelogin = 1;
                 // 使用场景 0 PC+手机 1 手机 2 PC
                 $googledata['config'] = json_decode($googledata['config'], true);
@@ -832,7 +841,7 @@ EOF;
         if (is_dir('./weapp/QqLogin/')) {
             $qq         = Db::name('weapp')->field('data,status,config')->where(['code' => 'QqLogin'])->find();
             if (!empty($qq)) {
-                $qq['data'] = !empty($qq['data']) ? unserialize($qq['data']) : [];
+                $qq['data'] = !empty($qq['data']) ? safe_unserialize($qq['data']) : [];
                 if ($qq['status'] == 1 && !empty($qq['data']['login_show']) && $qq['data']['login_show'] == 1) $weapp_qqlogin = 1;
                 // 使用场景 0 PC+手机 1 手机 2 PC
                 $qq['config'] = json_decode($qq['config'], true);
@@ -851,7 +860,7 @@ EOF;
         if (is_dir('./weapp/Wblogin/')) {
             $wb         = Db::name('weapp')->field('data,status,config')->where(['code' => 'Wblogin'])->find();
             if (!empty($wb)) {
-                $wb['data'] = !empty($wb['data']) ? unserialize($wb['data']) : [];
+                $wb['data'] = !empty($wb['data']) ? safe_unserialize($wb['data']) : [];
                 if ($wb['status'] == 1 && !empty($wb['data']['login_show']) && $wb['data']['login_show'] == 1) $weapp_wblogin = 1;
                 // 使用场景 0 PC+手机 1 手机 2 PC
                 $wb['config'] = json_decode($wb['config'], true);
@@ -878,7 +887,7 @@ EOF;
         /*等保密码复杂度验证 end*/
 
         if (1 == config('global.opencodetype')) {
-            $type = input('param.type/s');
+            $type = htmlspecialchars(input('param.type/s'), ENT_QUOTES, 'UTF-8');
             $this->assign('type', $type);
         }
 
@@ -954,7 +963,7 @@ EOF;
                 // 会员users_id存入session
                 model('EyouUsers')->loginAfter($users);
 
-                $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
+                $referurl = input('param.referurl/s', null, 'urldecode');
                 if (empty($referurl)) {
                     if (isset($_SERVER['HTTP_REFERER']) && stristr($_SERVER['HTTP_REFERER'], $this->request->host())) {
                         $referurl = $_SERVER['HTTP_REFERER'];
@@ -963,6 +972,7 @@ EOF;
                     }
                 }
                 $referurl = strip_tags($referurl);
+                $referurl = htmlspecialchars($referurl, ENT_QUOTES, 'UTF-8');
                 session('eyou_referurl', $referurl);
                 $users_config = getUsersConfigData('users');
                 if (!empty($users_config['users_login_jump_type']) && 1 == $users_config['users_login_jump_type']){
@@ -972,6 +982,8 @@ EOF;
                 }elseif (!empty($users_config['users_login_jump_type']) && 4 == $users_config['users_login_jump_type']){
                     $referurl = htmlspecialchars_decode($users_config['users_login_jump_url']);//跳到自定义URL
                     $referurl = strip_tags($referurl);
+                }else{
+                    $referurl = htmlspecialchars_decode($referurl);
                 }
 
                 // 是否绑定了微站点，否则自动绑定
@@ -980,7 +992,73 @@ EOF;
                 $this->success(foreign_lang('users24', $this->home_lang), $referurl);
 
             } else {
-                $this->error(foreign_lang('users26', $this->home_lang), null, ['status' => 'vertify']);
+                // 判断是否开启手机登录自动注册
+                $users_mobile_login_auto_reg = !empty($this->usersConfig['users_mobile_login_auto_reg']) ? $this->usersConfig['users_mobile_login_auto_reg'] : 0;
+                if (empty($users_mobile_login_auto_reg)) {
+                    $this->error(foreign_lang('users26', $this->home_lang), null, ['status' => 'vertify']);
+                }
+
+                // 未注册，自动注册新会员
+                $users_verification = !empty($this->usersConfig['users_verification']) ? $this->usersConfig['users_verification'] : 0;
+
+                // 处理判断是否为后台审核
+                $data = [];
+                if (1 == $users_verification) $data['is_activation'] = 0;
+
+                // 添加会员到会员表
+                $data['username'] = rand_username('tel' . substr($post['mobile'], -6), 'tel');
+                $data['nickname'] = $data['username'];
+                $data['is_mobile'] = 1;
+                $data['mobile'] = $post['mobile'];
+                $data['head_pic'] = ROOT_DIR . '/public/static/common/images/dfboy.png';
+                $data['reg_time'] = getTime();
+                $data['last_login'] = getTime();
+                $data['last_ip'] = clientIP();
+                $data['register_place'] = 2;
+                $data['lang'] = $this->home_lang;
+
+                // 来源
+                if (isMobile()) {
+                    $data['source'] = isWeixin() ? 3 : 2;
+                }
+
+                // 查询默认会员级别
+                $level_id = $this->users_level_db->where(['is_system' => 1])->getField('level_id');
+                $data['level'] = $level_id;
+
+                $users_id = $this->users_db->insertGetId($data);
+
+                if (!empty($users_id)) {
+                    $data['users_id'] = $users_id;
+                    // 添加手机号到会员属性表
+                    Db::name('users_list')->insert([
+                        'users_id' => $users_id,
+                        'para_id' => 1,
+                        'info' => $post['mobile'],
+                        'add_time' => getTime(),
+                        'update_time' => getTime()
+                    ]);
+
+                    // 注册成功后的业务逻辑
+                    model('EyouUsers')->regAfter($users_id);
+
+                    // 登录
+                    $newUsers = $this->users_db->where('users_id', $users_id)->find();
+                    model('EyouUsers')->loginAfter($newUsers);
+
+                    $referurl = input('param.referurl/s', null, 'urldecode');
+                    if (empty($referurl)) {
+                        $referurl = url("user/Users/centre");
+                    }
+                    $referurl = strip_tags($referurl);
+                    $referurl = htmlspecialchars($referurl, ENT_QUOTES, 'UTF-8');
+
+                    // 是否绑定了微站点
+                    auto_bind_wechatlogin($newUsers, $referurl);
+
+                    $this->success(foreign_lang('users39', $this->home_lang), $referurl);
+                }
+                $this->error(foreign_lang('system11', $this->home_lang), null, ['status' => 'vertify']);
             }
         }
         $this->error(foreign_lang('system11', $this->home_lang), null, ['status' => 'vertify']);
@@ -1103,6 +1181,22 @@ EOF;
                     $this->error(foreign_lang('users20', $this->home_lang), null, ['status' => 'vertify']);
                 }
             }
+
+            /*限制注册 - 同一IP注册时间限制检查*/
+            $users_reg_limit_time = isset($this->usersConfig['users_reg_limit_time']) && $this->usersConfig['users_reg_limit_time'] !== '' ? intval($this->usersConfig['users_reg_limit_time']) : 24;
+            if ($users_reg_limit_time > 0) {
+                $current_ip = clientIP();
+                $limit_time = getTime() - ($users_reg_limit_time * 3600); // 转换为秒
+                $reg_count = $this->users_db->where([
+                    'last_ip' => $current_ip,
+                    'register_place' => 2, // 前台注册
+                    'reg_time' => ['>=', $limit_time]
+                ])->count();
+                if ($reg_count > 0) {
+                    $this->error("同一IP在{$users_reg_limit_time}小时内只能注册一次，请稍后再试！", null, ['status' => 1]);
+                }
+            }
+            /*--end*/
 
             if (is_dir('./weapp/UCenter/')) {
                 $ucenter = new \weapp\UCenter\logic\UCenterLogic();
@@ -1309,6 +1403,7 @@ EOF;
             $referurl = urldecode($referurl);
         }
         $referurl = strip_tags($referurl);
+        $referurl = htmlspecialchars($referurl, ENT_QUOTES, 'UTF-8');
         cookie('referurl', $referurl);
         $this->assign('referurl', $referurl);
 
@@ -1316,7 +1411,7 @@ EOF;
         $weapp_wxlogin = 0;
         if (is_dir('./weapp/WxLogin/')) {
             $wx         = Db::name('weapp')->field('data,status,config')->where(['code' => 'WxLogin'])->find();
-            $wx['data'] = unserialize($wx['data']);
+            $wx['data'] = safe_unserialize($wx['data']);
             if ($wx['status'] == 1 && $wx['data']['login_show'] == 1) {
                 $weapp_wxlogin = 1;
             }
@@ -1337,7 +1432,7 @@ EOF;
         if (is_dir('./weapp/GoogleLogin/')) {
             $googledata         = Db::name('weapp')->field('data,status,config')->where(['code' => 'GoogleLogin'])->find();
             if (!empty($googledata)) {
-                $googledata['data'] = !empty($googledata['data']) ? unserialize($googledata['data']) : [];
+                $googledata['data'] = !empty($googledata['data']) ? safe_unserialize($googledata['data']) : [];
                 if ($googledata['status'] == 1 && !empty($googledata['data']['login_show']) && $googledata['data']['login_show'] == 1) $weapp_googlelogin = 1;
                 // 使用场景 0 PC+手机 1 手机 2 PC
                 $googledata['config'] = json_decode($googledata['config'], true);
@@ -1356,7 +1451,7 @@ EOF;
         $weapp_qqlogin = 0;
         if (is_dir('./weapp/QqLogin/')) {
             $qq         = Db::name('weapp')->field('data,status,config')->where(['code' => 'QqLogin'])->find();
-            $qq['data'] = unserialize($qq['data']);
+            $qq['data'] = safe_unserialize($qq['data']);
             if ($qq['status'] == 1 && $qq['data']['login_show'] == 1) {
                 $weapp_qqlogin = 1;
             }
@@ -1375,7 +1470,7 @@ EOF;
         $weapp_wblogin = 0;
         if (is_dir('./weapp/Wblogin/')) {
             $wb         = Db::name('weapp')->field('data,status,config')->where(['code' => 'Wblogin'])->find();
-            $wb['data'] = unserialize($wb['data']);
+            $wb['data'] = safe_unserialize($wb['data']);
             if ($wb['status'] == 1 && $wb['data']['login_show'] == 1) {
                 $weapp_wblogin = 1;
             }
@@ -1475,6 +1570,22 @@ EOF;
             }else{
                 $this->error(foreign_lang('users31', $this->home_lang), null, ['status' => 1]);
             }
+
+            /*限制注册 - 同一IP注册时间限制检查*/
+            $users_reg_limit_time = isset($this->usersConfig['users_reg_limit_time']) && $this->usersConfig['users_reg_limit_time'] !== '' ? intval($this->usersConfig['users_reg_limit_time']) : 24;
+            if ($users_reg_limit_time > 0) {
+                $current_ip = clientIP();
+                $limit_time = getTime() - ($users_reg_limit_time * 3600); // 转换为秒
+                $reg_count = $this->users_db->where([
+                    'last_ip' => $current_ip,
+                    'register_place' => 2, // 前台注册
+                    'reg_time' => ['>=', $limit_time]
+                ])->count();
+                if ($reg_count > 0) {
+                    $this->error("同一IP在{$users_reg_limit_time}小时内只能注册一次，请稍后再试！", null, ['status' => 1]);
+                }
+            }
+            /*--end*/
 
             // 会员设置
             $users_verification = !empty($this->usersConfig['users_verification']) ? $this->usersConfig['users_verification'] : 0;
@@ -2242,7 +2353,7 @@ EOF;
             }
         }
 
-        $title = input('param.title/s');
+        $title = htmlspecialchars(input('param.title/s'), ENT_QUOTES, 'UTF-8');
         $this->assign('title', $title);
         return $this->fetch();
     }
@@ -2348,11 +2459,11 @@ EOF;
         }
 
         if (1 == config('global.opencodetype')) {
-            $opt = input('param.opt/s');
+            $opt = htmlspecialchars(input('param.opt/s'), ENT_QUOTES, 'UTF-8');
             $this->assign('opt', $opt);
         }
 
-        $title = input('param.title/s');
+        $title = htmlspecialchars(input('param.title/s'), ENT_QUOTES, 'UTF-8');
         $this->assign('title', $title);
 
         // $rand_token_name = '__token__bind_'.get_rand_str(32, 0, 1);
@@ -2376,6 +2487,8 @@ EOF;
         cookie('users_id', null);
         cookie('dealerParam', null);
         session('dealerParam', null);
+        // session('coze_session_name', null);
+        // cookie('coze_session_name', null);
 
         // 设置不重复执行生成游客标记，3秒后自动过期失效
         \think\Cookie::delete('doNotExecute');
@@ -2656,15 +2769,20 @@ EOF;
     // 视频订单详情页
     public function media_order_details()
     {
-        $order_id = input('param.order_id');
+        $order_id = input('param.order_id/d', 0);
         if (!empty($order_id)) {
-            // 查询订单信息
+            // 查询订单信息，限定为当前登录会员的订单，防止越权查看
             $OrderData = Db::name('media_order')
                 ->field('a.*, product_id,c.aid,c.typeid,c.channel,d.*')
                 ->alias('a')
                 ->join('__ARCHIVES__ c', 'a.product_id = c.aid', 'LEFT')
                 ->join('__ARCTYPE__ d', 'c.typeid = d.id', 'LEFT')
-                ->find($order_id);
+                ->where('a.order_id', $order_id)
+                ->where('a.users_id', $this->users_id)
+                ->find();
+            if (empty($OrderData)) {
+                $this->error('订单不存在或无权访问！');
+            }
 
             // 查询会员数据
             $UsersData = $this->users_db->find($OrderData['users_id']);
@@ -2696,7 +2814,7 @@ EOF;
         //积分类型
         $score_type_arr = config('global.score_type');
         if (empty($score_type_arr)) {
-            $score_type_arr = [1=>'提问',2=>'回答',3=>'最佳答案',4=>'悬赏退回',5=>'每日签到',6=>'后台操作',7=>'问答悬赏',8=>'消费赠送',9=>'积分兑换',10=>'登录赠送',11=>'积分兑换',12=>'订单退回'];
+            $score_type_arr = [1=>'提问',2=>'回答',3=>'最佳答案',4=>'悬赏退回',5=>'每日签到',6=>'后台操作',7=>'问答悬赏',8=>'消费赠送',9=>'积分兑换',10=>'登录赠送',11=>'积分兑换',12=>'订单退回',13=>'文章支付'];
             config('global.score_type', $score_type_arr);
         }
         $this->assign('score_type_arr', $score_type_arr);
@@ -2825,15 +2943,20 @@ EOF;
     // 文章订单详情页
     public function article_order_details()
     {
-        $order_id = input('param.order_id');
+        $order_id = input('param.order_id/d', 0);
         if (!empty($order_id)) {
-            // 查询订单信息
+            // 查询订单信息，限定为当前登录会员的订单，防止越权查看
             $OrderData = Db::name('article_order')
                 ->field('a.*, product_id,c.aid,c.typeid,c.channel,d.*')
                 ->alias('a')
                 ->join('__ARCHIVES__ c', 'a.product_id = c.aid', 'LEFT')
                 ->join('__ARCTYPE__ d', 'c.typeid = d.id', 'LEFT')
-                ->find($order_id);
+                ->where('a.order_id', $order_id)
+                ->where('a.users_id', $this->users_id)
+                ->find();
+            if (empty($OrderData)) {
+                $this->error('订单不存在或无权访问！');
+            }
 
             // 查询会员数据
             $UsersData = $this->users_db->find($OrderData['users_id']);
@@ -2918,15 +3041,20 @@ EOF;
     // 下载订单详情页
     public function download_order_details()
     {
-        $order_id = input('param.order_id');
+        $order_id = input('param.order_id/d', 0);
         if (!empty($order_id)) {
-            // 查询订单信息
+            // 查询订单信息，限定为当前登录会员的订单，防止越权查看
             $OrderData = Db::name('download_order')
                 ->field('a.*, product_id,c.aid,c.typeid,c.channel,d.*')
                 ->alias('a')
                 ->join('__ARCHIVES__ c', 'a.product_id = c.aid', 'LEFT')
                 ->join('__ARCTYPE__ d', 'c.typeid = d.id', 'LEFT')
-                ->find($order_id);
+                ->where('a.order_id', $order_id)
+                ->where('a.users_id', $this->users_id)
+                ->find();
+            if (empty($OrderData)) {
+                $this->error('订单不存在或无权访问！');
+            }
 
             // 查询会员数据
             $UsersData = $this->users_db->find($OrderData['users_id']);

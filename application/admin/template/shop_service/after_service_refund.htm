@@ -75,6 +75,7 @@
                         <label title="用户使用微信支付下单才可以选择">
                             <input type="radio" name="refund_way" id="refund_way" value="3" {eq name="$Service.refund_way" value="3"} checked="true" {/eq} {if condition="'wechat' != $Order.pay_name || empty($usersConfig.pay_original_refund)"} disabled="true" {/if}>原路退回(微信)
                         </label>
+                        <p class="notic2">如需使用原路退回功能，请先到商城中心><a href="JavaScript:void(0);" onclick="parent.window.location.href = '{:url('Shop/conf')}'">商城配置</a>里开启</p>
                     </dd>
                 </dl>
 

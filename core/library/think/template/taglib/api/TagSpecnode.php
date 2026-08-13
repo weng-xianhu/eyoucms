@@ -21,7 +21,7 @@ class TagSpecnode extends Base
         $this->fieldLogic = new FieldLogic();
     }
 
-    public function getSpecnode($aid = 0,$title = '', $code = '',$thumb = '',$is_list = 0,$addfields = ''){
+    public function getSpecnode($aid = 0,$title = '', $code = '',$thumb = '',$is_list = 0,$addfields = '',$page = 1,$pagesize = 10,$orderby = ''){
         $aid = !empty($aid) ? intval($aid) : $this->aid;
         if (empty($aid)) {
             echo '标签apiSpecnodeList报错：缺少属性 aid 值，请填写专题文档ID。';
@@ -56,14 +56,15 @@ class TagSpecnode extends Base
             $keyword = !empty($specialNodeInfo['keywords']) ? $specialNodeInfo['keywords'] : '';
             $typeid = !empty($specialNodeInfo['typeid']) ? $specialNodeInfo['typeid'] : 0;
             $aidlist = !empty($specialNodeInfo['aidlist']) ? $specialNodeInfo['aidlist'] : '';
-            $limit = !empty($specialNodeInfo['row']) ? $specialNodeInfo['row'] : 10;
+            // 使用传入的 page 和 pagesize 参数计算 limit
+            $offset = ($page - 1) * $pagesize;
+            $limit = $offset . ',' . $pagesize;
             $titlelen = !empty($specialNodeInfo['titlelen']) ? $specialNodeInfo['titlelen'] : 100;
             $bodylen = !empty($specialNodeInfo['infolen']) ? $specialNodeInfo['infolen'] : 160;
 
             $isauto = intval($isauto);
             $titlelen = intval($titlelen);
             $bodylen = intval($bodylen);
-            $limit = str_replace('，', ',', $limit);
 
             $aidlistArr = [];
             if (!empty($aidlist)) {
@@ -132,7 +133,12 @@ class TagSpecnode extends Base
                     $keyword = implode('|', $keywordArr);
                     $condition[] = Db::raw(" CONCAT(a.title,a.seo_keywords) REGEXP '$keyword' ");
                 }
-                $orderBy = "a.sort_order asc, a.aid desc";
+                // 处理自定义排序
+                if (!empty($orderby)) {
+                    $orderBy = $this->parseOrderby($orderby);
+                } else {
+                    $orderBy = "a.sort_order asc, a.aid desc";
+                }
             }
             $condition['a.is_jump'] = 0;
             $condition['a.arcrank'] = ['gt', -1];
@@ -153,6 +159,13 @@ class TagSpecnode extends Base
                 }
             }
             /*end*/
+
+            // 查询总数，用于分页
+            $total = Db::name('archives')
+                ->alias('a')
+                ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
+                ->where($condition)
+                ->count();
 
             $list = Db::name('archives')->field("b.*, b.current_channel as channel_id, a.*")
                 ->alias('a')
@@ -227,18 +240,95 @@ class TagSpecnode extends Base
             /*--end*/
 
             $specialNodeList[$k]['arc_list'] = $list;
+            $specialNodeList[$k]['total'] = $total;
         }
-        if (0 == $is_list){
-            $specialNodeList = $specialNodeList[0];
+        
+        // 收集所有节点的文章数据和总数
+        $allArticles = [];
+        $totalCount = 0;
+        foreach ($specialNodeList as $node) {
+            if (!empty($node['arc_list'])) {
+                $allArticles = array_merge($allArticles, $node['arc_list']);
+            }
+            if (!empty($node['total'])) {
+                $totalCount += $node['total'];
+            }
         }
 
-        $result = [
-            'info'=>$specialNodeList,
-            'data' => !empty($list) ? $list : [], // 赋值数据集
-        ];
+        if (0 == $is_list){
+            $specialNodeList = $specialNodeList[0];
+            $result = [
+                'info'=>$specialNodeList,
+                'data' => !empty($specialNodeList['arc_list']) ? $specialNodeList['arc_list'] : [], // 单个节点的数据
+                'total' => !empty($specialNodeList['total']) ? $specialNodeList['total'] : 0, // 总数
+            ];
+        } else {
+            $result = [
+                'info'=>$specialNodeList,
+                'data' => $allArticles, // 所有节点的文章数据
+                'total' => $totalCount, // 总数
+            ];
+        }
 
         return $result;
 
+    }
+
+    /**
+     * 解析排序参数
+     * @param string $orderby 排序参数
+     * @return string 排序SQL
+     */
+    private function parseOrderby($orderby = '')
+    {
+        if (empty($orderby)) {
+            return "a.sort_order asc, a.aid desc";
+        }
+
+        // 允许的排序字段
+        $allowFields = [
+            'aid', 'add_time', 'update_time', 'click', 'sort_order',
+            'is_recom', 'is_head', 'is_special', 'is_jump', 'is_litpic'
+        ];
+
+        // 处理预设排序方式
+        $orderby = trim($orderby);
+        switch ($orderby) {
+            case 'hot':
+            case 'click':
+                return "a.click desc, a.aid desc";
+            case 'new':
+            case 'add_time':
+                return "a.add_time desc, a.aid desc";
+            case 'aid':
+                return "a.aid desc";
+            case 'sort_order':
+                return "a.sort_order asc, a.aid desc";
+            default:
+                // 处理自定义多字段排序，如 "is_recom desc, sort_order asc"
+                $orderParts = explode(',', $orderby);
+                $validOrders = [];
+                foreach ($orderParts as $part) {
+                    $part = trim($part);
+                    if (empty($part)) continue;
+
+                    // 解析字段和排序方向
+                    $segments = preg_split('/\s+/', $part);
+                    $field = $segments[0];
+                    $direction = isset($segments[1]) ? strtolower($segments[1]) : 'desc';
+
+                    // 验证字段是否允许
+                    if (in_array($field, $allowFields)) {
+                        $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
+                        $validOrders[] = "a.{$field} {$direction}";
+                    }
+                }
+
+                if (!empty($validOrders)) {
+                    return implode(', ', $validOrders);
+                }
+                return "a.sort_order asc, a.aid desc";
+        }
     }
 
 }

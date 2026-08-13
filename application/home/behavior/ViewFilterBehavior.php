@@ -39,7 +39,7 @@ class ViewFilterBehavior {
         $this->AppEndJsCode($params); // 自动追加阅读权限JS事件
         $this->AppFootprintJsCode($params); //自动追加足迹js事件
         // 外贸助手的语言包
-        model('ForeignPack')->appendForeignGlobalJs($params);
+        // model('ForeignPack')->appendForeignGlobalJs($params);
     }
     
     /**
@@ -51,12 +51,12 @@ class ViewFilterBehavior {
         if (!empty(self::$web_users_switch)) {
             $root_dir = ROOT_DIR;
             $version   = getCmsVersion();
+            // 追加JS到头部
             $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_global.js?v={$version}");
-            $JsHtml = <<<EOF
+            $JsHtml_head = <<<EOF
 <script type="text/javascript" src="{$srcurl}"></script>
 EOF;
-            // 追加替换JS
-            $params = str_ireplace('</head>', htmlspecialchars_decode($JsHtml)."\n</head>", $params);
+            $params = str_ireplace('</head>', htmlspecialchars_decode($JsHtml_head)."\n</head>", $params);
         }
     }
 
@@ -72,7 +72,12 @@ EOF;
                 $name = 'web_thirdcode_' . (isMobile() ? 'wap' : 'pc'); // PC端与手机端的变量名自适应，可彼此通用
                 $web_thirdcode = tpCache('web.'.$name);
                 if (!empty($web_thirdcode)) {
-                    $params = str_ireplace('</body>', htmlspecialchars_decode($web_thirdcode)."\n</body>", $params);
+                    // 使用安全过滤函数处理第三方代码，移除危险属性
+                    $safe_thirdcode = htmlspecialchars_decode($web_thirdcode);
+                    // 移除危险的事件属性，但保留script标签（统计代码需要）
+                    $safe_thirdcode = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/is', '', $safe_thirdcode);
+                    $safe_thirdcode = preg_replace('/\s+on\w+\s*=\s*[^\s>]*/is', '', $safe_thirdcode);
+                    $params = str_ireplace('</body>', $safe_thirdcode."\n</body>", $params);
                 }
             }
         }
@@ -91,7 +96,7 @@ EOF;
         if (strstr($params, 'eyou_arcclick') || strstr($params, 'ey_v378141') || !empty($web_users_switch)) {
             $lang = get_home_lang();
             $lang_str = config('lang_switch_on') ? " var __lang__='{$lang}';" : '';
-            $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_footer.js?v={$version}");
+            $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/ey_footer.js?v={$version}.0");
             $ey_footer_js = <<<EOF
 <script type="text/javascript">var root_dir="{$root_dir}";var ey_aid={$aid};{$lang_str}</script>
 <script language="javascript" type="text/javascript" src="{$srcurl}"></script>
@@ -137,7 +142,8 @@ EOF;
             $data['VideoLogicUrl'] = ROOT_DIR . "/index.php?m=api&c=Ajax&a=video_logic&_ajax=1";
             $data['LevelCentreUrl'] = ROOT_DIR . "/index.php?m=user&c=Level&a=level_centre&aid=".$aid;
             $data['aid'] = $aid;
-            $data_json = json_encode($data);
+            // 安全修复：使用安全的JSON编码选项防止XSS
+            $data_json = json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
             $version   = getCmsVersion();
             $root_dir = ROOT_DIR;
             $srcurl = get_absolute_url("{$root_dir}/public/static/common/js/view_arcrank.js?v={$version}");

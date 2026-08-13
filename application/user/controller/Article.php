@@ -47,6 +47,11 @@ class Article extends Base
             $where['order_status'] = 0;
             $articleOrder = $this->article_order_db->where($where)->order('order_id desc')->find();
 
+            // 清除之前的 cookie
+            if (!empty($articleOrder['order_id']) && !empty($articleOrder['order_code'])) {
+                Cookie::delete(md5(json_encode(['type' => 9, 'order_id' => $articleOrder['order_id'], 'order_code' => $articleOrder['order_code']])));
+            }
+
             // 查询文章文档内容
             $where = [
                 'is_del' => 0,
@@ -54,7 +59,7 @@ class Article extends Base
                 'aid' => $post['aid'],
                 'arcrank' => ['>', -1]
             ];
-            $archives = Db::name('archives')->field('aid, title, litpic, users_price')->where($where)->find();
+            $archives = Db::name('archives')->field('aid, title, litpic, users_price, users_score, restric_type')->where($where)->find();
             if (empty($archives)) $this->error('操作异常，请刷新重试');
             $archives['users_price'] = get_discount_price($this->users, $archives['users_price']);
 
@@ -68,7 +73,8 @@ class Article extends Base
                     'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'order_status'    => 0,
-                    'order_amount'    => $archives['users_price'],
+                    'order_score'     => !empty($archives['restric_type']) && 4 === intval($archives['restric_type']) ? $archives['users_score'] : 0,
+                    'order_amount'    => !empty($archives['restric_type']) && 4 !== intval($archives['restric_type']) ? $archives['users_price'] : 0,
                     'product_id'      => $archives['aid'],
                     'product_name'    => $archives['title'],
                     'product_litpic'  => get_default_pic($archives['litpic']),
@@ -82,7 +88,8 @@ class Article extends Base
                     'order_code'      => $orderCode,
                     'users_id'        => $this->users_id,
                     'order_status'    => 0,
-                    'order_amount'    => $archives['users_price'],
+                    'order_score'     => !empty($archives['restric_type']) && 4 === intval($archives['restric_type']) ? $archives['users_score'] : 0,
+                    'order_amount'    => !empty($archives['restric_type']) && 4 !== intval($archives['restric_type']) ? $archives['users_price'] : 0,
                     'pay_time'        => '',
                     'pay_name'        => '',
                     'wechat_pay_type' => '',
@@ -111,7 +118,7 @@ class Article extends Base
                 // 先 json_encode 后 md5 加密信息
                 $paystr = md5(json_encode($paydata));
                 // 清除之前的 cookie
-                Cookie::delete($paystr);
+                // Cookie::delete($paystr);
                 // 存入 cookie
                 cookie($paystr, $paydata);
                 // 跳转链接
@@ -130,7 +137,7 @@ class Article extends Base
     // 充值详情
     public function pay_recharge_detail()
     {
-        $url = url('user/Article/index');
+        $url = url('user/Users/article_index');
         // 接收数据读取解析
         $paystr = input('param.paystr/s', '');
         $paydata = !empty($paystr) ? cookie($paystr) : [];

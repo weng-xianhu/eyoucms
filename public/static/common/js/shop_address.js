@@ -333,3 +333,55 @@ function layerColse() {
     var parentObj = parent.layer.getFrameIndex(window.name);
     parent.layer.close(parentObj);
 }
+
+$(document).ready(function () {
+    //百度智能识别地址
+    $('.identify-btn').click(function() {        
+        let url = $(this).attr('data-url');        
+        let frm = $(this).attr('data-frm'); //1pc 2移动端
+        let content = $('#weapp_ai_address').val();
+        if (content.trim() === '') {
+            layer.msg('请输入地址文本', {time: 1500});
+            return false;
+        }
+        layer_loading('正在处理');                          
+        $.ajax({
+            url: url,
+            data: {str: content},
+            type:'post',
+            dataType:'json',
+            success:function(res){
+                layer.closeAll();    
+                if(res.code==1){
+                    if(frm==1){
+                        $('#mobile').parent().addClass('input-focus');
+                        $('#consignee').parent().addClass('input-focus');
+                        $('#address').parent().addClass('input-focus');
+                    }                         
+                    $('#consignee').val(res.data.person);
+                    $('#mobile').val(res.data.phonenum);
+                    $('#address').val(res.data.town+res.data.detail);                    
+                    if(frm==1){
+                        $('#address-title').val(res.data.province+' '+res.data.city+' '+res.data.county);
+                        $('.address-selectd').empty().append('<span class="province" onclick="showAddressList(\'province\');">'+res.data.province+'</span><span class="city" onclick="showAddressList(\'city\');">'+res.data.city+'</span><span class="district" onclick="showAddressList(\'district\');">'+res.data.county+'</span><span class="gray">选择区县</span>');
+                        $('.address-list-city').empty().append(res.data.city_str);
+                        $('.address-list-district').empty().append(res.data.county_str);    
+                    }else{ //移动端                        
+                        $('#city').empty().append(res.data.city_select_html);
+                        $('#district').empty().append(res.data.county_select_html);
+                    }
+                    $('#province').val(res.data.province_id);
+                    $('#city').val(res.data.city_id);                    
+                    $('#district').val(res.data.county_id);
+                }else{
+                    layer.msg(res.msg, {time: 1500});                        
+                    return false;
+                }                                                 
+            },
+            error : function(e) {
+                layer.closeAll();                                            
+                layer.msg(e.responseText, {time: 1500});   
+            }
+        });               
+    });
+});

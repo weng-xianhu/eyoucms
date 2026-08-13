@@ -46,7 +46,8 @@ class Uploadify extends Base
         $is_water  = input('is_water/d', 1);
         $default_size = intval($basicConfig['file_size'] * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
-        $size = empty($size) ? $default_size : $size*1024;
+        // 安全修复: 限制用户输入的文件大小不能超过系统配置的最大值
+        $size = empty($size) ? $default_size : min($size * 1024, $default_size);
         $info = array(
             'num'      => $num,
             'title'    => '',          
@@ -72,7 +73,8 @@ class Uploadify extends Base
         $num  = input('num/d', '1');
         $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
-        $size = empty($size) ? $default_size : $size*1024;
+        // 安全修复: 限制用户输入的文件大小不能超过系统配置的最大值
+        $size = empty($size) ? $default_size : min($size * 1024, $default_size);
         $info = array(
             'num'      => $num,
             'title'    => '',          
@@ -124,8 +126,18 @@ class Uploadify extends Base
      */
     public function get_images_path($images_path = 'uploads')
     {
-       if ('uploads' != $images_path && !preg_match('#^(uploads)/(.*)$#i', $images_path)) {
+        // 1. 使用realpath获取真实路径
+        $base_path = realpath('./uploads');
+        $request_path = realpath('./' . $images_path);
+        
+        // 2. 检查是否在允许的目录内
+        if (false === $request_path || 0 !== strpos($request_path, $base_path)) {
             $this->error('非法访问！');
+        }
+        
+        // 3. 严格验证路径格式
+        if (!preg_match('#^uploads(/[\w\-]+)*$#', $images_path)) {
+            $this->error('路径格式错误！');
         }
 
         $func = input('func/s');
@@ -228,7 +240,8 @@ class Uploadify extends Base
         $num = input('num/d', '1');
         $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
-        $size = empty($size) ? $default_size : $size*1024;
+        // 安全修复: 限制用户输入的文件大小不能超过系统配置的最大值
+        $size = empty($size) ? $default_size : min($size * 1024, $default_size);
         $info = array(
             'num'=> $num,
             'title' => '',          
@@ -255,7 +268,8 @@ class Uploadify extends Base
         $num = input('num/d', '1');
         $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
-        $size = empty($size) ? $default_size : $size*1024;
+        // 安全修复: 限制用户输入的文件大小不能超过系统配置的最大值
+        $size = empty($size) ? $default_size : min($size * 1024, $default_size);
         $field = array(
             'aid' => $aid,
             'num' => $num,
@@ -283,7 +297,8 @@ class Uploadify extends Base
         $num = input('num/d', '1');
         $default_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 单位为b
         $size = input('size/d'); // 单位为kb
-        $size = empty($size) ? $default_size : $size*1024;
+        // 安全修复: 限制用户输入的文件大小不能超过系统配置的最大值
+        $size = empty($size) ? $default_size : min($size * 1024, $default_size);
         $width = input('width/d', 0);
         $height = input('height/d', 0);
         $info = array(
@@ -416,13 +431,15 @@ class Uploadify extends Base
         if (!is_dir($path)) return null;
         if(substr($path, strlen($path) - 1) != '/') $path .= '/';
         $handle = opendir($path);
+        // 安全修复: 转义正则特殊字符，防止正则表达式注入
+        $safeKey = !empty($key) ? preg_quote($key, '/') : '';
         while (false !== ($file = readdir($handle))) {
             if ($file != '.' && $file != '..') {
                 $path2 = $path . $file;
                 if (is_dir($path2)) {
                     $this->getfiles($path2, $allowFiles, $key, $files);
                 } else {
-                    if (preg_match("/\.(".$allowFiles.")$/i", $file) && preg_match("/.*". $key .".*/i", $file)) {
+                    if (preg_match("/\.(".$allowFiles.")$/i", $file) && (empty($safeKey) || preg_match("/.*". $safeKey .".*/i", $file))) {
                         //获取图像信息
                         $info = @getimagesize(ROOT_PATH.'/'.$path2);
                         $files[] = array(
@@ -593,8 +610,38 @@ class Uploadify extends Base
                     $filename = $post['filename'];
                 }
             }
+            
+            // 安全修复：严格的路径验证
+            
+            // 1. 规范化输入，移除路径穿越字符
+            $filename = trim($filename, '/.');
+            $filename = str_replace(['\\', '../', '..\\', './'], '', $filename);
+            
+            // 2. 确保路径以 /uploads/ 开头或 uploads/ 开头
             $filename = strstr($filename, "/uploads/");
+            if (empty($filename)) {
+                $filename = strstr($post['filename'], "uploads/");
+                if (!empty($filename)) {
+                    $filename = '/' . $filename;
+                }
+            }
             if (!empty($filename)){
+                // 3. 使用 realpath 进行路径规范化和验证
+                $full_path = ROOT_PATH . ltrim($filename, '/');
+                $real_path = realpath($full_path);
+                $base_path = realpath(ROOT_PATH . 'uploads/');
+                
+                // 4. 验证文件路径合法性
+                if (false === $real_path || false === $base_path || 0 !== strpos($real_path, $base_path)) {
+                    return; // 路径非法，阻止删除
+                }
+                
+                // 5. 验证文件是否存在
+                if (!file_exists($real_path)) {
+                    return;
+                }
+                
+                // 执行云存储删除逻辑
                 $weappList = Db::name('weapp')->where([
                     'status'    => 1,
                 ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')

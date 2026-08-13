@@ -22,6 +22,7 @@
         </div>
     </div>
 </div>
+{if condition="!is_internal_network()"}
 <div class="page nobg">
     <div class="flexigrid">
         <!-- 安全扫描 -->
@@ -53,23 +54,32 @@
                 </div>
             </div>
             <div class="security-scan-r">
-                <a class="scan-btn" onclick="scan();" href="javascript:void(0);">立即扫描</a>
+                <a class="scan-btn" onclick="scan();" href="javascript:void(0);">深度扫描</a>
+                <a class="" href="javascript:void(0);" data-href="{:url('Security/ddos_scan_doc')}" onclick="openFullframe(this, '设置定时任务', '90%', '90%');">设置定时任务？</a>
             </div>
         </div>
     </div>
 </div>
+{/if}
 <div class="page">
     <div class="flexigrid">
         <!-- 扫描结果 -->
         <div class="result">
             <div id="div_scanlist" {if condition="empty($ddosSetting['ddos_scan_is_finish'])"} style="display: none;" {/if}>
                 <div class="result-tip">
-                    <div id="scan_no_problem" {notempty name="$doubtdata['html']"} style="display: none;" {/notempty}>
+                    <div id="scan_no_problem" {if condition="empty($source_dirlist_total) || !empty($doubtdata['html'])"} style="display: none;" {/if}>
                         <i class="iconfont e-yanzhengmaguanli green"></i>共检查了<em class="scan_allpagetotal">{$ddosSetting['ddos_scan_allscantotal']}</em>个文件，没有发现问题。
                     </div>
-                    <div id="scan_yes_problem" class="scan-problem" {empty name="$doubtdata['html']"} style="display: none;" {/empty}>
+                    <div id="scan_init_tips" {if condition="!empty($source_dirlist_total)"} style="display: none;" {/if}>
+                        <i class="iconfont e-yanzhengmaguanli green"></i>请点击右上方深度扫描按钮给网站做一次体检吧~
+                    </div>
+                    <div id="scan_yes_problem" class="scan-problem" {if condition="empty($source_dirlist_total) || empty($doubtdata['html'])"} style="display: none;" {/if}>
                         <div>
-                            <i class="iconfont e-gantanhao-quan red"></i>共检查了<em class="scan_allpagetotal">{$ddosSetting['ddos_scan_allscantotal']}</em>个文件，以下<em id="scan_doubtotal">{$doubtdata['file_doubt_total']}</em>个文件有问题，需要修复：
+                            {if condition="!empty($ddosSetting['ddos_is_auto_scan'])"}
+                                <i class="iconfont e-gantanhao-quan red"></i>定期检查<em class="scan_allpagetotal">{$ddosSetting['ddos_scan_allscantotal']}</em>个核心文件，发现<em id="scan_doubtotal">{$doubtdata['file_doubt_total']}</em>个文件有风险，请修复后并执行深度扫描：
+                            {else /}
+                                <i class="iconfont e-gantanhao-quan red"></i>共检查了<em class="scan_allpagetotal">{$ddosSetting['ddos_scan_allscantotal']}</em>个文件，以下<em id="scan_doubtotal">{$doubtdata['file_doubt_total']}</em>个文件有问题，需要修复：
+                            {/if}
                         </div>
                         <div>
                             <a class="scan-problem-btn" onclick="one_click_repair(this);" href="javascript:void(0);">一键处理</a>
@@ -77,7 +87,7 @@
                         
                     </div>
                 </div>
-                <ul class="result-problem" id="scan_problem_list" {empty name="$doubtdata['html']"} style="display: none;" {/empty}>
+                <ul class="result-problem" id="scan_problem_list" {if condition="empty($source_dirlist_total) || empty($doubtdata['html'])"} style="display: none;" {/if}>
                     {$doubtdata['html']}
                 </ul> 
                 <div style="height: 30px;"></div>
@@ -163,6 +173,15 @@
                      </div>
                     <div class="operation">
                         <a href="javascript:void(0);" data-href="{:url('Security/ddos_whitelist_list')}" data-cancel_callback="win_reload" onclick="openFullframe(this, '扫描白名单管理', '80%', '80%');">查看</a>
+                    </div>
+                </li>
+                <li>
+                    <span class="label">备份管理</span>
+                    <div class="name">
+                        查看、删除、还原一键处理时的文件备份
+                     </div>
+                    <div class="operation">
+                        <a href="javascript:void(0);" data-href="{:url('Security/ddos_backup_list')}" data-cancel_callback="win_reload" onclick="openFullframe(this, '备份管理', '80%', '80%');">查看</a>
                     </div>
                 </li>
                 <li>
@@ -278,10 +297,10 @@
      */
     function one_click_repair(obj)
     {
-        var title = '将批量处理扫描出来的文件修复及删除操作，操作后不可恢复，请确认';
+        var title = '将批量处理扫描出来的文件修复及删除操作，系统会先自动备份本次处理的文件，可在下方的“备份管理”中查看及还原，请确认<br/><font color="red">注意：jQuery文件将忽略处理，请自己手工点击修复</font>';
         layer.confirm(title, {
                 shade: layer_shade,
-                area: ['480px', '190px'],
+                area: ['480px', '250px'],
                 move: false,
                 title: '一键处理',
                 btnAlign:'r',
@@ -308,7 +327,7 @@
                         
                         if(res.code == 1){
                             $('#scan_doubtotal').text(res.data.file_doubt_total);
-                            layer.msg(res.msg, {icon: 1, time: 500});
+                            showSuccessAlert(res.msg);
                         }else{
                             showErrorAlert(res.msg);
                         }
@@ -437,7 +456,7 @@
             md5keys.push($(obj).attr('data-md5key'));
         }
 
-        layer.confirm('此操作不可逆，确认删除？', {
+        layer.confirm('删除后不可恢复，请自行确认所选文件是否为恶意文件，避免误删正常文件。确认删除？', {
                 shade: layer_shade,
                 area: ['480px', '190px'],
                 move: false,
@@ -488,7 +507,6 @@
         window.location.reload();
     }
 
-    // 上传图片检测木马
     function check_illegal_open_submit(value) {
         layer_loading('正在处理');
         $.ajax({

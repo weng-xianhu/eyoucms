@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.eco.mycar.trade.refund request
  *
  * @author auto create
- * @since 1.0, 2016-06-14 15:11:20
+ * @since 1.0, 2025-09-08 10:17:40
  */
 class AlipayEcoMycarTradeRefundRequest
 {

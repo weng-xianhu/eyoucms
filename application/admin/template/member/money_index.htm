@@ -4,9 +4,9 @@
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
 {include file="order/left" /}
-<div class="page" style="min-width:auto;margin-left:100px;padding-bottom: 0;">
+<div class="page min-hg-c-10" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid flexigrid-xin">
-        <div class="header-bar">
+        <div class="header-bar mb20">
             <div class="more">
                 <div class="search">
                     <div class="content">
@@ -21,7 +21,7 @@
                                                     <option value="" {if condition="!$Request.param.cause_type_str"}selected{/if}>全部</option>
                                                     <option value="0_2_3" {eq name="$Request.param.cause_type_str" value="0_2_3"}selected{/eq}>订单消费</option>
                                                     <option value="1" {eq name="$Request.param.cause_type_str" value="1"}selected{/eq}>会员储值</option>
-                                                    <option value="4_5" {eq name="$Request.param.cause_type_str" value="4_5"}selected{/if}>账户调整</option>
+                                                    <option value="4_5" {eq name="$Request.param.cause_type_str" value="4_5"}selected{/eq}>账户调整</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -41,7 +41,7 @@
                                 </div>
                             </div>
 
-                            <div class="ey-form-item"><label class="users-form-item-label">支付方式：</label>
+                            <!-- <div class="ey-form-item"><label class="users-form-item-label">支付方式：</label>
                                 <div class="users-form-item-content">
                                     <div class="users-select">
                                         <div tabindex="0" class="users-select-selection">
@@ -56,7 +56,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <div class="ey-form-item"><label class="users-form-item-label">会员级别：</label>
                                 <div class="users-form-item-content">
@@ -106,10 +106,6 @@
             </div>
         </div>
     </div>
-</div>
-
-
-<div class="page" style="min-width:auto;margin-left:100px;">
     <div class="flexigrid  flexigrid-xin">
 		<div class="tableDiv " style="height: auto;">
 			<div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
@@ -177,7 +173,7 @@
                                 </div>
                             </td>
                             <td> 
-                                {if condition="in_array($vo['cause_type'], [1,2,4])"}
+                                {if condition="in_array($vo['cause_type'], [1,2,4,10])"}
                                 <div class="green"> ￥+{$vo.money} </div>
                                 {else/}
                                 <div class="red"> ￥-{$vo.money} </div>
@@ -193,6 +189,8 @@
                                 <div class=""> 会员储值 </div>
                                 {elseif condition="in_array($vo['cause_type'], [4,5])" /}
                                 <div class=""> 账户调整 </div>
+                                {elseif condition="10 == $vo['cause_type']" /}
+                                <div class=""> 卡密充值 </div>
                                 {else/}
                                 <div class=""> —— </div>
                                 {/if}
@@ -296,7 +294,8 @@
                 keywords: "{$Request.param.keywords}",
                 pay_method: "{$Request.param.pay_method}",
                 end_time: "{$Request.param.add_time_end}",
-                start_time: "{$Request.param.add_time_begin}"
+                start_time: "{$Request.param.add_time_begin}",
+                cause_type_str: "{$Request.param.cause_type_str}",
             },
             dataType: 'json',
             success: function(res) {

@@ -319,7 +319,7 @@ width:1310px
 .ey-body{
 	margin: 0 auto;
 	width: 100%;
-	padding: 40px 0;
+	padding: 20px 0;
 	overflow: hidden;
 }
 /*头部样式*/
@@ -575,6 +575,7 @@ width:1310px
 /*头部 end*/
 .ey-container .el-table::before{
 	background-color: #fff;
+	bottom:inherit;
 }
 .ey-container .ey-nav{
 	background-color: #fff;
@@ -655,7 +656,7 @@ width:1310px
 	border-bottom: 1px solid #eaeaea;
 	justify-content: space-between;
 	align-items: center;
-	line-height: 50px;
+	padding-bottom:10px;
 }
 .ey-container .xin_mian .column-title{
 	border-bottom: unset!important;
@@ -677,7 +678,7 @@ width:1310px
 }
 .ey-container .column-title .column-name {
     color:#ff7600;
-	font-size: 16px;
+	font-size: 14px;
 }
 .ey-container .column-title .column-left{
 	
@@ -5556,6 +5557,116 @@ width: 100%;
     text-decoration: none;
 }
 
+/*优惠券列表*/
+.coupon-x-list {
+    padding: 20px 0 30px 0;
+    position: relative;
+    width: 100%;
+}
+.coupon-x-list ul {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+.coupon-x-list ul li {
+    width: calc((100% - 36px) / 2);
+    margin: 0 18px 18px 0;
+    /* width: 313px; */
+    height: 145px;
+    background: url(../images/item-bg.png) center center no-repeat;
+    background-size: 100%;
+    /* margin-bottom: .15rem; */
+    display: flex;
+    position: relative;
+}
+
+.coupon-x-list ul li .l {
+    flex-shrink: 0;
+    width: 146px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.coupon-x-list ul li .l p {
+    font-size: 28px;
+    display: flex;
+    align-items: baseline;
+    padding-top: 40px;
+    padding-bottom: 36px;
+    font-weight: bold;
+}
+
+.coupon-x-list ul li .l p i {
+    font-size: 16px;
+}
+
+.coupon-x-list ul li .l span {
+    font-size: 14px;
+    color: #a63a08;
+}
+
+.coupon-x-list ul li .r {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 25px;
+    padding-right: 15px;
+}
+
+.coupon-x-list ul li .r h3 {
+    font-size: 18px;
+    color: #000;
+}
+
+.coupon-x-list ul li .r .use {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #666666;
+    margin-top: .03rem
+}
+
+.coupon-x-list ul li .r .use button {
+    margin-left: 5px;
+    flex-shrink: 0;
+    width: 80px;
+    height: 32px;
+    line-height: 30px;
+    font-size: 14px;
+    color: #fff;
+    background: #f17b2d;
+    border-radius: 4px;
+    outline: none;
+    box-shadow: none;
+    border: 0;
+    cursor: pointer;
+}
+.coupon-x-list ul li .r .use button[disabled] {
+    background-color: #bbb;
+    cursor: not-allowed;
+}
+
+.coupon-x-list ul li .r .status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #666666;
+    margin-top: 5px;
+}
+
+.coupon-x-list ul li .r .status span {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    background: #ffc7a9;
+    font-size: 13px;
+    color: #dd3f14;
+    border-radius: 4px;
+}
 
 .null-data{
     font-size: 16px;
@@ -5567,6 +5678,38 @@ width: 100%;
     white-space: normal;
     word-break: break-all;
     line-height: 23px;
+}
+.h3-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+.address-add-ai {
+    margin-bottom: 20px;
+}
+.address-add-ai .identify {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.address-add-ai .identify-btn {
+    display: inline-block;
+    width: 108px;
+    height: 34px;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 34px;
+    text-align: center;
+    color: #ff9600;
+    background: #fff;
+    border: 1px solid #ff9600;
+    border-radius: 0.215rem;
+    cursor: pointer;
+}
+.address-add-ai .identify-btn:focus {
+    outline: none;
 }
 @font-face {
   font-family: "iconfont-users2"; /* Project id 3377172 */

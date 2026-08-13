@@ -3,7 +3,7 @@
  * ALIPAY API: zhima.auth.info.authquery request
  *
  * @author auto create
- * @since 1.0, 2016-11-08 10:37:18
+ * @since 1.0, 2025-08-14 11:42:36
  */
 class ZhimaAuthInfoAuthqueryRequest
 {

@@ -7,6 +7,7 @@
 {else/}
     {load href="__PUBLIC__/plugins/ckeditor/ckeditor.js" /}
 {/eq}
+<script type="text/javascript" src="__SKIN__/js/clipboard.min.js"></script>
 
 <body class="bodysy-w">
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
@@ -29,6 +30,7 @@
                         <li><a href="javascript:void(0);" data-index='3' class="tab"><span>更多设置</span></a></li>
                         <!-- #weapp_demontrate_li# -->
                         <!-- #weapp_li# -->
+                        <!-- #weapp_articlegroup_li# -->
                     </ul>
                 </div>
                 <div class="item-title-r">
@@ -159,6 +161,9 @@
                     {if condition="file_exists(ROOT_PATH.'weapp/Ai/template/archives/ai_uploads_btn.htm')" /}
                         {include file="/weapp/Ai/template/archives/ai_uploads_btn.htm" /}
                     {/if}
+                    {if condition="file_exists(ROOT_PATH.'weapp/PexelsImg/template/archives/pexels_uploads_btn.htm')" /}
+                        {include file="/weapp/PexelsImg/template/archives/pexels_uploads_btn.htm" /}
+                    {/if}
                     <span class="err"></span>
                     <!-- <p class="notic">当没有手动上传图片时候，会自动提取正文的第一张图片作为缩略图</p> -->
                 </dd>
@@ -173,6 +178,7 @@
                         <label class="curpoin"><input type="radio" name="restric_type" value="1">付费</label>&nbsp;&nbsp;
                         <label class="curpoin"><input type="radio" name="restric_type" value="2">指定会员</label>&nbsp;&nbsp;
                         <label class="curpoin"><input type="radio" name="restric_type" value="3">会员付费</label>&nbsp;&nbsp;
+                        <label class="curpoin"><input type="radio" name="restric_type" value="4">积分购买</label>&nbsp;&nbsp;
                     </dd>
                 </dl>
                 <dl class="row none" id="dl_arc_level_id">
@@ -185,8 +191,9 @@
                             <option value="{$vo.level_id}" level_value="{$vo.level_value}">{$vo.level_name}</option>
                             {/volist}
                         </select>
+                        &nbsp;
                         <label id="no_vip_pay_label"><input type="checkbox" name="no_vip_pay" id="no_vip_pay" value="1" onClick="clickNoVipPay(this);">开启非会员付费</label>
-                    	<p class="notic">包括等于或高于指定的会员等级</p>    
+                		<p class="notic">包括等于或高于指定的会员等级</p>
 					</dd>
                 </dl>
                 <dl class="row none" id="dl_users_price">
@@ -199,19 +206,40 @@
                         <p class="notic"></p>
                     </dd>
                 </dl>
+                
+                <dl class="row none" id="dl_users_score">
+                    <dt class="tit">
+                        <label for="users_score"><em>*</em>购买积分</label>
+                    </dt>
+                    <dd class="opt">
+                        <input type="text" name="users_score" id="users_score" value="0" class="input-txt" maxlength="8" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/g,'');" onpaste="this.value=this.value.replace(/[^\d]/g,'')" style="width: 100px !important; text-align: right;">&nbsp;积分
+                        <span class="err"></span>
+                        <p class="notic"></p>
+                    </dd>
+                </dl>
 
                 <div class="none" id="div_free_html">
                     <dl class="row" id="dl_part_free">
                         <dt class="tit">
-                            <label for="title"><em>*</em>免费内容</label>
+                            <label for="title"><em>*</em>显示方式</label>
                         </dt>
                         <dd class="opt">
                             <label class="curpoin"><input type="radio" name="part_free" value="0" checked onclick="change_part_free(this);">不预览</label>&nbsp;
-                            <label class="curpoin"><input type="radio" name="part_free" value="2" onclick="change_part_free(this);">自动截取</label>&nbsp;
-                            <label class="curpoin"><input type="radio" name="part_free" value="1" onclick="change_part_free(this);">手工录入 <span class="none" id="part_free_span" style="color: red;">[编辑]</span></label>&nbsp;
+                            <label class="curpoin"><input type="radio" name="part_free" value="2" onclick="change_part_free(this);">自动截取免费内容</label>&nbsp;
+                            <label class="curpoin"><input type="radio" name="part_free" value="1" onclick="change_part_free(this);">手工录入免费内容 <span class="none" id="part_free_span" style="color: red;">[编辑]</span></label>&nbsp;
+                            <label class="curpoin"><input type="radio" name="part_free" value="3" {if condition="!empty($field.part_free) and $field.part_free eq '3'"} checked {/if} onclick="change_part_free(this);">自由选择付费内容</label>&nbsp;
                             <span class="err"></span>
-                            <p class="notic"></p>
+                            <p class="notic2 {if condition="empty($field.part_free) or $field.part_free neq '3'"} none {/if}"  id="part_free_notic">请在编辑器里把需要付费的内容用<strong>[付费内容标签]</strong>标签包裹，<span class="red curpoin arc_free_taglib" onclick="showtext('arc_free_taglib');" data-clipboard-text="[付费内容开始]
+这里填写或插入你需要隐藏的付费内容
+[/付费内容结束]
+
+">[复制标签]</span></p>
                         </dd>
+                        <script>
+                            function showtext(classname){
+                                var clipboard1 = new Clipboard("."+classname);clipboard1.on("success", function(e) {layer.msg("复制成功");});clipboard1.on("error", function(e) {layer.msg("复制失败！请手动复制", {icon:5});}); 
+                            }
+                        </script>
                     </dl>
                     <dl class="row none" id="dl_size">
                         <dt class="tit">
@@ -226,6 +254,7 @@
                 </div>
 
             </div>
+            <!-- #weapp_articlegroup_dl# -->
             {include file="archives/get_field_addonextitem" /}
         </div>
         <!-- 常规信息 -->
@@ -246,7 +275,7 @@
                     <label>SEO关键词</label>
                 </dt>
                 <dd class="opt">          
-                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;"></textarea>
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')"></textarea>
                     <span class="err"></span>
                     <p class="notic">一般不超过100个字符，多个关键词请用英文逗号（,）隔开，建议3到5个关键词。</p>
                 </dd>
@@ -287,7 +316,7 @@
                     <textarea id="system_originlist_str" style="display: none;">{$system_originlist_str}</textarea>
                     <span class="setting" onclick="set_originlist();">设置</span>
                     <span class="err"></span>
-                    <p class="notic">为空时默认“网络”</p>
+                    <p class="notic">为空时默认"网络"</p>
                 </dd>
             </dl>
             <dl class="row">
@@ -309,7 +338,7 @@
                         {volist name="arcrank_list" id="vo"}
                         <option value="{$vo.rank}" {if $admin_info.role_id > 0 && $auth_role_info.check_oneself < 1 && $vo.rank==-1} selected="selected" {/if}>{$vo.name}</option>
                         {/volist}
-                    </select>
+                    </select>    
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>
@@ -327,6 +356,9 @@
                     <span class="err"></span>
                 </dd>
             </dl>
+            {if condition="file_exists(ROOT_PATH.'weapp/TimingTask/template/admin/archives/removal_time_add.htm')" /}
+                {include file="/weapp/TimingTask/template/admin/archives/removal_time_add.htm" /}
+            {/if}
             <dl class="row">
                 <dt class="tit">
                     <label for="tempview">文档模板</label>
@@ -341,7 +373,7 @@
                     <span class="err"></span>
                 </dd>
             </dl>
-            <dl class="row {notin name='$seo_pseudo' value='2,3'}no-grey{/notin}" >
+            <dl class="row {notin name='$seo_pseudo' value='2,3'}no-grey{/notin}">
                 <dt class="tit">
                     <label>自定义文件名</label>
                 </dt>
@@ -355,6 +387,7 @@
         <!-- 其他参数 -->
         <!-- #weapp_demontrate_div# -->
         <!-- #weapp_div# -->
+        <!-- #weapp_articlegroup_div# -->
         <div class="ncap-form-default">
             <div class="bot2">
                 <textarea name="free_content" id="free_content" style="display: none;"></textarea>
@@ -395,8 +428,8 @@
                 $(this).removeClass('current');
             });
             $(this).addClass('current');
-            var tab_index = $(this).data('index');
-            $(".tab_div_1, .tab_div_2, .tab_div_3").hide();          
+            var tab_index = $(this).data('index');          
+            $(".tab_div_1, .tab_div_2, .tab_div_3").hide();
             $(".tab_div_body").hide();
             $(".tab_div_"+tab_index).show();
             layer.closeAll();
@@ -441,6 +474,7 @@
         $('input[name=restric_type]').click(function(){
             $('#dl_arc_level_id').hide();
             $('#dl_users_price').hide();
+            $('#dl_users_score').hide();
             $('#no_vip_pay_label').hide();
             $('#div_free_html').hide();
             var restric_type = $(this).val();
@@ -459,6 +493,9 @@
                         $('#dl_users_price').show();
                     }
                 }
+            }
+            if (restric_type == 4) {
+                $('#dl_users_score').show();
             }
         });
     });
@@ -507,6 +544,26 @@
             }
         }
 
+        var restric_type = $('input[name=restric_type]:checked').val();
+        if (restric_type == '4') {
+            var users_score = $('#users_score').val();
+            if (parseFloat(users_score).toString() == "NaN") {
+                users_score = 0; 
+            }
+            if (0 == users_score || users_score == '') {
+                showErrorMsg('兑换积分不能为空或0');
+                $('#users_score').focus();
+                return false;
+            } else {
+                var exp = /^[1-9]\d*$/;  // 只允许正整数
+                if (!exp.test(users_score)) {
+                    showErrorMsg('兑换积分必须为正整数！');
+                    $('#users_score').focus();
+                    return false;
+                }
+            }
+        }
+
         layer_loading('正在处理');
         if(!ajax_check_htmlfilename())
         {
@@ -528,18 +585,25 @@
         $("#img_i").attr('onmouseover', "layer_tips=layer.tips('<img src="+fileurl_tmp+" class=\\'layer_tips_img\\'>',this,{tips: [1, '#fff']});");
         $("input[name=is_litpic]").attr('checked', true); // 自动勾选属性[图片]
     }
-
+    
     function change_part_free(e) {
         if (1 == $(e).val()){
             $('#dl_size').hide();
             $('#part_free_span').show();
+            $('#part_free_notic').hide();
             open_free_content();
         }else if (2 == $(e).val()){
             $('#part_free_span').hide();
             $('#dl_size').show();
+            $('#part_free_notic').hide();
+        } else if (3 == $(e).val()){
+            $('#part_free_span').hide();
+            $('#dl_size').hide();
+            $('#part_free_notic').show();
         } else{
             $('#part_free_span').hide();
             $('#dl_size').hide();
+            $('#part_free_notic').hide();
         }
     }
     function open_free_content() {

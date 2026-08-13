@@ -11,6 +11,23 @@
  * Date: 2018-4-3
  */
 
+if (!function_exists('getUploadSubDir')) {
+    /**
+     * 获取上传文件的日期子目录
+     * 根据后台配置返回 Ymd 或 Ym 格式的日期目录
+     * @return string
+     */
+    function getUploadSubDir()
+    {
+        static $subDir = null;
+        if ($subDir === null) {
+            $format = tpCache('basic.file_save_dirname');
+            $subDir = ($format == 'Ym') ? date('Ym/') : date('Ymd/');
+        }
+        return $subDir;
+    }
+}
+
 if (!function_exists('unifyPriceHandle')) {
     /**
      * 显示价格统一处理
@@ -34,16 +51,85 @@ if (!function_exists('unifyPriceHandle')) {
     }
 }
 
+if (!function_exists('safe_html_decode')) {
+    /**
+     * 安全的 HTML 解码函数
+     * 先解码 HTML 实体，然后过滤危险的 XSS 内容，保留安全的 HTML 标签
+     * @param string $content 需要解码的内容
+     * @return string 安全的 HTML 内容
+     */
+    function safe_html_decode($content)
+    {
+        if (empty($content) || !is_string($content)) {
+            return $content;
+        }
+        // 先解码 HTML 实体
+        $content = htmlspecialchars_decode($content);
+        // 移除 script 标签
+        $content = preg_replace('/<script[^>]*>[\s\S]*?<\/script>/i', '', $content);
+        // 移除 iframe 标签
+        $content = preg_replace('/<iframe[^>]*>[\s\S]*?<\/iframe>/i', '', $content);
+        // 移除 object/embed 标签
+        $content = preg_replace('/<(object|embed)[^>]*>[\s\S]*?<\/(object|embed)>/i', '', $content);
+        // 移除 svg 标签 (可能包含 onload 等事件)
+        $content = preg_replace('/<svg[^>]*>[\s\S]*?<\/svg>/i', '', $content);
+        // 移除 math 标签
+        $content = preg_replace('/<math[^>]*>[\s\S]*?<\/math>/i', '', $content);
+        // 移除 base 标签
+        $content = preg_replace('/<base[^>]*>/i', '', $content);
+        // 移除 link 标签
+        $content = preg_replace('/<link[^>]*>/i', '', $content);
+        // 移除 meta 标签
+        $content = preg_replace('/<meta[^>]*>/i', '', $content);
+        // 移除 style 标签
+        $content = preg_replace('/<style[^>]*>[\s\S]*?<\/style>/i', '', $content);
+        // 移除 form 标签
+        $content = preg_replace('/<\/?form[^>]*>/i', '', $content);
+        // 移除 input/button/textarea/select 标签
+        $content = preg_replace('/<(input|button|textarea|select)[^>]*>[\s\S]*?<\/(input|button|textarea|select)>/i', '', $content);
+        $content = preg_replace('/<(input|button)[^>]*>/i', '', $content);
+        // 移除事件属性 (on*)
+        $content = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $content);
+        $content = preg_replace('/\s+on\w+\s*=\s*[^\s>]+/i', '', $content);
+        // 移除 javascript: 协议
+        $content = preg_replace('/javascript\s*:/i', '', $content);
+        // 移除 vbscript: 协议
+        $content = preg_replace('/vbscript\s*:/i', '', $content);
+        // 移除 data: 协议 (可能包含恶意内容，但保留 data:image)
+        $content = preg_replace('/data\s*:(?!image\/)[^,]*,/i', '', $content);
+        // 移除 expression() CSS 表达式
+        $content = preg_replace('/expression\s*\([^)]*\)/i', '', $content);
+        return $content;
+    }
+}
+
 if (!function_exists('removeJsTagCode')) {
     /**
      * 去除JS标签代码
+     * 增强 XSS 过滤，移除更多危险标签和属性
      */
     function removeJsTagCode($param = [])
     {
         // 处理去除
         foreach ($param as $key => $value) {
             if (!empty($key) && !empty($value)) {
-                $param[$key] = htmlspecialchars(preg_replace('/<script([^\>]*)>([\s\S]+)<\/script>/i', '', htmlspecialchars_decode($value)));
+                $value = htmlspecialchars_decode($value);
+                // 移除 script 标签
+                $value = preg_replace('/<script[^>]*>[\s\S]*?<\/script>/i', '', $value);
+                // 移除 iframe 标签
+                $value = preg_replace('/<iframe[^>]*>[\s\S]*?<\/iframe>/i', '', $value);
+                // 移除 object/embed 标签
+                $value = preg_replace('/<(object|embed)[^>]*>[\s\S]*?<\/(object|embed)>/i', '', $value);
+                // 移除事件属性 (on*)
+                $value = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $value);
+                $value = preg_replace('/\s+on\w+\s*=\s*[^\s>]+/i', '', $value);
+                // 移除 javascript: 协议
+                $value = preg_replace('/javascript\s*:/i', '', $value);
+                // 移除 vbscript: 协议
+                $value = preg_replace('/vbscript\s*:/i', '', $value);
+                // 移除 data: 协议 (可能包含恶意内容)
+                $value = preg_replace('/data\s*:[^,]*,/i', '', $value);
+                $param[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
             }
         }
         // 返回内容
@@ -138,43 +224,30 @@ if (!function_exists('get_auth_code')) {
     /**
      * 密码加密盐值
      */
-    function get_auth_code($type = 'bcrypt')
+    function get_auth_code($type = 'bcrypt', $lang = '', $static_auth_code = true)
     {
         static $auth_code = null;
-        if (null === $auth_code) {
+        if (null === $auth_code || false === $static_auth_code) {
+            $current_lang = empty($lang) ? get_current_lang(true) : $lang;
             if ($type == 'bcrypt') { // crypt加密方式
-                $lang = get_current_lang(true);
-                $auth_code = \think\Db::name('config')->where(['name'=>'system_crypt_auth_code','inc_type'=>'system','lang'=>$lang])->value('value');
+                $auth_code = \think\Db::name('config')->where(['name'=>'system_crypt_auth_code','inc_type'=>'system','lang'=>$current_lang])->value('value');
                 if (empty($auth_code)) {
-                    $rand_str = md5(uniqid(rand(), true));
+                    $rand_str = secure_random_string(12, true); // 生成24个十六进制字符
                     $rand_str = substr($rand_str, 0, 23);
                     $auth_code = '$2y$11$'.$rand_str;  //30位盐
-                    /*多语言*/
-                    if (is_language()) {
-                        $langRow = \think\Db::name('language')->order('id asc')->select();
-                        foreach ($langRow as $key => $val) {
-                            tpCache('system', ['system_crypt_auth_code' => $auth_code], $val['mark']);
-                        }
-                    } else { // 单语言
-                        tpCache('system', ['system_crypt_auth_code' => $auth_code]);
+                    $langRow = \think\Db::name('language')->order('id asc')->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('system', ['system_crypt_auth_code' => $auth_code], $val['mark']);
                     }
-                    /*--end*/
                 }
             } else { // md5加密方式
-                $lang = get_current_lang(true);
-                $auth_code = \think\Db::name('config')->where(['name'=>'system_auth_code','inc_type'=>'system','lang'=>$lang])->value('value');
+                $auth_code = \think\Db::name('config')->where(['name'=>'system_auth_code','inc_type'=>'system','lang'=>$current_lang])->value('value');
                 if (empty($auth_code)) {
                     $auth_code = \think\Config::get('AUTH_CODE');
-                    /*多语言*/
-                    if (is_language()) {
-                        $langRow = \think\Db::name('language')->order('id asc')->select();
-                        foreach ($langRow as $key => $val) {
-                            tpCache('system', ['system_auth_code' => $auth_code], $val['mark']);
-                        }
-                    } else { // 单语言
-                        tpCache('system', ['system_auth_code' => $auth_code]);
+                    $langRow = \think\Db::name('language')->order('id asc')->select();
+                    foreach ($langRow as $key => $val) {
+                        tpCache('system', ['system_auth_code' => $auth_code], $val['mark']);
                     }
-                    /*--end*/
                 }
             }
         }
@@ -232,18 +305,25 @@ if (!function_exists('getClientIP')) {
     /**
      * 客户端IP(新)
      */
-    function getClientIP()
+    function getClientIP($type = 'ipv4')
     {
-        if (getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
-            $ip = getenv('HTTP_CLIENT_IP');
-        } elseif (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
-            $ip = getenv('HTTP_X_FORWARDED_FOR');
-        } elseif (getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
-            $ip = getenv('REMOTE_ADDR');
-        } elseif (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
-            $ip = $_SERVER['REMOTE_ADDR'];
+        if ('ipv6' == $type) {
+            $ip = request()->ip2();
+            if (!empty($ip)) {
+                return $ip;
+            }
+        } else {
+            if (getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
+                $ip = getenv('HTTP_CLIENT_IP');
+            } elseif (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
+                $ip = getenv('HTTP_X_FORWARDED_FOR');
+            } elseif (getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
+                $ip = getenv('REMOTE_ADDR');
+            } elseif (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
+                $ip = $_SERVER['REMOTE_ADDR'];
+            }
+            return preg_match('/[\d\.]{7,15}/', $ip, $matches) ? $matches [0] : '';
         }
-        return preg_match('/[\d\.]{7,15}/', $ip, $matches) ? $matches [0] : '';
     }
 }
 
@@ -251,15 +331,20 @@ if (!function_exists('clientIP')) {
     /**
      * 客户端IP(旧，目前存在未知异常，获取的IP有不准的情况)
      */
-    function clientIP()
+    function clientIP($type = 'ipv4')
     {
-        $ip = request()->ip();
-        if (request()->isValidIP($ip)) {
-            return $ip;
+        if ('ipv6' == $type) {
+            $ip = request()->ip2();
+            if (!empty($ip)) {
+                return $ip;
+            }
+        } else {
+            $ip = request()->ip();
+            if (request()->isValidIP($ip)) {
+                return $ip;
+            }
         }
-        else {
-            return '';
-        }
+        return '';
     }
 }
 
@@ -586,12 +671,12 @@ if (!function_exists('httpRequest')) {
         $requestinfo = curl_getinfo($ci);
         $http_code   = curl_getinfo($ci, CURLINFO_HTTP_CODE);
         if ($debug) {
-            echo "=====post data======\r\n";
-            var_dump($postfields);
-            echo "=====info===== \r\n";
-            print_r($requestinfo);
-            echo "=====response=====\r\n";
-            print_r($response);
+            // echo "=====post data======\r\n";
+            // var_dump($postfields);
+            // echo "=====info===== \r\n";
+            // print_r($requestinfo);
+            // echo "=====response=====\r\n";
+            // print_r($response);
         }
         curl_close($ci);
         return $response;
@@ -672,15 +757,15 @@ if (!function_exists('httpRequest2')) {
         $response    = curl_exec($ci);
         // $http_code   = curl_getinfo($ci, CURLINFO_HTTP_CODE);
         if ($debug) {
-            echo "=====post data======\r\n";
-            var_dump($postfields);
-            echo "=====info===== \r\n";
-            $requestinfo = curl_getinfo($ci);
-            print_r($requestinfo);
-            echo "=====response=====\r\n";
-            print_r($response);
-            echo "=====error=====\r\n";
-            print_r(curl_error($ci));
+            // echo "=====post data======\r\n";
+            // var_dump($postfields);
+            // echo "=====info===== \r\n";
+            // $requestinfo = curl_getinfo($ci);
+            // print_r($requestinfo);
+            // echo "=====response=====\r\n";
+            // print_r($response);
+            // echo "=====error=====\r\n";
+            // print_r(curl_error($ci));
         }
         curl_close($ci);
         return $response;
@@ -696,8 +781,17 @@ if (!function_exists('check_mobile')) {
      */
     function check_mobile($mobile)
     {
-        if (preg_match('/1\d{10}$/', $mobile))
+        // [功能地图]-[外贸助手]-[表单手机格式]正则使用处理
+        $mobileFormatKey = "foreign_open_mobile_format";
+        $openMobileFormat = \think\Cache::get($mobileFormatKey);
+        if (false === $openMobileFormat) {
+            $openMobileFormat = \think\Db::name('setting')->where(['name' => 'foreign_open_mobile_format'])->getField('value');
+            \think\Cache::set($mobileFormatKey, intval($openMobileFormat), EYOUCMS_CACHE_TIME, "setting");
+        }
+        $openMobileFormatVal = !empty($openMobileFormat) ? '/^([\d\-\+]+)$/' : '/^1[3-9]\d{9}$/';
+        if (preg_match($openMobileFormatVal, $mobile)) {
             return true;
+        }
         return false;
     }
 }
@@ -714,6 +808,41 @@ if (!function_exists('check_telephone')) {
         if (preg_match('/^([0-9]{3,4}-)?[0-9]{7,8}$/', $mobile))
             return true;
         return false;
+    }
+}
+
+if (!function_exists('check_landline')) {
+    /**
+     * 验证固定电话号码格式
+     * @param string $phone 待验证的固定电话
+     * @param bool $allowExtension 是否允许分机号，默认true
+     * @return bool 验证通过返回true，否则返回false
+     */
+    function check_landline($phone, $allowExtension = true) {
+        // 移除所有空白字符
+        $phone = preg_replace('/\s+/', '', $phone);
+        
+        // 1. 400电话验证规则
+        // 格式：400-XXX-XXXX 或 400XXXXXXX（无连字符）
+        $pattern400 = '/^400(-?\d{3,4}){2}$/';
+        if (preg_match($pattern400, $phone)) {
+            return true;
+        }
+        
+        // 2. 普通固定电话验证规则
+        // 基础固定电话正则（带区号）
+        $basicPattern = '/^0\d{2,3}-?\d{7,8}$/';
+        
+        // 带分机号的格式
+        if ($allowExtension) {
+            $extensionPattern = '/^0\d{2,3}-?\d{7,8}(-|转)\d{1,5}$/';
+            if (preg_match($extensionPattern, $phone)) {
+                return true;
+            }
+        }
+        
+        // 验证基础格式
+        return preg_match($basicPattern, $phone);
     }
 }
 
@@ -853,6 +982,28 @@ if (!function_exists('text_msubstr')) {
     }
 }
 
+if (!function_exists('safe_htmlspecialchars_decode')) {
+    /**
+     * 安全的 HTML 解码函数
+     * @param string $str 需要解码的字符串
+     * @return string
+     */
+    function safe_htmlspecialchars_decode($str = '')
+    {
+        if (!is_string($str) || empty($str)) {
+            return $str;
+        }
+
+        $str = htmlspecialchars_decode($str);
+
+        // 先解码再重新编码，确保特殊字符正确显示且安全
+        // $str = htmlspecialchars_decode($str, ENT_QUOTES);
+        // $str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+
+        return $str;
+    }
+}
+
 if (!function_exists('eyou_htmlspecialchars_decode')) {
     /**
      * 自定义只针对htmlspecialchars编码过的字符串进行解码
@@ -867,7 +1018,7 @@ if (!function_exists('eyou_htmlspecialchars_decode')) {
     function eyou_htmlspecialchars_decode($str = '')
     {
         if (is_string($str) && stripos($str, '&lt;') !== false && stripos($str, '&gt;') !== false) {
-            $str = htmlspecialchars_decode($str);
+            $str = safe_htmlspecialchars_decode($str);
         }
         return $str;
     }
@@ -882,6 +1033,11 @@ if (!function_exists('isMobile')) {
      */
     function isMobile()
     {
+        // 生成静态页面时，通过全局常量标记强制返回false
+        // 注意：这个判断必须在缓存判断之前，确保每次都检查
+        if (defined('EYOUCMS_BUILDING_HTML') && EYOUCMS_BUILDING_HTML === true) {
+            return false;
+        }
         static $is_mobile = null;
         null === $is_mobile && $is_mobile = request()->isMobile();
         return $is_mobile;
@@ -1059,9 +1215,15 @@ if (!function_exists('respose')) {
     function respose($res, $is_jsonp = false)
     {
         if (true === $is_jsonp) {
-            exit(input('callback') . "(" . json_encode($res) . ")");
+            $callback = input('callback');
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $callback)) {
+                $callback = 'callback';
+            }
+            header('Content-Type: application/javascript; charset=utf-8');
+            exit($callback . "(" . json_encode($res, JSON_UNESCAPED_UNICODE) . ")");
         } else {
-            exit(json_encode($res));
+            header('Content-Type: application/json; charset=utf-8');
+            exit(json_encode($res, JSON_UNESCAPED_UNICODE));
         }
     }
 }
@@ -1487,8 +1649,18 @@ if (!function_exists('saveRemote')) {
             );
             return json_encode($data);
         }
+
+        // 检查是否为内网 IP
+        $validateResult = validateRemoteUrl($imgUrl);
+        if ($validateResult['code'] == 0) {
+            $data = array(
+                'state' => $validateResult['msg'],
+            );
+            return json_encode($data);
+        }
+        
         //获取请求头并检测死链
-        $heads = @get_headers($imgUrl, 1);
+        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
         if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
             $data = array(
                 'state' => '链接不可用',
@@ -1529,14 +1701,13 @@ if (!function_exists('saveRemote')) {
             $is_weixin_img = true;
         }
 
-        /*验证图片一句话木马*/
         if (false === check_illegal($imgUrl,true,trim($fileType, '.'))) {
             $data = array(
-                'state' => '疑似木马图片！',
+                'state' => base64_decode(config('global.mm_tips')),
             );
             return json_encode($data);
         }
-        /*--end*/
+
         // 本站图片 / 根网址图片 / 第三方存储插件的图片
         $preg_root_dir = str_replace('/', '\/', ROOT_DIR);
         if (preg_match("/\/\/({$host}{$preg_root_dir}|{$storageDomain}|{$parse_arr['host']}{$preg_root_dir})\//i", $imgUrl)) {
@@ -1558,17 +1729,13 @@ if (!function_exists('saveRemote')) {
 
         //打开输出缓冲区并获取远程图片
         ob_start();
-        $context = stream_context_create(
-            array('http' => array(
-                'follow_location' => false // don't follow redirects
-            ))
-        );
+        $context = get_remote_stream_context($imgUrl);
         readfile($imgUrl, false, $context);
         $img = ob_get_contents();
         ob_end_clean();
         preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/", $imgUrl, $m);
 
-        $dirname          = './' . UPLOAD_PATH . 'allimg/' . date('Ymd') . '/';
+        $dirname          = './' . UPLOAD_PATH . 'allimg/' . getUploadSubDir();
         $file['oriName']  = $m ? $m[1] : "";
         $file['filesize'] = strlen($img);
         $file['ext']      = $fileType;
@@ -1591,7 +1758,7 @@ if (!function_exists('saveRemote')) {
         }
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0755, true)) {
             $data = array(
                 'state' => '目录创建失败',
             );
@@ -1618,7 +1785,7 @@ if (!function_exists('saveRemote')) {
             if (!check_image_mime_type($realfilepath)) {
                 @unlink($realfilepath);
                 $data = array(
-                    'state' => '疑似木马图片！',
+                    'state' => base64_decode(config('global.mm_tips')),
                 );
                 return json_encode($data);
             }
@@ -1627,7 +1794,7 @@ if (!function_exists('saveRemote')) {
             if (!check_image_header($realfilepath)) {
                 @unlink($realfilepath);
                 $data = array(
-                    'state' => '疑似木马图片！',
+                    'state' => base64_decode(config('global.mm_tips')),
                 );
                 return json_encode($data);
             }
@@ -1661,6 +1828,7 @@ if (!function_exists('saveRemote')) {
             $addData = [
                 'aid'         => 0,
                 'type_id'     => 0,
+                'group_code'  => 'image',
                 'image_url'   => $data['url'],
                 'title'       => '',
                 'intro'       => '',
@@ -1673,7 +1841,645 @@ if (!function_exists('saveRemote')) {
                 'add_time'    => getTime(),
                 'update_time' => getTime(),
             ];
-            // \think\Db::name('uploads')->add($addData);
+            \think\Db::name('uploads')->add($addData);
+        }
+        return json_encode($data);
+    }
+}
+
+if (!function_exists('validateSavePath')) {
+    /**
+     * 验证保存路径是否安全（防止路径遍历攻击）
+     *
+     * @param string $savePath
+     * @return array ['valid' => bool, 'error' => string, 'path' => string]
+     */
+    function validateSavePath($savePath)
+    {
+        // 移除危险字符
+        $savePath = str_replace(array('..', "\0", "\r", "\n"), '', $savePath);
+        // 只允许字母、数字、下划线、斜杠
+        $savePath = preg_replace('/[^a-zA-Z0-9_\/]/', '', $savePath);
+        // 确保路径以斜杠结尾
+        $savePath = rtrim($savePath, '/') . '/';
+        // 确保路径不为空
+        if (empty($savePath) || $savePath === '/') {
+            return array('valid' => false, 'error' => '保存路径不能为空', 'path' => '');
+        }
+        // 检查路径深度（防止过深的目录结构）
+        $depth = substr_count($savePath, '/');
+        if ($depth > 3) {
+            return array('valid' => false, 'error' => '保存路径层级过深', 'path' => '');
+        }
+        return array('valid' => true, 'error' => '', 'path' => $savePath);
+    }
+}
+
+if (!function_exists('checkVideoFileHeader')) {
+    /**
+     * 检查视频文件头部魔数是否有效
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    function checkVideoFileHeader($filePath)
+    {
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            return false;
+        }
+        $handle = fopen($filePath, 'rb');
+        if (!$handle) {
+            return false;
+        }
+        $header = fread($handle, 32);
+        fclose($handle);
+        if (strlen($header) < 4) {
+            return false;
+        }
+        // 视频文件魔数检测
+        $signatures = array(
+            // MP4/MOV (ftyp box)
+            array('offset' => 4, 'magic' => 'ftyp'),
+            // AVI (RIFF....AVI)
+            array('offset' => 0, 'magic' => 'RIFF'),
+            // FLV
+            array('offset' => 0, 'magic' => 'FLV'),
+            // MKV/WebM (EBML)
+            array('offset' => 0, 'magic' => "\x1A\x45\xDF\xA3"),
+            // WMV/ASF
+            array('offset' => 0, 'magic' => "\x30\x26\xB2\x75"),
+            // MPEG
+            array('offset' => 0, 'magic' => "\x00\x00\x01\xBA"),
+            array('offset' => 0, 'magic' => "\x00\x00\x01\xB3"),
+        );
+        foreach ($signatures as $sig) {
+            $checkPart = substr($header, $sig['offset'], strlen($sig['magic']));
+            if ($checkPart === $sig['magic']) {
+                return true;
+            }
+        }
+        // 额外检查AVI格式
+        if (substr($header, 0, 4) === 'RIFF' && substr($header, 8, 4) === 'AVI ') {
+            return true;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('checkFileNotScript')) {
+    /**
+     * 检查文件内容是否包含脚本代码（防止上传伪装文件）
+     *
+     * @param string $filePath
+     * @return bool true表示安全，false表示包含脚本
+     */
+    function checkFileNotScript($filePath)
+    {
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            return false;
+        }
+        $handle = fopen($filePath, 'rb');
+        if (!$handle) {
+            return false;
+        }
+        // 读取文件前2KB检查
+        $content = fread($handle, 2048);
+        fclose($handle);
+        // 检查PHP标签
+        $dangerousPatterns = array(
+            '<?php',
+            '<?=',
+            '<script',
+            '<%',
+            '<asp',
+        );
+        $contentLower = strtolower($content);
+        foreach ($dangerousPatterns as $pattern) {
+            if (strpos($contentLower, strtolower($pattern)) !== false) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+if (!function_exists('saveRemoteVideo')) {
+    /**
+     * 抓取远程视频
+     *
+     * @param     string $fieldName 远程视频url
+     * @param     string $savePath 存储在public/upload的子目录
+     * @return    string
+     */
+    function saveRemoteVideo($fieldName, $savePath = 'media/')
+    {
+        // 路径遍历防护：验证保存路径
+        $pathValidation = validateSavePath($savePath);
+        if (!$pathValidation['valid']) {
+            $data = array(
+                'state' => $pathValidation['error'],
+            );
+            return json_encode($data);
+        }
+        $savePath = $pathValidation['path'];
+
+        $video_ext = config('global.media_ext');
+        $allowFiles = explode(',', '.'.str_replace(',', ',.', $video_ext));
+        $web_basehost = tpCache('web.web_basehost');
+        $parse_arr    = parse_url($web_basehost);
+        $host  = request()->host(true);
+
+        $videoUrl = htmlspecialchars($fieldName);
+        $videoUrl = str_replace("&amp;", "&", $videoUrl);
+        $videoUrl = preg_replace('/#/', '', $videoUrl);
+
+        // SSRF防护：验证URL安全性
+        $validateResult = validateRemoteUrl($videoUrl);
+        if ($validateResult['code'] === 0) {
+            $data = array(
+                'state' => $validateResult['msg'],
+            );
+            return json_encode($data);
+        }
+
+        // 插件列表
+        static $weappList = null;
+        if (null === $weappList) {
+            $weappList = \think\Db::name('weapp')->where([
+                    'status'    => 1,
+                ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
+                ->getAllWithIndex('code');
+        }
+        $storageDomain = ''; // 第三方存储的域名
+        if (!empty($weappList['Qiniuyun']['data'])) {
+            $qnyData = json_decode($weappList['Qiniuyun']['data'], true);
+            if (!empty($qnyData['domain'])) {
+                $storageDomain = $qnyData['domain'];
+            }
+        } else if (!empty($weappList['AliyunOss']['data'])) {
+            $ossData = json_decode($weappList['AliyunOss']['data'], true);
+            if (!empty($ossData['domain'])) {
+                $storageDomain = $ossData['domain'];
+            }
+        } else if (!empty($weappList['Cos']['data'])) {
+            $cosData = json_decode($weappList['Cos']['data'], true);
+            if (!empty($cosData['domain'])) {
+                $storageDomain = $cosData['domain'];
+            }
+        } else if (!empty($weappList['AwsOss']['data'])) {
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            if (!empty($awsData['domain'])) {
+                $storageDomain = $awsData['domain'];
+            }
+        }
+        //http开头验证
+        if (strpos($videoUrl, "http") !== 0) {
+            $data = array(
+                'state' => '链接不是http链接',
+            );
+            return json_encode($data);
+        }
+        //获取请求头并检测死链
+        $heads = @get_headers($videoUrl, 1, get_remote_stream_context($videoUrl));
+        if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
+            $data = array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
+        // 视频扩展名
+        $fileType = '';
+        if (isset($heads['Content-Type'])) {
+            $contentType = is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type'];
+            $fileType = substr($contentType, -4, 4);
+            if (!preg_match("#\.(".str_replace(',', '|', $video_ext).")#i", $fileType)) {
+                $filext = str_ireplace('video/', '', $contentType);
+                if (stristr($contentType, 'video/mp4') || $filext == 'mp4') {
+                    $fileType = ".mp4";
+                } else if (stristr($contentType, 'video/avi') || $filext == 'avi') {
+                    $fileType = ".avi";
+                } else if (stristr($contentType, 'video/mov') || $filext == 'mov') {
+                    $fileType = ".mov";
+                } else if (stristr($contentType, 'video/wmv') || $filext == 'wmv') {
+                    $fileType = ".wmv";
+                } else if (stristr($contentType, 'video/flv') || $filext == 'flv') {
+                    $fileType = ".flv";
+                } else if (stristr($contentType, 'video/mkv') || $filext == 'mkv') {
+                    $fileType = ".mkv";
+                } else if (stristr($contentType, 'video/webm') || $filext == 'webm') {
+                    $fileType = ".webm";
+                } else {
+                    // 从URL中提取扩展名
+                    $urlPath = parse_url($videoUrl, PHP_URL_PATH);
+                    if (!empty($urlPath)) {
+                        $urlExt = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
+                        if (in_array($urlExt, explode(',', $video_ext))) {
+                            $fileType = '.'.$urlExt;
+                        } else {
+                            $fileType = '.mp4'; // 默认使用 mp4
+                        }
+                    } else {
+                        $fileType = '.mp4'; // 默认使用 mp4
+                    }
+                }
+            }
+        } else {
+            // 没有 Content-Type，从URL中提取扩展名
+            $urlPath = parse_url($videoUrl, PHP_URL_PATH);
+            if (!empty($urlPath)) {
+                $urlExt = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
+                if (in_array($urlExt, explode(',', $video_ext))) {
+                    $fileType = '.'.$urlExt;
+                } else {
+                    $fileType = '.mp4'; // 默认使用 mp4
+                }
+            } else {
+                $fileType = '.mp4'; // 默认使用 mp4
+            }
+        }
+        $fileType = strtolower($fileType);
+        
+        //格式验证(扩展名验证和Content-Type验证)，链接contentType是否正确
+        if (isset($heads['Content-Type'])) {
+            $contentType = is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type'];
+            // 允许 video/ 开头的 Content-Type，或者没有 Content-Type 的情况
+            if (!stristr($contentType, "video/") && !stristr($contentType, "application/octet-stream") && !stristr($contentType, "binary/octet-stream")) {
+                // 如果 Content-Type 不是视频类型，但扩展名是视频类型，仍然允许（某些服务器可能返回错误的 Content-Type）
+                if (!in_array(trim($fileType, '.'), explode(',', $video_ext))) {
+                    $data = array(
+                        'state' => '链接contentType不正确',
+                    );
+                    return json_encode($data);
+                }
+            }
+        }
+
+        // 本站视频 / 根网址视频 / 第三方存储插件的视频
+        $preg_root_dir = str_replace('/', '\/', ROOT_DIR);
+        if (preg_match("/\/\/({$host}{$preg_root_dir}|{$storageDomain}|{$parse_arr['host']}{$preg_root_dir})\//i", $videoUrl)) {
+            $arr = explode('/', $videoUrl);
+            $data = array(
+                'state'    => 'SUCCESS',
+                'url'      => $videoUrl,
+                'title'    => end($arr),
+                'original' => '',
+                'type'     => strtolower(strrchr($videoUrl, '.')),
+                'size'     => 0,
+                'width' => 0,
+                'height' => 0,
+                'mime' => isset($heads['Content-Type']) ? (is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type']) : 'video/mp4',
+            );
+            return json_encode($data);
+        }
+
+        //打开输出缓冲区并获取远程视频
+        ob_start();
+        $context = get_remote_stream_context($videoUrl);
+        readfile($videoUrl, false, $context);
+        $video = ob_get_contents();
+        ob_end_clean();
+        preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/", $videoUrl, $m);
+
+        $dirname          = './' . UPLOAD_PATH . $savePath . getUploadSubDir();
+        $file['oriName']  = $m ? $m[1] : "";
+        $file['filesize'] = strlen($video);
+        $file['ext']      = $fileType;
+        $users_id         = 1;
+        if (session('?users_id')) {
+            $users_id = session('users_id');
+        } else if (session('?admin_id')) {
+            $users_id = session('admin_id');
+        }
+        $file['name']     = $users_id . '-' . dd2char(date("ymdHis") . mt_rand(100, 999)) . $file['ext'];
+        $file['fullName'] = $dirname . $file['name'];
+        $fullName         = $file['fullName'];
+
+        //检查文件大小是否超出限制
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 转换为字节
+        if ($file['filesize'] >= $max_file_size) {
+            $data = array(
+                'state' => '文件大小超出网站限制',
+            );
+            return json_encode($data);
+        }
+
+        //创建目录失败
+        if (!file_exists($dirname) && !mkdir($dirname, 0755, true)) {
+            $data = array(
+                'state' => '目录创建失败',
+            );
+            return json_encode($data);
+        } else if (!is_writeable($dirname)) {
+            $data = array(
+                'state' => '目录没有写权限',
+            );
+            return json_encode($data);
+        }
+
+        //移动文件
+        if (!(file_put_contents($fullName, $video) && file_exists($fullName))) { //移动失败
+            $data = array(
+                'state' => '写入文件内容错误',
+            );
+            return json_encode($data);
+        } else { //移动成功
+            // 安全检查：验证视频文件头
+            if (!checkVideoFileHeader($fullName)) {
+                @unlink($fullName);
+                $data = array(
+                    'state' => '文件内容不是有效的视频格式',
+                );
+                return json_encode($data);
+            }
+            // 安全检查：确保文件不包含脚本代码
+            if (!checkFileNotScript($fullName)) {
+                @unlink($fullName);
+                $data = array(
+                    'state' => '文件内容包含不安全代码',
+                );
+                return json_encode($data);
+            }
+            $videourl = substr($file['fullName'], 1);
+            $mime = isset($heads['Content-Type']) ? (is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type']) : 'video/mp4';
+            $data = array(
+                'state'    => 'SUCCESS',
+                'url'      => ROOT_DIR . $videourl,
+                'title'    => $file['name'],
+                'original' => $file['oriName'],
+                'type'     => $file['ext'],
+                'size'     => $file['filesize'],
+                'width'    => 0,
+                'height'   => 0,
+                'mime'     => $mime,
+            );
+
+            try {
+                /*同步到第三方对象存储空间*/
+                $bucket_data = SynImageObjectBucket($data['url'], $weappList);
+                if (!empty($bucket_data['url']) && is_string($bucket_data['url'])) {
+                    $data['url'] = $bucket_data['url'];
+                }
+                /*end*/
+            } catch (\Exception $e) {}
+        }
+        return json_encode($data);
+    }
+}
+
+if (!function_exists('saveRemoteFile')) {
+    /**
+     * 抓取远程附件文件
+     *
+     * @param     string $fieldName 远程附件url
+     * @param     string $savePath 存储在public/upload的子目录
+     * @return    string
+     */
+    function saveRemoteFile($fieldName, $savePath = 'soft/')
+    {
+        // 路径遍历防护：验证保存路径
+        $pathValidation = validateSavePath($savePath);
+        if (!$pathValidation['valid']) {
+            $data = array(
+                'state' => $pathValidation['error'],
+            );
+            return json_encode($data);
+        }
+        $savePath = $pathValidation['path'];
+
+        $default_file_type = 'zip,gz,rar,iso,doc,xls,ppt,wps,docx,xlsx,pptx,pdf,txt,7z';
+        $file_type_config = tpCache('basic.file_type');
+        $file_ext = !empty($file_type_config) ? str_replace('|', ',', $file_type_config) : $default_file_type;
+        $allowFiles = explode(',', '.'.str_replace(',', ',.', $file_ext));
+        $web_basehost = tpCache('web.web_basehost');
+        $parse_arr    = parse_url($web_basehost);
+        $host  = request()->host(true);
+
+        $fileUrl = htmlspecialchars($fieldName);
+        $fileUrl = str_replace("&amp;", "&", $fileUrl);
+        $fileUrl = preg_replace('/#/', '', $fileUrl);
+
+        // SSRF防护：验证URL安全性
+        $validateResult = validateRemoteUrl($fileUrl);
+        if ($validateResult['code'] === 0) {
+            $data = array(
+                'state' => $validateResult['msg'],
+            );
+            return json_encode($data);
+        }
+
+        // 插件列表
+        static $weappList = null;
+        if (null === $weappList) {
+            $weappList = \think\Db::name('weapp')->where([
+                    'status'    => 1,
+                ])->cache(true, EYOUCMS_CACHE_TIME, 'weapp')
+                ->getAllWithIndex('code');
+        }
+        $storageDomain = ''; // 第三方存储的域名
+        if (!empty($weappList['Qiniuyun']['data'])) {
+            $qnyData = json_decode($weappList['Qiniuyun']['data'], true);
+            if (!empty($qnyData['domain'])) {
+                $storageDomain = $qnyData['domain'];
+            }
+        } else if (!empty($weappList['AliyunOss']['data'])) {
+            $ossData = json_decode($weappList['AliyunOss']['data'], true);
+            if (!empty($ossData['domain'])) {
+                $storageDomain = $ossData['domain'];
+            }
+        } else if (!empty($weappList['Cos']['data'])) {
+            $cosData = json_decode($weappList['Cos']['data'], true);
+            if (!empty($cosData['domain'])) {
+                $storageDomain = $cosData['domain'];
+            }
+        } else if (!empty($weappList['AwsOss']['data'])) {
+            $awsData = json_decode($weappList['AwsOss']['data'], true);
+            if (!empty($awsData['domain'])) {
+                $storageDomain = $awsData['domain'];
+            }
+        }
+        //http开头验证
+        if (strpos($fileUrl, "http") !== 0) {
+            $data = array(
+                'state' => '链接不是http链接',
+            );
+            return json_encode($data);
+        }
+        //获取请求头并检测死链
+        $heads = @get_headers($fileUrl, 1, get_remote_stream_context($fileUrl));
+        if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
+            $data = array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
+        // 附件扩展名
+        $fileType = '';
+        $urlPath = parse_url($fileUrl, PHP_URL_PATH);
+        if (!empty($urlPath)) {
+            $urlExt = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
+            // 去除查询参数
+            $urlExt = preg_replace('/\?.*$/', '', $urlExt);
+            if (in_array($urlExt, explode(',', $file_ext))) {
+                $fileType = '.'.$urlExt;
+            } else {
+                // 如果URL中没有扩展名，尝试从Content-Type推断
+                if (isset($heads['Content-Type'])) {
+                    $contentType = is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type'];
+                    // 常见的MIME类型映射
+                    $mimeMap = [
+                        'application/zip' => '.zip',
+                        'application/x-zip-compressed' => '.zip',
+                        'application/x-rar-compressed' => '.rar',
+                        'application/x-rar' => '.rar',
+                        'application/pdf' => '.pdf',
+                        'application/msword' => '.doc',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => '.docx',
+                        'application/vnd.ms-excel' => '.xls',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => '.xlsx',
+                        'application/vnd.ms-powerpoint' => '.ppt',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => '.pptx',
+                        'text/plain' => '.txt',
+                        'application/x-7z-compressed' => '.7z',
+                        'application/x-gzip' => '.gz',
+                    ];
+                    if (isset($mimeMap[$contentType])) {
+                        $fileType = $mimeMap[$contentType];
+                        // 验证推断出的文件类型是否在允许列表中
+                        $fileExtWithoutDot = trim($fileType, '.');
+                        if (!in_array($fileExtWithoutDot, explode(',', $file_ext))) {
+                            $data = array(
+                                'state' => '不支持的文件格式',
+                            );
+                            return json_encode($data);
+                        }
+                    } else {
+                        $data = array(
+                            'state' => '无法识别文件类型',
+                        );
+                        return json_encode($data);
+                    }
+                } else {
+                    $data = array(
+                        'state' => '无法识别文件类型',
+                    );
+                    return json_encode($data);
+                }
+            }
+        } else {
+            $data = array(
+                'state' => '无法识别文件类型',
+            );
+            return json_encode($data);
+        }
+        $fileType = strtolower($fileType);
+        
+        //格式验证(扩展名验证)
+        if (!in_array($fileType, $allowFiles)) {
+            $data = array(
+                'state' => '不支持的文件格式',
+            );
+            return json_encode($data);
+        }
+
+        // 本站附件 / 根网址附件 / 第三方存储插件的附件
+        $preg_root_dir = str_replace('/', '\/', ROOT_DIR);
+        if (preg_match("/\/\/({$host}{$preg_root_dir}|{$storageDomain}|{$parse_arr['host']}{$preg_root_dir})\//i", $fileUrl)) {
+            $arr = explode('/', $fileUrl);
+            $data = array(
+                'state'    => 'SUCCESS',
+                'url'      => $fileUrl,
+                'title'    => end($arr),
+                'original' => '',
+                'type'     => strtolower(strrchr($fileUrl, '.')),
+                'size'     => 0,
+                'width' => 0,
+                'height' => 0,
+                'mime' => isset($heads['Content-Type']) ? (is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type']) : 'application/octet-stream',
+            );
+            return json_encode($data);
+        }
+
+        //打开输出缓冲区并获取远程附件
+        ob_start();
+        $context = get_remote_stream_context($fileUrl);
+        readfile($fileUrl, false, $context);
+        $fileContent = ob_get_contents();
+        ob_end_clean();
+        preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/", $fileUrl, $m);
+
+        $dirname          = './' . UPLOAD_PATH . $savePath . getUploadSubDir();
+        $file['oriName']  = $m ? $m[1] : "";
+        $file['filesize'] = strlen($fileContent);
+        $file['ext']      = $fileType;
+        $users_id         = 1;
+        if (session('?users_id')) {
+            $users_id = session('users_id');
+        } else if (session('?admin_id')) {
+            $users_id = session('admin_id');
+        }
+        $file['name']     = $users_id . '-' . dd2char(date("ymdHis") . mt_rand(100, 999)) . $file['ext'];
+        $file['fullName'] = $dirname . $file['name'];
+        $fullName         = $file['fullName'];
+
+        //检查文件大小是否超出限制
+        $max_file_size = intval(tpCache('basic.file_size') * 1024 * 1024); // 转换为字节
+        if ($file['filesize'] >= $max_file_size) {
+            $data = array(
+                'state' => '文件大小超出网站限制',
+            );
+            return json_encode($data);
+        }
+
+        //创建目录失败
+        if (!file_exists($dirname) && !mkdir($dirname, 0755, true)) {
+            $data = array(
+                'state' => '目录创建失败',
+            );
+            return json_encode($data);
+        } else if (!is_writeable($dirname)) {
+            $data = array(
+                'state' => '目录没有写权限',
+            );
+            return json_encode($data);
+        }
+
+        //移动文件
+        if (!(file_put_contents($fullName, $fileContent) && file_exists($fullName))) { //移动失败
+            $data = array(
+                'state' => '写入文件内容错误',
+            );
+            return json_encode($data);
+        } else { //移动成功
+            // 安全检查：确保文件不包含脚本代码
+            if (!checkFileNotScript($fullName)) {
+                @unlink($fullName);
+                $data = array(
+                    'state' => '文件内容包含不安全代码',
+                );
+                return json_encode($data);
+            }
+            $fileurl = substr($file['fullName'], 1);
+            $mime = isset($heads['Content-Type']) ? (is_array($heads['Content-Type']) ? end($heads['Content-Type']) : $heads['Content-Type']) : 'application/octet-stream';
+            $data = array(
+                'state'    => 'SUCCESS',
+                'url'      => ROOT_DIR . $fileurl,
+                'title'    => $file['name'],
+                'original' => $file['oriName'],
+                'type'     => $file['ext'],
+                'size'     => $file['filesize'],
+                'width'    => 0,
+                'height'   => 0,
+                'mime'     => $mime,
+            );
+
+            try {
+                /*同步到第三方对象存储空间*/
+                $bucket_data = SynImageObjectBucket($data['url'], $weappList);
+                if (!empty($bucket_data['url']) && is_string($bucket_data['url'])) {
+                    $data['url'] = $bucket_data['url'];
+                }
+                /*end*/
+            } catch (\Exception $e) {}
         }
         return json_encode($data);
     }
@@ -1759,18 +2565,14 @@ if (!function_exists('func_common')) {
         }
         /*--end*/
 
-        /*验证图片一句话木马*/
         if (false === check_illegal($file->getInfo('tmp_name'), false, $ext)) {
-            if ($lang == 'cn') {
-                $errmsg = '疑似木马图片';
-            } else if ($lang == 'zh') {
-                $errmsg = '疑似木馬圖片';
+            if (in_array($lang, ['cn','zh'])) {
+                $errmsg = base64_decode(config('global.mm_tips'));
             } else {
                 $errmsg = 'Suspected Trojan images';
             }
             return ['errcode'=>1,'errmsg'=>$errmsg];
         }
-        /*--end*/
 
         $fileName = $file->getInfo('name');
         // 提取文件名后缀
@@ -1788,7 +2590,7 @@ if (!function_exists('func_common')) {
         } else {
             $savePath = UPLOAD_PATH;
         }
-        $savePath   .= $path . '/' . date('Ymd/');
+        $savePath   .= $path . '/' . getUploadSubDir();
 
         $return_url = "";
         $info = $file->rule(function ($file) {
@@ -1928,7 +2730,7 @@ if (!function_exists('func_common_doc')) {
         // 中文转码
 //        $newfileName = iconv("utf-8", "gb2312//IGNORE", $newfileName);
 
-        $savePath   = $path . '/' . date('Ymd/');
+        $savePath   = $path . '/' . getUploadSubDir();
         $return_url = "";
 
         $info = $file->rule(function ($file) {
@@ -2062,7 +2864,7 @@ if (!function_exists('func_authcode')) {
 
 if (!function_exists('get_pinyin')) {
     /**
-     *  获取拼音以gbk编码为准
+     *  获取拼音以gbk编码为准 
      *
      * @param     string $str 字符串信息
      * @param     int $ishead 是否取头字母
@@ -2072,6 +2874,7 @@ if (!function_exists('get_pinyin')) {
     function get_pinyin($str, $ishead = 0, $isclose = 1)
     {
         try{
+            $org_str = $str;
             $s1 = iconv("UTF-8", "gb2312", $str);
             $s2 = iconv("gb2312", "UTF-8", $s1);
             if ($s2 == $str) {
@@ -2116,7 +2919,17 @@ if (!function_exists('get_pinyin')) {
             if ($isclose == 0) {
                 unset($pinyins);
             }
-            return strtolower($restr);
+            $restr = strtolower($restr);
+            if (stristr($org_str, '深圳')) {
+                $restr = str_replace('shenchou', 'shenzhen', $restr);
+            } else if (stristr($org_str, '内蒙古')) {
+                $restr = str_replace('namenggu', 'neimenggu', $restr);
+            } else if (stristr($org_str, '重庆')) {
+                $restr = str_replace('zhongqing', 'chongqing', $restr);
+            } else if (stristr($org_str, '西藏')) {
+                $restr = str_replace('xicang', 'xizang', $restr);
+            }
+            return $restr;
         }catch (\Exception $e){
             return "";
         }
@@ -2319,7 +3132,7 @@ if (!function_exists('getCmsVersion')) {
                 }
             }
         }
-
+// return $ver;
         return file_exists('./data/conf/develop.txt') ? 'v9'.getTime() : $ver;
     }
 }
@@ -2347,7 +3160,7 @@ if (!function_exists('getVersion')) {
                 }
             }
         }
-
+// return $ver;
         return file_exists('./data/conf/develop.txt') ? 'v9'.getTime() : $ver;
     }
 }
@@ -2396,18 +3209,70 @@ if (!function_exists('strip_sql')) {
     {
         static $data = null;
         if (null === $data) {
-            if (file_exists(webXssKeyFile())) {
+            /*if (file_exists(webXssKeyFile())) {
                 $content = @file_get_contents(webXssKeyFile());
                 $data = json_decode($content, true);
+            }*/
+            $cacheKey = 'function-strip_sql-config';
+            $result = \think\Cache::get($cacheKey);
+            if (empty($result)) {
+                $where = [
+                    'name' => ['IN', ['web_xss_filter','web_xss_words']],
+                ];
+                $result = \think\Db::name('config')->field('name,value')->where($where)->order('value desc')->getAllWithIndex('name');
+                \think\Cache::set($cacheKey, $result, EYOUCMS_CACHE_TIME, "config");
             }
+            $web_xss_words_default =<<<EOF
+union
+delete
+outfile
+char
+concat
+truncate
+insert
+revoke
+grant
+replace
+rename
+declare
+exec
+delimiter
+phar
+eval
+onerror
+script
+EOF;
+            $data = [
+                'web_xss_filter' => isset($result['web_xss_filter']) ? $result['web_xss_filter']['value'] : 1,
+                'web_xss_words' => isset($result['web_xss_words']['value']) ? $result['web_xss_words']['value'] : $web_xss_words_default,
+            ];
         }
         $web_xss_filter = empty($data['web_xss_filter']) ? 0 : intval($data['web_xss_filter']);
         $web_xss_words = empty($data['web_xss_words']) ? [] : explode(PHP_EOL, $data['web_xss_words']);
-        if ((empty($web_xss_filter) && is_numeric($web_xss_filter)) || empty($web_xss_words)) {
+        $words_array = array_unique($web_xss_words);
+        if ((empty($web_xss_filter) && is_numeric($web_xss_filter)) || empty($words_array)) {
             return $string;
         }
 
-        foreach ($web_xss_words as $words) {
+        // 处理数组参数
+        if (is_array($string)) {
+            foreach ($string as $key => $val) {
+                $string[$key] = strip_sql($val);
+            }
+            return $string;
+        }
+        
+        // 不是字符串类型不处理
+        if (!is_string($string)) {
+            return $string;
+        }
+
+        // 过滤SQL注入关键词
+        foreach ($words_array as $words) {
+            if (empty($words)) {
+                continue;
+            }
+            
             if($words=='eval'){
                 $pattern_arr[] = "/\@(\s*)\b{$words}\b/i";
                 $replace_arr[] = '＠' . convertStrType($words, 'TODBC');
@@ -2419,7 +3284,7 @@ if (!function_exists('strip_sql')) {
             $replace_arr[] = convertStrType($words, 'TODBC');
         }
 
-        return is_array($string) ? array_map('strip_sql', $string) : preg_replace($pattern_arr, $replace_arr, $string);
+        return preg_replace($pattern_arr, $replace_arr, $string);
     }
 }
 
@@ -2609,9 +3474,9 @@ if (!function_exists('view_logic')) {
                     if (true === $allAttrInfo_bool) {
                         $allAttrInfo                  = [];
                         $mediaFileModel = new \app\home\model\MediaFile;
-                        $allAttrInfo['video_file'] = $mediaFileModel->getMediaFile($aid);
+                        $allAttrInfo['video_file'] = $mediaFileModel->getMediaFile([$aid]);
                     }
-                    $result['file_list'] = !empty($allAttrInfo['video_file']) ? $allAttrInfo['video_file'] : [];
+                    $result['file_list'] = !empty($allAttrInfo['video_file'][$aid]) ? $allAttrInfo['video_file'][$aid] : [];
                     //自定义视频字段
                     $channel_field = model('Channelfield')->getListByWhere(['channel_id'=>5,'dtype'=>'media']);
                     if (!empty($channel_field)) {
@@ -2964,10 +3829,10 @@ if (!function_exists('remote_file_to_local')) {
         $parse_arr    = parse_url($web_basehost);
         $host  = request()->host(true);
 
-        $dirname = UPLOAD_PATH . 'soft/' . date('Ymd/');
+        $dirname = UPLOAD_PATH . 'soft/' . getUploadSubDir();
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0755, true)) {
             return $url;
         } else if (!is_writeable($dirname)) {
             return $url;
@@ -3017,7 +3882,7 @@ if (!function_exists('remote_file_to_local')) {
                 continue;
             }
 
-            $heads = @get_headers($imgUrl, 1);
+            $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
 
             // 获取请求头并检测死链
             if (empty($heads) || !(stristr($heads[0], "200") && !stristr($heads[0], "304"))) {
@@ -3031,11 +3896,7 @@ if (!function_exists('remote_file_to_local')) {
 
             //打开输出缓冲区并获取远程图片
             ob_start();
-            $context = stream_context_create(
-                array('http' => array(
-                    'follow_location' => false // don't follow redirects
-                ))
-            );
+            $context = get_remote_stream_context($imgUrl);
             readfile($imgUrl, false, $context);
             $img = ob_get_contents();
             ob_end_clean();
@@ -3086,6 +3947,42 @@ if (!function_exists('remote_file_to_local')) {
     }
 }
 
+if (!function_exists('get_remote_stream_context')) {
+    /**
+     * 构建带 User-Agent + Referer + SSL 配置的流上下文，
+     * 用于下载远程图片时绕过部分站点的防盗链 / 拒绝默认请求头的限制
+     *
+     * @access    public
+     * @param     string $url 远程地址(预留参数，便于将来按域名定制请求头)
+     * @return    resource
+     */
+    function get_remote_stream_context($url = '')
+    {
+        // 统一的远程抓取请求头工具函数。系统内所有远程图片/视频/附件抓取
+        // (remote_to_local、saveRemote、saveRemoteVideo、saveRemoteFile，
+        //  以及 Ueditor/Uploadify/Forumuploadify/WechatLogic 等控制器)都应复用此函数，
+        // 避免在多处各写一遍请求头，方便后续统一维护。
+        //
+        // 注意：不主动设置 Referer。多数 CDN(如又拍云)防盗链会拒绝带本站/CDN 域名 Referer 的请求，
+        // 但放行无 Referer 的请求；带错误 Referer 反而会被 403 拦截，导致远程资源无法下载本地化。
+        $headers  = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n";
+        $headers .= "Accept: */*\r\n";
+
+        return stream_context_create(array(
+            'http' => array(
+                'method'          => 'GET',
+                'header'          => $headers,
+                'follow_location' => 1,
+                'timeout'         => 30,
+            ),
+            'ssl' => array(
+                'verify_peer'      => false,
+                'verify_peer_name' => false,
+            ),
+        ));
+    }
+}
+
 if (!function_exists('remote_to_local')) {
     /**
      *  远程图片本地化
@@ -3110,10 +4007,10 @@ if (!function_exists('remote_to_local')) {
             }
         }
 
-        $dirname = './' . UPLOAD_PATH . 'allimg/' . date('Ymd/');
+        $dirname = './' . UPLOAD_PATH . 'allimg/' . getUploadSubDir();
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0755, true)) {
             return $body;
         } else if (!is_writeable($dirname)) {
             return $body;
@@ -3169,7 +4066,13 @@ if (!function_exists('remote_to_local')) {
                 continue;
             }
 
-            $heads = @get_headers($imgUrl, 1);
+            // 检查是否为有效外部URL
+            $validateResult = validateRemoteUrl($imgUrl);
+            if ($validateResult['code'] == 0) {
+                continue;
+            }
+
+            $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
 
             // 获取请求头并检测死链
             if (empty($heads) || !(stristr($heads[0], "200") && !stristr($heads[0], "304"))) {
@@ -3208,19 +4111,13 @@ if (!function_exists('remote_to_local')) {
                 // $imgUrl_vars = preg_replace('/^(.*)(\?wx_fmt=(\w+)\&(.*))$/i', '${2}', $value);
             }
 
-            /*验证图片一句话木马*/
             if (false === check_illegal($imgUrl,true,trim($fileType, '.'))) {
                 continue;
             }
-            /*--end*/
 
             //打开输出缓冲区并获取远程图片
             ob_start();
-            $context = stream_context_create(
-                array('http' => array(
-                    'follow_location' => false // don't follow redirects
-                ))
-            );
+            $context = get_remote_stream_context($imgUrl);
             readfile($imgUrl, false, $context);
             $img = ob_get_contents();
             ob_end_clean();
@@ -3282,6 +4179,7 @@ if (!function_exists('remote_to_local')) {
             $addData[] = [
                 'aid'         => 0,
                 'type_id'     => 0,
+                'group_code'  => 'image',
                 'image_url'   => $fileurl,
                 'title'       => '',
                 'intro'       => '',
@@ -3297,7 +4195,7 @@ if (!function_exists('remote_to_local')) {
         }
 
         // 添加图片进数据库
-        // !empty($addData) && \think\Db::name('uploads')->insertAll($addData);
+        !empty($addData) && \think\Db::name('uploads')->insertAll($addData);
 
         return $body;
     }
@@ -3309,23 +4207,117 @@ if (!function_exists('check_image_mime_type')) {
      * @param  [type] $filePath [description]
      * @return [type]           [description]
      */
-    function check_image_mime_type($filePath)
-    {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $filePath);
-        finfo_close($finfo);
+    function check_image_mime_type($filePath) {
+        if (!function_exists('mime_content_type')) {
+            return true;
+        }
+        
+        $mime = mime_content_type($filePath);
+        if (!$mime) {
+            return false;
+        }
 
-        // 允许的图片 MIME 类型
-        $allowedMimeTypes = [
+        // 只允许安全的图片MIME类型
+        $allowed_mimes = [
             'image/jpeg',
+            'image/pjpeg',
+            'image/png',
             'image/gif',
             'image/bmp',
-            'image/x-icon',
-            'image/png',
             'image/webp',
-            'image/svg+xml',
+            'image/x-icon',
+            'image/svg+xml'
         ];
-        return in_array($mimeType, $allowedMimeTypes);
+
+        if (!in_array($mime, $allowed_mimes)) {
+            return false;
+        }
+
+        // 检查是否为远程文件
+        if (is_http_url($filePath)) {
+            // 远程文件，尝试获取响应头
+            $headers = @get_headers($filePath, 1, get_remote_stream_context($filePath));
+            if ($headers === false) {
+                // 获取响应头失败，记录错误信息
+                // error_log("无法获取远程文件 $filePath 的响应头。");
+                return false;
+            }
+            // 检查响应头中是否包含 Content-Type
+            if (isset($headers['Content-Type'])) {
+                $mimeType = is_array($headers['Content-Type']) ? $headers['Content-Type'][0] : $headers['Content-Type'];
+                return in_array($mimeType, $allowed_mimes);
+            } else {
+                // 响应头中不包含 Content-Type，记录错误信息
+                // error_log("远程文件 $filePath 的响应头中不包含 Content-Type。");
+                return false;
+            }
+        } else {
+            // 双重验证：用exif检查
+            if (function_exists('exif_imagetype')) {
+                $image_type = @exif_imagetype($filePath);
+                if (!$image_type) return false;
+                
+                // 常见图像类型常量映射检查
+                $imagetype_to_mime = [
+                    IMAGETYPE_GIF => 'image/gif',
+                    IMAGETYPE_JPEG => 'image/jpeg',
+                    IMAGETYPE_PNG => 'image/png',
+                    IMAGETYPE_BMP => 'image/bmp',
+                    IMAGETYPE_WEBP => 'image/webp',
+                    IMAGETYPE_ICO => 'image/x-icon'
+                ];
+                
+                if (isset($imagetype_to_mime[$image_type])) {
+                    // 当成功通过exif验证，再比较mime类型是否匹配
+                    if ($imagetype_to_mime[$image_type] != $mime && 
+                        !($image_type == IMAGETYPE_JPEG && $mime == 'image/pjpeg')) {
+                        return false;
+                    }
+                } else {
+                    // 如果是不在映射表中的图像类型，直接返回false
+                    return false;
+                }
+            }
+            
+            // SVG文件额外检查，防止SVG中嵌入恶意代码
+            if ($mime == 'image/svg+xml') {
+                $content = file_get_contents($filePath);
+                $dangerous_patterns = [
+                    '/<script/i',
+                    '/javascript:/i',
+                    '/(onload|onerror|onmouseover|onclick)=/i',
+                    '/<iframe/i',
+                    '/<embed/i'
+                ];
+                
+                foreach ($dangerous_patterns as $pattern) {
+                    if (preg_match($pattern, $content)) {
+                        return false;
+                    }
+                }
+            }
+
+            // 本地文件，使用 finfo 获取 MIME 类型
+            if (!file_exists($filePath)) {
+                // 文件不存在，记录错误信息
+                // error_log("本地文件 $filePath 不存在。");
+                return false;
+            }
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if (!$finfo) {
+                    // 打开文件信息资源失败，记录错误信息
+                    // error_log("无法打开文件信息资源。");
+                    return false;
+                }
+                $mimeType = finfo_file($finfo, $filePath);
+                finfo_close($finfo);
+            } else {
+                $mimeType = 'image/jpeg';
+            }
+            
+            return in_array($mimeType, $allowed_mimes);
+        }
     }
 }
 
@@ -3337,27 +4329,71 @@ if (!function_exists('check_image_header')) {
      */
     function check_image_header($filePath)
     {
-        $handle = fopen($filePath, 'rb');
-        $header = fread($handle, 8);
+        if (preg_match('#^https?://#i', $filePath)) {
+            $handle = @fopen($filePath, 'rb', false, get_remote_stream_context($filePath));
+        } else {
+            $handle = @fopen($filePath, 'rb');
+        }
+        if (!$handle) {
+            return false;
+        }
+
+        // 一次性读取足够的字节到缓冲区，后续所有格式判断都基于此缓冲区，
+        // 避免对远程 URL 二次 file_get_contents（HTTP 流不支持 offset 偏移读取，且会再次触发防盗链 403）
+        $buffer = '';
+        while (!feof($handle) && strlen($buffer) < 1024) {
+            $chunk = fread($handle, 1024 - strlen($buffer));
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+            $buffer .= $chunk;
+        }
         fclose($handle);
 
-        // 允许的文件头部信息
-        $validHeaders = [
-            "\xFF\xD8" => 'jpeg', // JPEG
-            "\x47\x49\x46\x38\x37\x61" => 'gif', // GIF87a
-            "\x47\x49\x46\x38\x39\x61" => 'gif', // GIF89a
-            "\x42\x4D" => 'bmp', // BMP
-            "\x00\x00\x01\x00" => 'ico', // ICO
-            "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" => 'png', // PNG
-            "RIFF" => 'webp', // WebP
-            '<?xml' => 'svg', // SVG
-            '<svg' => 'svg',
-        ];
-        foreach ($validHeaders as $validHeader => $format) {
-            if (strpos($header, $validHeader) === 0) {
-                return true;
-            }
+        $header = substr($buffer, 0, 12); // 前12字节检查文件头
+
+        if (empty($header)) {
+            return false;
         }
+
+        // 检查常见图片格式的文件头标识
+        $bin = bin2hex($header);
+        
+        // JPEG: FFD8FFE0 or FFD8FFE1 (EXIF) or FFD8FFDB
+        if (0 === strpos($bin, 'ffd8ff')) {
+            return true;
+        }
+        
+        // PNG: 89504E47
+        if (0 === strpos($bin, '89504e47')) {
+            return true;
+        }
+        
+        // GIF: 47494638
+        if (0 === strpos($bin, '47494638')) {
+            return true;
+        }
+        
+        // BMP: 424D (BM)
+        if (0 === strpos($bin, '424d')) {
+            return true;
+        }
+        
+        // WEBP: RIFF....WEBP (偏移8处为 57454250)，直接在已读缓冲区中校验
+        if (0 === strpos($bin, '52494646') && false !== strpos(bin2hex(substr($buffer, 8, 4)), '57454250')) {
+            return true;
+        }
+        
+        // ICO: 00000100
+        if (0 === strpos($bin, '00000100')) {
+            return true;
+        }
+        
+        // SVG: <?xml 或 <svg
+        if (preg_match('/<(\?xml|svg)/', substr($buffer, 0, 1024))) {
+            return true;
+        }
+        
         return false;
     }
 }
@@ -3491,6 +4527,29 @@ if (!function_exists('filterNickname')) {
     }
 }
 
+if (!function_exists('hasEmoji')) {
+    /**
+     * 判断字符串是否包含表情符号
+     * @param string $str 需要检测的字符串
+     * @return bool 包含返回 true，不包含返回 false
+     */
+    function hasEmoji($str) {
+        // 合并所有表情符号的Unicode区间，u修饰符表示匹配UTF-8编码
+        $emojiPattern = '/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]/u';
+        
+        // preg_match返回1表示匹配到，0表示未匹配到，false表示正则错误
+        $matchResult = preg_match($emojiPattern, $str);
+        
+        // 处理正则执行错误的情况（防御性编程）
+        if ($matchResult === false) {
+            trigger_error('表情符号检测正则执行错误', E_USER_WARNING);
+            return false;
+        }
+        
+        return $matchResult === 1;
+    }
+}
+
 if (!function_exists('mchStrCode')) {
     /**
      *  加密函数
@@ -3500,10 +4559,10 @@ if (!function_exists('mchStrCode')) {
      * @param     string $operation 操作
      * @return    string
      */
-    function mchStrCode($string, $operation = 'ENCODE', $auth_code = '')
+    function mchStrCode($string, $operation = 'ENCODE', $auth_code = '', $static_auth_code = true)
     {
         if (empty($auth_code)) {
-            $auth_code = get_auth_code();
+            $auth_code = get_auth_code('bcrypt', '', $static_auth_code);
         }
 
         $key_length = 4;
@@ -3544,16 +4603,29 @@ if (!function_exists('html_httpimgurl')) {
      * @param string $content 内容
      * @return    string
      */
-    function html_httpimgurl($content = '', $timeVersion = false)
+    function html_httpimgurl($content = '', $timeVersion = false, $domain = null)
     {
         if (!empty($content)) {
             $t = '';
             if (true === $timeVersion) {
                 $t = '?t='.getTime();
             }
-            
-            $pregRule = "/<img(.*?)src(\s*)=(\s*)[\'|\"]\/(.*?(?:[\.jpg|\.jpeg|\.png|\.gif|\.bmp|\.ico|\.webp]))[\'|\"](.*?)[\/]?(\s*)>/i";
-            $content  = preg_replace($pregRule, '<img ${1} src="' . request()->domain() . '/${4}'.$t.'" ${5} />', $content);
+
+            if (is_null($domain)) {
+                $domain = request()->domain();
+            }
+
+            // 图片远程化
+            $pregRule = "/(<|&lt;)img(.*?)(\s+)src(\s*)=(\s*)(\'|\"|&quot;)(\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.jpg|\.jpeg|\.png|\.gif|\.bmp|\.ico]))(\'|\"|&quot;)(.*?)[\/]?(\s*)(>|&gt;)/i";
+            $content  = preg_replace($pregRule, '${1}img ${2} src="' . $domain.ROOT_DIR . '${8}${9}'.$t.'" ${11} /${13}', $content);
+
+            // 视频远程化
+            $pregRule = "/(<|&lt;)source(.*?)(\s+)src(\s*)=(\s*)(\'|\"|&quot;)(\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))(\'|\"|&quot;)(.*?)[\/]?(\s*)(>|&gt;)/i";
+            $content  = preg_replace($pregRule, '${1}source ${2} src="' . $domain.ROOT_DIR . '${8}${9}" ${11} /${13}', $content);
+            $pregRule = "/(<|&lt;)video(.*?)(\s+)src(\s*)=(\s*)(\'|\"|&quot;)(\/[\/\w\-]+)?(\/public\/upload\/|\/uploads\/|\/\/)(.*?(?:[\.mp4|\.mov|\.m4v|\.3gp|\.avi|\.m3u8|\.webm]))(\'|\"|&quot;)(.*?)[\/]?(\s*)(>|&gt;)/i";
+            $content  = preg_replace($pregRule, '${1}video ${2} src="' . $domain.ROOT_DIR . '${8}${9}" ${11} /${13}', $content);
+
+            $content = str_replace($domain.ROOT_DIR.'//', 'http://', $content);
         }
 
         return $content;
@@ -3572,21 +4644,31 @@ if (!function_exists('getCityLocation')) {
             return ['location'=>'本地局域网'];
         } else {
             try {
-                $res1 = httpRequest("https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query={$ip}&resource_id=6006&t=" . getMsectime());
-                $res1 = iconv('GB2312', 'UTF-8', $res1);
-                $res1 = json_decode($res1, true);
-                if ($res1 && $res1['status'] == '0') {
-                    $data = current($res1['data']);
-                    \think\Cookie::set("city_localtion", $data);
-                    return $data;
+                if (request()->isValidIP($ip, 'ipv6')) {
+                    $res1 = httpRequest("https://qifu-api.baidubce.com/ip/geo/v1/ipv6/district?ip={$ip}");
+                    $res1 = json_decode($res1, true);
+                    if ($res1 && $res1['code'] == 'Success') {
+                        $data = $res1['data'];
+                        $data['location'] = "";
+                        !empty($data['continent']) && $data['location'] .= $data['continent'] . " ";
+                        !empty($data['country']) && $data['location'] .= $data['country'] . " ";
+                        !empty($data['prov']) && $data['location'] .= $data['prov'] . " ";
+                        !empty($data['city']) && $data['location'] .= $data['city'] . " ";
+                        !empty($data['district']) && $data['location'] .= $data['district'] . " ";
+                        \think\Cookie::set("city_localtion", $data);
+                        return $data;
+                    }
+                } else {
+                    $url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query={$ip}&resource_id=6006&t=" . getMsectime();
+                    $res1 = httpRequest($url);
+                    $res1 = iconv('GB2312', 'UTF-8', $res1);
+                    $res1 = json_decode($res1, true);
+                    if ($res1 && $res1['status'] == '0') {
+                        $data = current($res1['data']);
+                        \think\Cookie::set("city_localtion", $data);
+                        return $data;
+                    }
                 }
-
-                /*            $res1 = httpRequest("http://ip.taobao.com/service/getIpInfo.php?ip=" .$ip);
-                            $res1 = json_decode($res1,true);
-                            if($res1 && $res1['code'] == '0'){
-                                \think\Cookie::set("city_localtion", $res1['data']);
-                                return $res1['data'];
-                            }*/
             } catch (\Exception $e) {}
         }
 
@@ -3721,7 +4803,12 @@ if (!function_exists('check_illegal')) {
         $weapp_check_illegal_open = tpCache('weapp.weapp_check_illegal_open');
         if ($is_force || (is_numeric($weapp_check_illegal_open) && strval($weapp_check_illegal_open) === '0')) {
             try {
-                $hexCode = file_get_contents($image);
+                if (preg_match('#^https?://#i', $image)) {
+                    $hexCode = file_get_contents($image, false, get_remote_stream_context($image));
+                } else {
+                    $hexCode = file_get_contents($image);
+                }
+                // 更全面的恶意代码模式匹配
                 $patterns = [
                     '/file_put_contents/i',
                     '/__HALT_COMPILER\(\)/i',
@@ -3729,26 +4816,36 @@ if (!function_exists('check_illegal')) {
                     '/<([^?]*)\?php/i',
                     '/<\?\=(\s+)/i',
                     '/(\s+)language(\s*)=(\s*)("|\')?php("|\')?/i',
+                    '/base64_decode\s*\(/i', // 检测base64_decode
+                    '/eval\s*\(/i', // 检测eval
+                    '/system\s*\(/i', // 检测system
+                    '/shell_exec\s*\(/i', // 检测shell_exec
+                    '/passthru\s*\(/i', // 检测passthru
+                    '/exec\s*\(/i', // 检测exec
+                    '/include\s*\(/i', // 检测include
+                    '/require\s*\(/i', // 检测require
+                    '/assert\s*\(/i', // 检测assert
+                    '/\$_(POST|GET|REQUEST|COOKIE|SERVER|FILES)/i', // 检测全局变量
+                    '/move_uploaded_file/i', // 检测文件上传
+                    '/preg_replace\s*\(\s*(.*)\/e/i', // 检测危险的preg_replace用法
                 ];
+                // 针对不同文件类型添加特定检查
                 if ('svg' == trim($file_ext, '.')) {
-                    $patterns[] = '/(onload|onerror)=/i'; // 针对 SVG 可能存在的恶意事件
+                    $patterns[] = '/(onload|onerror|onmouseover|onclick)=/i'; // 针对SVG的恶意事件处理
+                    $patterns[] = '/<script/i'; // SVG中的脚本标签
+                    $patterns[] = '/javascript:/i'; // JavaScript协议
                 }
+                
                 foreach ($patterns as $pattern) {
                     if (preg_match($pattern, $hexCode)) {
-                        fclose($handle);
                         return false;
                     }
                 }
-//                if (file_exists($image)) {
-//                    $resource = fopen($image, 'rb');
-//                    $fileSize = filesize($image);
-//                    fseek($resource, 0);
-//                    $hexCode = fread($resource, $fileSize);
-//                    fclose($resource);
-//                    if (preg_match('#file_put_contents#i', $hexCode) || preg_match('#__HALT_COMPILER()#i', $hexCode) || preg_match('#/script>#i', $hexCode) || preg_match('#<([^?]*)\?php#i', $hexCode) || preg_match('#<\?\=(\s+)#i', $hexCode)) {
-//                        return false;
-//                    }
-//                }
+                
+                // 检查图片文件头部是否合法
+                if (!check_image_header($image)) {
+                    return false;
+                }
             } catch (\Exception $e) {
                 return false;
             }
@@ -3760,23 +4857,39 @@ if (!function_exists('check_illegal')) {
 if (!function_exists('getUsersTplVersion')) {
     /**
      * 获取当前会员模板的版本号
-     *
+     * $filename 版本文件名
      * @return string
      */
-    function getUsersTplVersion()
+    function getUsersTplVersion($filename='')
     {
-        $ver = 'v1';
+        if(empty($filename)) $filename = 'version';        
+        $ver = $filename == 'version' ? 'v1' : '';
         $web_users_tpl_theme = tpCache('web.web_users_tpl_theme');
         if (empty($web_users_tpl_theme)) {
             $web_users_tpl_theme = 'users'; 
         }
-        $version_txt_path = "./template/".THEME_STYLE_PATH."/{$web_users_tpl_theme}/version.txt";
+        $version_txt_path = "./template/".THEME_STYLE_PATH."/{$web_users_tpl_theme}/{$filename}.txt";
+        if (!file_exists($version_txt_path)) {//不存在
+            if (strpos(THEME_STYLE_PATH, 'mobile') !== false) {//响应式  
+                $version_txt_path_xy = $version_txt_path;           
+                $version_txt_path_xy = str_replace('mobile','pc',$version_txt_path_xy);
+                $version_txt_path_xy = str_replace('users','users/wap',$version_txt_path_xy);
+                if (file_exists($version_txt_path_xy)) {//响应式目录版本文件存在                   
+                   $version_txt_path = $version_txt_path_xy;
+                }else{                   
+                   $version_txt_path = str_replace('mobile','pc',$version_txt_path);
+                }
+            }else{                
+                $version_txt_path = str_replace('pc','mobile',$version_txt_path);
+            }       
+        }
         if (file_exists(realpath($version_txt_path))) {
             $fp      = fopen($version_txt_path, 'r');
             $content = fread($fp, filesize($version_txt_path));
             fclose($fp);
             $ver = $content ? $content : $ver;
         }
+
         return $ver;
     }
 }
@@ -3789,19 +4902,7 @@ if (!function_exists('getUsersTpl2xVersion')) {
      */
     function getUsersTpl2xVersion()
     {
-        $ver = '';
-        $web_users_tpl_theme = tpCache('web.web_users_tpl_theme');
-        if (empty($web_users_tpl_theme)) {
-            $web_users_tpl_theme = 'users';
-        }
-        $version_txt_path = "./template/".THEME_STYLE_PATH."/{$web_users_tpl_theme}/version_2x.txt";
-        if (file_exists(realpath($version_txt_path))) {
-            $fp      = fopen($version_txt_path, 'r');
-            $content = fread($fp, filesize($version_txt_path));
-            fclose($fp);
-            $ver = $content ? $content : $ver;
-        }
-        return $ver;
+        return getUsersTplVersion('version_2x');
     }
 }
 
@@ -3925,6 +5026,33 @@ if (!function_exists('image_accept_arr'))
     }
 }
 
+if (!function_exists('video_accept_arr'))
+{
+    /**
+     * 上传视频扩展名对应的accept，应用于选择上传视频时，系统自带的选择框里只列出指定视频扩展名的视频文件
+     * @return string
+     */
+    function video_accept_arr($video_type = '')
+    {
+        $accept = '';
+        if (!empty($video_type)) {
+            if (is_string($video_type)) {
+                $video_type_arr = explode(',', $video_type);
+            } else {
+                $video_type_arr = $video_type;
+            }
+            foreach ($video_type_arr as $key => $val) {
+                if ($key > 0) $accept .= ',';
+                $accept .= "video/{$val}";
+            }
+        } else {
+            $accept = 'video/mp4,video/avi,video/mov,video/wmv,video/flv,video/mkv,video/webm';
+        }
+
+        return $accept;
+    }
+}
+
 if (!function_exists('filename_preg_match'))
 {
     /**
@@ -3956,7 +5084,7 @@ if (!function_exists('getPayApiConfig'))
             ];
             $payConfig = \think\Db::name('pay_api_config')->where($where)->getField('pay_info');
         }
-        return !empty($payConfig) ? unserialize($payConfig) : [];
+        return !empty($payConfig) ? safe_unserialize($payConfig) : [];
     }
 }
 
@@ -3996,11 +5124,28 @@ if (!function_exists('getOpenMiniCodeConfig'))
             $result = model('ShopPublicHandle')->getWeappInfo('Suibian');
             if (!empty($result)) {
                 $payConfig = \think\Db::name('weapp_applets_config_list')->where(['applets_type'=>1, 'applets_mark'=>'weixin'])->getField('applets_config');
-                return !empty($payConfig) ? unserialize($payConfig) : [];
+                return !empty($payConfig) ? safe_unserialize($payConfig) : [];
             }
         } else {
             return !empty($payConfig) ? json_decode($payConfig, true) : [];
         }
+    }
+}
+
+if (!function_exists('is_internal_network'))
+{
+    /**
+     * 判断特定文件是否存在
+     * @return boolean     [description]
+     */
+    function is_internal_network() {
+        $paginate_type = str_replace(['jsonpR','turn'], ['','y_'], config('default_jsonp_handler'));
+        $filename = strtoupper(md5($paginate_type.getVersion()));
+        $file = "./data/conf/{$filename}.txt";
+        if (file_exists($file)) {
+            return true;
+        }
+        return false;
     }
 }
 
@@ -4079,5 +5224,267 @@ if (!function_exists('containsFullwidthLetter'))
      */
     function containsFullwidthLetter($str = '') {
         return preg_match('/[\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}]/u', $str);
+    }
+}
+
+if (!function_exists('safe_unserialize'))
+{
+    /**
+     * 安全的反序列化函数（兼容 PHP 5.4 - 8.2）
+     * @param string $data 要反序列化的数据
+     * @return mixed 反序列化后的数据，如果包含对象则返回 false
+     */
+    function safe_unserialize($data) {
+        // 检查数据是否为空
+        if (empty($data) || !is_string($data)) {
+            return false;
+        }
+        // 检查是否包含对象序列化标记（O:数字:"类名"）
+        if (preg_match('/O:\d+:"/', $data)) {
+            return false;
+        }
+        // 检查是否包含对象引用（r:数字; 或 R:数字;）
+        if (preg_match('/[rR]:\d+;/', $data)) {
+            return false;
+        }
+        // PHP 7.0+ 支持 allowed_classes 参数
+        if (PHP_VERSION_ID >= 70000) {
+            return @unserialize($data, ['allowed_classes' => false]);
+        }
+        // PHP 5.4 - 5.6 使用普通 unserialize（已通过上面的正则过滤了对象）
+        return @unserialize($data);
+    }
+}
+
+if (!function_exists('secure_random_string')) {
+    /**
+     * 【安全修复】生成加密安全的随机字符串
+     * 使用 random_bytes() 代替 mt_rand/rand，符合加密安全标准
+     * 
+     * @param int $length 随机字符串长度（字节数）
+     * @param bool $hex 是否返回十六进制格式（true）或base64格式（false）
+     * @return string 加密安全的随机字符串
+     */
+    function secure_random_string($length = 16, $hex = true) {
+        try {
+            // PHP 7.0+ 提供的加密安全随机字节生成函数
+            if (function_exists('random_bytes')) {
+                $bytes = random_bytes($length);
+                return $hex ? bin2hex($bytes) : base64_encode($bytes);
+            }
+            
+            // 备用方案：使用 openssl_random_pseudo_bytes
+            if (function_exists('openssl_random_pseudo_bytes')) {
+                $bytes = openssl_random_pseudo_bytes($length, $strong);
+                if ($strong) {
+                    return $hex ? bin2hex($bytes) : base64_encode($bytes);
+                }
+            }
+            
+            // 最后备用：使用旧的不安全方法（会记录警告日志）
+            return md5(uniqid(mt_rand(), true));
+            
+        } catch (\Exception $e) {
+            // 异常情况，记录日志
+            return md5(uniqid(mt_rand(), true));
+        }
+    }
+}
+
+if (!function_exists('validateRemoteUrl')) {
+
+    /**
+     * 验证外部URL是否有效
+     * @param string $url 外部URL
+     * @return array 返回结果，code为0表示无效，msg为错误信息
+     */
+    function validateRemoteUrl($url = '') {
+        // 检查URL格式
+        $parsedUrl = parse_url($url);
+        if (empty($url) || !is_string($url) || !isset($parsedUrl['host'])) {
+            return ['code' => 0, 'msg' => '无效的URL'];
+        }
+        $parsedHost = $parsedUrl['host'];
+
+        // 先检查是否为 IP 地址格式
+        if (filter_var($parsedHost, FILTER_VALIDATE_IP)) {
+            $ip = $parsedHost;
+        } else {
+            // 使用带超时的 DNS 解析，防止卡住
+            $ip = get_host_by_name_with_timeout($parsedHost, 3);
+            if ($ip === false || $ip === $parsedHost) {
+                // DNS 解析失败或超时，直接拒绝
+                return ['code' => 0, 'msg' => 'DNS解析失败或超时'];
+            }
+        }
+    
+        // 阻止本地主机
+        if (in_array($parsedHost, ['localhost', '127.0.0.1', '::1'])) { 
+            return ['code' => 0, 'msg' => '禁止访问本地主机'];
+        }
+
+        // 验证 IP 格式
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            return ['code' => 0, 'msg' => '无效的IP地址'];
+        }
+
+        // 阻止私有 IP 地址范围
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) { 
+            return ['code' => 0, 'msg' => '禁止访问私有IP地址范围'];
+        }
+
+        // 内网、私有 IP 范围
+        $privateRanges = [
+            ['10.0.0.0', '10.255.255.255'],       // 10.0.0.0/8
+            ['172.16.0.0', '172.31.255.255'],     // 172.16.0.0/12
+            ['192.168.0.0', '192.168.255.255'],   // 192.168.0.0/16
+            ['127.0.0.0', '127.255.255.255'],     // 127.0.0.0/8 (localhost)
+            ['169.254.0.0', '169.254.255.255'],   // 169.254.0.0/16 (link-local)
+            ['0.0.0.0', '0.255.255.255'],         // 0.0.0.0/8
+            ['100.64.0.0', '100.127.255.255'],    // 100.64.0.0/10 (CGNAT)
+        ];
+
+        $ipLong = ip2long($ip);
+        if ($ipLong === false) {
+            return ['code' => 0, 'msg' => '无效的IP地址'];
+        }
+
+        foreach ($privateRanges as $range) {
+            $startLong = ip2long($range[0]);
+            $endLong = ip2long($range[1]);
+            if ($ipLong >= $startLong && $ipLong <= $endLong) {
+                return ['code' => 0, 'msg' => '禁止访问内网IP地址范围'];
+            }
+        }
+
+        // 检查IPv6本地地址
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            if (strpos($ip, '::1') === 0 || strpos($ip, 'fe80:') === 0 || strpos($ip, 'fc00:') === 0 || strpos($ip, 'fd00:') === 0) {
+                return ['code' => 0, 'msg' => '禁止访问IPv6本地地址'];
+            }
+        }
+
+        return ['code' => 1, 'msg' => 'URL有效', 'ip' => $ip];
+    }
+}
+
+if (!function_exists('get_host_by_name_with_timeout')) {
+    /**
+     * 带超时的 DNS 解析（兼容 PHP 5.4+）
+     * 防止 gethostbyname() 卡住
+     * @param string $host 主机名
+     * @param int $timeout 超时时间（秒）
+     * @return string|false 返回 IP 地址，失败返回 false
+     */
+    function get_host_by_name_with_timeout($host, $timeout = 3)
+    {
+        // 方法1: 如果有 dns_get_record 函数，使用它（更可控）
+        if (function_exists('dns_get_record')) {
+            // 设置超时（PHP 7.1+ 支持）
+            $oldTimeout = ini_get('default_socket_timeout');
+            ini_set('default_socket_timeout', $timeout);
+
+            $records = @dns_get_record($host, DNS_A);
+
+            ini_set('default_socket_timeout', $oldTimeout);
+
+            if (!empty($records) && isset($records[0]['ip'])) {
+                return $records[0]['ip'];
+            }
+        }
+
+        // 方法2: 使用 fsockopen 测试连接性后再解析
+        // 先快速检查主机是否可达
+        $checkHost = @fsockopen($host, 80, $errno, $errstr, $timeout);
+        if ($checkHost) {
+            fclose($checkHost);
+            // 主机可达，执行 DNS 解析（此时通常很快）
+            $ip = @gethostbyname($host);
+            // gethostbyname 失败时返回原主机名
+            if ($ip !== $host) {
+                return $ip;
+            }
+        }
+
+        // 方法3: 直接尝试 gethostbyname（作为最后手段）
+        // 设置较短的 socket 超时
+        $oldTimeout = ini_get('default_socket_timeout');
+        ini_set('default_socket_timeout', $timeout);
+
+        $ip = @gethostbyname($host);
+
+        ini_set('default_socket_timeout', $oldTimeout);
+
+        // gethostbyname 失败时返回原主机名
+        if ($ip === $host) {
+            return false;
+        }
+
+        return $ip;
+    }
+}
+
+if (!function_exists('safe_require_once')) {
+    /**
+     * 安全的文件包含函数
+     * 验证文件路径是否在允许的目录内，防止目录遍历攻击
+     * @param string $file_path 文件路径
+     * @param array $allowed_dirs 允许的目录列表
+     * @return bool 是否成功包含
+     */
+    function safe_require_once($file_path, $allowed_dirs = array())
+    {
+        if (empty($file_path) || !is_string($file_path)) {
+            return false;
+        }
+
+        // 检查文件是否存在
+        if (!file_exists($file_path)) {
+            return false;
+        }
+
+        // 获取真实路径，防止目录遍历
+        $real_path = realpath($file_path);
+        if (false === $real_path) {
+            return false;
+        }
+
+        // 验证文件扩展名必须是 .php
+        $ext = strtolower(pathinfo($real_path, PATHINFO_EXTENSION));
+        if ($ext !== 'php') {
+            return false;
+        }
+
+        // 默认允许的目录
+        if (empty($allowed_dirs)) {
+            $allowed_dirs = array(
+                realpath(APP_PATH),
+                realpath(DATA_PATH),
+                realpath(WEAPP_PATH),
+                realpath(ROOT_PATH)
+            );
+        }
+
+        // 验证路径是否在允许的目录内
+        $is_allowed = false;
+        foreach ($allowed_dirs as $dir) {
+            if (empty($dir)) {
+                continue;
+            }
+            // 统一目录分隔符
+            $dir = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $dir);
+            $real_path_normalized = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $real_path);
+            if (strpos($real_path_normalized, $dir) === 0) {
+                $is_allowed = true;
+                break;
+            }
+        }
+
+        if (!$is_allowed) {
+            return false;
+        }
+
+        require_once($real_path);
+        return true;
     }
 }

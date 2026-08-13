@@ -1,0 +1,23 @@
+* {
+    margin: 0;
+    padding: 0;
+    color: #838383;
+}
+
+table {
+    font-size: 12px;
+    margin: 10px;
+    line-height: 36px;
+    width: 100%;
+}
+
+.txt {
+    box-sizing: border-box;
+    width: 90%;
+    height: 30px;
+    line-height: 30px;
+    border: 1px solid #F2F2F2;
+    border-radius: 3px;
+    padding: 0 5px;
+    outline: none;
+}

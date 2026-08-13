@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -83,6 +83,9 @@ class ShopComment extends Base
             }
         }
         foreach ($res as $k => $v){
+            if (empty($res[$k]['goods'])) {
+                $res[$k]['goods'] = [];
+            }
             $res[$k]['OrderDetailsUrl'] = urldecode(url('user/Shop/shop_order_details',['order_id'=>$v['order_id']]));
             $res[$k]['CommentProduct'] = urldecode(url('user/ShopComment/comment_list', ['order_id' => $v['order_id']]));
             $res[$k]['order_amount'] = floatval($v['order_amount']);
@@ -377,7 +380,7 @@ class ShopComment extends Base
         if (1 == !empty($Details['is_comment'])) $this->error('商品已评价过', $url);
 
         // 商品规格
-        $Details['spec_value'] = htmlspecialchars_decode(unserialize($Details['data'])['spec_value']);
+        $Details['spec_value'] = htmlspecialchars_decode(safe_unserialize($Details['data'])['spec_value']);
         $product_spec_list = [];
         if (!empty($Details['spec_value'])) {
             $spec_value_arr = explode('<br/>', $Details['spec_value']);

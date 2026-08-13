@@ -152,7 +152,7 @@ class ShopOrderService extends Model
         // 获取商品前台URL
         $Archives = get_archives_data($Service, 'product_id');
         foreach ($Service as $key => $value) {
-            $detailsData = !empty($value['detailsData']) ? unserialize($value['detailsData']) : [];
+            $detailsData = !empty($value['detailsData']) ? safe_unserialize($value['detailsData']) : [];
             $Service[$key]['Details'][]['pointsGoodsBuyField'] = !empty($detailsData['pointsGoodsBuyField']) ? json_decode($detailsData['pointsGoodsBuyField'], true) : [];
 
             $Service[$key]['handle'] = in_array($value['status'], [3, 6, 7, 8]) ? '已完成' : '处理中';
@@ -263,13 +263,10 @@ class ShopOrderService extends Model
         $Service['update_time'] = !empty($Service['update_time']) ? date('Y-m-d H:i:s', $Service['update_time']) : 0;
         $Service['manual_time'] = !empty($Service['manual_time']) ? date('Y-m-d H:i:s', $Service['manual_time']) : 0;
         if (empty($Service['manual_time']) && 1 === intval($Service['manual_refund'])) $Service['manual_time'] = $Service['update_time'];
-        $Service['users_delivery'] = !empty($Service['users_delivery']) ? unserialize($Service['users_delivery']) : [];
-        $Service['admin_delivery'] = !empty($Service['admin_delivery']) ? unserialize($Service['admin_delivery']) : [];
+        $Service['users_delivery'] = !empty($Service['users_delivery']) ? safe_unserialize($Service['users_delivery']) : [];
+        $Service['admin_delivery'] = !empty($Service['admin_delivery']) ? safe_unserialize($Service['admin_delivery']) : [];
         if (!empty($Service['admin_delivery']['time'])) $Service['admin_delivery']['time'] = date('Y-m-d H:i:s', $Service['admin_delivery']['time']);
         $Service['refund_way'] = empty($Service['refund_way']) || 0 === intval($Service['refund_way']) ? 1 : intval($Service['refund_way']);
-        $Service['refund_price'] = floatval($Service['refund_price']) * floatval($Service['product_num']);
-        $Service['actual_price'] = floatval($Service['actual_price']) > 0 ? floatval($Service['actual_price']) : unifyPriceHandle($Service['refund_price']);
-        $Service['actual_points'] = floatval($Service['actual_points']) > 0 ? floatval($Service['actual_points']) : '';
 
         // 商品规格，组合数据
         // $Service['product_spec'] = explode('&lt;br/&gt;', $Service['product_spec']);
@@ -313,7 +310,7 @@ class ShopOrderService extends Model
         $Order['shipping_fee'] = unifyPriceHandle($Order['shipping_fee']);
         $Order['order_amount'] = unifyPriceHandle($Order['order_amount']);
         // 备注条数
-        $Order['admin_note_count'] = !empty($Order['admin_note']) ? count(unserialize($Order['admin_note'])) : 0;
+        $Order['admin_note_count'] = !empty($Order['admin_note']) ? count(safe_unserialize($Order['admin_note'])) : 0;
         // 获取订单方式名称
         $Order['pay_name_show'] = !empty($Order['pay_name']) ? Config::get('global.pay_method_arr')[$Order['pay_name']] : '微信支付';
 
@@ -336,7 +333,7 @@ class ShopOrderService extends Model
         $Details['product_img'] = !empty($Details['litpic']) ? get_default_pic($Details['litpic']) : '';
         $Details['product_subtotal'] = unifyPriceHandle(floatval($Details['product_price']) * floatval($Details['num']));
         // 规格处理
-        $detailsData = !empty($Details['data']) ? unserialize($Details['data']) : [];
+        $detailsData = !empty($Details['data']) ? safe_unserialize($Details['data']) : [];
         $Details['pointsGoodsBuyField'] = !empty($detailsData['pointsGoodsBuyField']) ? json_decode($detailsData['pointsGoodsBuyField'], true) : [];
         // $productSpec = !empty($detailsData['spec_value']) ? explode('；', $detailsData['spec_value']) : '';
         // $specData = '';
@@ -350,7 +347,7 @@ class ShopOrderService extends Model
         $Service['last_one'] = model('ShopPublicHandle')->isLastOneServiceOrder($Service['users_id'], $Service['order_id'], 1);
 
         // 用户发货后计算退还金额、余额
-        if (5 === intval($Service['status']) || 7 === intval($Service['status']) || in_array($Service['service_type'], [2])) {
+        if (5 === intval($Service['status']) || 7 === intval($Service['status']) || in_array($Service['service_type'], [2, 3])) {
             // 订单总数
             // $Order['order_total_num'] = (string)$Order['order_total_num'];
 
@@ -372,6 +369,10 @@ class ShopOrderService extends Model
             $Service['refund_price'] = '0.00';
         }
         $Service['shipping_fee']  = $ShippingFee;
+        $Service['refund_price'] = !empty($Service['refund_price']) ? unifyPriceHandle($Service['refund_price']) : 0;
+        $Service['refund_balance'] = !empty($Service['refund_balance']) ? unifyPriceHandle($Service['refund_balance']) : 0;
+        $Service['actual_price'] = floatval($Service['actual_price']) > 0 ? floatval($Service['actual_price']) : floatval($Service['refund_price']);
+        $Service['actual_points'] = intval($Service['actual_points']) > 0 ? intval($Service['actual_points']) : 0;
 
         // 会员信息
         $Users = $this->users_db->find($Service['users_id']);
@@ -790,7 +791,7 @@ class ShopOrderService extends Model
             foreach ($details as $key => $value) {
                 if (empty($value['service_id']) || !in_array($value['service_status'], [6, 7]))  {
                     // 商品规格信息
-                    $value['data'] = !empty($value['data']) ? unserialize($value['data']) : [];
+                    $value['data'] = !empty($value['data']) ? safe_unserialize($value['data']) : [];
                     $product_spec = '';//!empty($value['data']['spec_value']) ? htmlspecialchars_decode(htmlspecialchars_decode($value['data']['spec_value'])) : '';
                     // 订单售后信息
                     $insert = [

@@ -243,9 +243,11 @@
                                 {/eq}
 
                                 {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
-                                    {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
-                                        <i></i><a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
-                                    {/if}
+                                    {eq name="'del'|is_check_cud" value="1"}
+                                        {if condition="$main_lang == $admin_lang || !empty($global['language_split'])"}
+                                            <i></i><a class="btn red"  href="javascript:void(0);" data-url="{:url('Arctype/pseudo_del')}" data-id="{$vo.id}" data-typename="{$vo.typename}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq} onClick="delfun(this);">删除</a>
+                                        {/if}
+                                    {/eq}
                                 {/eq}
                                 <i></i>
                                 <a href="{$vo|get_typeurl=###}" class="btn blue" target="_blank">预览</a>
@@ -273,7 +275,9 @@
             </span>
             <div class="nav-dropup">
                 {eq name="'Arctype@pseudo_del'|is_check_access" value="1"}
-                    <button class="layui-btn layui-btn-primary" onclick="batch_del_arctype(this, 'ids')"  data-url="{:url('Arctype/batch_pseudo_del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>批量删除</button>
+                    {eq name="'del'|is_check_cud" value="1"}
+                        <button class="layui-btn layui-btn-primary" onclick="batch_del_arctype(this, 'ids')"  data-url="{:url('Arctype/batch_pseudo_del')}" {eq name="$global['web_recycle_switch']" value='1'} data-deltype="del" {else /} data-deltype="pseudo" {/eq}>批量删除</button>
+                    {/eq}
                 {/eq}
             </div>
             {eq name="'RecycleBin@arctype_index'|is_check_access" value="1"}
@@ -331,7 +335,12 @@
     function shopProductIndex(obj) {
         var shop_open = {$usersConfig['shop_open']|default=0};
         if (1 == shop_open) {
-            top.$('#Shop_home').attr('data-click', true).attr('data-click_url', $(obj).data('url')).click();
+            if (top.$('#Shop_home').length >= 1) {
+                top.$('#Shop_home').attr('data-click', true).attr('data-click_url', $(obj).data('url')).click();
+            } else {
+                top.$('#sub-menu a#Arctype_index').removeClass('on');
+                window.location.href = "{:url('Shop/home')}";
+            }
         } else {
             window.location.href = $(obj).data('href');
         }

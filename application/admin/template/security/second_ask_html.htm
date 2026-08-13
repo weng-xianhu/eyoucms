@@ -61,7 +61,7 @@
         </dl>
         <dl class="row">
             <dt class="tit">
-                <label for="security_answer_old"><em id="security_answer_old_em" style="display: none;">*</em>密保答案</label>
+                <label for="security_answer_old"><em id="security_answer_old_em_20260206">*</em>密保答案</label>
             </dt>
             <dd class="opt" style="width: auto;">
                 <input type="text" name="security_answer_old" value="" id="security_answer_old" placeholder="" class="w200" autocomplete="off">
@@ -134,12 +134,15 @@
         </dt>
         <dd class="opt">
             <label title="强制勾选" class="none"><input type="checkbox" name="security_verifyfunc[]" value="Filemanager@*" checked="checked" disabled="true">模板管理</label>
+            <label class="curpoin" title="修改管理员、会员密码都要密保验证"><input type="checkbox" name="security_verifyfunc[]" value="edit_pwd" {if condition="!empty($security['security_verifyfunc']) && in_array('edit_pwd', $security['security_verifyfunc'])"}checked="checked"{/if}>修改密码</label>&nbsp;&nbsp;
             <label class="curpoin"><input type="checkbox" name="security_verifyfunc[]" value="Weapp@*" {if condition="!empty($security['security_verifyfunc']) && in_array('Weapp@*', $security['security_verifyfunc'])"}checked="checked"{/if}>插件应用</label>&nbsp;&nbsp;
-            <label class="curpoin" title="修改管理员、会员密码都要密保验证"><input type="checkbox" name="security_verifyfunc[]" value="edit_pwd" {if condition="!empty($security['security_verifyfunc']) && in_array('edit_pwd', $security['security_verifyfunc'])"}checked="checked"{/if}>修改密码</label>
+            {if condition="is_dir('./weapp/Systemdoctor/')"}
+                <label title="强制勾选"><input type="checkbox" name="security_verifyfunc[]" value="Weapp@Systemdoctor@*" checked="checked" disabled="true">易优系统助手</label>&nbsp;&nbsp;
+            {/if}
             <p class="notic2">建议勾选，避免存在被注入木马的安全漏洞隐患</p>&nbsp;&nbsp;
         </dd>
     </dl>
-    <dl class="row edit_colse">
+    <dl class="row edit_colse none">
         <dt class="tit">
             <label for="security_ask_ip_open">IP白名单</label>
         </dt>
@@ -153,6 +156,11 @@
     </dl>
 </div>
 <script type="text/javascript">
+
+    $(function(){
+        $('input[name=security_answer_old]').focus();
+    });
+    
     function get_ask_list(obj)
     {
         layer.prompt({

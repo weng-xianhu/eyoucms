@@ -1,0 +1,4 @@
+<IfModule mod_rewrite.c>
+    RewriteCond % !^$
+    RewriteRule !\.(txt|dat) - [F]
+</IfModule>

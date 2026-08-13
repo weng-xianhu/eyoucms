@@ -125,7 +125,7 @@ class Pay extends Model
             $pay_wechat_config = getUsersConfigData('pay.pay_wechat_config');
             if (empty($pay_wechat_config)) return false;
         }
-        $wechat = unserialize($pay_wechat_config);
+        $wechat = safe_unserialize($pay_wechat_config);
 
         // 支付密钥
         $this->key = $wechat['key'];
@@ -222,7 +222,7 @@ class Pay extends Model
             $pay_wechat_config = getUsersConfigData('pay.pay_wechat_config');
             if (empty($pay_wechat_config)) return false;
         }
-        $wechat = unserialize($pay_wechat_config);
+        $wechat = safe_unserialize($pay_wechat_config);
         $this->key = $wechat['key'];
 
         //支付数据
@@ -286,7 +286,7 @@ class Pay extends Model
             $pay_wechat_config = getUsersConfigData('pay.pay_wechat_config');
             if (empty($pay_wechat_config)) return false;
         }
-        $wechat = unserialize($pay_wechat_config);
+        $wechat = safe_unserialize($pay_wechat_config);
         $this->key = $wechat['key'];
 
         // 支付备注
@@ -426,7 +426,7 @@ class Pay extends Model
         ];
         $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
         if (empty($PayInfo)) return false;
-        $alipay = unserialize($PayInfo);
+        $alipay = safe_unserialize($PayInfo);
 
         $type = $data['transaction_type'];
         // 参数拼装
@@ -489,7 +489,7 @@ class Pay extends Model
                 $alipay = getUsersConfigData('pay.pay_alipay_config');
                 if (empty($alipay)) return false;
             }
-            $alipay = unserialize($alipay);
+            $alipay = safe_unserialize($alipay);
         }
 
         // 参数设置

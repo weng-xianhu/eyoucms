@@ -192,7 +192,7 @@ class Base extends Common {
     public function update_notice_data()
     {
         //查接收消息通知的会员id
-        $users_id = $this->users_id;
+        $users_id = intval($this->users_id);
         $last_read_notice_id = Db::name('users_notice_read')
             ->where(['users_id'=>$users_id])
             ->max("notice_id");
@@ -210,5 +210,61 @@ class Base extends Common {
             }
             Db::name('users_notice_read')->insertAll($no_add_data);
         }
+    }
+    /**
+     * 验证百度接口
+     * @param  string $str [字段名称]
+     * @return [type]      [description]
+     */
+    /**
+     * 验证百度接口
+     * @param  string $str [字段名称]
+     * @return void
+     */
+    public function weapp_ai($str = '') {
+        $weapp_ai = false;
+        if (!empty($str) && is_dir('./weapp/Ai/') && 1 == $this->usersConfig['shop_open'] && $this->usersTpl2xVersion == 'v2.x') {
+            $aiDatas = tpCache('ai');
+            if (!empty($aiDatas[$str])) {
+                $weapp_ai = true;
+            }
+        }
+        $this->assign('weapp_ai', $weapp_ai);
+    }
+
+    /**
+     * 安全修复: 验证重定向 URL，防止开放重定向攻击
+     * @param string $url 待验证的 URL
+     * @return string|null 安全的 URL 或 null
+     */
+    protected function validateRedirectUrl($url)
+    {
+        if (empty($url)) {
+            return null;
+        }
+
+        // 过滤危险字符
+        $url = strip_tags($url);
+
+        // 解析 URL
+        $parsed = parse_url($url);
+
+        // 只允许相对路径
+        if (!isset($parsed['host'])) {
+            // 防止 javascript: 等协议
+            if (preg_match('/^(javascript|data|vbscript):/i', $url)) {
+                return null;
+            }
+            return $url;
+        }
+
+        // 如果有 host，验证是否为当前域名
+        $currentHost = $this->request->host();
+        if (strcasecmp($parsed['host'], $currentHost) !== 0) {
+            // 不是当前域名，返回 null
+            return null;
+        }
+
+        return $url;
     }
 }

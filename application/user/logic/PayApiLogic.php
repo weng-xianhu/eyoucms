@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -74,7 +74,7 @@ class PayApiLogic extends Model
         if ('alipay' == $post['pay_mark']) {
             $Config = $this->pay_api_config_db->where(['pay_mark'=>'PersonPay'])->find();
             $personPay = Db::name('weapp')->where(['code'=>'PersonPay','status'=>1])->find();
-            $Config['pay_info'] = !empty($Config['pay_info']) ? unserialize($Config['pay_info']) : [];
+            $Config['pay_info'] = !empty($Config['pay_info']) ? safe_unserialize($Config['pay_info']) : [];
             if (empty($personPay) || !isset($Config['pay_info']['is_open_pay']) || 1 === intval($Config['pay_info']['is_open_pay'])) $Config = [];
         }
 
@@ -82,7 +82,7 @@ class PayApiLogic extends Model
             //先查虎皮椒支付有没有配置
             $hupijiao_pay_config = $this->pay_api_config_db->where(['pay_mark'=>'Hupijiaopay'])->find();
             if (!empty($hupijiao_pay_config)) {
-                $hupijiao_pay_config['pay_info'] = unserialize($hupijiao_pay_config['pay_info']);
+                $hupijiao_pay_config['pay_info'] = safe_unserialize($hupijiao_pay_config['pay_info']);
                 $hupijiaoInfo = Db::name('weapp')->where(['code'=>'Hupijiaopay','status'=>1])->find();
                 if (empty($hupijiaoInfo) || !isset($hupijiao_pay_config['pay_info']['is_open_pay']) || 1 == $hupijiao_pay_config['pay_info']['is_open_pay']) {
                     $Config = $this->GetOtherPayApiConfig($post);
@@ -138,7 +138,7 @@ class PayApiLogic extends Model
         ];
         $Config = $this->pay_api_config_db->where($where)->find();
         if (empty($Config) || empty($Config['pay_info'])) $this->error('请在后台【接口配置】完善【'.$Config['pay_name'].'】配置信息');
-        $Config['pay_info'] = unserialize($Config['pay_info']);
+        $Config['pay_info'] = safe_unserialize($Config['pay_info']);
 
         if (1 == $post['pay_id']) {
             if (!isset($Config['pay_info']['is_open_wechat']) || 1 == $Config['pay_info']['is_open_wechat']) {
@@ -305,6 +305,12 @@ class PayApiLogic extends Model
                     echo 'SUCCESS'; exit;
                 }
             }
+
+            /*if (!empty($OrderData['order_status']) && in_array($OrderData['order_status'], [2, 3])) {
+                // 邮箱发送 用户修复的问题，先不放出去，等用户用一段时间再观察
+                $email = GetEamilSendData(tpCache('smtp'), $this->users, $OrderData, 1, $post['pay_mark']);
+                if (!empty($email['url'])) httpRequest(request()->domain() . $email['url'], 'POST', $email['data']);
+            }*/
 
             $OrderData['unified_id'] = intval($OrderData['order_id']);
             $OrderData['unified_amount'] = unifyPriceHandle($OrderData['order_amount']);
@@ -820,7 +826,7 @@ class PayApiLogic extends Model
                     } else {
                         // 同步处理
                         if (empty($this->fromAsync)) {
-                            $this->success('支付成功，余额充值失败，请联系客服', $url, $result_0);
+                            $this->success('支付成功，余额充值失败', $url, $result_0);
                         }
                         // 异步处理
                         else {
@@ -830,7 +836,7 @@ class PayApiLogic extends Model
                 } else {
                     // 同步处理
                     if (empty($this->fromAsync)) {
-                        $this->success('支付成功，订单更新失败，请联系客服', $url, $result_0);
+                        $this->success('支付成功，订单更新失败', $url, $result_0);
                     }
                     // 异步处理
                     else {
@@ -846,7 +852,8 @@ class PayApiLogic extends Model
                 // async为true时表示同步，否则异步
                 $async = $this->fromAsync ? false : true;
                 $returnData = pay_success_logic($this->users_id, $Order['order_code'], $PayDetails, $Order['pay_name'], $async, [], $config);
-                if (is_array($returnData)) {
+          
+              if (is_array($returnData)) {
                     // 同步处理
                     if (empty($this->fromAsync)) {
                         if (1 === intval($returnData['code'])) {
@@ -863,6 +870,10 @@ class PayApiLogic extends Model
                     // 异步处理
                     else {
                         if (1 === intval($returnData['code'])) {
+                            // 发送邮箱 用户修复的问题，先不放出去，等用户用一段时间再观察
+                            /*if (!empty($returnData['data']['email']['url'])) {
+                                httpRequest(request()->domain() . $returnData['data']['email']['url'], 'POST', $returnData['data']['email']['data']);
+                            }*/
                             echo 'SUCCESS'; exit;
                         } else {
                             echo 'FAIL'; exit;
@@ -879,6 +890,11 @@ class PayApiLogic extends Model
                     // 手机发送
                     $returnData['mobile'] = GetMobileSendData(tpCache('sms'), $users, $Order, 1, $Order['pay_name']);
                     $this->success('已支付', url('user/Shop/shop_centre'), $returnData);
+                } else {
+                    // 发送邮箱 用户修复的问题，先不放出去，等用户用一段时间再观察
+                    /*if (!empty($returnData['data']['email']['url'])) {
+                        httpRequest(request()->domain() . $returnData['data']['email']['url'], 'POST', $returnData['data']['email']['data']);
+                    }*/
                 }
             }
         }
@@ -896,7 +912,7 @@ class PayApiLogic extends Model
                     'order_number' => strval($Order['order_number']),
                 ];
                 // 更新数据
-                $usersTypeData = !empty($Order['cause']) ? unserialize($Order['cause']) : session('UsersTypeData');
+                $usersTypeData = !empty($Order['cause']) ? safe_unserialize($Order['cause']) : session('UsersTypeData');
                 $update = $this->GetUpMoneyData($usersTypeData, $Order['pay_method']);
                 // 执行更新
                 $resultID = $this->users_money_db->where($where)->update($update);
@@ -927,7 +943,7 @@ class PayApiLogic extends Model
                 }
                 // 同步处理
                 if (empty($this->fromAsync)) {
-                    $this->success('支付成功，升级失败，请联系客服', $url, $result_0);
+                    $this->success('支付成功，升级失败', $url, $result_0);
                 }
                 // 异步处理
                 else {
@@ -1106,7 +1122,13 @@ class PayApiLogic extends Model
         }
         // 多商家订单处理
         else if (99 === intval($Post['transaction_type'])) {
-            // 付款成功后，订单并未修改状态时，修改订单状态并返回
+            // 小程序环境：不在这里处理，让控制权回到 Shop.php 的 WechatAppletsPayDealWith
+            if (!empty($this->fromApplets)) {
+                // 小程序多商家订单交给 Shop.php 处理，这里直接返回
+                return;
+            }
+            
+            // PC端：付款成功后，订单并未修改状态时，修改订单状态并返回
             if (!empty($Order) && empty($Order['pay_status'])) {
                 $multiMerchantLogic = new \app\user\logic\MultiMerchantLogic;
                 $multiMerchantLogic->unifiedPaySuccessHandle($Order, $Post['pay_mark'], $PayDetails);
@@ -1240,7 +1262,7 @@ class PayApiLogic extends Model
                 $this->ReturnMoneyPayData($Post, $AddMoneyData, $PayInfo);
             }
         } else {
-            $MoneyDataCause = unserialize($MoneyData['cause']);
+            $MoneyDataCause = safe_unserialize($MoneyData['cause']);
             if (isMobile() && !isWeixin()) {
                 // 手机浏览器端支付
                 $PayType = 'WeChatH5';

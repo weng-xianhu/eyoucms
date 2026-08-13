@@ -29,6 +29,15 @@ class AskLogic extends Model
      */
     public function _initialize() {
         parent::_initialize();
+
+        static $ask_result = null;
+        if (is_null($ask_result)) {
+            $ask_result = Db::name('channeltype')->where(['nid'=>'ask','is_del'=>1])->find();
+            if (!empty($ask_result)) {
+                die('内置问答模型已废弃');
+            }
+            $ask_result = true;
+        }
     }
 
     // 查询条件处理

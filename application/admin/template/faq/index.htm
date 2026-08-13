@@ -1,0 +1,179 @@
+{include file="public/layout" /}
+
+<body class="bodystyle" style="cursor: default; -moz-user-select: inherit;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+
+<div class="page min-hg-c-10" style="min-width:auto;">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>FAQ</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <div class="flexigrid">
+        <div class="mDiv mb10">
+            <div class="ftitle">
+                {eq name="$Think.const.CONTROLLER_NAME.'@add'|is_check_access" value="1"}
+                 <div class="fbutton">
+                     <a href="javascript:void(0);" data-href="{:url('Faq/add')}" onclick="openFullframe(this, '新增FAQ', '100%', '100%');">
+                         <div class="add">
+                             <span><i class="layui-icon layui-icon-addition"></i>新增FAQ</span>
+                         </div>
+                     </a>
+                 </div>
+                {/eq}
+            </div>
+            <form id="searchForm" class="navbar-form form-inline" action="{:url('Faq/index')}" method="get" onsubmit="layer_loading('正在处理');">
+                {$searchform.hidden|default=''}
+                <div class="sDiv">
+                    <div class="sDiv2">
+                        <input type="text" size="30" name="keywords" value="{$Request.param.keywords}" class="qsbox" placeholder="名称搜索...">
+                        <input type="submit" class="btn" value="搜索">
+                        <i class="iconfont e-sousuo"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th class="sign w40"><div class="tc"><input type="checkbox" class="checkAll"></div></th>
+                            <th class="w60"><div class="tc">ID</div></th>
+                            <th ><div class="tl text-l10" style="width: 100%">分组名称</div></th>
+                            <th class="w60"><div class="tc">启用</div></th>
+                            <th class="w180"><div class="tc">操作</div></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+        <div class="bDiv" style="height: auto;">
+            <div id="flexigrid" cellpadding="0" cellspacing="0" border="0">
+                <table style="width: 100%">
+                    <tbody>
+                        {empty name="$list"}
+                        <tr>
+                            <td class="no-data" align="center" axis="col0" colspan="50">
+                                <div class="no_row">
+                                    <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {else/}
+                            {volist name="$list" id="vo"}
+                            <tr>
+                                <td class="sign">
+                                    <div class="w40 tc"> <input type="checkbox" name="ids[]" value="{$vo.group_id}"> </div>
+                                </td>
+                                <td>
+                                    <div class="tc w60">{$vo.group_id}</div>
+                                </td>
+
+                                <td align="left" style="width:100%;">
+                                    <div class="tl text-l10">
+                                        <a href="javascript:void(0);" data-href="{:url('Faq/edit', ['group_id' => $vo.group_id])}" data-closereload="1" onclick="openFullframe(this, '编辑-{$vo.group_title}', '100%', '100%');">{$vo.group_title}</a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="tc w60">
+                                        {if condition="$vo.status eq 1"}
+                                        <span class="yes" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} onClick="changeTableVal('faq_group', 'group_id', '{$vo.group_id}', 'status', this);" {/eq} ><i class="fa fa-check-circle"></i>是</span>
+                                        {else /}
+                                        <span class="no" {eq name="$Think.const.CONTROLLER_NAME.'@edit'|is_check_access" value="1"} onClick="changeTableVal('faq_group', 'group_id', '{$vo.group_id}', 'status', this);" {/eq} ><i class="fa fa-ban"></i>否</span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td class="operation">
+                                    <div class="w180 tc">
+                                        <a href="javascript:void(0);" data-href="{:url('Faq/edit', ['group_id' => $vo.group_id])}" data-closereload="1" class="btn blue" onclick="openFullframe(this, '编辑-{$vo.group_title}', '100%', '100%');">编辑</a>
+                                        <i></i>
+                                        <a class="btn red" href="javascript:void(0);" data-url="{:url('Faq/del')}" data-id="{$vo.group_id}" onClick="delfun(this);">删除</a>
+                                         <i></i>
+                                        <a class="btn blue" href="javascript:void(0);" onclick="copyToClipBoard({$vo.group_id}, 1)">标签调用</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+                        {/empty}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+        {notempty name="list"}
+        <div class="tDiv">
+            <div class="tDiv2">
+                <div class="fbutton checkboxall"> <input type="checkbox" class="checkAll"> </div>
+                {eq name="$Think.const.CONTROLLER_NAME.'@del'|is_check_access" value="1"}
+                    <div class="fbutton">
+                        <a onclick="batch_del(this, 'ids');" data-url="{:url('Faq/del')}" class="layui-btn layui-btn-primary">批量删除</a>
+                    </div>
+                {/eq}
+                {include file="public/page" /}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        {/notempty}
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('input[name*=ids]').click(function() {
+            if ($('input[name*=ids]').length == $('input[name*=ids]:checked').length) {
+                $('.checkAll').prop('checked', 'checked');
+            } else {
+                $('.checkAll').prop('checked', false);
+            }
+        });
+        $('input[type=checkbox].checkAll').click(function() {
+            $('input[type=checkbox]').prop('checked', this.checked);
+        });
+    });
+    
+    $(document).ready(function() {
+        // 表格行点击选中切换
+        $('#flexigrid > table>tbody >tr').click(function() {
+            $(this).toggleClass('trSelected');
+        });
+
+        // 点击刷新数据
+        $('.fa-refresh').click(function() {
+            location.href = location.href;
+        });
+    });
+
+    /**
+     * 代码调用js
+     * @param id  id
+     * @param limit 条数
+     */
+    function copyToClipBoard(id, limit) {
+        var faqStr = "{eyou:faq group_id='" + id + "'}\r\n   <div>标题: {$"+"field.asklist_title}</div>\r\n   <div>说明: {$"+"field.asklist_content}</div>\r\n{/eyou:faq";
+        var contentStr = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px"><dd>标签 faq 调用：</dd>';
+        contentStr += '<textarea rows="4" cols="60" style="width:400px; height:80px;">' + faqStr + '}</textarea>';
+        contentStr += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将标签faq代码复制并粘贴到对应模板文件中！</dd></dl></div>';
+        // contentStr += '<dd>JavaScript：</dd>';
+        // contentStr += '<dd><input type="text" style=" width:400px;" value="<script type=&quot;text/javascript&quot; src=&quot;http://' + '{$Think.server.http_host}' + '__ROOT_DIR__/index.php?m=api&amp;c=Other&amp;a=other_show&amp;group_id=' + id + '&amp;row='+limit+'&quot;><\/script>"></dd>';
+        // contentStr += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将标签faq或JavaScript代码复制并粘贴到对应模板文件中！</dd></dl></div>';
+        layer.open({
+            title: '代码调用',
+            type: 1,
+            shade: layer_shade,
+            skin: 'layui-layer-demo',
+            area: ['480px', '280px'], //宽高
+            content: contentStr
+        });
+    }
+
+</script>
+
+{include file="public/footer" /}

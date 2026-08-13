@@ -502,6 +502,90 @@ function clearPresetSpecValue(obj) {
     });
 }
 
+// 更新同步规格值信息
+function RefreshSpecValue(obj) {
+    layer.confirm('此操作将会把规格库<span style="color:red;">'+$(obj).data('name')+'</span>的规格数据同步更新！操作不可逆，确认同步？', {
+        shade: layer_shade,
+        area: ['480px', '190px'],
+        move: false,
+        title: '提示',
+        btnAlign:'r',
+        closeBtn: 3,
+        btn: ['确定', '取消'] ,//按钮
+        success: function () {
+              $(".layui-layer-content").css('text-align', 'left');
+          }
+    }, function () {
+        layer_loading('正在处理');
+        var mark_id = $(obj).data('mark_id');
+        if (mark_id) {
+            var aid = $("input[name=aid]").val();
+            $.ajax({
+                type : 'post',
+                url  : RefreshSpecUrl,
+                data : {spec_mark_id:mark_id, aid:aid, _ajax:1},
+                dataType : 'json',
+                success : function(res){
+                    layer.closeAll();
+                    if (res.data) {
+                        // 更新规格值下拉框
+                        if (res.data.ValueOption) {
+                            $('#spec_value_'+mark_id).empty().html(res.data.ValueOption);
+                        }
+
+                        // 更新页面上已选的规格名称及规格值
+                        if (res.data.UpData) {
+                            for (var i = 0; i < res.data.UpData.length; i++) {
+                                /*替换已选商品规格名称及规格值*/
+                                // 替换规格名称
+                                $('.spec_name_span_'+res.data.UpData[i]['spec_mark_id']).html(res.data.UpData[i]['spec_name']);
+                                $('.spec_name_input_'+res.data.UpData[i]['spec_mark_id']).val(res.data.UpData[i]['spec_name']);
+                                if (res.data.UpData[i]['spec_value_id']) {
+                                    // 替换规格值
+                                    $('.spec_value_span_'+res.data.UpData[i]['spec_value_id']).html(res.data.UpData[i]['spec_value']);
+                                    $('.spec_value_input_'+res.data.UpData[i]['spec_value_id']).val(res.data.UpData[i]['spec_value']);    
+                                }
+                                /* END */
+                            }
+                        }
+                        
+                        // 清除页面上已选的规格数据
+                        if (res.data.SpecIds) {
+                            if (res.data.DelAllSpec) {
+                                $('#spec_'+res.data.DelAllSpec).remove();
+                            }else{
+                                for (var i = 0; i < res.data.SpecIds.length; i++) {
+                                    $('#preset-bt2_'+res.data.SpecIds[i]).remove();
+                                }    
+                            }
+                        }
+
+                        // 重新加载规格价格库存填写栏
+                        if (res.data.HtmlTable && res.data.SpecMarks) {
+                            // 加载规格框架
+                            $('#SpecTempLateDiv').html(res.data.HtmlTable);
+                            // 合并单元格
+                            MergeCells();
+                            $('#spec_mark_id_arr').val(res.data.SpecMarks);
+                        }
+                    }
+                    layer.msg(res.msg, {time:1500, icon: 1});
+                },
+                error : function(e) {
+                    layer.closeAll();
+                    layer.alert(e.responseText, {icon: 5});
+                }
+            });
+        }else{
+            layer.closeAll();
+            layer.msg('数据有误，同步失败，请刷新重试！', {time:2000, icon: 2});
+        }
+    }, function (index) {
+        // 取消
+        layer.closeAll(index);
+    });
+}
+
 // 批量设置价格
 function BulkSetPrice(obj) {
     layer.prompt({
@@ -652,18 +736,11 @@ function BulkSetCode(obj) {
         closeBtn: 3,
         success: function(layero, index){
             $("#BulkSetCode").find('input').attr('placeholder', '批量商品编码');
-            $("#BulkSetCode").find('input').attr('onkeyup', "this.value=this.value.replace(/[^\\d.]/g,'')");
-            $("#BulkSetCode").find('input').attr('onpaste', "this.value=this.value.replace(/[^\\d.]/g,'')");
         }
     }, function(stock, index) {
         layer.close(index);
-        // 单个库存
         $('.stock_code').val(stock);
-        $('.stock_code').attr('data-old_stock',stock);
-        stock_count = Number($('.stock_code').length) * Number(stock);
-        $('#stock_code').val(stock_count);
-        // 禁用库存框
-        $('#stock_code').attr('readonly', 'readonly');
+        $('#stock_code').val(stock);
     });
 }
 // 更新库存量

@@ -56,7 +56,7 @@ class PayApi extends Model
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (empty($PayInfo)) return false;
-            $PayInfo = unserialize($PayInfo);
+            $PayInfo = safe_unserialize($PayInfo);
         }
 
         // 支付备注
@@ -145,7 +145,7 @@ class PayApi extends Model
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (empty($PayInfo)) return false;
-            $PayInfo = unserialize($PayInfo);
+            $PayInfo = safe_unserialize($PayInfo);
         }
 
         // 支付备注
@@ -179,7 +179,11 @@ class PayApi extends Model
         // 请求接口成功
         if (isset($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
             if (!empty($result['mweb_url'])) return $result['mweb_url'];
-            if (!empty($result['err_code'])) return $result['err_code_des'];
+            if (!empty($result['err_code'])) {
+                $result['return_code'] = 'FAIL';
+                $result['return_msg'] = $result['err_code_des'];
+                // return $result['err_code_des'];
+            }
         }
         // 请求接口失败
         else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
@@ -211,7 +215,7 @@ class PayApi extends Model
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (empty($PayInfo)) return false;
-            $PayInfo = unserialize($PayInfo);
+            $PayInfo = safe_unserialize($PayInfo);
 
             // 支付备注
             $body = "微信支付";
@@ -466,8 +470,8 @@ class PayApi extends Model
         ];
         $PayApiConfig = Db::name('pay_api_config')->field('pay_info, pay_terminal')->where($where)->find();
         if (empty($PayApiConfig['pay_info'])) return false;
-        $PayInfo = unserialize($PayApiConfig['pay_info']);
-        $PayTerminal = !empty($PayApiConfig['pay_terminal']) ? unserialize($PayApiConfig['pay_terminal']) : [];
+        $PayInfo = safe_unserialize($PayApiConfig['pay_info']);
+        $PayTerminal = !empty($PayApiConfig['pay_terminal']) ? safe_unserialize($PayApiConfig['pay_terminal']) : [];
         
         // 后台支付宝支付配置信息
         $config['app_id'] = $PayInfo['app_id'];
@@ -551,7 +555,7 @@ class PayApi extends Model
             ];
             $PayInfo = Db::name('pay_api_config')->where($where)->getField('pay_info');
             if (empty($PayInfo)) return false;
-            $alipay = unserialize($PayInfo);
+            $alipay = safe_unserialize($PayInfo);
         }
 
         // 参数设置

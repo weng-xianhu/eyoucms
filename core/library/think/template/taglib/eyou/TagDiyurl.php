@@ -30,7 +30,15 @@ class TagDiyurl extends Base
 
         $parseStr = "";
         
-        if (in_array(self::$request->controller(), ['Search', 'Lists', 'Tags', 'Buildhtml'])) {
+        $controller_arr = ['Search', 'Lists', 'Tags', 'Buildhtml'];
+        $allow_release_channel = config('global.allow_release_channel');
+        $channeltype_list = model('channeltype')->getAll();
+        foreach ($channeltype_list as $key => $val) {
+            if (in_array($val['id'], $allow_release_channel)) {
+                $controller_arr[] = $val['ctl_name'];
+            }
+        }
+        if (in_array(self::$request->controller(), $controller_arr)) {
             // 获取URL链接上的所有参数
             $Param = self::$request->get();
             // 获取已处理好的 tid

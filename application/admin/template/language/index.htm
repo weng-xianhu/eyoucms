@@ -211,12 +211,11 @@
                             </div>
                         </a>
                     </div>
-                {/eq}
+                    {include file="public/page" /}
+                </div>
             </div>
             <div style="clear:both"></div>
         </div>
-        <!--分页位置-->
-        {$page}
     </div>
 </div>
 <script>
@@ -248,7 +247,7 @@
         function append_lang(){
             $(".em_lang ul li.lang", window.parent.document).remove();
             var htmlstr = '';
-            {volist name='$list' id='vo'}
+            {volist name='$allList' id='vo'}
                 htmlstr += '<li class="ey-tool-list text-center lang"><a class="liaojie" href="?lang={$vo.mark}">{$vo.title}</a></li>';
             {/volist}
             $('#addlang', window.parent.document).before(htmlstr);

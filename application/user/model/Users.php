@@ -37,10 +37,8 @@ class Users extends Model
     // 判断会员属性中必填项是否为空
     // 传入参数：
     // $post_users ：会员属性信息数组
-    // return error：错误提示
     public function isEmpty($post_users = [], $type = '', $return = 'string')
     {
-        $error = '';
         // 会员属性
         $where = array(
             'lang'        => $this->home_lang,
@@ -53,21 +51,28 @@ class Users extends Model
         $para_data = M('users_parameter')->where($where)->field('title,name')->select();
         // 处理提交的属性中必填项是否为空
         foreach ($para_data as $key => $value) {
+            $is_empty = false;
             if (isset($post_users[$value['name']])) {
                 if (is_array($post_users[$value['name']])) {
                     $post_users[$value['name']] = implode(',', $post_users[$value['name']]);
                 }
                 $attr_value = trim($post_users[$value['name']]);
                 if (empty($attr_value)) {
-                    $msg = sprintf(foreign_lang('users2', $this->home_lang), $value['title']);
-                    if ('array' === $return) {
-                        return [
-                            'field' => $value['name'],
-                            'msg'   => $msg,
-                        ];
-                    } else {
-                        return $msg;
-                    }
+                    $is_empty = true;
+                }
+            } else if ('reg' == $type) {
+                $is_empty = true;
+            }
+
+            if (true === $is_empty) {
+                $msg = sprintf(foreign_lang('users2', $this->home_lang), $value['title']);
+                if ('array' === $return) {
+                    return [
+                        'field' => $value['name'],
+                        'msg'   => $msg,
+                    ];
+                } else {
+                    return $msg;
                 }
             }
         }

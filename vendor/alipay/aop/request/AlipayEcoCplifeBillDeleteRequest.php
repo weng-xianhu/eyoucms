@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.eco.cplife.bill.delete request
  *
  * @author auto create
- * @since 1.0, 2017-02-10 18:52:02
+ * @since 1.0, 2025-08-18 13:52:35
  */
 class AlipayEcoCplifeBillDeleteRequest
 {

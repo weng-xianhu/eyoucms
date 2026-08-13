@@ -13,8 +13,8 @@ var ueditor_toolbars = [[
     'link', 'unlink', 'anchor', '|', 'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
     'simpleupload', 'insertimage', 'emotion', 'insertvideo', 'attachment', 'map', 'insertframe', 'insertcode', '|',
     'horizontal', 'spechars', '|',
-    'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
-    'preview', 'searchreplace', 'drafts'
+    'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', '|',
+    'preview', 'searchreplace', 'drafts', 'ai'
 ]];
 // 手机端编辑器工具 previewmobile
 var ueditor_toolbars_ey_m = [[
@@ -56,11 +56,85 @@ function monitorInputStr() {
     }
 }
 
+$(document).ready(function() {
+    // 页面渲染结束后执行
+    cxyWrittenStr();
+});
+function cxyWrittenStr() {
+    if ($('.cxyKeywordsTextarea').length) {
+        var cxyKeywordsTextarea = $('.cxyKeywordsTextarea').val();
+        if (cxyKeywordsTextarea) {
+            if ($('#cxyBeenWritten').length) $('#cxyBeenWritten').show();
+            if ($('#cxyBeenWrittenStr').length) $('#cxyBeenWrittenStr').html(parseInt(cxyKeywordsTextarea.length));
+        } else {
+            if ($('#cxyBeenWritten').length) $('#cxyBeenWritten').hide();
+        }
+    }
+}
+
+
 $(function(){
+    // 绑定查看功能点击事件
+    bindViewFeatureClick();
+})
+
+/**
+ * 绑定查看功能点击事件
+ * 可在全局JS文件中调用此方法
+ */
+function bindViewFeatureClick() {
+    $('.view_feature').click(function(){
+        showFeaturePreview($(this));
+    });
+}
+
+/**
+ * 显示功能预览弹窗
+ * @param {Object} element - jQuery元素对象
+ */
+function showFeaturePreview(element) {
+    var imgSrc = element.parent().find('p.notic3 img').attr('src');
+    var imgHtml = '<div style="text-align:center;"><img src="'+imgSrc+'" style="max-width:100%;"></div>';
+    
+    // 创建一个临时图片对象来获取图片尺寸
+    var tempImg = new Image();
+    tempImg.src = imgSrc;
+    tempImg.onload = function() {
+        // 获取图片的宽高
+        var imgWidth = this.width;
+        var imgHeight = this.height;
+        
+        // 获取窗口宽高
+        var winWidth = $(window).width();
+        var winHeight = $(window).height();
+        
+        // 计算弹窗尺寸，根据图片比例设置
+        var layerWidth = Math.min(imgWidth + 40, winWidth * 0.9);
+        var layerHeight = Math.min(imgHeight + 120, winHeight * 0.9);
+        
+        // 打开弹窗
+        layer.open({
+            type: 1,
+            title: '功能预览',
+            shadeClose: true,
+            shade: [0.7, '#fff'],  // 将遮罩层改为白色
+            area: [layerWidth + 'px', layerHeight + 'px'],
+            content: imgHtml,
+            btn: ['关闭'],
+            yes: function(index, layero){
+                layer.close(index);
+            }
+        });
+    };
+}
+
+$(function(){
+    
     auto_notic_pic_tips();
     auto_notic_tips();
     auto_notic_tipss();
     auto_notic_tipsu();
+    auto_notic_layertips();
     /**
      * 自动小提示
      */
@@ -98,6 +172,24 @@ $(function(){
         $.each($('.ivu-form-item-content  p.notic'), function(index, item){
             if ($(item).html() != '') {
                 $(item).before(html);
+            }
+        });
+    }
+    function auto_notic_layertips()
+    {
+        $.each($('.ey_auto_layer_tips'), function(index, item){
+            var layer_tips_txt = $(this).data('layer_tips_txt');
+            if (layer_tips_txt != '' && layer_tips_txt !== undefined && layer_tips_txt !== 'undefined') {
+                var layer_opt_tips = $(this).data('layer_opt_tips');
+                if (layer_opt_tips == '' || layer_opt_tips === undefined || layer_opt_tips === 'undefined') {
+                    layer_opt_tips = 2;
+                }
+                $(item).on('mouseover', function(){
+                    var ey_auto_layer_tips = layer.tips(layer_tips_txt, this, {time:100000, tips:layer_opt_tips});
+                    $(item).on('mouseout', function(){
+                        layer.close(ey_auto_layer_tips);
+                    });
+                });
             }
         });
     }
@@ -948,6 +1040,10 @@ function GetUploadimgnew(num,elementid,path,callback,url,obj)
         if (open_source) {
             upurl += '&open_source='+open_source;
         }
+        var kw = $(obj).attr('data-keywords');
+        if (kw) {
+            upurl += '&keywords='+encodeURIComponent(kw);
+        }
         layer_GetUploadify = top.layer.open({
             id: 'layer_GetUploadimgnew',
             type: 2,
@@ -1232,13 +1328,14 @@ function showErrorAlert(msg, icon, callback){
 }
 
 function showConfirm(msg, options, callback){
+    var title = (typeof options.title === 'undefined') ? '提示' : options.title;
     var btn = (typeof options.btn === 'undefined') ? ['确定', '取消'] : options.btn;
     var area = (typeof options.area === 'undefined') ? ['480px', '190px'] : options.area;
     layer.confirm(msg, {
         shade: layer_shade,
         area: area,
         move: false,
-        title: '提示',
+        title: title,
         btnAlign:'r',
         closeBtn: 3,
         btn: btn ,//按钮
@@ -1252,7 +1349,7 @@ function showConfirm(msg, options, callback){
     });
 }
 
-function showUnifiedAlert(msg) {
+function showUnifiedAlert(msg, callback) {
     layer.alert(msg, {
         shade: layer_shade,
         area: ['480px', '220px'],
@@ -1262,6 +1359,12 @@ function showUnifiedAlert(msg) {
         btnAlign: 'r',
         success: function () {
             $(".layui-layer-content").css('text-align', 'left');
+        }
+    }, function (index) {
+        if (typeof callback !== 'undefined') {
+            callback();
+        } else {
+            layer.close(index);
         }
     });
 }
@@ -2054,8 +2157,14 @@ function set_city_list(cityid, siteid) {
             if (res.code === 1){
                 if (1 == res.data.isempty) {
                     $("#city_id").hide();
+                    if (typeof isArchivesQuery !== 'undefined') {
+                        $("#city_id").parent().parent().parent().hide();
+                    }
                 } else {
                     $("#city_id").show();
+                    if (typeof isArchivesQuery !== 'undefined') {
+                        $("#city_id").parent().parent().parent().show();
+                    }
                 }
                 $("#city_id").empty();
                 $("#city_id").prepend(res.msg);
@@ -2063,6 +2172,9 @@ function set_city_list(cityid, siteid) {
                     $("#city_id").val(cityid);
                 }
                 $('#area_id').hide().val(0);
+                if (typeof isArchivesQuery !== 'undefined') {
+                    $("#area_id").parent().parent().parent().hide();
+                }
             }
         },
         error: function(e){
@@ -2085,8 +2197,14 @@ function set_area_list(areaid) {
             if (res.code === 1){
                 if (1 == res.data.isempty) {
                     $("#area_id").hide();
+                    if (typeof isArchivesQuery !== 'undefined') {
+                        $("#area_id").parent().parent().parent().hide();
+                    }
                 } else {
                     $("#area_id").show();
+                    if (typeof isArchivesQuery !== 'undefined') {
+                        $("#area_id").parent().parent().parent().show();
+                    }
                 }
                 $("#area_id").empty();
                 $("#area_id").prepend(res.msg);
@@ -2472,6 +2590,86 @@ function build_up_html(id_value,typeid,last){
         error: function(e){
             layer.closeAll();
             layer.alert('生成HTML失败，请手工生成静态HTML！', {icon: 5, title: false});
+        }
+    });
+}
+
+/**
+ * 移除URL上的指定参数
+ * @param  {[type]} url           [description]
+ * @param  {[type]} paramToRemove [description]
+ * @return {[type]}               [description]
+ */
+function removeURLParameter(url, paramToRemove) {
+    // 使用URL对象来处理URL
+    var urlParts = url.split('?');
+    if (urlParts.length >= 2) {
+        var params = urlParts[1].split('&');
+        params = params.filter(function(param) {
+            return param.split('=')[0] !== paramToRemove;
+        });
+        return urlParts[0] + '?' + params.join('&');
+    }
+    return url;
+}
+
+
+function checkSupportUtf8mb4() {
+    layer_loading('正在检测');
+    $.ajax({
+        type : 'post',
+        url : eyou_basefile + "?m=admin&c=System&a=checkSupportUtf8mb4&lang="+__lang__,
+        data : {_ajax: 1},
+        dataType : 'json',
+        success : function(res){
+            layer.closeAll();
+            if (1 === parseInt(res.code)) {
+                layer.confirm('要开启特殊字符支持啦~不过为了数据安全，得先备份数据库才行哟！确认现在执行这个处理不？', {
+                    shade: layer_shade,
+                    area: ['480px', '190px'],
+                    move: false,
+                    title: '提示',
+                    btnAlign:'r',
+                    closeBtn: 3,
+                    btn: ['已备份，立即执行', '备份数据库'] ,//按钮
+                    success: function () {
+                        $(".layui-layer-content").css('text-align', 'left');
+                    },
+                    cancel: function (index) {
+                        layer.close(index);
+                    },
+                }, function () {
+                    layer_loading('正在处理');
+                    $.ajax({
+                        type : 'post',
+                        url : res.url,
+                        data : {_ajax: 1},
+                        dataType : 'json',
+                        success : function(res){
+                            layer.closeAll();
+                            if (res.code == 1) {
+                                showSuccessMsg(res.msg, 1500, function() {
+                                    window.location.reload();
+                                });
+                            } else {
+                                showUnifiedAlert(res.msg);
+                            }
+                        },
+                        error: function(e){
+                            layer.closeAll();
+                            showUnifiedAlert(e.responseText);
+                        }
+                    });
+                }, function () {
+                    window.location.href = eyou_basefile + "?m=admin&c=Tools&a=index&lang="+__lang__
+                });
+            } else {
+                showUnifiedAlert(res.msg);
+            }
+        },
+        error: function(e){
+            layer.closeAll();
+            showUnifiedAlert(e.responseText);
         }
     });
 }

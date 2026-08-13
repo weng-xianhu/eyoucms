@@ -24,6 +24,10 @@
                     <input type="hidden" name="seo_html_arcdir_limit" value="{$seo_html_arcdir_limit}"/>
                     <input type="hidden" id="seo_inlet" value="{$config.seo_inlet}"/>
                     <input type="hidden" id="init_html" value="{$init_html|default='1'}"/>
+                    <span class="err"></span>
+                    {if condition="!empty($global['web_citysite_open'])"}
+                    <p class="notic2">你已开启城市分站，静态页面功能不可用</p>
+                    {/if}
                 </dd>
             </dl>
             <dl class="row {if condition='empty($config.seo_pseudo) || 1 != $config.seo_pseudo || (1 == $config.seo_pseudo && 1 == $config.seo_dynamic_format)'}none{/if}" id="dl_seo_dynamic_format">
@@ -193,10 +197,10 @@
                 <dt class="tit">
                     <label>发布/编辑文档</label>
                 </dt>
-                <dd class="opt {if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}title="开启运营模式生效" {/if}>
-                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_home13" value="1" {if condition="!isset($config.seo_uphtml_after_home13) OR $config.seo_uphtml_after_home13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除首页缓存</label>&nbsp;&nbsp;
-                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_channel13" value="1" {if condition="!isset($config.seo_uphtml_after_channel13) OR $config.seo_uphtml_after_channel13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除相关栏目缓存</label>&nbsp;&nbsp;
-                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}grey{/if}"><input type="checkbox" name="seo_uphtml_after_pernext13" value="1" {if condition="!isset($config.seo_uphtml_after_pernext13) OR $config.seo_uphtml_after_pernext13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除上下篇缓存</label>&nbsp;&nbsp;
+                <dd class="opt">
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}ey_auto_layer_tips grey{/if}" data-layer_tips_txt='开启运营模式生效' data-layer_opt_tips='3'><input type="checkbox" name="seo_uphtml_after_home13" value="1" {if condition="!isset($config.seo_uphtml_after_home13) OR $config.seo_uphtml_after_home13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除首页缓存</label>&nbsp;&nbsp;
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}ey_auto_layer_tips grey{/if}" data-layer_tips_txt='开启运营模式生效' data-layer_opt_tips='3'><input type="checkbox" name="seo_uphtml_after_channel13" value="1" {if condition="!isset($config.seo_uphtml_after_channel13) OR $config.seo_uphtml_after_channel13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除相关栏目缓存</label>&nbsp;&nbsp;
+                    <label class="curpoin {if condition="$global['web_cmsmode'] != 1"}ey_auto_layer_tips grey{/if}" data-layer_tips_txt='开启运营模式生效' data-layer_opt_tips='3'><input type="checkbox" name="seo_uphtml_after_pernext13" value="1" {if condition="!isset($config.seo_uphtml_after_pernext13) OR $config.seo_uphtml_after_pernext13 eq 1"}checked="checked"{/if} class="{if condition="$global['web_cmsmode'] != 1"}grey{/if}" {if condition="$global['web_cmsmode'] != 1"}disabled="disabled"{/if}>清除上下篇缓存</label>&nbsp;&nbsp;
                     <span class="err"></span>
                     <p class="notic"></p>
                     <input type="hidden" id="seo_uphtml_after_home13_old" value="{$config.seo_uphtml_after_home13|default=''}"/>
@@ -787,7 +791,7 @@
                                       $(".layui-layer-content").css('text-align', 'left');
                                   }
                             }, function(){
-                                var url = eyou_basefile+"?m=admin&c=Seo&a=site&lang="+__lang__;
+                                var url = eyou_basefile+"?m=admin&c=Seo&a=site&is_buildhtml=1&seo_pagesize=20&seo_maxpagesize=50&lang="+__lang__;
                                 var index = layer.open({
                                     type: 2,
                                     shade: layer_shade,
@@ -963,7 +967,7 @@
                         if (0 == res.code) {
                             showErrorAlert(res.msg);
                         } else {
-                            var url = eyou_basefile+"?m=admin&c=Seo&a=site&uphtmltype=0&lang="+__lang__;
+                            var url = eyou_basefile+"?m=admin&c=Seo&a=site&uphtmltype=0&is_buildhtml=1&seo_pagesize=20&seo_maxpagesize=50&lang="+__lang__;
                             var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },
@@ -1046,7 +1050,7 @@
                             showErrorAlert(res.msg);
                         } else {
                             var typeid = $("#html_typeid").val();     //栏目id
-                            var url = eyou_basefile+"?m=admin&c=Seo&a=channel&typeid="+typeid+"&lang="+__lang__;
+                            var url = eyou_basefile+"?m=admin&c=Seo&a=channel&typeid="+typeid+"&is_buildhtml=1&seo_maxpagesize=50&lang="+__lang__;
                             var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },
@@ -1074,7 +1078,7 @@
                             showErrorAlert(res.msg);
                         } else {
                             var typeid = $("#html_arc_typeid").val();     //栏目id
-                            var url = eyou_basefile+"?m=admin&c=Seo&a=article&typeid="+typeid+"&lang="+__lang__;
+                            var url = eyou_basefile+"?m=admin&c=Seo&a=article&typeid="+typeid+"&is_buildhtml=1&seo_pagesize=20&lang="+__lang__;
                             var index = layer.open({type: 2,shade: layer_shade,title: '开始生成',area: ['500px', '300px'],fix: false, maxmin: false,content: url});
                         }
                     },

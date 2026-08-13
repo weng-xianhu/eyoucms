@@ -51,7 +51,7 @@ class Foreign extends Base {
         if (empty($admin_logic_1693909371)) {
             if (is_dir('./weapp/Waimao/')) {
                 $row = Db::name('weapp')->where(['code'=>'Waimao'])->find();
-                $row['data'] = !empty($$row['data']) ? json_decode($$row['data'], true) : [];
+                $row['data'] = !empty($row['data']) ? json_decode($row['data'], true) : [];
                 $foreignData['foreign_is_status'] = (!empty($row['status']) && 1 == $row['status']) ? 1 : 0;
                 $foreignData['foreign_clear_htmlfilename'] = empty($row['data']['clear_htmlfilename']) ? 0 : $row['data']['clear_htmlfilename'];
                 tpSetting('foreign', $foreignData, 'cn');
@@ -108,6 +108,8 @@ class Foreign extends Base {
             $foreignData['foreign_htmlfilename_mode'] = intval($post['foreign_htmlfilename_mode']);
             $foreignData['foreign_clear_htmlfilename'] = intval($post['foreign_clear_htmlfilename']);
             $foreignData['foreign_seo_description_mode'] = intval($post['foreign_seo_description_mode']);
+            $foreignData['foreign_open_mobile_format'] = intval($post['open_mobile_format']);
+            \think\Cache::set('foreign_open_mobile_format', $foreignData['foreign_open_mobile_format'], EYOUCMS_CACHE_TIME, "setting");
             tpSetting('foreign', $foreignData, 'cn');
             // 生成语言包文件
             model('ForeignPack')->updateLangFile();

@@ -58,12 +58,25 @@
             </div>
             {/volist} 
         </div>
-        <div class="navboxs_bt" onclick="check_submit();">确认提交</div>
+        <div class="navboxs_bt">
+            <a href="javascript:void(0);" onclick="check_confirm();">保存</a>
+        </div>
     </form>
     {/empty}
 
     <script type="text/javascript">
+        var max_selnum = {$max_selnum|default=1000};
+        var welcome_type = "{$welcome_type|default=''}";
+
         $(function () {
+
+            $('input[name*=checkedids]').click(function(){
+                if ($(this).is(':checked') && max_selnum < $('input[name*=checkedids]:checked').length) {
+                    $(this).attr('checked', false);
+                    showErrorMsg('最多只勾选'+max_selnum+'个！');
+                }
+            });
+
             /** 拖动排序相关 js*/
             $( ".sort-list" ).sortable({
                 start: function( event, ui) {
@@ -79,10 +92,20 @@
         var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
 
         // 表单提交
-        function check_submit(){
+        function check_confirm(){
+            if (max_selnum < $('input[name*=checkedids]:checked').length) {
+                showErrorMsg('最多只勾选'+max_selnum+'个！');
+                return false;
+            }
+            submit_form();
+            return false;
+        }
+
+        function submit_form()
+        {
             layer_loading('正在处理');
             $.ajax({
-                url: "{:url('Index/ajax_weapp_quickmenu', ['_ajax'=>1])}",
+                url: "{:url('Index/ajax_weapp_quickmenu', ['_ajax'=>1, 'welcome_type'=>$welcome_type])}",
                 type: 'POST',
                 dataType: 'JSON',
                 data: $('#post_form').serialize(),
@@ -103,8 +126,6 @@
                     layer.alert(e.responseText, {icon:5, time:1500});
                 }
             });
-
-            return false;
         }
     </script>
     {include file="public/footer" /}

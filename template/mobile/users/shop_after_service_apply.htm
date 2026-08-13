@@ -79,12 +79,19 @@
                         <div class="item-from-flex">
                             <div class="item-tit ">服务类型：</div>
                             <div class="item-con ">
+                                {if condition="1 != $eyou.field.order_status && 0 == $eyou.field.prom_type"}
                                 <input type="hidden" id="service_type" name="service_type" value="1">
-                                <label class="radio-label" onclick="serviceTypeRadio(1);">
-                                    <input type="radio" class="radio" name="radioInput" checked="checked"><span class="check-mark"></span><span class="text">我要换货</span>
+                                <label class="radio-label" id="1" onclick="serviceTypeRadio(1);">
+                                    <input type="radio" class="radio" name="radioInput"><span class="check-mark"></span><span class="text">我要换货</span>
                                 </label>
-                                <label class="radio-label" onclick="serviceTypeRadio(2);">
+                                <label class="radio-label" id="2" onclick="serviceTypeRadio(2);">
                                     <input type="radio" class="radio" name="radioInput"><span class="check-mark"></span><span class="text">我要退货</span>
+                                </label>
+                                {else/}
+                                <input type="hidden" id="service_type" name="service_type" value="3">
+                                {/if}
+                                <label class="radio-label" id="3" onclick="serviceTypeRadio(3);">
+                                    <input type="radio" class="radio" name="radioInput"><span class="check-mark"></span><span class="text">仅退款</span>
                                 </label>
                             </div>
                         </div>
@@ -92,7 +99,7 @@
                         <div class="item-from-flex">
                             <div class="item-tit ">问题描述：</div>
                             <div class="item-con ">
-                                <textarea rows="5" cols="35" name="content" class="fs16" style="height: 100px; width: 100%; font-size: 16px;border: 1px solid #DCDFE6;"></textarea>
+                                <textarea rows="5" cols="35" name="content" id="content" class="fs16" style="height: 100px; width: 100%; font-size: 16px;border: 1px solid #DCDFE6;"></textarea>
                             </div>
                         </div>
 
@@ -130,52 +137,53 @@
                     </div>
                 </div>
 
-                <div class="el-row p10 bgfff mt10">
-                    <div class="column-title"> <div class="column-title-l">商家收货地址</div> </div>
-                    <div class="order-progress-con">
-                        <div class="span-row">
-                            <div class="span-row-l">联系人：</div>
-                            <div class="span-row-r">{$eyou.maddr.addr_contact_person}</div>
-                        </div>
-                        <div class="span-row">
-                            <div class="span-row-l">联系号码：</div>
-                            <div class="span-row-r">{$eyou.maddr.addr_contact_phone}</div>
-                        </div>
-                        <div class="span-row">
-                            <div class="span-row-l">商家地址：</div>
-                            <div class="span-row-r">{$eyou.maddr.addr_shipping_addr}</div>
+                <span id="service-addr-div" {if condition="1 != $eyou.field.order_status && 0 == $eyou.field.prom_type"} style="display: block;" {else/} style="display: none;" {/if}>
+                    <div class="el-row p10 bgfff mt10">
+                        <div class="column-title"> <div class="column-title-l">商家收货地址</div> </div>
+                        <div class="order-progress-con">
+                            <div class="span-row">
+                                <div class="span-row-l">联系人：</div>
+                                <div class="span-row-r">{$eyou.maddr.addr_contact_person}</div>
+                            </div>
+                            <div class="span-row">
+                                <div class="span-row-l">联系号码：</div>
+                                <div class="span-row-r">{$eyou.maddr.addr_contact_phone}</div>
+                            </div>
+                            <div class="span-row">
+                                <div class="span-row-l">商家地址：</div>
+                                <div class="span-row-r">{$eyou.maddr.addr_shipping_addr}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="el-row p10 bgfff mt10">
-                    <div class="column-title"> <div class="column-title-l">会员收货地址</div> </div>
-                    <div class="order-progress-con">
-                        <div class="span-row">
-                            <div class="span-row-l" style="line-height: 35px; height: 35px;">联系人：</div>
-                            <div class="span-row-r">
-                                <input type="text" name="consignee" value="{$eyou.field.consignee}" id="consignee" class="el-input__inner" autocomplete="off">
+                    <div class="el-row p10 bgfff mt10">
+                        <div class="column-title"> <div class="column-title-l">会员收货地址</div> </div>
+                        <div class="order-progress-con">
+                            <div class="span-row">
+                                <div class="span-row-l" style="line-height: 35px; height: 35px;">联系人：</div>
+                                <div class="span-row-r">
+                                    <input type="text" name="consignee" value="{$eyou.field.consignee}" id="consignee" class="el-input__inner" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                        <div class="span-row">
-                            <div class="span-row-l" style="line-height: 35px; height: 35px;">联系号码：</div>
-                            <div class="span-row-r">
-                                <input type="text" name="mobile" value="{$eyou.field.mobile}" id="mobile" class="el-input__inner" autocomplete="off">
+                            <div class="span-row">
+                                <div class="span-row-l" style="line-height: 35px; height: 35px;">联系号码：</div>
+                                <div class="span-row-r">
+                                    <input type="text" name="mobile" value="{$eyou.field.mobile}" id="mobile" class="el-input__inner" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                        <div class="span-row">
-                            <input type="hidden" name="addrinfo" value="{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}">
-                            <div class="span-row-l" style="line-height: 35px; height: 35px;">会员地址：</div>
-                            <div class="span-row-r" style="line-height: 35px;">{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}
-                                <input type="text" name="address" value="{$eyou.field.address}" id="address" class="el-input__inner" autocomplete="off" style="display: block;">
+                            <div class="span-row">
+                                <input type="hidden" name="addrinfo" value="{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}">
+                                <div class="span-row-l" style="line-height: 35px; height: 35px;">会员地址：</div>
+                                <div class="span-row-r" style="line-height: 35px;">{$eyou.field.province} {$eyou.field.city} {$eyou.field.district}
+                                    <input type="text" name="address" value="{$eyou.field.address}" id="address" class="el-input__inner" autocomplete="off" style="display: block;">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </span>
+
                 <div class="h60 mt15"></div>
-                <div class="public-btn">
-                    <a onclick="submitApply(this);" data-url="{$eyou.url}">提交</a>
-                </div>
+                <div class="public-btn"><a onclick="submitApply(this);" data-url="{$eyou.url}">提交</a></div>
             </form>
         </div>
         {eyou:static file="users/skin/js/shop_after_service_apply.js"/}

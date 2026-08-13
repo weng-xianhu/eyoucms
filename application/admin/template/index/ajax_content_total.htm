@@ -41,16 +41,19 @@
             </div>
             {/volist} 
         </div>
-        <div class="navboxs_bt" onclick="check_confirm();">确认提交</div>
+        <div class="navboxs_bt"><a href="javascript:void(0);" onclick="check_confirm();">保存</a></div>
     </form>
 
     <script type="text/javascript">
+        var max_selnum = {$max_selnum|default=9};
+        var welcome_type = "{$welcome_type|default=''}";
+
         $(function () {
 
             $('input[name*=checkedids]').click(function(){
-                if ($(this).is(':checked') && 9 < $('input[name*=checkedids]:checked').length) {
+                if ($(this).is(':checked') && max_selnum < $('input[name*=checkedids]:checked').length) {
                     $(this).attr('checked', false);
-                    showErrorMsg('最多只勾选9个！');
+                    showErrorMsg('最多只勾选'+max_selnum+'个！');
                 }
             });
 
@@ -70,12 +73,11 @@
 
         // 表单提交
         function check_confirm(){
-
-            if (9 < $('input[name*=checkedids]:checked').length) {
-                showErrorMsg('最多只勾选9个！');
+            if (max_selnum < $('input[name*=checkedids]:checked').length) {
+                showErrorMsg('最多只勾选'+max_selnum+'个！');
                 return false;
             }
-            if (0 < $('input[name*=checkedids]:checked').length) {
+            if (0 < $('input[name*=checkedids]:checked').length || 'ai' == welcome_type) {
                 submit_form();
             } else {
                 layer.confirm('没有勾选项，内容统计模块将被隐藏，不再显示。', {
@@ -103,7 +105,7 @@
         {
             layer_loading('正在处理');
             $.ajax({
-                url: "{:url('Index/ajax_content_total', ['_ajax'=>1])}",
+                url: "{:url('Index/ajax_content_total', ['_ajax'=>1, 'welcome_type'=>$welcome_type])}",
                 type: 'POST',
                 dataType: 'JSON',
                 data: $('#post_form').serialize(),

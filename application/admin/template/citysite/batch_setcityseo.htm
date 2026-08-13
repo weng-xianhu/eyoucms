@@ -25,7 +25,7 @@
                     <label>SEO关键词</label>
                 </dt>
                 <dd class="opt" style="width: auto;">          
-                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" autocomplete="off"></textarea>
+                    <textarea rows="5" cols="60" id="seo_keywords" name="seo_keywords" style="height:20px;" autocomplete="off" onkeyup="this.value=this.value.replace(/[\，]/g,',');" onpaste="this.value=this.value.replace(/[\，]/g,',')"></textarea>
                     <span class="err"></span>
                     <p class="notic"></p>
                 </dd>

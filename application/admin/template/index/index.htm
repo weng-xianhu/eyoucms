@@ -27,6 +27,7 @@
     var __web_xss_filter__ = {$global['web_xss_filter']|default=0};
     var __is_mobile__ = {$is_mobile|default=0};
     var __security_ask_open__ = {$global['security_ask_open']|default=0};
+    var __editor_bd_style__ = "{$global['editor_bd_style']|default=''}";
 </script>
 
 <link href="__SKIN__/css/main.css?v={$version}" rel="stylesheet" type="text/css">
@@ -51,7 +52,7 @@
 <script type="text/javascript" src="__PUBLIC__/plugins/layer-v3.1.0/layer.js?v={$version}"></script>
 <script type="text/javascript" src="__SKIN__/js/dialog/dialog.js?v={$version}" id="dialog_js"></script>
 <script src="__SKIN__/js/upgrade.js?v={$version}"></script>
-<script src="__SKIN__/js/global.js?v={$version}0"></script>
+<script src="__SKIN__/js/global.js?v={$version}"></script>
 </head>
 <body>
 {include file="public/menubox" /}
@@ -178,7 +179,7 @@
                   <li><a href="javascript:void(0);" onclick="openItem('Index|theme_index');">主题风格</a></li>
                   {/eq}
                   {empty name="$is_eyou_authortoken"}
-                  <li><a href="javascript:void(0);" onclick="openItem('UsersNotice|admin_notice_index');">站内通知</a><span class="info-num UnreadNotify1615518028 {empty name='$notice_count'}none{/empty}">{$notice_count}</span></li>
+                  <li><a href="javascript:void(0);" onclick="openItem('UsersNotice|admin_notice_index');">站长消息</a><span class="info-num UnreadNotify1615518028 {empty name='$notice_count'}none{/empty}">{$notice_count}</span></li>
                   {/empty}
                   <li><a href="{:url('Admin/logout')}">安全退出</a></li>
                 </ul>
@@ -186,10 +187,12 @@
             </div>
             <script type="text/javascript">
               $(".admin_user_dropup").mouseover(function(){
+                 event.stopPropagation();
                  $(".admin_user_dropup_con").show();
                  $(".admin_user_dropup_bt").children('i').removeClass('fa-angle-down').addClass('fa-angle-up');
               });
               $(".admin_user_dropup").mouseout(function(){
+                 event.stopPropagation();
                  $(".admin_user_dropup_con").hide();
                  $(".admin_user_dropup_bt").children('i').removeClass('fa-angle-up').addClass('fa-angle-down');
               });
@@ -216,6 +219,7 @@
               $('.iframe_loading').removeClass('iframe_loading');
           // }, 500);
       })
+      var php_servicemeal = {$php_servicemeal|default='0'};
 
       /* 定时查询未读的站内信 --- 暂定为60秒查询一次 */
       var is_author = {$is_eyou_authortoken|default='0'};
@@ -252,6 +256,42 @@
       if (1 == sitemap_html) {
           UpdateSitemap1647228884();
           window.setInterval(UpdateSitemap1647228884, 2*60*1000);
+      }
+
+      // 轮询更新ai_content_index.html网站地图
+      function UpdateSitemap1758167419(){
+          $.ajax({
+              url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_ai_content_index_html&lang="+__lang__,
+              type: "POST",
+              dataType: "json",
+              data: {is_auto:'off', _ajax:1},
+              success: function(res) {
+
+              }
+          });
+      }
+      var ai_content_index_html = {$global['ai_content_index_html']|default=0};
+      if (1 == ai_content_index_html && 5 <= php_servicemeal) {
+          UpdateSitemap1758167419();
+          window.setInterval(UpdateSitemap1758167419, 2*60*1000);
+      }
+
+      // 轮询更新llms.txt
+      function UpdateSitemap1758600001(){
+          $.ajax({
+              url: "__ROOT_DIR__/index.php?m=api&c=Sitemap&a=ajax_update_llms_txt&lang="+__lang__,
+              type: "POST",
+              dataType: "json",
+              data: {is_auto:'off', _ajax:1},
+              success: function(res) {
+
+              }
+          });
+      }
+      var llms_txt = {$global['llms_txt']|default=0};
+      if (1 == llms_txt && 5 <= php_servicemeal) {
+          UpdateSitemap1758600001();
+          window.setInterval(UpdateSitemap1758600001, 2*60*1000);
       }
 
       repair_language_data();

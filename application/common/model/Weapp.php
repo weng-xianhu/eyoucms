@@ -42,7 +42,7 @@ class Weapp extends Model
                         if (preg_match('/^{.*}$/', $value['data'])) { // json格式
                             $value['data'] = json_decode($value['data'], true);
                         } else {
-                            $value['data'] = unserialize($value['data']);
+                            $value['data'] = safe_unserialize($value['data']);
                         }
                     }
                     if (!empty($value['config'])) {

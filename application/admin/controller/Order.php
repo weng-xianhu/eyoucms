@@ -91,6 +91,9 @@ class Order extends Base
             } else if (6 == $post['export_type']) {
                 // 查询文章订单并处理
                 $ExportData = $this->GetServiceOrder($post);
+            }else if (7 == $post['export_type']) {
+                // 查询下载订单并处理
+                $ExportData = $this->GetDownOrder($post);
             }
             if (!empty($ExportData['ExcelData'])) {
                 // 执行导出下载
@@ -105,6 +108,87 @@ class Order extends Base
         } else {
             $this->error('导出失败');
         }
+    }
+
+    // 查询下载订单并处理
+    private function GetDownOrder($post = [])
+    {
+        // 查询条件
+        $where = [
+            'a.lang' => $this->admin_lang
+        ];
+
+        // 订单状态搜索
+        $order_status = !empty($post['order_status']) ? $post['order_status'] : 0;
+        if (!empty($order_status)) $where['a.order_status'] = intval($order_status) === 1 ? intval($order_status) : 0;
+
+        // 订单号或用户名搜索
+        $keywords = !empty($post['keywords']) ? $post['keywords'] : '';
+        if (!empty($keywords)) $where['a.order_code|b.username'] = ['LIKE', "%{$keywords}%"];
+
+        // 支付方式查询
+        $pay_name = !empty($post['pay_name']) ? $post['pay_name'] : '';
+        if (!empty($pay_name)) $where['a.pay_name'] = $pay_name;
+
+        // 根据日期导出
+        $start_time = $post['start_time'];
+        $end_time = $post['end_time'];
+        if (!empty($start_time) && !empty($end_time)) {
+            $start_time = strtotime($start_time);
+            $end_time = strtotime("+1 day", strtotime($end_time)) - 1;
+            $where['a.add_time'] = ['between', [$start_time, $end_time]];
+        } elseif (!empty($start_time) && empty($end_time)) {
+            $start_time = strtotime($start_time);
+            $where['a.add_time'] = ['>=', $start_time];
+        } elseif (empty($start_time) && !empty($end_time)) {
+            $end_time = strtotime("+1 day", strtotime($end_time)) - 1;
+            $where['a.add_time'] = ['<=', $end_time];
+        }
+
+        // 查询字段
+        $Field = 'a.order_code, a.product_id, a.product_name, a.order_amount, a.pay_name, b.username, a.add_time, a.order_status';
+        // 执行查询
+        $ArticleData = Db::name('download_order')
+            ->alias('a')
+            ->field($Field)
+            ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
+            ->where($where)
+            ->order('a.order_status desc, a.order_id desc')
+            ->select();
+
+        // 处理订单导出数据
+        $ExcelData = [];
+        foreach ($ArticleData as $key => $value) {
+            // 订单金额格式化为：￥20.00
+            $amount = floatval($value['order_amount']);
+            $order_amount_text = '￥' . number_format($amount, 2, '.', '');
+
+            // 拼装追加数据
+            $PushData = [
+                // 订单信息
+                'order_code'   => $value['order_code']. "\t",
+                'product_name' => $value['product_name'],
+                'order_amount' => $order_amount_text,
+                'add_time'     => date('Y-m-d H:i:s', $value['add_time']),
+                'order_status' => 1 == $value['order_status'] ? '已付款' : '未付款',
+                // 会员账号
+                'username'     => $value['username']
+            ];
+            // 追加数据，用于导出
+            array_push($ExcelData, $PushData);
+        }
+        // 导出字段设置
+        $ExcelField = ['order_code', 'product_name', 'order_amount', 'username', 'add_time', 'order_status'];
+        // 导出标题设置
+        $ExcelTitle = ['订单号', '文章名称', '订单金额', '会员账号', '下单时间', '订单状态'];
+
+        // 返回导出所需数据及参数
+        $ReturnData = [
+            'ExcelData' => $ExcelData,
+            'ExcelField' => $ExcelField,
+            'ExcelTitle' => $ExcelTitle
+        ];
+        return $ReturnData;
     }
 
     // 查询商城订单并处理
@@ -151,7 +235,7 @@ class Order extends Base
         }
 
         // 查询字段
-        $Field = 'a.order_id, a.order_code, a.order_status, a.pay_time, a.pay_name, a.express_name, a.express_order, a.consignee, a.order_amount, a.order_total_num, a.province, a.city, a.district, a.address, a.mobile, a.add_time, b.username';
+        $Field = 'a.order_id, a.order_code, a.order_status, a.pay_time, a.pay_name, a.express_name, a.express_order, a.consignee, a.order_amount, a.order_total_num, a.province, a.city, a.district, a.address, a.mobile, a.add_time, a.user_note, a.admin_note, b.username';
         // 执行查询
         $OrderData = Db::name('shop_order')
             ->alias('a')
@@ -201,23 +285,82 @@ class Order extends Base
             // 匹配县、区、镇中文
             $District = get_area_name($value['district']);
             // 订单商品列表
-            $product_name_all = '';
+            $product_name_rows = [];
+            $product_spec_rows = [];
             $order_details_info = !empty($order_details_list[$value['order_id']]) ? $order_details_list[$value['order_id']] : [];
             if (!empty($order_details_info)) {
                 foreach ($order_details_info as $k => $v) {
-                    if (!empty($product_name_all)) {
-                        $product_name_all .= PHP_EOL;
+                    $product_line = trim($v['product_name']) . "\t";
+                    $product_name_rows[] = $product_line;
+
+                    // 提取商品规格信息
+                    $spec_text = '';
+                    if (!empty($v['data'])) {
+                        $spec_data = safe_unserialize($v['data']);
+                        if (!empty($spec_data['spec_value'])) {
+                            $spec_value_arr = explode('<br/>', htmlspecialchars_decode($spec_data['spec_value']));
+                            $spec_parts = [];
+                            foreach ($spec_value_arr as $sp_val) {
+                                $sp_arr = explode('：', $sp_val);
+                                if (!empty($sp_arr[0]) && !empty($sp_arr[1])) {
+                                    $spec_parts[] = trim($sp_arr[0]) . '：' . trim($sp_arr[1]);
+                                }
+                            }
+                            $spec_text = implode(' ', $spec_parts);
+                        }
                     }
-                    $product_name_all .= $v['product_name']. "\t";
+                    $spec_line_text = trim($spec_text);
+                    $product_spec_rows[] = $spec_line_text !== '' ? $spec_line_text : '-';
+                }
+            }
+            $product_name_all = implode("\r\n", $product_name_rows);
+            $product_spec_all = implode("\r\n", $product_spec_rows);
+            // 管理员备注信息
+            $admin_remark_text = '';
+            if (!empty($value['admin_note'])) {
+                $admin_notes = safe_unserialize($value['admin_note']);
+                if (!empty($admin_notes) && is_array($admin_notes)) {
+                    $admin_notes_text = [];
+                    foreach ($admin_notes as $note) {
+                        $note_parts = [];
+                        if (!empty($note['times'])) {
+                            $note_parts[] = trim($note['times']);
+                        }
+                        if (!empty($note['admin_name'])) {
+                            $note_parts[] = trim($note['admin_name']);
+                        }
+                        if (!empty($note['remarks'])) {
+                            $note_parts[] = trim($note['remarks']);
+                        }
+                        if (!empty($note_parts)) {
+                            $admin_notes_text[] = implode(' ', $note_parts);
+                        }
+                    }
+                    $admin_remark_text = implode(PHP_EOL, $admin_notes_text);
                 }
             }
             // 拼装追加数据
+            $regionParts = array_filter([$Province, $City, $District], function ($item) {
+                return $item !== '' && $item !== null;
+            });
+            $regionText = implode(' ', $regionParts);
+            $addr_info = trim($value['address']);
+            if (!empty($regionText) && !empty($addr_info)) {
+                $addr_info = $regionText . "\r\n" . $addr_info;
+            } elseif (!empty($regionText)) {
+                $addr_info = $regionText;
+            }
+            // 订单金额格式化为：￥20.00
+            $amount = floatval($value['order_amount']);
+            $order_amount_text = '￥' . number_format($amount, 2, '.', '');
+            
             $PushData = [
                 // 订单信息
                 'order_code'   => $value['order_code']. "\t",
                 'product_name'    => $product_name_all,
+                'product_spec'    => $product_spec_all,
                 'order_num'    => $value['order_total_num'],
-                'order_amount' => $value['order_amount'],
+                'order_amount' => $order_amount_text,
                 'add_time'     => date('Y-m-d H:i:s', $value['add_time']),
                 'order_status' => $admin_order_status_arr[$value['order_status']],
                 // 支付信息
@@ -231,15 +374,17 @@ class Order extends Base
                 // 收货信息
                 'consignee' => $value['consignee'],
                 'mobile'    => $value['mobile'],
-                'addr_info' => $Province . ' ' . $City . ' ' . $District . ' ' . $value['address'],
+                'addr_info' => $addr_info,
+                'order_remark' => !empty($value['user_note']) ? $value['user_note'] : '',
+                'admin_remark' => $admin_remark_text,
             ];
             // 追加数据，用于导出
             array_push($ExcelData, $PushData);
         }
         // 导出字段设置
-        $ExcelField = ['order_code', 'product_name', 'order_num', 'order_amount', 'add_time', 'order_status', 'pay_time', 'pay_name', 'express_name', 'express_order', 'username', 'consignee', 'mobile', 'addr_info'];
+        $ExcelField = ['order_code', 'product_name', 'product_spec', 'order_num', 'order_amount', 'add_time', 'order_status', 'pay_time', 'pay_name', 'express_name', 'express_order', 'username', 'consignee', 'mobile', 'addr_info', 'order_remark', 'admin_remark'];
         // 导出标题设置
-        $ExcelTitle = ['订单号', '商品名称', '商品数量', '订单总额', '下单时间', '订单状态', '支付时间', '支付方式', '快递公司', '快递单号', '会员账号', '收货人', '联系电话', '收货地址'];
+        $ExcelTitle = ['订单号', '商品名称', '商品规格', '商品数量', '订单总额', '下单时间', '订单状态', '支付时间', '支付方式', '快递公司', '快递单号', '会员账号', '收货人', '联系电话', '收货地址', '订单备注', '管理员备注'];
 
         // 返回导出所需数据及参数
         $ReturnData = [
@@ -256,18 +401,27 @@ class Order extends Base
         // 查询条件
         $where = [
             // 多语言
-            'a.lang' => $this->admin_lang,
-            // 查询充值订单
-            'a.cause_type' => $cause_type
+            // 'a.lang' => $this->admin_lang,
         ];
+        // 如果是查询升级订单则执行
+        if (0 === intval($cause_type)) {
+            $where['a.status'] = ['IN', [2, 3]];
+            $where['a.cause_type'] = intval($cause_type);
+        } else {
+            $where['a.status'] = ['GT', 1];
+            // $where['a.cause_type'] = ['NEQ', 0];
+        }
+
+        // 来源/用途
+        if (!empty($post['cause_type_str'])) $where['a.cause_type'] = ['IN', explode('_', $post['cause_type_str'])];
 
         // 订单号或会员名查询
         $keywords = !empty($post['keywords']) ? $post['keywords'] : '';
         if (!empty($keywords)) $where['a.order_number|b.username'] = array('LIKE', "%{$keywords}%");
 
         // 支付方式查询
-        $pay_method = !empty($post['pay_method']) ? $post['pay_method'] : '';
-        if (!empty($pay_method)) $where['a.pay_method'] = $pay_method;
+        // $pay_method = !empty($post['pay_method']) ? $post['pay_method'] : '';
+        // if (!empty($pay_method)) $where['a.pay_method'] = $pay_method;
 
         // 会员级别查询
         $level = !empty($post['level']) ? $post['level'] : 0;
@@ -278,10 +432,10 @@ class Order extends Base
         if (!empty($level_id)) $where['a.level_id'] = $level_id;
 
         // 指定订单状态导出
-        $status = !empty($post['status']) ? $post['status'] : 0;
-        if (!empty($post['status'])) $where['a.status'] = in_array($status, [2, 3]) ? ['IN', [2, 3]] : $status; 
+        // $status = !empty($post['status']) ? $post['status'] : 0;
+        // if (!empty($post['status'])) $where['a.status'] = in_array($status, [2, 3]) ? ['IN', [2, 3]] : $status; 
         // 如果传入的类型是0则强制查询已完成的订单
-        if (0 === $cause_type) $where['a.status'] = ['IN', [2, 3]];
+        // if (0 === intval($cause_type)) $where['a.status'] = ['IN', [2, 3]];
 
         // 根据日期导出
         $start_time = $post['start_time'];
@@ -299,14 +453,15 @@ class Order extends Base
         }
 
         // 查询字段
-        $Field = 'a.order_number, a.money, b.username, a.add_time, a.status, a.update_time, a.pay_method, a.cause, b.level';
+        $Field = 'a.order_number, a.money, a.users_money, b.username, b.nickname, a.add_time, a.status, a.update_time, a.pay_method, a.cause, b.level, a.cause_type';
         // 执行查询
         $MoneyData = Db::name('users_money')
             ->alias('a')
             ->field($Field)
             ->join('__USERS__ b', 'a.users_id = b.users_id', 'LEFT')
             ->where($where)
-            ->order('a.status desc, a.moneyid desc')
+            // ->order('a.status desc, a.moneyid desc')
+            ->order('a.add_time desc, a.moneyid desc')
             ->select();
 
         // 充值状态
@@ -315,10 +470,10 @@ class Order extends Base
         $pay_method_arr = config('global.pay_method_arr');
         // 处理订单导出数据
         $ExcelData = [];
-        if (0 === $cause_type) {
+        if (0 === intval($cause_type)) {
             // 升级订单
             foreach ($MoneyData as $key => $value) {
-                $value['cause'] = unserialize($value['cause']);
+                $value['cause'] = safe_unserialize($value['cause']);
                 // 拼装追加数据
                 $PushData = [
                     // 订单信息
@@ -336,22 +491,42 @@ class Order extends Base
                 // 追加数据，用于导出
                 array_push($ExcelData, $PushData);
                 // 导出字段设置
-                $ExcelField = ['order_number', 'type_name', 'money', 'username', 'add_time', 'status', 'update_time', 'pay_method'];
+                $ExcelField = ['order_number', 'type_name', 'money', 'username', 'add_time', 'update_time', 'pay_method', 'status'];
                 // 导出标题设置
-                $ExcelTitle = ['订单号', '产品名称', '订单金额', '会员账号', '升级时间', '订单状态', '支付时间', '支付方式'];
+                $ExcelTitle = ['订单号', '升级类别', '订单金额', '会员账号', '升级时间', '支付时间', '支付方式', '订单状态'];
             }
         } else {
             // 充值订单
+            // 来源/用途文案
+            $pay_cause_type_arr = config('global.pay_cause_type_arr');
             foreach ($MoneyData as $key => $value) {
+                $a = in_array($value['cause_type'], [1, 2, 4, 10]) ? '+' : '-';
+                // 来源/用途显示规则与列表页保持一致
+                if (in_array($value['cause_type'], [0, 2, 3])) {
+                    $cause_type_text = '订单消费';
+                } else if (1 == $value['cause_type']) {
+                    $cause_type_text = '会员储值';
+                } else if (in_array($value['cause_type'], [4, 5])) {
+                    $cause_type_text = '账户调整';
+                } else if (10 == $value['cause_type']) {
+                    $cause_type_text = '卡密充值';
+                } else if (isset($pay_cause_type_arr[$value['cause_type']])) {
+                    // 兜底：使用全局配置中的文案
+                    $cause_type_text = $pay_cause_type_arr[$value['cause_type']];
+                } else {
+                    $cause_type_text = '——';
+                }
                 // 拼装追加数据
                 $PushData = [
                     // 订单信息
                     'order_number' => $value['order_number']. "\t",
-                    'money'        => $value['money'],
+                    'money'        => '￥' . $a . $value['money'],
+                    'users_money'  => $value['users_money'],
+                    'cause_type_text' => $cause_type_text,
                     'add_time'     => date('Y-m-d H:i:s', $value['add_time']),
                     'status'       => $pay_status_arr[$value['status']],
                     // 会员账号
-                    'username'     => $value['username'],
+                    'username'     => !empty($value['nickname']) ? trim($value['nickname']) : trim($value['username']),
                     // 支付信息
                     'update_time'  => in_array($value['status'], [2, 3]) ? date('Y-m-d H:i:s', $value['update_time']) : '',
                     'pay_method'   => in_array($value['status'], [2, 3]) ? $pay_method_arr[$value['pay_method']] : ''
@@ -360,11 +535,11 @@ class Order extends Base
                 array_push($ExcelData, $PushData);
             }
             // 导出字段设置
-            $ExcelField = ['order_number', 'money', 'username', 'add_time', 'status', 'update_time', 'pay_method'];
+            $ExcelField = ['order_number', 'money', 'users_money', 'cause_type_text', 'username', 'add_time', 'update_time', 'pay_method', 'status'];
             // 导出标题设置
-            $ExcelTitle = ['订单号', '充值金额', '会员账号', '充值时间', '订单状态', '支付时间', '支付方式'];
+            $ExcelTitle = ['订单号', '变动金额', '剩余金额', '来源/用途', '会员账号', '发生时间', '支付时间', '支付方式', '订单状态'];
         }
-        
+
         // 返回导出所需数据及参数
         $ReturnData = [
             'ExcelData' => $ExcelData,
@@ -410,7 +585,7 @@ class Order extends Base
         }
 
         // 查询字段
-        $Field = 'a.order_code, a.order_amount, b.username, a.mobile, a.add_time, a.order_status';
+        $Field = 'a.order_code, a.product_id, a.product_name, a.order_amount, b.username, a.mobile, a.add_time, a.order_status';
         // 执行查询
         $MediaData = Db::name('media_order')
             ->alias('a')
@@ -419,14 +594,41 @@ class Order extends Base
             ->where($where)
             ->order('a.order_status desc, a.order_id desc')
             ->select();
+
+        // 补充缺失的视频文章名称
+        if (!empty($MediaData)) {
+            $productIds = [];
+            foreach ($MediaData as $item) {
+                if (empty($item['product_name']) && !empty($item['product_id'])) {
+                    $productIds[] = $item['product_id'];
+                }
+            }
+            $productIds = array_unique($productIds);
+            if (!empty($productIds)) {
+                $archives = Db::name('archives')
+                    ->where('aid', 'IN', $productIds)
+                    ->column('title', 'aid');
+                foreach ($MediaData as $key => $item) {
+                    if (empty($item['product_name']) && !empty($archives[$item['product_id']])) {
+                        $MediaData[$key]['product_name'] = $archives[$item['product_id']];
+                    }
+                }
+            }
+        }
+
         // 处理订单导出数据
         $ExcelData = [];
         foreach ($MediaData as $key => $value) {
+            // 订单金额格式化为：￥20.00
+            $amount = floatval($value['order_amount']);
+            $order_amount_text = '￥' . number_format($amount, 2, '.', '');
+
             // 拼装追加数据
             $PushData = [
                 // 订单信息
                 'order_code'   => $value['order_code']. "\t",
-                'order_amount' => $value['order_amount'],
+                'product_name' => $value['product_name'],
+                'order_amount' => $order_amount_text,
                 'add_time'     => date('Y-m-d H:i:s', $value['add_time']),
                 'order_status' => 1 == $value['order_status'] ? '已付款' : '未付款',
                 // 会员账号
@@ -437,9 +639,9 @@ class Order extends Base
             array_push($ExcelData, $PushData);
         }
         // 导出字段设置
-        $ExcelField = ['order_code', 'order_amount', 'username', 'mobile', 'add_time', 'order_status'];
+        $ExcelField = ['order_code', 'product_name', 'order_amount', 'username', 'mobile', 'add_time', 'order_status'];
         // 导出标题设置
-        $ExcelTitle = ['订单号', '订单金额', '会员账号', '会员手机', '下单时间', '订单状态'];
+        $ExcelTitle = ['订单号', '文章名称', '订单金额', '会员账号', '会员手机', '下单时间', '订单状态'];
 
         // 返回导出所需数据及参数
         $ReturnData = [
@@ -486,7 +688,7 @@ class Order extends Base
         }
 
         // 查询字段
-        $Field = 'a.order_code, a.order_amount, b.username, a.add_time, a.order_status';
+        $Field = 'a.order_code, a.product_id, a.product_name, a.order_score, a.order_amount, b.username, a.add_time, a.order_status';
         // 执行查询
         $ArticleData = Db::name('article_order')
             ->alias('a')
@@ -496,14 +698,45 @@ class Order extends Base
             ->order('a.order_status desc, a.order_id desc')
             ->select();
 
+        // 补充缺失的文章名称
+        if (!empty($ArticleData)) {
+            $productIds = [];
+            foreach ($ArticleData as $item) {
+                if (empty($item['product_name']) && !empty($item['product_id'])) {
+                    $productIds[] = $item['product_id'];
+                }
+            }
+            $productIds = array_unique($productIds);
+            if (!empty($productIds)) {
+                $archives = Db::name('archives')
+                    ->where('aid', 'IN', $productIds)
+                    ->column('title', 'aid');
+                foreach ($ArticleData as $key => $item) {
+                    if (empty($item['product_name']) && !empty($archives[$item['product_id']])) {
+                        $ArticleData[$key]['product_name'] = $archives[$item['product_id']];
+                    }
+                }
+            }
+        }
+
         // 处理订单导出数据
         $ExcelData = [];
         foreach ($ArticleData as $key => $value) {
+            // 订单金额显示：如果有积分则显示“20积分”，否则显示“￥20.00”
+            $order_amount_text = '';
+            if (!empty($value['order_score'])) {
+                $order_amount_text = $value['order_score'] . '积分';
+            } else {
+                $amount = floatval($value['order_amount']);
+                $order_amount_text = '￥' . number_format($amount, 2, '.', '');
+            }
+
             // 拼装追加数据
             $PushData = [
                 // 订单信息
                 'order_code'   => $value['order_code']. "\t",
-                'order_amount' => $value['order_amount'],
+                'product_name' => $value['product_name'],
+                'order_amount' => $order_amount_text,
                 'add_time'     => date('Y-m-d H:i:s', $value['add_time']),
                 'order_status' => 1 == $value['order_status'] ? '已付款' : '未付款',
                 // 会员账号
@@ -513,9 +746,9 @@ class Order extends Base
             array_push($ExcelData, $PushData);
         }
         // 导出字段设置
-        $ExcelField = ['order_code', 'order_amount', 'username', 'add_time', 'order_status'];
+        $ExcelField = ['order_code', 'product_name', 'order_amount', 'username', 'add_time', 'order_status'];
         // 导出标题设置
-        $ExcelTitle = ['订单号', '订单金额', '会员账号', '下单时间', '订单状态'];
+        $ExcelTitle = ['订单号', '文章名称', '订单金额', '用户', '下单时间', '订单状态'];
 
         // 返回导出所需数据及参数
         $ReturnData = [
@@ -560,7 +793,7 @@ class Order extends Base
         }
 
         $Service = Db::name('shop_order_service')->alias('a')
-            ->field('a.*, b.product_price, b.num as product_num, d.username')
+            ->field('a.*, b.product_price, b.num as product_num, b.data as detailsData, c.province, c.city, c.district, c.address as order_address, d.username')
             ->join('__SHOP_ORDER_DETAILS__ b', 'a.details_id = b.details_id', 'LEFT')
             ->join('__SHOP_ORDER__ c', 'a.order_id = c.order_id', 'LEFT')
             ->join('__USERS__ d', 'a.users_id = d.users_id', 'LEFT')
@@ -572,21 +805,61 @@ class Order extends Base
         // 处理订单导出数据
         $ExcelData = [];
         foreach ($Service as $key => $value) {
+            // 商品规格处理
+            $product_spec_text = '';
+            $goodsSpecList = model('ShopPublicHandle')->getOrderGoodsSpecList($value);
+            if (!empty($goodsSpecList)) {
+                $specArr = [];
+                foreach ($goodsSpecList as $spec) {
+                    $name  = !empty($spec['name'])  ? trim($spec['name'])  : '';
+                    $val   = !empty($spec['value']) ? trim($spec['value']) : '';
+                    if ($name !== '' && $val !== '') {
+                        $specArr[] = $name . '：' . $val;
+                    } elseif ($val !== '') {
+                        $specArr[] = $val;
+                    }
+                }
+                $product_spec_text = implode('；', $specArr);
+            }
+
+            // 维权描述
+            $service_content = '';
+            if (!empty($value['content'])) {
+                $service_content = trim(strip_tags($value['content']));
+            }
+
             $service_type = '换货';
             if (2 === intval($value['service_type'])) {
                 $service_type = '退货';
             } else if (3 === intval($value['service_type'])) {
-                $service_type = '维修';
+                $service_type = '仅退款';
             }
+
+            // 收货地址换行处理：地区在上一行，详细地址在下一行
+            $Province = !empty($value['province']) ? get_province_name($value['province']) : '';
+            $City     = !empty($value['city']) ? get_city_name($value['city']) : '';
+            $District = !empty($value['district']) ? get_area_name($value['district']) : '';
+            $regionParts = array_filter([$Province, $City, $District], function ($item) {
+                return $item !== '' && $item !== null;
+            });
+            $regionText = implode(' ', $regionParts);
+            $addr_info = trim(!empty($value['order_address']) ? $value['order_address'] : $value['address']);
+            if (!empty($regionText) && !empty($addr_info)) {
+                $addr_info = $regionText . "\r\n" . $addr_info;
+            } elseif (!empty($regionText)) {
+                $addr_info = $regionText;
+            }
+
             // 拼装追加数据
             $PushData = [
                 // 订单信息
                 'order_code' => $value['order_code'] . "\t",
                 'refund_code' => $value['refund_code'] . "\t",
-                'product_name' => $value['product_name'],
-                'product_price' => $value['product_price'],
-                'product_num' => $value['product_num'],
-                'refund_price' => $value['refund_price'],
+                'product_name'  => $value['product_name'],
+                'product_spec'  => $product_spec_text,
+                'product_price' => '￥' . $value['product_price'],
+                'product_num'   => $value['product_num'],
+                'refund_price'  => '￥' . $value['refund_price'],
                 'service_type' => $service_type,
                 'status' => $ServiceStatus[$value['status']],
                 'add_time' => date('Y-m-d H:i:s', $value['add_time']),
@@ -595,16 +868,17 @@ class Order extends Base
                 // 收货信息
                 'consignee' => $value['consignee'],
                 'mobile' => $value['mobile'],
-                'address' => trim($value['address']),
+                'address' => $addr_info,
+                'service_content' => $service_content,
             ];
             // 追加数据，用于导出
             array_push($ExcelData, $PushData);
         }
 
         // 导出字段设置
-        $ExcelField = ['order_code', 'refund_code', 'product_name', 'product_price', 'product_num', 'refund_price', 'service_type', 'status', 'add_time', 'username', 'consignee', 'mobile', 'address'];
+        $ExcelField = ['order_code', 'refund_code', 'product_name', 'product_spec', 'product_price', 'product_num', 'refund_price', 'service_type', 'status', 'add_time', 'username', 'consignee', 'mobile', 'address', 'service_content'];
         // 导出标题设置
-        $ExcelTitle = ['订单号', '服务单号', '商品名称', '商品价格', '商品数量', '退还金额', '售后类型', '处理状态', '售后时间', '会员账号', '收货人', '联系电话', '收货地址'];
+        $ExcelTitle = ['订单号', '服务单号', '商品名称', '商品规格', '商品价格', '商品数量', '退还金额', '售后类型', '处理状态', '售后时间', '会员账号', '收货人', '联系电话', '收货地址', '维权描述'];
 
         // 返回导出所需数据及参数
         $ReturnData = [
@@ -630,33 +904,39 @@ class Order extends Base
 
         // 设置表格标题栏长度
         $objActSheet = $objPHPExcel->getActiveSheet();
+        $objActSheet->getDefaultRowDimension()->setRowHeight(30);
         if (1 == $export_type) {// 商城订单
             $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(22);
             $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(30);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(25);
             $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(10);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(22);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('K')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('L')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('M')->setWidth(13);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('N')->setWidth(40);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(12);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('K')->setWidth(22);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('L')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('M')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('N')->setWidth(13);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('O')->setWidth(50);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('P')->setWidth(50);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('Q')->setWidth(50);
             // 设置导出表格名称
             $FileName = 'shop-order-'.date("YmdHis");
 
         } else if (2 == $export_type) {// 充值订单
             // 设置导出表格标题宽度
             $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(22);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(10);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(10);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(14);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(14);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(14);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
             $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(12);
             // 设置导出表格名称
             $FileName = 'money-order-'.date("YmdHis");
 
@@ -667,8 +947,8 @@ class Order extends Base
             $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(10);
             $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(10);
             $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(10);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(10);
             $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(10);
             // 设置导出表格名称
             $FileName = 'upgrade-order-'.date("YmdHis");
@@ -676,7 +956,7 @@ class Order extends Base
         } else if (4 == $export_type) {// 视频订单
             // 设置导出表格标题宽度
             $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(50);
             $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(10);
             $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(13);
             $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
@@ -687,27 +967,39 @@ class Order extends Base
         } else if (5 == $export_type) {// 文章订单
             // 设置导出表格标题宽度
             $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(50);
             $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(10);
             $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(13);
             $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
             // 设置导出表格名称
             $FileName = 'article-order-'.date("YmdHis");
 
+        } else if (7 == $export_type) {// 下载订单
+            // 设置导出表格标题宽度
+            $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(18);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(50);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(10);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(13);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(18);
+            // 设置导出表格名称
+            $FileName = 'download-order-'.date("YmdHis");
+
         } else if (6 == $export_type) {// 售后订单
             $objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(22);
             $objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
             $objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(22);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(22);
             $objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(8);
             $objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(8);
             $objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(12);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(18);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(12);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(18);
             $objPHPExcel->getActiveSheet()->getColumnDimension('K')->setWidth(8);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('L')->setWidth(13);
-            $objPHPExcel->getActiveSheet()->getColumnDimension('M')->setWidth(40);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('L')->setWidth(8);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('M')->setWidth(13);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('N')->setWidth(40);
+            $objPHPExcel->getActiveSheet()->getColumnDimension('O')->setWidth(40);
             // 设置导出表格名称
             $FileName = 'service-order-'.date("YmdHis");
 
@@ -728,12 +1020,11 @@ class Order extends Base
             foreach($ExcelField as $key => $value) {
                 $objActSheet->setCellValue($cell_arr[$key] . $startRow, $v[$value]);
                 if (1 == $export_type) {// 商城订单
-                    $product_name_arr = explode(PHP_EOL, $v['product_name']);
-                    $product_name_num = count($product_name_arr);
-                    $height = ($product_name_num * 15) + 5;
-                    $objActSheet->getRowDimension($startRow)->setRowHeight($height);// 设置行高
-                    $objActSheet->getStyle($columnField.($startRow))->getAlignment()->setWrapText(true);//设置自动换行
-                    $objActSheet->getStyle($columnField. $startRow)->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER);//垂直居中
+                    // 对商品名称和规格列设置自动换行
+                    if (in_array($columnField, ['B', 'C', 'O', 'Q'])) {
+                        $objActSheet->getStyle($columnField.($startRow))->getAlignment()->setWrapText(true);//设置自动换行
+                        $objActSheet->getStyle($columnField. $startRow)->getAlignment()->setVertical(\PHPExcel_Style_Alignment::VERTICAL_CENTER);//垂直居中
+                    }
                     $columnField++;
                 }
             }
@@ -756,7 +1047,7 @@ class Order extends Base
         // 保存前清空删除原先的excel
         delFile(UPLOAD_PATH . 'excel/', true);
         // 创建文件夹
-        @mkdir($ExcelPath, 0777, true);
+        @mkdir($ExcelPath, 0755, true);
         // excel文件路径
         $filePath = $ExcelPath . $FileName . '.xlsx';
         // 保存excel文件

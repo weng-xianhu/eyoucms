@@ -109,7 +109,7 @@ class Level extends Base {
             if (in_array($value['status'],[2,3])  && 'wechat' == $value['pay_method']) $order_number_arr[] = $value['order_number'];
             $value['username'] = !empty($value['nickname']) ? $value['nickname'] : $value['username'];
             // 反序列化参数
-            $value['cause'] = unserialize($value['cause']);
+            $value['cause'] = safe_unserialize($value['cause']);
             $value['head_pic'] = get_head_pic($value['head_pic']);
             $list[$key] = $value;
         }

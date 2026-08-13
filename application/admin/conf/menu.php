@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -84,6 +84,7 @@ if ($main_lang != $admin_lang) {
     $ctlactArr = [
         'Seo@seo',
         'Sitemap@index',
+        'Robots@edit',
         'Links@index',
     ];
     foreach ($ctlactArr as $key => $val) {
@@ -205,6 +206,16 @@ if (is_dir('./weapp/Diyminipro/') && 1 == tpCache('global.web_diyminipro_switch'
 }
 /*--end*/
 
+/*html生成*/
+$seo_build_arr = array();
+if (2 == tpCache('seo.seo_pseudo') && $main_lang == $admin_lang) {
+    $seo_build_arr = array(
+        'is_menu' => 0,
+        'is_modules' => 1,
+    );
+}
+/*--end*/
+
 /*更多功能*/
 $index_switch_map_arr = array(
     'is_menu' => 1,
@@ -278,6 +289,21 @@ return  array(
                         'name' => '内容统计',
                         'controller'=>'Index',
                         'action'=>'ajax_content_total',
+                        'url'=>'', 
+                        'target'=>'workspace',
+                        'icon'=>'fa fa-undo',
+                        'grade'=>2,
+                        'is_menu'=>0,
+                        'is_modules'=>1,
+                        'is_subshowmenu'=>0,
+                        'child' => [],
+                    ],
+                    '1005003' => [
+                        'id'=>1005003,
+                        'parent_id'=>1005,
+                        'name' => '实时概况',
+                        'controller'=>'Index',
+                        'action'=>'ajax_surveyquickmenu',
                         'url'=>'', 
                         'target'=>'workspace',
                         'icon'=>'fa fa-undo',
@@ -609,6 +635,21 @@ return  array(
                     //     'is_subshowmenu'=>0,
                     //     'child' => array(),
                     // ),
+                    '2003005' => array(
+                        'id'=>2003005,
+                        'parent_id'=>2003,
+                        'name' => 'Robots', 
+                        'controller'=>'Robots',
+                        'action'=>'edit',
+                        'url'=>'',
+                        'target'=>'workspace',
+                        'icon'=>'iconfont e-robots',
+                        'grade'=>2,
+                        'is_menu'=>0,
+                        'is_modules'=>1,
+                        'is_subshowmenu'=>0,
+                        'child' => array(),
+                    ),
                 ),
             ),
             '2004' => array(
@@ -861,8 +902,8 @@ return  array(
                         'target'=>'workspace',
                         'icon'=>'iconfont e-jingtaishengcheng',
                         'grade'=>2,
-                        'is_menu'=>0,
-                        'is_modules'=>1,
+                        'is_menu'=> isset($seo_build_arr['is_menu']) ? $seo_build_arr['is_menu'] : 0,
+                        'is_modules'=> isset($seo_build_arr['is_modules']) ? $seo_build_arr['is_modules'] : 0,
                         'is_subshowmenu'=>0,
                         'child' => array(),
                     ),
@@ -972,6 +1013,22 @@ return  array(
                         'is_subshowmenu'=>0,
                         'child' => array(),
                     ),
+                    // '2004024' => array(
+                    //     'id'=>2004024,
+                    //     'parent_id'=>2004,
+                    //     'name' => '消息通知',
+                    //     'controller'=>'Notice',
+                    //     'action'=>'buyer_notice',
+                    //     'param' => '',
+                    //     'url'=>'',
+                    //     'target'=>'workspace',
+                    //     'icon'=>'iconfont e-shangcheng',
+                    //     'grade'=>2,
+                    //     'is_menu'=>0,
+                    //     'is_modules'=>1,
+                    //     'is_subshowmenu'=>0,
+                    //     'child' => array(),
+                    // ),
                     '2004025' => array(
                         'id'=>2004025,
                         'parent_id'=>2004,
@@ -997,7 +1054,39 @@ return  array(
                         'param' => '',
                         'url'=>'',
                         'target'=>'workspace',
-                        'icon'=>'iconfont e-zhutifengge',
+                        'icon'=>'iconfont e-waimaoshezhi',
+                        'grade'=>2,
+                        'is_menu'=>0,
+                        'is_modules'=>1,
+                        'is_subshowmenu'=>0,
+                        'child' => array(),
+                    ),
+                    '2004027' => array(
+                        'id'=>2004027,
+                        'parent_id'=>2004,
+                        'name' => '智能互联',
+                        'controller'=>'Ai',
+                        'action'=>'index',
+                        'param' => '',
+                        'url'=>'',
+                        'target'=>'workspace',
+                        'icon'=>'iconfont e-aizhushou',
+                        'grade'=>2,
+                        'is_menu'=>0,
+                        'is_modules'=>1,
+                        'is_subshowmenu'=>0,
+                        'child' => array(),
+                    ),
+                    '2004028' => array(
+                        'id'=>2004028,
+                        'parent_id'=>2004,
+                        'name' => 'FAQ',
+                        'controller'=>'Faq',
+                        'action'=>'index',
+                        'param' => '',
+                        'url'=>'',
+                        'target'=>'workspace',
+                        'icon'=>'iconfont e-fqa',
                         'grade'=>2,
                         'is_menu'=>0,
                         'is_modules'=>1,

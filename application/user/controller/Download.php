@@ -99,14 +99,16 @@ class Download extends Base
             $post = input('param.');
             $keyword = $post['keyword'];
 
-            $servernames = unserialize(tpCache('download.download_select_servername'));
+            $servernames = safe_unserialize(tpCache('download.download_select_servername'));
 
             $search_data = $servernames;
             if (!empty($keyword)) {
                 $search_data = [];
                 if ($servernames) {
+                    // 安全修复: 转义正则特殊字符，防止正则表达式注入
+                    $keyword = preg_quote($keyword, '/');
                     foreach ($servernames as $k => $v) {
-                        if (preg_match("/$keyword/s", $v)) $search_data[] = $v;
+                        if (preg_match("/$keyword/si", $v)) $search_data[] = $v;
                     }
                 }
             }

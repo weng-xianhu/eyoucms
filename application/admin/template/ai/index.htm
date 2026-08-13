@@ -1,0 +1,382 @@
+{include file="public/layout" /}
+
+<body class="bodystyle">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<div class="page atta min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="javascript:history.back();" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>智能互联</h3>
+                <h5></h5>
+            </div>
+        </div>
+    </div>
+    <div id="" class="explanation">
+        <ul>
+            <li>使用此功能需要先安装Ai智能创作平台插件，并配置相关AI接口 </li>
+            <li>AI版包含多个免费插件：<a href="{:url('Weapp/mybuy', ['install'=>0])}">Ai智能创作平台</a>，<a href="{:url('Weapp/mybuy', ['install'=>0])}">SEO文章AI自动配图(免费+无版权+随机+自定义)</a> </li>
+            <li>易优CMS将持续更新AI应用场景，为您的网站提供更智能的体验</li>
+        </ul>
+    </div>
+    <div class="flexigrid htitx">
+        <form class="form-horizontal" id="post_form" method="post">
+            <div class="ncap-form-default">
+                
+                <!-- 内置功能说明 -->
+                <div class="ai-section">
+                    <div class="ai-section-header">
+                        <i class="iconfont e-shezhi"></i>内置功能区
+                    </div>
+                    <div class="ai-section-body">
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">地址识别</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能在商城中心 > <a href="{:url('Shop/conf')}" class="red">商城配置</a>里开启。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-4.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>收货地址AI自动识别：通过AI分析收货地址信息，自动拆分省市区</li>
+                                    <li>PC端与移动端均支持快捷填写功能</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">搜索智答</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能在搜索管理 > <a href="{:url('Search/conf')}" class="red">功能配置</a>里开启。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-2.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>智能回答：在网站搜索时AI会给出智能回答作为搜索结果的辅助信息</li>
+                                    <li>提升用户搜索体验，快速获取相关信息</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">内容AI创作</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能在内容管理 > 文档发布/编辑 > 页面右上角AI助手中使用。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-7.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                              </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>AI辅助创作：智能生成文章内容、摘要和标题</li>
+                                    <li>内容润色与优化：改善文章表达和结构</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">AI生成图片</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能在图片上传功能中使用。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-6.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>AI自动配图：根据文章内容智能生成相关图片</li>
+                                    <li>SEO文章AI自动配图：免费+无版权+随机+自定义</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 插件区域说明 -->
+                <div class="ai-section">
+                    <div class="ai-section-header">
+                        <i class="iconfont e-shezhi"></i>插件功能区
+                    </div>
+                    <div class="ai-section-body">
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">AI问答</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能需要在易优问答插件 > <a {eyou:if condition="is_dir('./weapp/Ask/')"}href="{:weapp_url('Ask/Ask/conf', ['install'=>0])}"{else/}href="{:url('Weapp/index')}"{/eyou:if} class="red">插件配置</a>里开启。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-5.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>智能回答：在网站搜索时AI会给出智能回答作为搜索结果的辅助信息</li>
+                                    <li>提升用户搜索体验，快速获取相关信息</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">AI评论</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能需要在文章评论插件 > <a {eyou:if condition="is_dir('./weapp/Comment/')"}href="{:weapp_url('Comment/Comment/conf', ['install'=>0])}"{else/}href="{:url('Weapp/index')}"{/eyou:if} class="red">评论配置</a>里开启。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-8.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>敏感词AI词库判断：自动检测恶意内容，防止灌水</li>
+                                    <li>AI自动回复：智能回复用户评论，提高互动性</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">AI智能客服</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能需要在AI智能客服插件 > <a {eyou:if condition="is_dir('./weapp/AiHelper/')"}href="{:weapp_url('AiHelper/AiHelper/index', ['install'=>0])}{else/}href="{:url('Weapp/index')}"{/eyou:if}" class="red">插件配置</a>中开启。</div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-9.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>智能对话：豆包AI自动回复访客咨询，7x24小时在线服务</li>
+                                    <li>知识库回复：添加企业内部资料让ai客服回复业务问题更准确</li>
+                                    <li>人机协作：支持人工介入解答回复客户问题，目前为跳转，后续会开发内置对话框</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">百度AI语音阅读</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">
+                                    <div>此功能需要在百度AI语音阅读插件 > 
+                                        <a {eyou:if condition="is_dir('./weapp/AivoiceRead/')"}href="{:weapp_url('AivoiceRead/AivoiceRead/index', ['install'=>0])}"{else/}href="{:url('Weapp/index')}"{/eyou:if} class="red">插件配置</a>
+                                        中开启。
+                                    </div>
+                                    <P class="notic3" style="display:none;"><img src="https://www.eyoucms.com/uploads/feature/feature-10.png" /></P>
+                                    <a class="ui_tan view_feature" href="javascript:void(0);">[效果预览]</a>
+                                </div>
+                                <p><strong>AI能力：</strong></p>
+                                <ul class="ai-feature-list">
+                                    <li>文章朗读：自动将文章内容转为语音朗读</li>
+                                    <li>提升体验：为视力障碍用户和偏好听觉学习的用户提供便利</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">更多AI插件</div>
+                            <div class="ai-feature-desc">
+                                <div class="ai-feature-path">可在<a href="{:url('Weapp/index')}" class="red">插件应用中心</a>搜索并安装更多AI相关插件</div>
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 未来更新 -->
+                <div class="ai-section future-section">
+                    <div class="ai-section-header">
+                        <i class="iconfont e-shezhi"></i>更多AI应用
+                    </div>
+                    <div class="ai-section-body">
+                        <div class="ai-feature">
+                            <div class="ai-feature-title">持续更新</div>
+                            <div class="ai-feature-desc">
+                                <p>易优CMS将持续开发和更新更多AI应用场景，敬请期待：</p>
+                                <ul class="ai-feature-list">
+                                    <li>Al内容创作进—步深度优化</li>
+                                    <li>AI图像能力接入到更多场景(比如：广告位)</li>
+                                    <li>Al用户行为分析+网站数据分析能力</li>
+                                    <li>更多智能化功能场景延伸...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    // 全局变量
+    var typeValue = '{$row.data.type|default="3"}';
+    var drawingModel = '{$row.data.drawing_model|default="0"}';
+    
+    $(function() {
+        $('.go_baidu_ai').click(function(e) {
+            e.preventDefault();
+            let status = $(this).data('status');
+            if(status == 1) {
+                window.location.href = $(this).attr('href');
+            } else {
+                showUnifiedAlert('请先安装Ai智能创作平台插件');
+            }
+        });
+        //易优问答
+        let is_weapp_ai = {$is_weapp_ai};
+        $('input[name="ai_bd_adr_open"]').change(function() {
+            let is_baidu = $('input[name="ai_bd_adr_open"]:checked').val();
+            if(is_baidu==1){
+                let port='type';
+                let value =5;
+                if(is_weapp_ai!=1){
+                    $('input[name="ai_bd_adr_open"][value="0"]').prop('checked', true);
+                    showUnifiedAlert('请先安装Ai智能创作平台插件并配置好文心一言');
+                    return false;
+                }
+                $.ajax({
+                    type: 'post',
+                    url : "{:weapp_url('Ai/AiConfig/aiConfigVerify', ['_ajax'=>1])}",
+                    data: {port: port, value: value},
+                    dataType: 'json',
+                    success: function(res) {
+                        layer.closeAll();
+                        if (1 === parseInt(res.code)) {
+                            if (0 === parseInt(res.data.count)) {
+                                $(this).prop('checked', false);
+                                showConfirm('[AI模型]-['+res.data.names+']尚未配置，是否需要前往配置？', {btn:['去配置', '取消']}, function() {
+                                    window.location.href = res.url+'&backurl='+"{:urlencode(url('admin/Ai/index'))}";
+                                });
+                                $('input[name="ai_bd_adr_open"][value="0"]').prop('checked', true);
+                            } else {
+                                if ('type' == port) {
+                                    typeValue = value;
+                                } else if ('drawing_model' == port) {
+                                    drawingModel = value;
+                                }
+                            }
+                        } else {
+                            showUnifiedAlert(res.msg);
+                        }
+                    },
+                    error: function(e){
+                        layer.closeAll();
+                        showUnifiedAlert(e.responseText);
+                    }
+                });
+            }
+        });
+        //易优问答
+        $('input[name="ai_ask_open"]').change(function() {
+            var ai_ask_open = $('input[name="ai_ask_open"]:checked').val();
+            if(ai_ask_open==1){
+                if(is_weapp_ai !=1){
+                    showUnifiedAlert('请先安装Ai智能创作平台插件');
+                    $('input[name="ai_ask_open"][value="0"]').prop('checked', true);
+                    return false;
+                }
+                $('#ask-main').css('display','block')
+            }else{
+                $('#ask-main').css('display','none')
+            }
+        });
+        $('input[name="ai_pl_open"]').change(function() {
+            var is_com = $('input[name="ai_pl_open"]:checked').val();
+            if(is_com==1){
+                if(is_weapp_ai!=1){
+                    showUnifiedAlert('请先安装Ai智能创作平台插件');
+                    $('input[name="ai_pl_open"][value="0"]').prop('checked', true);
+                    return false;
+                }
+                $('#comment-main').css('display','block')
+            }else{
+                $('#comment-main').css('display','none')
+            }
+        });
+    });
+    
+    function aiConfigVerify(obj, port) {
+        var value = $(obj).val();
+        let is_weapp_ai = {$is_weapp_ai};
+        if (0 === parseInt(value)) {
+            if ('type' == port) {
+                typeValue = value;
+            } else if ('drawing_model' == port) {
+                drawingModel = value;
+            }
+        } else {
+            if(is_weapp_ai !=1){
+                showUnifiedAlert('请先安装Ai智能创作平台插件');
+                return false;
+            }
+            $.ajax({
+                type: 'post',
+                url : "{:weapp_url('Ai/AiConfig/aiConfigVerify', ['_ajax'=>1])}",
+                data: {port: port, value: value},
+                dataType: 'json',
+                success: function(res) {
+                    layer.closeAll();
+                    if (1 === parseInt(res.code)) {
+                        if (0 === parseInt(res.data.count)) {
+                            $(obj).prop('checked', false);
+                            showConfirm('[AI模型]-['+res.data.names+']尚未配置，是否需要前往配置？', {btn:['去配置', '取消']}, function() {
+                                window.location.href = res.url+'&backurl='+"{:urlencode(url('admin/Ai/index'))}";
+                            });
+                        } else {
+                            if ('type' == port) {
+                                typeValue = value;
+                            } else if ('drawing_model' == port) {
+                                drawingModel = value;
+                            }
+                        }
+                    } else {
+                        showUnifiedAlert(res.msg);
+                    }
+                },
+                error: function(e){
+                    layer.closeAll();
+                    showUnifiedAlert(e.responseText);
+                }
+            });
+        }
+    }
+    // 提交保存
+    function checkForm() {
+        var ai_ask_open = $('input[name="ai_ask_open"]:checked').val();
+        if(ai_ask_open==1){
+            var ai_ask_obj = $('input[name="ai_ask_obj"]:checked').val();
+            if(!ai_ask_obj) {
+                showErrorMsg('请选择问答接口');
+                return false;
+            }
+        }
+        var ai_ask_open = $('input[name="ai_pl_open"]:checked').val();
+        if(ai_ask_open==1){
+            var ai_ask_obj = $('input[name="ai_pl_obj"]:checked').val();
+            if(!ai_ask_obj) {
+                showErrorMsg('请选择评论接口');
+                return false;
+            }
+        }
+        layer_loading('正在处理');
+        $.ajax({
+            type: 'post',
+            url : "{:url('admin/Ai/index', ['_ajax'=>1])}",
+            data: $('#post_form').serialize(),
+            dataType: 'json',
+            success: function(res) {
+                layer.closeAll();
+                if (1 === parseInt(res.code)) {
+                    layer.msg(res.msg, {time: 1000}, function() {
+                        window.location.reload();
+                    });
+                } else {
+                    showUnifiedAlert(res.msg);
+                }
+            },
+            error: function(e){
+                layer.closeAll();
+                showUnifiedAlert(e.responseText);
+            }
+        });
+    }
+</script>
+{include file="public/footer" /}

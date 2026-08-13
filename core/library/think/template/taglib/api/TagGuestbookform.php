@@ -91,7 +91,7 @@ class TagGuestbookform extends Base
                 // $arr['second_id_'.$attr_id]=" id='second_id_$attr_id' onchange=\"getNext1598839807('third_id_$attr_id',$attr_id,2);\" style='display:none;'";
                 // $arr['third_id_'.$attr_id]=" id='third_id_$attr_id' style='display:none;'  onchange=\"getNext1598839807('', $attr_id,3);\" ";
                 // $arr['hidden_'.$attr_id]= "<input type='hidden' name='{$name}' id='{$name}'>";
-                 $val['attr_values'] = unserialize($val['attr_values']);
+                 $val['attr_values'] = safe_unserialize($val['attr_values']);
                  $options = Db::name('region')->field("id,name")->where('id','in',$val['attr_values']['region_ids'])->select();
                 // $arr['options_'.$attr_id] = $options;
                 if (!empty($options)){

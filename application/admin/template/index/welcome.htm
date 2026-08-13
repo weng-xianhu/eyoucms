@@ -35,17 +35,7 @@
 <div id="toolTipLayer" style="position: absolute; z-index: 9999; display: none; visibility: visible; left: 95px; top: 573px;"></div>
 <div id="append_parent"></div>
 <div id="ajaxwaitid"></div>
-{if condition="empty($ddos_scan_last_time) || empty($system_explanation_welcome_2) || empty($system_explanation_welcome_3)"}
-<div id="explanation_welcome" style="margin:10px 10px 0px 10px;">
-    {if condition="empty($ddos_scan_last_time)"}
-    <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
-        <ul>
-            <li style="color: red;">
-                温馨提示：升级完成！欢迎使用{$version}，建议到安全中心给系统做一次安全检测，看看是否有安全隐患需要处理<a href="{:url('Security/index')}">【点击进入】</a>
-            </li>
-        </ul>
-    </div>
-    {/if}
+<div id="explanation_welcome" style="margin:10px 10px 0px 10px; display: none;">
     {if condition='empty($system_explanation_welcome_2)'}
     <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
         <div class="title checkZoom" data-type="2">
@@ -57,25 +47,38 @@
         </ul>
     </div>
     {/if}
-    <!-- {if condition='empty($system_explanation_welcome_3)'}
+    {if condition='empty($system_explanation_welcome_4)'}
     <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
-        <div class="title checkZoom" data-type="2">
+        <div class="title checkZoom" data-type="4">
             <span title="不再提示" style="display: block;"></span>
         </div>
         <ul>
             <li style="color: red;">
-                {if condition="empty($ddos_scan_last_time)"}
-                    您的网站还没定期检查
-                {else /}
-                    您的网站已有{$ddos_scan_expire_day}天没有定期检查
-                {/if}
-                ，请进入<a href="{:url('Security/index')}">【安全中心】</a>立即扫描。
+                温馨提示：欢迎使用{$version}版本，建议到安全中心给系统做一次安全检测，是否有安全隐患需要处理<a href="{:url('Security/index')}">【点击进入】</a>
             </li>
         </ul>
     </div>
-    {/if} -->
+    {/if}
+    {if condition='empty($system_explanation_welcome_5)'}
+    <div class="explanation" style="color: rgb(44, 188, 163); background-color: #fff!important;  margin-top: 10px;">
+        <div class="title checkZoom" data-type="5">
+            <span title="不再提示" style="display: block;"></span>
+        </div>
+        <ul>
+            <li style="color: red;">
+                风险提示：经定时扫描，发现系统核心文件存在被篡改风险，请到安全中心处理并进行深度扫描 {$ddos_scan_last_time|MyDate='Y-m-d H:i',###} <a href="{:url('Security/index', ['noreset'=>1])}">【点击进入】</a>
+            </li>
+        </ul>
+    </div>
+    {/if}
 </div>
-{/if}
+<script type="text/javascript">
+    $(function(){
+        if ($('#explanation_welcome div.explanation').length > 0) {
+            $('#explanation_welcome').show();
+        }
+    });
+</script>
 <div class="warpper">
     <div class="content start_content">
         <div class="contentWarp">
@@ -165,25 +168,29 @@
                                         <div id="upgrade_filelist" style="display:none;"></div>
                                         <div id="upgrade_intro" style="display:none;"></div>
                                         <div id="upgrade_notice" style="display:none;"></div>
-                                        <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}" data-php_servicemeal="{$php_servicemeal|default=0}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
+                                        <a href="javascript:void(0);" id="a_upgrade" data-version="" data-max_version="" data-curent_version="{$sys_info.curent_version|default='v1.0.0'}" data-iframe="workspace" title="" data-tips_url="{:url('Upgrade/setPopupUpgrade')}" data-upgrade_url="{:url('Upgrade/OneKeyUpgrade')}" data-check_authority="{:url('Upgrade/check_authority')}" data-php_servicemeal="{$php_servicemeal|default=0}">{if condition='!empty($security_patch)'}正在版本检测中……{else/}{eq name="upgrade" value="true"}正在版本检测中……{else/}已是最新版{/eq}{/if}</a>
                                     </td>
                                     <td class="gray_bg">当前版本：</td>
-                                    <td>{$sys_info.curent_version|default='v1.0'}</td>
+                                    <td>{$sys_info.curent_version|default='v1.0.0'}</td>
                                 </tr>
                                 <tr>
                                     <td class="gray_bg">网站名称：</td>
                                     <td>{$sys_info.web_name|default='Eyoucms企业网站管理系统'}</td>
                                     <td class="gray_bg">版权所有：</td>
-                                    <td>{notempty name="$is_eyou_authortoken"}<a href="https://www.eyoucms.com/buy/" target="_blank" style="color: #454545;">盗版必究</a>{else /}正版软件{/notempty}&nbsp;<a href="javascript:void(0);" onclick="top.openItem('Index|authortoken|is_force|1');">校验</a></td>
+                                    <td>{notempty name="$is_eyou_authortoken"}<a href="https://www.eyoucms.com/buy/" target="_blank" style="color: #454545;">盗版必究</a>{else /}正版软件{/notempty}&nbsp;
+                                        {if condition="!is_internal_network()"}
+                                        <a href="javascript:void(0);" onclick="top.openItem('Index|authortoken|is_force|1');">校验</a>
+                                        {/if}
+                                    </td>
                                 </tr>
-                                {notempty name="$is_eyou_authortoken"}
+                                {if condition="!empty($is_eyou_authortoken) && !is_internal_network()"}
                                 <tr>
                                     <td class="gray_bg">更新日志：</td>
                                     <td><a href="https://www.eyoucms.com/rizhi/" target="_blank">查看</a></td>
                                     <td class="gray_bg">帮助中心:</td>
                                     <td><a href="https://www.eyoucms.com/ask/" target="_blank">查看</a></td>
                                 </tr>
-                                {/notempty}
+                                {/if}
                             </tbody>
                         </table>
                     </div>

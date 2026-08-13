@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -90,8 +90,9 @@ class Lists extends Base
         $result = $this->logic($tid); // 模型对应逻辑
 
         /*URL上参数的校验*/
-        if (3 == $seo_pseudo) {
-            $current_url = $this->request->url(true);
+        $url_screen_var = config('global.url_screen_var');
+        if (3 == $seo_pseudo && empty($param[$url_screen_var])) {
+            $current_url = urldecode($this->request->url(true));
             $current_url = rtrim($current_url, '/')."/";
             if ('single' == $result['nid'] && $result['pageurl'] != $result['typeurl']) {
                 $url_query = $result['typeurl'];
@@ -99,7 +100,9 @@ class Lists extends Base
                 $url_query = $result['pageurl'];
             }
             $url_query = preg_replace('/^(http(s)?:)?(\/\/)?([^\/\:]*)(.*)$/i', '${5}', $url_query);
-            $url_query = "/".trim($url_query, '/')."/";
+            if (!preg_match('/^\:([\d]+)/i', $url_query)) { // 不带端口号才进行处理
+                $url_query = "/".trim($url_query, '/')."/";
+            }
             if (!stristr($current_url, $url_query) && !preg_match('/(\?|&)(c=Lists|a=index)/i', $current_url)) {
                 abort(404, '页面不存在');
             }
@@ -121,9 +124,12 @@ class Lists extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }
@@ -332,6 +338,7 @@ class Lists extends Base
                 $gourl = urldecode(trim($gourl));
                 $gourl = str_replace(['"',"'",';'], '', $gourl);
             }
+
             $post = input('post.');
             unset($post['gourl']);
 
@@ -404,7 +411,8 @@ class Lists extends Base
                             $this->error($msg);
                         } else {
                             if ($ga_data['validate_type'] == 6) {
-                                $pattern  = "/^1\d{10}$/";
+                                $form_field_grep_list = config('global.form_field_grep_list');
+                                $pattern  = $form_field_grep_list['mobile']['value'];
                                 if (!preg_match($pattern, $value)) {
                                     $msg = sprintf(foreign_lang('gbook4', $this->home_lang), $ga_data['attr_name']);
                                     $this->error($msg);
@@ -416,6 +424,9 @@ class Lists extends Base
                                 }
                             }
                         }
+                    }
+                    if (9 == $ga_data['attr_input_type']) {
+                        $value = get_region_name($value);
                     }
                     if (is_array($value)){
                         $value = implode('，', $value);
@@ -512,6 +523,39 @@ class Lists extends Base
                 }
             }
 
+            // 查询邮箱验证码是否正确
+            if (!empty($post['real_validate_email'])) {
+                if (!empty($post['real_validate_email_code']) && !empty($post['real_validate_email_attr_id'])) {
+                    // 匹配邮箱，若为空则返回提示
+                    $email = !empty($post[$post['real_validate_email_attr_id']]) ? $post[$post['real_validate_email_attr_id']] : '';
+                    if (empty($email)) $this->error(foreign_lang('gbook21', $this->home_lang));
+
+                    // 验证邮箱验证码
+                    $where = [
+                        'source' => 40,
+                        'email' => $email,
+                        'code' => addslashes(trim($post['real_validate_email_code'])),
+                        'status' => 0,
+                        'lang'   => $this->home_lang,
+                    ];
+                    $recordInfo = Db::name('smtp_record')->where($where)->find();
+                    if (!empty($recordInfo)) {
+                        $update  = [
+                            'status' => 1,
+                            'update_time' => getTime()
+                        ];
+                        // 更新数据
+                        Db::name('smtp_record')->where($where)->update($update);
+                        // 清理邮箱验证涉及的参数
+                        unset($post['real_validate_email_input'], $post['real_validate_email_code'], $post['real_validate_email_attr_id'], $post['real_validate_email_token']);
+                    } else {
+                        $this->error(foreign_lang('gbook24', $this->home_lang));
+                    }
+                } else {
+                    $this->error(foreign_lang('gbook22', $this->home_lang));
+                }
+            }
+
             // 数据验证
             $rule     = [
                 'typeid' => 'require|token:' . $token,
@@ -550,11 +594,13 @@ class Lists extends Base
                     $aid = Db::name('guestbook')->insertGetId($data);
                     if ($aid > 0) {
                         $res = $this->saveGuestbookAttr($aid, $typeid, $post);
-                        if ($res){
+                        if ($res) {
+                            Db::name('guestbook')->where(['aid' => intval($aid)])->delete(true);
                             $this->error($res);
                         }
                     }
                     $_POST['aid'] = $aid;
+                    model('Arctype')->hand_type_count(['typeid'=>[$typeid]], 'guestbook');//统计栏目文档数量
                     /*插件 - 邮箱发送*/
                     $data    = [
                         'gbook_submit',
@@ -584,7 +630,6 @@ class Lists extends Base
                         'update_time' => getTime(),
                     ]);
                 }
-                
                 $msg = foreign_lang('gbook1', $this->home_lang);
                 $channel_guestbook_time = tpSetting('channel_guestbook.channel_guestbook_time');
                 $channel_guestbook_time = !empty($channel_guestbook_time) ? intval($channel_guestbook_time) : 5;
@@ -676,36 +721,38 @@ class Lists extends Base
         foreach ($post as $k => $v) {
             if (!strstr($k, 'attr_')) continue;
             $attr_id = str_replace('attr_', '', $k);
-            if (is_array($v)) {
-                $v = implode(PHP_EOL, $v);
-            } else {
-                $ga_data = Db::name('guestbook_attribute')->where([
-                    'attr_id'   => $attr_id,
-                ])->find();
-                if (!empty($ga_data) && 10 == $ga_data['attr_input_type']){
-                    $v = strtotime($v);
+            if (!empty($attr_id)) {
+                if (is_array($v)) {
+                    $v = implode(PHP_EOL, $v);
+                } else {
+                    $ga_data = Db::name('guestbook_attribute')->where([
+                        'attr_id'   => $attr_id,
+                    ])->find();
+                    if (!empty($ga_data) && 10 == $ga_data['attr_input_type']){
+                        $v = strtotime($v);
+                    }
                 }
-            }
 
-            /*多语言*/
-            if (!empty($attrArr)) {
-                $attr_id = $attrArr[$attr_id]['attr_id'];
-            }
-            /*--end*/
+                /*多语言*/
+                if (!empty($attrArr)) {
+                    $attr_id = $attrArr[$attr_id]['attr_id'];
+                }
+                /*--end*/
 
-            //$v = str_replace('_', '', $v); // 替换特殊字符
-            //$v = str_replace('@', '', $v); // 替换特殊字符
-            $v       = trim($v);
-            $adddata = array(
-                'aid'         => $aid,
-                'form_type'   => empty($post['form_type']) ? 0 : intval($post['form_type']),
-                'attr_id'     => $attr_id,
-                'attr_value'  => $v,
-                'lang'        => $this->home_lang,
-                'add_time'    => getTime(),
-                'update_time' => getTime(),
-            );
-            Db::name('guestbook_attr')->add($adddata);
+                //$v = str_replace('_', '', $v); // 替换特殊字符
+                //$v = str_replace('@', '', $v); // 替换特殊字符
+                $v       = trim($v);
+                $adddata = array(
+                    'aid'         => $aid,
+                    'form_type'   => empty($post['form_type']) ? 0 : intval($post['form_type']),
+                    'attr_id'     => $attr_id,
+                    'attr_value'  => $v,
+                    'lang'        => $this->home_lang,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime(),
+                );
+                Db::name('guestbook_attr')->add($adddata);
+            }
         }
     }
 }

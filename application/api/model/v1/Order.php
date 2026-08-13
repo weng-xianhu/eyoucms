@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -151,8 +151,8 @@ class Order extends UserBase
 
         if (!empty($list['data'])) {
             foreach ($list['data'] as $key => $val) {
-                $list['data'][$key]['cause'] = !empty($val['cause']) ? unserialize($val['cause']) : '';
-                $list['data'][$key]['pay_details'] = !empty($val['pay_details']) ? unserialize($val['pay_details']) : '';
+                $list['data'][$key]['cause'] = !empty($val['cause']) ? safe_unserialize($val['cause']) : '';
+                $list['data'][$key]['pay_details'] = !empty($val['pay_details']) ? safe_unserialize($val['pay_details']) : '';
             }
         }
 

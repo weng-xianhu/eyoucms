@@ -1,114 +1,479 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>订单支付-{eyou:global name='web_name' /}</title>
+    <title>确认购买-{eyou:global name='web_name' /}</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <link href="{eyou:global name='web_cmspath'/}/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    {eyou:static file="users/skin/css/basic.css" /}
-    {eyou:static file="users/skin/css/eyoucms.css" /}
-	<!-- 新样式 2020-11-25 -->
-	{eyou:static file="users/skin/css/element/index.css" /}
-	{eyou:static file="users/skin/css/e-user.css" /}
-    {eyou:include file="users/skin/css/diy_css.htm" /}
 
     {eyou:static file="/public/static/common/js/jquery.min.js"/}
     {eyou:static file="/public/plugins/layer-v3.1.0/layer.js"/}
     {eyou:static file="users/skin/js/global.js" /}
-	<style>
-        .pay-item{border:1px solid #eee;height: 50px;position: relative;}
-		.pay-item-select{border:1px solid #1E9FFF;}
-        .pay-item-select::after{position: absolute;right: 4px;bottom: 0;content: "";width:6px;height: 12px;border-bottom: 2px solid #fff;border-right: 2px solid #fff;-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);transform: rotate(45deg);}
-        .pay-item.pay-item-select span {position: absolute;right: 0;bottom: 0;width: 0;height: 0;border-bottom: 20px solid #1E9FFF;border-left: 20px solid transparent;}
-        .button-wrapper{text-align: right;margin-top: 20px;}
-        .layui-btn{height: 32px;line-height: 32px;border: 1px solid transparent;padding: 0 15px;background-color:#1E9FFF;color: #fff;white-space: nowrap;text-align: center;font-size: 14px;border-radius: 2px;cursor: pointer;}
-        .main-bg{margin-bottom: 0 !important;padding-bottom: 0 !important; }
-	</style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f5f7fa;
+            font-family: "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        
+        .pay-container {
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pay-header {
+            background: linear-gradient(135deg, #74c7ff, #42a5f5);
+            color: #fff;
+            padding: 20px 20px 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+        }
+        
+        .close-btn:hover {
+            opacity: 1;
+        }
+        
+        .cart-icon {
+            width: 36px;
+            height: 36px;
+            /* background: #fff; */
+            border-radius: 6px;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .pay-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .pay-content {
+            padding: 15px 10px;
+            background: #fff;
+        }
+        
+        .product-info {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .product-tag {
+            background: #ff6d3b;
+            color: #fff;
+            padding: 3px 7px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+            margin-right: 6px;
+            font-weight: 500;
+        }
+        
+        .product-title {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.03);
+        }
+        
+        .price-label {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .price-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .original-price {
+            color: #999;
+            text-decoration: line-through;
+            font-size: 14px;
+        }
+        
+        .current-price {
+            color: #ff6d3b;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        
+        .payment-title {
+            color: #333;
+            font-size: 15px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .payment-methods {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .pay-item {
+            width: 31.5%;
+            border: 1.5px solid #e8e8e8;
+            border-radius: 10px;
+            padding: 10px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pay-item:hover {
+            border-color: #42a5f5;
+            background: #f8fbff;
+        }
+        
+        .pay-item-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .alipay-icon {
+            background: #1677ff;
+        }
+        
+        .wechat-icon {
+            background: #07c160;
+        }
+        
+        .balance-icon {
+            background: #ff9800;
+        }
+        
+        .pay-item span {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .pay-item img {
+            width: auto;
+            height: 32px;
+        }
+        
+        .pay-item-select {
+            border-color: #42a5f5;
+            background: #f0f8ff;
+        }
+        
+        .pay-item-select::after {
+            content: "✓";
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            background: #42a5f5;
+            color: #fff;
+            width: 18px;
+            height: 18px;
+            border-radius: 0 8px 0 10px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .confirm-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff6b6b, #ff5252);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.2);
+        }
+        
+        .confirm-btn:hover {
+            background: linear-gradient(135deg, #ff5252, #e53935);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(255, 82, 82, 0.3);
+        }
+        
+        .confirm-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 480px) {
+            .pay-container {
+                max-width: 100vw;
+            }
+            
+            .pay-header {
+                padding: 35px 15px 25px;
+            }
+            
+            .pay-content {
+                padding: 20px 15px;
+            }
+            
+            .payment-methods {
+                gap: 8px;
+            }
+            
+            .pay-item {
+                padding: 14px 8px;
+                min-height: 75px;
+            }
+            
+            .pay-item img {
+                width: auto;
+                height: 28px;
+            }
+            
+            .pay-item span {
+                font-size: 12px;
+            }
+        }
+        
+        /* 隐藏原有样式 */
+        .ey-container,
+        .el-main,
+        .el-form-item {
+            background: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        
+        .el-form-item__content {
+            display: contents;
+        }
+    </style>
 </head>
 
 <body>
-<div class="ey-container">
-	<div class="el-main main-bg">
-		<div class="el-form-item" style="text-align: center;">
-			<div class="el-form-item__content pay-type-select">
-				<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
-				{eyou:sppayapilist id='vo'}
-				{eyou:notempty name="$vo.pay_id"}
-				<div class="pay-item"  onclick="LayerPaySelect(this);" data-mark="{$vo.pay_mark}" data-parameter="'{$vo.pay_id}','{$vo.pay_mark}'">
-					<a href="JavaScript:void(0);" >
-						<img src="{$vo.pay_img}">
-                        <span></span>
-					</a>
-				</div>
-				{/eyou:notempty}
-				{$vo.hidden}
-				{/eyou:sppayapilist}
-				<input type="hidden" id="PayID">
-				<input type="hidden" id="PayMark">
-				<!-- END -->
-				
-				{eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
-				<div class="pay-item" data-toggle="modal" data-target="#pay-order-modal" onclick="LayerPaySelect(this);"  data-mark="balance" data-parameter="'{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}'">
-					<a  href="JavaScript:void(0);" id="PayBalancePayment" >
-						<img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" >
-                        <span></span>
-					</a>
-				</div>
-				<script type="text/javascript">
-					// 余额支付，购买商品+视频支付使用
-					function PayBalancePayment(unified_id,unified_number,transaction_type) {
-						if (!unified_number || !unified_id) layer.msg('订单号异常，请刷新重试', {time: 1500});
+<div class="pay-container">
+    <div class="pay-header">
+        <!-- <button class="close-btn" onclick="parent.layer.closeAll();">×</button> -->
+        <div class="cart-icon">🛒</div>
+        <h1 class="pay-title">确认购买</h1>
+    </div>
+    
+    <div class="pay-content">
+        <div class="product-info">
+            <span class="product-tag">产品购买</span>
+            <div class="product-title">{$data.product_name}</div>
+        </div>
+        
+        <div class="price-info">
+            <span class="price-label">价格</span>
+            <div class="price-wrapper">
+                
+                <span class="current-price">{notempty name="$data.order_score"}{$data.order_score}{$usersConfig.score_name}{else/}￥{$data.order_amount}{/notempty}</span>
+            </div>
+        </div>
+        
+        <div class="payment-section">
+            <div class="payment-title">请选择支付方式</div>
+            <div class="payment-methods">
+                
+                {empty name="$data.order_score"}
+                <!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
+                    {eyou:sppayapilist id='vo'}
+                    {eyou:notempty name="$vo.pay_id"}
+                    <div class="pay-item" onclick="LayerPaySelect(this);" data-mark="{$vo.pay_mark}" data-parameter="'{$vo.pay_id}','{$vo.pay_mark}'">
+                        <a href="JavaScript:void(0);">
+                            <img src="{$vo.pay_img}">
+                            <span></span>
+                        </a>
+                    </div>
+                    {/eyou:notempty}
+                    {$vo.hidden}
+                    {/eyou:sppayapilist}
+                    <input type="hidden" id="PayID">
+                    <input type="hidden" id="PayMark">
+                    <!-- END -->
+                
+                    {eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
+                    <div class="pay-item" data-toggle="modal" data-target="#pay-order-modal" onclick="LayerPaySelect(this);"  data-mark="balance" data-parameter="'{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}'">
+                        <a  href="JavaScript:void(0);" id="PayBalancePayment" >
+                            <img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" >
+                            <span></span>
+                        </a>
+                    </div>
+                    <script type="text/javascript">
+                        // 余额支付，购买商品+视频支付使用
+                        function PayBalancePayment(unified_id,unified_number,transaction_type) {
+                            if (!unified_number || !unified_id) layer.msg('订单号异常，请刷新重试', {time: 1500});
 
-						// 禁止再次点击余额支付
-						$('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
-						var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
-						// 发送请求
-						layer_loading('订单处理中');
-						$.ajax({
-							url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
-							data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
-							type:'post',
-							dataType:'json',
-							success:function(res){
-								layer.closeAll();
-								var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
-								 var _parent = parent;
-								_parent.layer.close(parentObj);
-								if (1 == res.code) {
-									if (!res.data.mobile && !res.data.email) {
-										_parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
-											_parent.window.location.reload();
-										});
-									} else {
-										if (res.data.mobile) SendMobile(res.data.mobile);
-										if (res.data.email) SendEmail(res.data.email);
-										_parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
-											_parent.window.location.reload();
-										});
-									}
-								} else {
-									_parent.PayIsRecharge(res.msg, res.url,unified_id,unified_number,transaction_type);
-								}
-							}
-						});
-					}
-				</script>
-				{/eyou:if}
-			</div>
-            <div class="button-wrapper"><button type="button" class="layui-btn layui-btn-sm" id="confirm">确认支付{$data.order_amount}元</button></div>
-		</div>
-	</div>
+                            // 禁止再次点击余额支付
+                            $('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
+                            var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                            // 发送请求
+                            layer_loading();
+                            $.ajax({
+                                url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
+                                data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                                type:'post',
+                                dataType:'json',
+                                success:function(res){
+                                    layer.closeAll();
+                                    var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                                     var _parent = parent;
+                                    _parent.layer.close(parentObj);
+                                    if (1 == res.code) {
+                                        if (!res.data.mobile && !res.data.email) {
+                                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                                _parent.window.location.reload();
+                                            });
+                                        } else {
+                                            if (res.data.mobile) SendMobile(res.data.mobile);
+                                            if (res.data.email) SendEmail(res.data.email);
+                                            _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                                _parent.window.location.reload();
+                                            });
+                                        }
+                                    } else {
+                                        _parent.PayIsRecharge(res.msg, res.url,unified_id,unified_number,transaction_type);
+                                    }
+                                }
+                            });
+                        }
+                    </script>
+                    {/eyou:if}
+                {else/}
+                <div class="pay-item" onclick="LayerPaySelect(this);"  data-mark="score" data-parameter="'{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}'">
+                    <a  href="JavaScript:void(0);" id="payScorePayment" >
+                        <img src="{eyou:static file='users/skin/images/pay_score.png' /}" >
+                        <span></span>
+                    </a>
+                </div>
+                <script type="text/javascript">
+                    // 会员积分支付
+                    function payScorePayment(unified_id, unified_number, transaction_type) {
+                        if (!unified_id || !unified_number) layer.msg('订单号异常，请刷新重试', {time: 1500});
+
+                        // 禁止再次点击余额支付
+                        $('#payScorePayment').prop("disabled", true).css("pointer-events", "none");
+                        var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        // 发送请求
+                        layer_loading();
+                        $.ajax({
+                            url: '{$RootDir}/index.php?m=user&c=PayApi&a=score_payment&_ajax=1',
+                            data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},
+                            type:'post',
+                            dataType:'json',
+                            success:function(res){
+                                layer.closeAll();
+                                var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                                 var _parent = parent;
+                                _parent.layer.close(parentObj);
+                                if (1 == res.code) {
+                                    if (!res.data.mobile && !res.data.email) {
+                                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                            _parent.window.location.reload();
+                                        });
+                                    } else {
+                                        if (res.data.mobile) SendMobile(res.data.mobile);
+                                        if (res.data.email) SendEmail(res.data.email);
+                                        _parent.layer.msg(res.msg, {shade: 0.3, time: 1000}, function(){
+                                            _parent.window.location.reload();
+                                        });
+                                    }
+                                } else {
+                                    _parent.showErrorAlert(res.msg);
+                                }
+                            }
+                        });
+                    }
+                </script>
+            {/empty}
+            </div>
+            <button type="button" class="confirm-btn" id="confirm">立即支付{notempty name="$data.order_score"}{$data.order_score}{$usersConfig.score_name}{else/}￥{$data.order_amount}{/notempty}</button>
+        </div>
+    </div>
+</div>
+
+<!-- 原有的容器结构保持兼容性 -->
+<div class="ey-container" style="display: none;">
+    <div class="el-main main-bg">
+        <div class="el-form-item" style="text-align: center;">
+            <div class="el-form-item__content pay-type-select"></div>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
     $(function(){
         // 默认支付方式
-        $($('.el-form-item__content .pay-item')[0]).trigger("click");
+        $($('.payment-methods .pay-item')[0]).trigger("click");
     });
     
-	function LayerPaySelect(obj) {
+    function LayerPaySelect(obj) {
         $(".pay-item").each(function(){
             $(this).removeClass('pay-item-select');
         });
@@ -118,21 +483,13 @@
             var parameter = $(obj).attr('data-parameter')
             if ('balance' == mark){
                 $('#confirm').attr("onclick","PayBalancePayment("+parameter+");");
+            } else if ('score' == mark) {
+                $('#confirm').attr("onclick","payScorePayment("+parameter+");");
             }else{
                 $('#confirm').attr("onclick","SelectPayMethodLayer("+parameter+");");
             }
         }
     }
-    // function confirm(e) {
-	 //    var mark = $('.pay-item-select').attr('data-mark')
-		// if (mark){
-    //         var parameter = $('.pay-item-select').attr('data-parameter')
-    //         if ('balance' == mark){
-    //             $(e).attr("onclick","PayBalancePayment("+parameter+");");
-    //         }else{
-    //             $(e).attr("onclick","SelectPayMethodLayer("+parameter+");");
-    //         }
-		// }
-    // }
 </script>
 </body>
+</html>

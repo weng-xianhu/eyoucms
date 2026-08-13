@@ -18,6 +18,14 @@
                 {/eq}
                 {/eq}
 
+                {eq name='$main_lang' value='$admin_lang'}
+                    {if condition="$php_servicemeal >= 5"}
+                        {eq name="'Robots@index'|is_check_access" value="1"}
+                        <li><a href="{:url('Robots/edit')}" {if condition="'Robots'==$Think.const.CONTROLLER_NAME"}class="current"{/if}><span>Robots</span></a></li>
+                        {/eq}
+                    {/if}
+                {/eq}
+
                 {eq name="'Links@index'|is_check_access" value="1"}
                 <li><a href="{:url('Links/index')}" {if condition="'Links'==$Think.const.CONTROLLER_NAME"}class="current"{/if}><span>友情链接</span></a></li>
                 {/eq}

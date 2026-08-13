@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -24,7 +24,7 @@ class Tags extends Base
      */
     public function index()
     {
-        $result['pageurl'] = tagurl('home/Tags/index'); // 获取当前页面URL
+        $result['pageurl'] = tagurl('home/Tags/index', [], true, true); // 获取当前页面URL
         $result['pageurl_m'] = pc_to_mobile_url($result['pageurl']); // 获取当前页面对应的移动端URL
         // 移动端域名
         $result['mobile_domain'] = '';
@@ -47,9 +47,12 @@ class Tags extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }
@@ -143,8 +146,9 @@ class Tags extends Base
             'seo_title'   => set_tagseotitle($tag, $tagindexInfo['seo_title']),
             'seo_keywords'   => !empty($tagindexInfo['seo_keywords']) ? $tagindexInfo['seo_keywords'] : $tagindexInfo['seo_keywords'],
             'seo_description'   => !empty($tagindexInfo['seo_description']) ? $tagindexInfo['seo_description'] : $tagindexInfo['seo_description'],
-            'pageurl' => tagurl('home/Tags/lists', array('tagid'=>$tagid)),
+            'pageurl' => tagurl('home/Tags/lists', array('tagid'=>$tagid), true, true),
         );
+        $field_data = array_merge($tagindexInfo, $field_data);
         $eyou = array(
             'field'  => $field_data,
         );
@@ -158,9 +162,12 @@ class Tags extends Base
         if (config('city_switch_on') && !empty($this->home_site)) { // 多站点内置模板文件名
             $viewfilepath = TEMPLATE_PATH.$this->theme_style_path.DS.$this->home_site;
             $viewfilepath2 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.$this->home_site;
+            $viewfilepath3 = TEMPLATE_PATH.$this->theme_style_path.DS.'city'.DS.'default';
             if (!empty($this->eyou['global']['site_template'])) {
                 if (file_exists($viewfilepath2)) {
                     $viewfile = "city/{$this->home_site}/{$viewfile}";
+                } else if (file_exists($viewfilepath3)) {
+                    $viewfile = "city/default/{$viewfile}";
                 } else if (file_exists($viewfilepath)) {
                     $viewfile = "{$this->home_site}/{$viewfile}";
                 }

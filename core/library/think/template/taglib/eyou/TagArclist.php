@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -137,13 +137,22 @@ class TagArclist extends Base
                                     } else if ('region' == $value['dtype']) { // 区域字段类型
                                         $val_arr[0] = addslashes($val_arr[0]);
                                         $val_arr_arr = explode('_', $val_arr[0]);
-                                        $dfvalue_tmp = explode(',', unserialize($value['dfvalue'])['region_ids']);
+                                        $dfvalue_tmp = explode(',', safe_unserialize($value['dfvalue'])['region_ids']);
                                         if (in_array($val_arr_arr[0], $dfvalue_tmp)) {
                                             rsort($val_arr_arr);
                                             array_push($where_multiple, "FIND_IN_SET('".$val_arr_arr[0]."',{$fieldname})");
                                         } else {
                                             $val_arr_arr[0] = md5($val_arr_arr[0]);
                                             array_push($where_multiple, "FIND_IN_SET('".$val_arr_arr[0]."',{$fieldname})");
+                                        }
+                                    } else if ('cascade' == $value['dtype']) { // 联动选择字段类型
+                                        $cascade_parts = explode('_', $val_arr[0]);
+                                        $cascade_parts = array_map('intval', $cascade_parts);
+                                        $cascade_parts = array_filter($cascade_parts, function($v){ return $v > 0; });
+                                        $match_str = implode(',', $cascade_parts);
+                                        if (!empty($match_str)) {
+                                            $match_str = addslashes($match_str);
+                                            array_push($where_multiple, "({$fieldname} = '{$match_str}' OR {$fieldname} LIKE '{$match_str},%')");
                                         }
                                     } else {
                                         if (!empty($value['dfvalue'])) {
@@ -290,7 +299,11 @@ class TagArclist extends Base
                 }
             }
         }
-
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }  
         // 查询条件
         foreach (array('keyword','typeid','notypeid','flag','noflag','channel','joinaid','release') as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
@@ -321,24 +334,8 @@ class TagArclist extends Base
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -349,29 +346,13 @@ class TagArclist extends Base
                 elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
-                        $where_flag_str = " (".implode(" OR ", $where_or_flag).") ";
+                        $where_flag_str = " (".implode(" AND ", $where_or_flag).") ";
                         array_push($condition, $where_flag_str);
                     }
                 }
@@ -473,15 +454,36 @@ class TagArclist extends Base
                 }else if(!empty($idrange)){
                     $where2['a.aid'] = ['between', $idrange];
                 }
+                $uiset = input('param.uiset/s', 'off');
+                $uiset = trim($uiset, '/');
                 $web_cmsmode = tpCache('global.web_cmsmode');  //系统模式
-                $cache_key_suffix = md5(json_encode($where_str).json_encode($where2).json_encode($group_user_where).$orderby.$limit.$arcrank.$addfields.$web_cmsmode);
+                // 多城市
+                $citysite_list = [];
+                if (self::$city_switch_on) {
+                    $citysite_list = get_citysite_list();
+                }
+                $cache_key_suffix = md5($uiset.$orderby.$limit.$arcrank.$addfields.$web_cmsmode.json_encode([$allow_release_channel,$where_str,$where2,$group_user_where,self::$main_lang,self::$home_lang,self::$city_switch_on,self::$site_info,$citysite_list]));
+
+                // 深度优化：非rand查询的static内存缓存，避免重复读文件缓存+反序列化
+                static $arclist_result_cache = [];
+                if ('Buildhtml' == CONTROLLER_NAME && 'rand()' != $orderby && isset($arclist_result_cache[$cache_key_suffix])) {
+                    $result = $arclist_result_cache[$cache_key_suffix]['result'];
+                    $querysql = $arclist_result_cache[$cache_key_suffix]['querysql'];
+                } else {
+
                 $buildhtml_arc_result = cache("buildhtml_arc_result_".$cache_key_suffix);
-                $result = unserialize($buildhtml_arc_result);
+                $result = safe_unserialize($buildhtml_arc_result);
 
                 if (($web_cmsmode == 1 || 'Buildhtml' == CONTROLLER_NAME ) && !is_dir('./weapp/TimingTask/') && 'rand()' != $orderby && !empty($result)){
                     $querysql = cache("buildhtml_arc_querysql_".$cache_key_suffix);
                 } else {
                     if ('rand()' == $orderby) { // 如果是随便获取数据，将先查询1000条，然后再从其中随机，提高大数据情况下的性能
+                        // 深度优化：static缓存rand查询的1000条原始结果，避免每篇文档重复查询
+                        static $rand_query_cache = [];
+                        $rand_cache_key = md5(json_encode([$where_str, $where2, $group_user_where]));
+                        if ('Buildhtml' == CONTROLLER_NAME && isset($rand_query_cache[$rand_cache_key])) {
+                            $result = $rand_query_cache[$rand_cache_key];
+                        } else {
                         if (empty($group_user_where)){
                             $result = $this->archives_db
                                 ->field("a.*")
@@ -502,6 +504,10 @@ class TagArclist extends Base
                                 ->order('a.aid asc')
                                 ->limit(1000)
                                 ->select();
+                        }
+                        if ('Buildhtml' == CONTROLLER_NAME && !empty($result)) {
+                            $rand_query_cache[$rand_cache_key] = $result;
+                        }
                         }
 
                         if (!empty($result)) {
@@ -580,6 +586,11 @@ class TagArclist extends Base
                         $val['old_price'] = floatval($val['old_price']);
                         $val['real_sales'] = $val['sales_num']; // 真实总销量
                         $val['sales_num'] = $val['sales_all']; // 总虚拟销量
+                        
+                        // 所属城市区域
+                        $val['province_name'] = empty($citysite_list[$val['province_id']]) ? '' : $citysite_list[$val['province_id']]['name'];
+                        $val['city_name'] = empty($citysite_list[$val['city_id']]) ? '' : $citysite_list[$val['city_id']]['name'];
+                        $val['area_name'] = empty($citysite_list[$val['area_id']]) ? '' : $citysite_list[$val['area_id']]['name'];
 
                         // 栏目链接
                         if (!empty($val['is_part']) && $val['is_part'] == 1) {
@@ -752,6 +763,11 @@ class TagArclist extends Base
                         cache("buildhtml_arc_querysql_".$cache_key_suffix, $querysql, null, 'archives');
                     }
                 }
+                // 深度优化：写入static内存缓存（非rand模式）
+                if ('Buildhtml' == CONTROLLER_NAME && 'rand()' != $orderby && !empty($result)) {
+                    $arclist_result_cache[$cache_key_suffix] = ['result' => $result, 'querysql' => $querysql];
+                }
+                } // 深度优化 else 结束
                 break;
             }
         }
@@ -760,7 +776,7 @@ class TagArclist extends Base
         if (false !== $tagidmd5 && 0 < $pagesize) {
             $arcmulti_db = \think\Db::name('arcmulti');
             $arcmultiRow = $arcmulti_db->field('tagid')->where(['tagid'=>$tagidmd5])->find();
-            $attstr = addslashes(serialize($tag)); //记录属性,以便分页样式统一调用
+            $attstr = json_encode($tag); //记录属性,以便分页样式统一调用
             if (empty($arcmultiRow)) {
                 $arcmulti_db->insert([
                     'tagid' => $tagidmd5,
@@ -792,50 +808,9 @@ class TagArclist extends Base
             }
         }
 
-        if (!empty($result) && 2 == $channeltype) {
-            $ShopConfig = getUsersConfigData('shop');
-            if (!empty($ShopConfig['shop_open']) && !empty($ShopConfig['shop_open_spec'])) {
-                // 查询商品规格并分类处理
-                $where = [
-                    'aid' => ['IN', $aidArr],
-                    'spec_stock' => ['gt', 0],
-                ];
-                $order = 'spec_price asc';
-                $product_spec = Db::name('product_spec_value')->where($where)->order($order)->select();
-                $product_spec = group_same_key($product_spec, 'aid');
-                
-                // 查询用户信息
-                $usersInfo = GetUsersLatestData();
-                $discountRate = !empty($usersInfo['level_discount']) ? floatval($usersInfo['level_discount']) / floatval(100) : 1;
-
-                // 处理价格及库存
-                $Spec = [];
-                foreach ($result as $key => $value) {
-                    if (!empty($product_spec[$value['aid']][0])) {
-                        // 产品规格
-                        $Spec = $product_spec[$value['aid']][0];
-                        // 规格价格
-                        if (!empty($Spec) && $Spec['spec_price'] >= 0) {
-                            $result[$key]['old_price'] = unifyPriceHandle($Spec['spec_price']);
-                            $result[$key]['users_price'] = unifyPriceHandle($Spec['spec_price'] * $discountRate);
-                        }
-                        // 规格库存
-                        if (!empty($Spec) && $Spec['spec_stock'] >= 0) $result[$key]['stock_count'] = $Spec['spec_stock'];
-                        // 加入购物车 onclick
-                        $result[$key]['ShopAddCart'] = " onclick=\"ShopAddCart1625194556('{$value['aid']}', '{$Spec['spec_value_id']}', 1, '{$this->root_dir}');\" ";
-                    } else {
-                        // 无规格
-                        $result[$key]['old_price'] = unifyPriceHandle($value['users_price']);
-                        $result[$key]['users_price'] = unifyPriceHandle($value['users_price'] * $discountRate);
-                        // 加入购物车 onclick
-                        $result[$key]['ShopAddCart'] = " onclick=\"ShopAddCart1625194556('{$value['aid']}', null, 1, '{$this->root_dir}');\" ";
-                    }
-                }
-
-                // 如果存在分销插件则处理分销商商品URL(携带分销商参数，用于绑定分销商上下级)
-                $result = $this->handleDealerGoodsURL($result, $usersInfo);
-            }
-        }
+        // 处理商品数据信息
+        if (!empty($result)) $result = $this->handleGoodsInfo($result);
+        // dump($result);exit;
 
         $data = [
             'tag' => $tag,
@@ -847,7 +822,7 @@ class TagArclist extends Base
     // 生成hash唯一串
     private function attDef($tag)
     {
-        $tagmd5 = md5(serialize($tag));
+        $tagmd5 = md5(json_encode($tag));
         if (!empty($tag['tagid'])) {
             $tagidmd5 = $tag['tagid'].'_'.$tagmd5;
         } else {

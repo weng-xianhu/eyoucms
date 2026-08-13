@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -101,9 +101,11 @@ class Language extends Base
             $this->assign('languagemarkList', $languagemarkList);
         }
         $pageStr = $pageObj->show(); // 分页显示输出
+        $allList = $language_db->order('id asc')->select(); // 顶部下拉用的完整语言列表
         $this->assign('list', $list); // 赋值数据集
-        $this->assign('pageStr', $pageStr); // 赋值分页输出
-        $this->assign('pageObj', $pageObj); // 赋值分页对象
+        $this->assign('allList', $allList); // 完整语言列表
+        $this->assign('page', $pageStr); // 赋值分页输出
+        $this->assign('pager', $pageObj); // 赋值分页对象
 
         return $this->fetch();
     }
@@ -311,7 +313,8 @@ class Language extends Base
                     }
                     /*--end*/
 
-                    /*统计多语言数量*/
+                    Cache::clear('language');
+                    // 统计多语言数量
                     model('Language')->setLangNum();
                     
                     adminLog('编辑多语言：'.$post['title']); // 写入操作日志

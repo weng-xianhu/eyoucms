@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -167,6 +167,16 @@ class FieldLogic extends Model
             $fields[1] = "SET($dfvalue)";
             $fields[2] = $maxlen;
         }
+        else if("checkboxs" == $dtype)
+        {
+            if(empty($dfvalue)) {
+                $dfvalue = '';
+            }
+            $maxlen = 10003;
+            $fields[0] = " `$fieldname` text COMMENT '$fieldtitle|{$maxlen}';";
+            $fields[1] = "text";
+            $fields[2] = $maxlen;
+        }
         else if("select" == $dtype || "radio" == $dtype)
         {
             $maxlen = 0;
@@ -178,14 +188,38 @@ class FieldLogic extends Model
             $fields[1] = "enum($dfvalue)";
             $fields[2] = $maxlen;
         }
-        else if("checkboxs" == $dtype)
+        else if("radios" == $dtype)
         {
             if(empty($dfvalue)) {
                 $dfvalue = '';
             }
-            $maxlen = 10003;
-            $fields[0] = " `$fieldname` text COMMENT '$fieldtitle|{$maxlen}';";
-            $fields[1] = "text";
+            $dfvalueArr = explode(',', $dfvalue);
+            $default_value = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+            $maxlen = 11;
+            $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '{$default_value}' COMMENT '$fieldtitle|{$maxlen}';";
+            $fields[1] = "varchar($maxlen)";
+            $fields[2] = $maxlen;
+        }
+        else if("selects" == $dtype)
+        {
+            if(empty($dfvalue)) {
+                $dfvalue = '';
+            }
+            $dfvalueArr = explode(',', $dfvalue);
+            $default_value = !empty($dfvalueArr[0]) ? $dfvalueArr[0] : '';
+            $maxlen = 12;
+            $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '{$default_value}' COMMENT '$fieldtitle|{$maxlen}';";
+            $fields[1] = "varchar($maxlen)";
+            $fields[2] = $maxlen;
+        }
+        else if("cascade" == $dtype)
+        {
+            if(empty($dfvalue)) {
+                $dfvalue = '';
+            }
+            $maxlen = 500;
+            $fields[0] = " `$fieldname` varchar($maxlen) NOT NULL DEFAULT '' COMMENT '$fieldtitle';";
+            $fields[1] = "varchar($maxlen)";
             $fields[2] = $maxlen;
         }
         else
@@ -214,15 +248,51 @@ class FieldLogic extends Model
      */
     public function checkChannelFieldList($slave_table, $fieldname, $channel_id, $filter = array())
     {
+        // 验证表名只包含合法字符（字母、数字、下划线、连接符）
+        if (!preg_match('/^[\w\-]+$/', $slave_table)) {
+            return true;
+        }
+        $arctypeTable = PREFIX . 'arctype';
         // 栏目表字段
-        $arctypeFieldArr = Db::getTableFields(PREFIX.'arctype'); 
+        // $arctypeFieldArr = Db::getTableFields(PREFIX.'arctype');
+        if (config('database.type') == 'dm') { // 达梦优化
+            $arctypeFieldArr = Db::query("SELECT COLUMN_NAME FROM ALL_TAB_COLS WHERE TABLE_NAME = ?", [$arctypeTable]);
+            $arctypeFieldArr = get_arr_column($arctypeFieldArr, 'COLUMN_NAME');
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $arctypeFieldArr = Db::query("SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = 'public'", [$arctypeTable]);
+            $arctypeFieldArr = get_arr_column($arctypeFieldArr, 'column_name');
+        } else {
+            $arctypeFieldArr = Db::query("SHOW COLUMNS FROM `{$arctypeTable}`");
+            $arctypeFieldArr = get_arr_column($arctypeFieldArr, 'Field');
+        }
         foreach ($arctypeFieldArr as $key => $val) {
             if (!preg_match('/^type/i',$val)) {
                 array_push($arctypeFieldArr, 'type'.$val);
             }
         }
-        $masterFieldArr = Db::getTableFields(PREFIX.'archives'); // 文档主表字段
-        $slaveFieldArr = Db::getTableFields($slave_table); // 文档附加表字段
+        $archivesTable = PREFIX . 'archives';
+        // $masterFieldArr = Db::getTableFields(PREFIX.'archives'); // 文档主表字段
+        if (config('database.type') == 'dm') { // 达梦优化
+            $masterFieldArr = Db::query("SELECT COLUMN_NAME FROM ALL_TAB_COLS WHERE TABLE_NAME = ?", [$archivesTable]);
+            $masterFieldArr = get_arr_column($masterFieldArr, 'COLUMN_NAME');
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $masterFieldArr = Db::query("SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = 'public'", [$archivesTable]);
+            $masterFieldArr = get_arr_column($masterFieldArr, 'column_name');
+        } else {
+            $masterFieldArr = Db::query("SHOW COLUMNS FROM `{$archivesTable}`");
+            $masterFieldArr = get_arr_column($masterFieldArr, 'Field');
+        }
+        // $slaveFieldArr = Db::getTableFields($slave_table); // 文档附加表字段
+        if (config('database.type') == 'dm') { // 达梦优化
+            $slaveFieldArr = Db::query("SELECT COLUMN_NAME FROM ALL_TAB_COLS WHERE TABLE_NAME = ?", [$slave_table]);
+            $slaveFieldArr = get_arr_column($slaveFieldArr, 'COLUMN_NAME');
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $slaveFieldArr = Db::query("SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = 'public'", [$slave_table]);
+            $slaveFieldArr = get_arr_column($slaveFieldArr, 'column_name');
+        } else {
+            $slaveFieldArr = Db::query("SHOW COLUMNS FROM `{$slave_table}`");
+            $slaveFieldArr = get_arr_column($slaveFieldArr, 'Field');
+        }
         $addfields = ['pageurl','has_children','typelitpic','arcurl','typeurl']; // 额外与字段冲突的变量名
         $fieldArr = array_merge($slaveFieldArr, $masterFieldArr, $addfields, $arctypeFieldArr); // 合并字段
         if (!empty($fieldname)) {
@@ -250,7 +320,21 @@ class FieldLogic extends Model
      */
     public function checkTableFieldList($table, $fieldname, $filter = array())
     {
-        $fieldArr = Db::getTableFields($table); // 表字段
+        // 验证表名只包含合法字符（字母、数字、下划线、连接符）
+        if (!preg_match('/^[\w\-]+$/', $table)) {
+            return true;
+        }
+        // $fieldArr = Db::getTableFields($table); // 表字段
+        if (config('database.type') == 'dm') { // 达梦优化
+            $fieldArr = Db::query("SELECT COLUMN_NAME FROM ALL_TAB_COLS WHERE TABLE_NAME = ?", [$table]);
+            $fieldArr = get_arr_column($fieldArr, 'COLUMN_NAME');
+        } elseif (config('database.type') == 'kingbase') { // 人大金仓优化
+            $fieldArr = Db::query("SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = 'public'", [$table]);
+            $fieldArr = get_arr_column($fieldArr, 'column_name');
+        } else {
+            $fieldArr = Db::query("SHOW COLUMNS FROM `{$table}`");
+            $fieldArr = get_arr_column($fieldArr, 'Field');
+        }
         if (!empty($fieldname)) {
             if (!empty($filter) && is_array($filter)) {
                 foreach ($filter as $key => $val) {
@@ -282,8 +366,14 @@ class FieldLogic extends Model
                 return array('code'=>0, 'msg'=>'禁止删除系统字段！');
             }
             $fieldname = $row['name'];
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $fieldname)) {
+                return array('code'=>0, 'msg'=>'字段名不合法！');
+            }
             $channel_id = $row['channel_id'];
             $table = Db::name('channeltype')->where('id',$channel_id)->getField('table');
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
+                return array('code'=>0, 'msg'=>'表名不合法！');
+            }
             $table = PREFIX.$table.'_content';
             if ($this->checkChannelFieldList($table, $fieldname, $channel_id)) {
                 $sql = "ALTER TABLE `{$table}` DROP COLUMN `{$fieldname}`;";
@@ -327,6 +417,9 @@ class FieldLogic extends Model
                 return array('code'=>0, 'msg'=>'禁止删除系统字段！');
             }
             $fieldname = $row['name'];
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $fieldname)) {
+                return array('code'=>0, 'msg'=>'字段名不合法！');
+            }
             $table = PREFIX.'arctype';
             if ($this->checkTableFieldList($table, $fieldname)) {
                 $sql = "ALTER TABLE `{$table}` DROP COLUMN `{$fieldname}`;";
@@ -625,6 +718,10 @@ class FieldLogic extends Model
             $maxlen = preg_replace('/^varchar\((.*)\)/i', '$1', $fieldtype);
             if (250 == $maxlen) {
                 $dtype = 'img';
+            } else if (11 == $maxlen) {
+                $dtype = 'radios';
+            } else if (12 == $maxlen) {
+                $dtype = 'selects';
             } else if (1001 == $maxlen || 10001 == $maxlen) {
                 $dtype = 'imgs';
             } else if (1002 == $maxlen || 10002 == $maxlen) {
@@ -667,7 +764,7 @@ class FieldLogic extends Model
             $fieldTypeList = model('Channelfield')->getListByWhere(array('channel_id'=>$channel_id), 'name,dtype', 'name');
             foreach ($dataExt as $key => $val) {
                 
-                $key = preg_replace('/^(.*)(_eyou_is_remote|_eyou_remote|_eyou_local)$/', '$1', $key);
+                $key = preg_replace('/^(.*)(_eyou_local)$/', '$1', $key);
                 $dtype = !empty($fieldTypeList[$key]) ? $fieldTypeList[$key]['dtype'] : '';
                 switch ($dtype) {
 
@@ -687,12 +784,7 @@ class FieldLogic extends Model
 
                     case 'img':
                     {
-                        $is_remote = !empty($dataExt[$key.'_eyou_is_remote']) ? $dataExt[$key.'_eyou_is_remote'] : 0;
-                        if (1 == $is_remote) {
-                            $val = $dataExt[$key.'_eyou_remote'];
-                        } else {
-                            $val = $dataExt[$key.'_eyou_local'];
-                        }
+                        $val = $dataExt[$key.'_eyou_local'];
                         break;
                     }
 

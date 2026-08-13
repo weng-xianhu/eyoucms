@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -65,12 +65,19 @@ class TagList extends Base
         /*--end*/
 
         $result = false;
-
+        $uiset = input('param.uiset/s', 'off');
+        $uiset = trim($uiset, '/');
+        $allow_release_channel = config('global.allow_release_channel');
         $web_stypeid_open = tpCache('web.web_stypeid_open'); // 是否开启副栏目
         $language_split = tpCache('language.language_split'); // 多语言分离
         $site_showall = tpCache('site.site_showall'); // 多城市站点 - 全国是否显示分站的文档
         $site_showsuball = tpCache('site.site_showsuball'); // 多城市站点 - 是否显示子站文档
-        $cacheKey = 'taglib-'.md5(__CLASS__.__FUNCTION__.json_encode([$param,$pagesize,$addfields,$thumb,$arcrank,$this->tid,self::$main_lang,self::$home_lang,self::$city_switch_on,self::$site_info,$web_stypeid_open,$site_showall,$site_showsuball,$language_split,$siteall]));
+        // 多城市
+        $citysite_list = [];
+        if (self::$city_switch_on) {
+            $citysite_list = get_citysite_list();
+        }
+        $cacheKey = 'taglib-'.md5(__CLASS__.__FUNCTION__.json_encode([$uiset,$allow_release_channel,$param,$pagesize,$addfields,$thumb,$arcrank,$this->tid,self::$main_lang,self::$home_lang,self::$city_switch_on,self::$site_info,$web_stypeid_open,$site_showall,$site_showsuball,$language_split,$siteall,$citysite_list]));
         $cacheData = cache($cacheKey);
 
         if (empty($cacheData)) {
@@ -115,7 +122,6 @@ class TagList extends Base
             
             /*不指定模型ID、栏目ID，默认显示所有可以发布文档的模型ID下的文档*/
             if (("" === $channeltype && empty($typeid)) || 0 === $channeltype) {
-                $allow_release_channel = config('global.allow_release_channel');
                 $channeltype = $param['channel'] = implode(',', $allow_release_channel);
             }
             /*--end*/
@@ -173,7 +179,11 @@ class TagList extends Base
             //     echo '标签list报错：至少指定属性 typeid | modelid 任何一个。';
             //     return $result;
             // }
-
+            $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+            $flagRow = [];
+            foreach ($archives_flag_list as $key => $v) {
+                $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+            }  
             // 查询条件
             $condition = array();
             foreach (array('keywords','keyword','typeid','notypeid','flag','noflag','channel') as $key) {
@@ -227,24 +237,8 @@ class TagList extends Base
                         $flag_arr = explode(",", $param[$key]);
                         $where_or_flag = array();
                         foreach ($flag_arr as $k2 => $v2) {
-                            if ($v2 == "c") {
-                                array_push($where_or_flag, "a.is_recom = 1");
-                            } elseif ($v2 == "h") {
-                                array_push($where_or_flag, "a.is_head = 1");
-                            } elseif ($v2 == "a") {
-                                array_push($where_or_flag, "a.is_special = 1");
-                            } elseif ($v2 == "j") {
-                                array_push($where_or_flag, "a.is_jump = 1");
-                            } elseif ($v2 == "p") {
-                                array_push($where_or_flag, "a.is_litpic = 1");
-                            } elseif ($v2 == "b") {
-                                array_push($where_or_flag, "a.is_b = 1");
-                            } elseif ($v2 == "s") {
-                                array_push($where_or_flag, "a.is_slide = 1");
-                            } elseif ($v2 == "r") {
-                                array_push($where_or_flag, "a.is_roll = 1");
-                            } elseif ($v2 == "d") {
-                                array_push($where_or_flag, "a.is_diyattr = 1");
+                            if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                                array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                             }
                         }
                         if (!empty($where_or_flag)) {
@@ -255,29 +249,13 @@ class TagList extends Base
                     elseif ($key == 'noflag') {
                         $flag_arr = explode(",", $param[$key]);
                         $where_or_flag = array();
-                        foreach ($flag_arr as $nk2 => $nv2) {
-                            if ($nv2 == "c") {
-                                array_push($where_or_flag, "a.is_recom <> 1");
-                            } elseif ($nv2 == "h") {
-                                array_push($where_or_flag, "a.is_head <> 1");
-                            } elseif ($nv2 == "a") {
-                                array_push($where_or_flag, "a.is_special <> 1");
-                            } elseif ($nv2 == "j") {
-                                array_push($where_or_flag, "a.is_jump <> 1");
-                            } elseif ($nv2 == "p") {
-                                array_push($where_or_flag, "a.is_litpic <> 1");
-                            } elseif ($nv2 == "b") {
-                                array_push($where_or_flag, "a.is_b <> 1");
-                            } elseif ($nv2 == "s") {
-                                array_push($where_or_flag, "a.is_slide <> 1");
-                            } elseif ($nv2 == "r") {
-                                array_push($where_or_flag, "a.is_roll <> 1");
-                            } elseif ($nv2 == "d") {
-                                array_push($where_or_flag, "a.is_diyattr <> 1");
+                        foreach ($flag_arr as $k2 => $v2) {
+                            if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                                array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                             }
                         }
                         if (!empty($where_or_flag)) {
-                            $where_flag_str = " (".implode(" OR ", $where_or_flag).") ";
+                            $where_flag_str = " (".implode(" AND ", $where_or_flag).") ";
                             array_push($condition, $where_flag_str);
                         }
                     }
@@ -413,7 +391,7 @@ class TagList extends Base
                 /*--end*/
 
                 $paginate_type = config('paginate.type');
-                if (isMobile()) {
+                if (isMobile() && 1 == config('ey_config.response_type')) {
                     $paginate_type = 'mobile';
                 }
                 $paginate = array(
@@ -425,7 +403,7 @@ class TagList extends Base
 
                 $cache_key_suffix = md5("{$this->tid}_{$this->php_sessid}");
                 $buildhtml_channel_aidarr = cache("buildhtml_channel_aidarr_{$cache_key_suffix}");
-                $buildhtml_channel_aidarr = unserialize($buildhtml_channel_aidarr);
+                $buildhtml_channel_aidarr = safe_unserialize($buildhtml_channel_aidarr);
                 if ('Buildhtml' == CONTROLLER_NAME && !empty($buildhtml_channel_aidarr)){
                     $start = !empty($page) ? ($page-1)*$pagesize : 0;
                     $aid_arr = array_slice($buildhtml_channel_aidarr, $start, $pagesize);
@@ -508,6 +486,11 @@ class TagList extends Base
                     $val['old_price'] = floatval($val['old_price']);
                     $val['real_sales'] = $val['sales_num']; // 真实总销量
                     $val['sales_num'] = $val['sales_all']; // 总虚拟销量
+                        
+                    // 所属城市区域
+                    $val['province_name'] = empty($citysite_list[$val['province_id']]) ? '' : $citysite_list[$val['province_id']]['name'];
+                    $val['city_name'] = empty($citysite_list[$val['city_id']]) ? '' : $citysite_list[$val['city_id']]['name'];
+                    $val['area_name'] = empty($citysite_list[$val['area_id']]) ? '' : $citysite_list[$val['area_id']]['name'];
 
                     /*获取指定路由模式下的URL*/
                     if (!empty($val['is_part']) && $val['is_part'] == 1) {
@@ -702,50 +685,9 @@ class TagList extends Base
                 }
                 /*--end*/
 
-                if ('product' == $channeltype_info['nid'] && !empty($list)) {
-                    $ShopConfig = getUsersConfigData('shop');
-                    if (!empty($ShopConfig['shop_open']) && !empty($ShopConfig['shop_open_spec'])) {
-                        // 查询商品规格并分类处理
-                        $where = [
-                            'aid' => ['IN', $aidArr],
-                            'spec_stock' => ['gt', 0],
-                        ];
-                        $order = 'spec_price asc';
-                        $product_spec = Db::name('product_spec_value')->where($where)->order($order)->select();
-                        $product_spec = group_same_key($product_spec, 'aid');
-
-                        // 查询用户信息
-                        $usersInfo = GetUsersLatestData();
-                        $discountRate = !empty($usersInfo['level_discount']) ? floatval($usersInfo['level_discount']) / floatval(100) : 1;
-
-                        // 处理价格及库存
-                        $Spec = [];
-                        foreach ($list as $key => $value) {
-                            if (!empty($product_spec[$value['aid']][0])) {
-                                // 产品规格
-                                $Spec = $product_spec[$value['aid']][0];
-                                // 规格价格
-                                if (!empty($Spec) && $Spec['spec_price'] >= 0) {
-                                    $list[$key]['old_price'] = unifyPriceHandle($Spec['spec_price']);
-                                    $list[$key]['users_price'] = unifyPriceHandle($Spec['spec_price'] * $discountRate);
-                                }
-                                // 规格库存
-                                if (!empty($Spec) && $Spec['spec_stock'] >= 0) $list[$key]['stock_count'] = $Spec['spec_stock'];
-                                // 加入购物车 onclick
-                                $list[$key]['ShopAddCart'] = " onclick=\"ShopAddCart1625194556('{$value['aid']}', '{$Spec['spec_value_id']}', 1, '{$this->root_dir}');\" ";
-                            } else {
-                                // 无规格
-                                $list[$key]['old_price'] = unifyPriceHandle($value['users_price']);
-                                $list[$key]['users_price'] = unifyPriceHandle($value['users_price'] * $discountRate);
-                                // 加入购物车 onclick
-                                $list[$key]['ShopAddCart'] = " onclick=\"ShopAddCart1625194556('{$value['aid']}', null, 1, '{$this->root_dir}');\" ";
-                            }
-                        }
-                    }
-
-                    // 如果存在分销插件则处理分销商商品URL(携带分销商参数，用于绑定分销商上下级)
-                    $list = $this->handleDealerGoodsURL($list, $usersInfo);
-                }
+                // 处理商品数据信息
+                if (!empty($list)) $list = $this->handleGoodsInfo($list);
+                // dump($list);exit;
 
                 $result['pages'] = $pages; // 分页显示输出
                 $result['list'] = $list; // 赋值数据集
@@ -786,6 +728,11 @@ class TagList extends Base
 
         $web_stypeid_open = tpCache('web.web_stypeid_open');
         $site_showall = tpCache('site.site_showall'); // 多城市站点 - 全国是否显示分站的文档
+        // 多城市
+        $citysite_list = [];
+        if (self::$city_switch_on) {
+            $citysite_list = get_citysite_list();
+        }
         $search_conf = tpCache('search'); // 搜索配置
         $search_model = !empty($search_conf['search_model']) ? $search_conf['search_model'] : 'default'; // 搜索模式
         $title_word_model = !empty($search_conf['title_word_model']) ? $search_conf['title_word_model'] : 0; // 分词匹配
@@ -795,6 +742,13 @@ class TagList extends Base
             $search_tabu_words = explode(PHP_EOL, $search_conf['search_tabu_words']);
         }
         $where_keywords = '';
+
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }
+        $likeStr = '';
         // 应用搜索条件
         foreach (['keywords','keyword','typeid','notypeid','channelid','flag','noflag'] as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
@@ -806,7 +760,13 @@ class TagList extends Base
                         $keywords = addslashes($keywords);
                         $where_keywords = $keywords;
                         if ('intellect' == $search_model) {
-                            $condition[] = Db::raw(' a.title LIKE "%'.$keywords.'%" OR a.seo_keywords LIKE "%'.$keywords.'%" ');
+                            $search_conf['intellect_arr'] = !empty($search_conf['intellect_arr']) ? json_decode($search_conf['intellect_arr'], true) : [];
+                            $likeStr = '';
+                            foreach ($search_conf['intellect_arr'] as $key => $value) {
+                                $orStr = !empty($key) ? ' OR ' : '';
+                                if ('content' != strval($value)) $likeStr .= $orStr . 'a.' . $value . ' LIKE "%' . $keywords . '%"';
+                            }
+                            // $condition[] = Db::raw($likeStr);
                         } else if ('accurate' == $search_model) {
                             $condition['a.title'] = trim($param[$key]);
                         } else {
@@ -920,24 +880,8 @@ class TagList extends Base
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -948,29 +892,13 @@ class TagList extends Base
                 elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
-                        $where_flag_str = " (".implode(" OR ", $where_or_flag).") ";
+                        $where_flag_str = " (".implode(" AND ", $where_or_flag).") ";
                         $condition[] = Db::raw($where_flag_str);
                     }
                 }
@@ -979,6 +907,50 @@ class TagList extends Base
                     $param[$key] = addslashes($param[$key]);
                     $condition['a.'.$key] = array('eq', $param[$key]);
                 }
+            }
+        }
+
+        // [搜索管理]-[搜索模式]-[智能模糊]搜索逻辑
+        if (!empty($param['keywords']) && 'intellect' == $search_model && !empty($search_conf['intellect_arr']) && in_array('content', $search_conf['intellect_arr'])) {
+            $allow_release_channel = config('global.allow_release_channel');
+            if (!empty($typeids)) $channelidArr = Db::name('arctype')->where(['id' => ['IN', $typeids]])->column('current_channel');
+            $where = [
+                'status' => 1,
+                'is_del' => 0,
+                'ifsystem' => 1,
+                'id' => ['IN', $allow_release_channel]
+            ];
+            if (!empty($channelidArr)) $where['id'] = ['IN', $channelidArr];
+            if (!empty($param['channelid'])) $where['id'] = intval($param['channelid']);
+            $tableArr = Db::name('channeltype')->where($where)->column('table');
+            $aidArr = [];
+            if (!empty($tableArr)) {
+                foreach ($tableArr as $key => $value) {
+                    // 第一阶段：SQL粗筛
+                    $matchList = Db::name($value . '_content')
+                        ->where(['content' => ['LIKE', "%{$param['keywords']}%"]])
+                        ->field('aid, content')
+                        ->select();
+                    // 第二阶段：PHP精筛，过滤掉HTML标签后再验证
+                    if (!empty($matchList)) {
+                        foreach ($matchList as $item) {
+                            $plainText = strip_tags(htmlspecialchars_decode($item['content'], ENT_QUOTES));
+                            if (stripos($plainText, $param['keywords']) !== false) {
+                                $aidArr[] = $item['aid'];
+                            }
+                        }
+                    }
+                }
+            }
+            if (!empty($aidArr)) $likeStr .= ' OR a.aid IN ('.implode(',', $aidArr).')';
+        }
+        if (!empty($likeStr)) $condition[] = Db::raw($likeStr);
+
+        // 应用后台配置的屏蔽栏目
+        if (!empty($search_conf['search_exclude_typeid'])) {
+            $exclude_typeids = preg_replace('/[^0-9,]/', '', $search_conf['search_exclude_typeid']);
+            if (!empty($exclude_typeids)) {
+                $condition[] = Db::raw("a.typeid NOT IN ({$exclude_typeids})");
             }
         }
 
@@ -1101,6 +1073,11 @@ class TagList extends Base
                 $arcval['old_price'] = floatval($arcval['old_price']);
                 $arcval['real_sales'] = $arcval['sales_num']; // 真实总销量
                 $arcval['sales_num'] = $arcval['sales_all']; // 总虚拟销量
+                        
+                // 所属城市区域
+                $arcval['province_name'] = empty($citysite_list[$arcval['province_id']]) ? '' : $citysite_list[$arcval['province_id']]['name'];
+                $arcval['city_name'] = empty($citysite_list[$arcval['city_id']]) ? '' : $citysite_list[$arcval['city_id']]['name'];
+                $arcval['area_name'] = empty($citysite_list[$arcval['area_id']]) ? '' : $citysite_list[$arcval['area_id']]['name'];
 
                 /*获取指定路由模式下的URL*/
                 if (!empty($arcval['is_part']) && $arcval['is_part'] == 1) {
@@ -1241,8 +1218,9 @@ class TagList extends Base
             /*--end*/
         }
 
-        // 如果存在分销插件则处理分销商商品URL(携带分销商参数，用于绑定分销商上下级)
-        $list = $this->handleDealerGoodsURL($list);
+        // 处理商品数据信息
+        if (!empty($list)) $list = $this->handleGoodsInfo($list);
+        // dump($list);exit;
 
         $result['pages'] = $pages; // 分页显示输出
         $result['list'] = $list; // 赋值数据集
@@ -1291,10 +1269,17 @@ class TagList extends Base
                 // 根据需求新增条件
             ];
             // 所有应用于搜索的自定义字段
-            $channelfield = Db::name('channelfield')->where($where)->field('channel_id,id,name,dtype,dfvalue')->select();
+            $channelfield = Db::name('channelfield')->where($where)->field('channel_id,id,name,dtype,dfvalue,is_multiselect')->select();
             // 所有模型类别
             $channeltype_list = config('global.channeltype_list');
             $channel_table = array_search($channel_id, $channeltype_list);
+
+            // 多选项、单选项、下拉框[新]
+            $fieldCustomParamList = array();
+            $fieldCustomParamRow = Db::name('field_custom_param')->field('id,dfvalue,name,channel_id')->order('dtype ASC, sort_order ASC, id ASC')->select();
+            foreach ($fieldCustomParamRow as $k => $v) {
+                $fieldCustomParamList[$v['channel_id']][$v['name']][$v['id']] = $v;
+            }
 
             // 查询获取aid初始sql语句
             $wheres = [];
@@ -1311,19 +1296,63 @@ class TagList extends Base
                             // $wheres[$fieldname] = ['NEQ', null];
                         }else{
                             if (1 == count($val_arr)) {
-                                if ('checkbox' == $value['dtype']) { // 多选字段类型
-                                    $val_arr[0] = addslashes($val_arr[0]);
+                                $is_multi_on = !empty($value['is_multiselect']);
+                                if ('checkbox' == $value['dtype'] && $is_multi_on) { // 多选字段类型（多选筛选）
+                                    $multi_vals = explode(',', $val_arr[0]);
+                                    $or_conds = [];
                                     $dfvalue_tmp = explode(',', $value['dfvalue']);
-                                    if (in_array($val_arr[0], $dfvalue_tmp)) {
-                                        array_push($where_multiple, "FIND_IN_SET('".$val_arr[0]."',{$fieldname})");
-                                    } else {
-                                        $val_arr[0] = md5($val_arr[0]);
-                                        array_push($where_multiple, "FIND_IN_SET('".$val_arr[0]."',{$fieldname})");
+                                    foreach ($multi_vals as $_mv) {
+                                        $_mv = addslashes(trim($_mv));
+                                        if (!in_array($_mv, $dfvalue_tmp)) $_mv = md5($_mv);
+                                        $or_conds[] = "FIND_IN_SET('".$_mv."',{$fieldname})";
                                     }
+                                    array_push($where_multiple, count($or_conds) > 1 ? "(" . implode(' OR ', $or_conds) . ")" : $or_conds[0]);
+                                }elseif ('checkbox' == $value['dtype'] && !$is_multi_on) { // 多选字段类型（单选筛选）
+                                    $dfvalue_tmp = explode(',', $value['dfvalue']);
+                                    $val_arr[0] = addslashes($val_arr[0]);
+                                    if (!in_array($val_arr[0], $dfvalue_tmp)) $val_arr[0] = md5($val_arr[0]);
+                                    array_push($where_multiple, "FIND_IN_SET('".$val_arr[0]."',{$fieldname})");
+                                }elseif ('checkboxs' == $value['dtype'] && $is_multi_on) { // 新多选字段（多选筛选）
+                                    $multi_vals = explode(',', $val_arr[0]);
+                                    $or_conds = [];
+                                    $dfvalue_tmp = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                                    foreach ($multi_vals as $_mv) {
+                                        $_mv = addslashes(trim($_mv));
+                                        if (!isset($dfvalue_tmp[$_mv])) $_mv = md5($_mv);
+                                        $or_conds[] = "FIND_IN_SET('".$_mv."',{$fieldname})";
+                                    }
+                                    array_push($where_multiple, count($or_conds) > 1 ? "(" . implode(' OR ', $or_conds) . ")" : $or_conds[0]);
+                                }elseif ('checkboxs' == $value['dtype'] && !$is_multi_on) { // 新多选字段（单选筛选）
+                                    $dfvalue_tmp = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                                    $val_arr[0] = addslashes($val_arr[0]);
+                                    if (!isset($dfvalue_tmp[$val_arr[0]])) $val_arr[0] = md5($val_arr[0]);
+                                    array_push($where_multiple, "FIND_IN_SET('".$val_arr[0]."',{$fieldname})");
+                                }elseif ('selects' == $value['dtype'] && $is_multi_on) { // 新下拉字段（多选筛选）
+                                    $multi_vals = explode(',', $val_arr[0]);
+                                    $or_conds = [];
+                                    $dfvalue_tmp = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                                    foreach ($multi_vals as $_mv) {
+                                        $_mv = intval(trim($_mv));
+                                        if (!isset($dfvalue_tmp[$_mv])) $_mv = md5($_mv);
+                                        $or_conds[] = "{$fieldname} = '".$_mv."'";
+                                    }
+                                    array_push($where_multiple, count($or_conds) > 1 ? "(" . implode(' OR ', $or_conds) . ")" : $or_conds[0]);
+                                }elseif ('selects' == $value['dtype'] && !$is_multi_on) { // 新下拉字段（单选筛选）
+                                    $val_arr[0] = intval($val_arr[0]);
+                                    $dfvalue_tmp = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                                    if (!isset($dfvalue_tmp[$val_arr[0]])) $val_arr[0] = md5($val_arr[0]);
+                                    $wheres[$fieldname] = $val_arr[0];
+                                }elseif ('radios' == $value['dtype']) { // 单选字段类型
+                                    $val_arr[0] = intval($val_arr[0]);
+                                    $dfvalue_tmp = empty($fieldCustomParamList[$value['channel_id']][$value['name']]) ? [] : $fieldCustomParamList[$value['channel_id']][$value['name']];
+                                    if (!isset($dfvalue_tmp[$val_arr[0]])) {
+                                        $val_arr[0] = md5($val_arr[0]);
+                                    }
+                                    $wheres[$fieldname] = $val_arr[0];
                                 } else if ('region' == $value['dtype']) { // 区域字段类型
                                     $val_arr[0] = addslashes($val_arr[0]);
                                     $val_arr_arr = explode('_', $val_arr[0]);
-                                    $dfvalue_tmp = explode(',', unserialize($value['dfvalue'])['region_ids']);
+                                    $dfvalue_tmp = explode(',', safe_unserialize($value['dfvalue'])['region_ids']);
                                     if (in_array($val_arr_arr[0], $dfvalue_tmp)) {
                                         rsort($val_arr_arr);
                                         array_push($where_multiple, "FIND_IN_SET('".$val_arr_arr[0]."',{$fieldname})");
@@ -1331,6 +1360,30 @@ class TagList extends Base
                                         $val_arr_arr[0] = md5($val_arr_arr[0]);
                                         array_push($where_multiple, "FIND_IN_SET('".$val_arr_arr[0]."',{$fieldname})");
                                     }
+                                } elseif ('cascade' == $value['dtype']) { // 联动选择字段类型
+                                    $cascade_parts = explode('_', $val_arr[0]);
+                                    $cascade_parts = array_map('intval', $cascade_parts);
+                                    $cascade_parts = array_filter($cascade_parts, function($v){ return $v > 0; });
+                                    $match_str = implode(',', $cascade_parts);
+                                    if (!empty($match_str)) {
+                                        $match_str = addslashes($match_str);
+                                        array_push($where_multiple, "({$fieldname} = '{$match_str}' OR {$fieldname} LIKE '{$match_str},%')");
+                                    }
+                                } else if ('select' == $value['dtype'] && $is_multi_on) {
+                                    $multi_vals = explode(',', $val_arr[0]);
+                                    $or_conds = [];
+                                    $dfvalue_tmp = !empty($value['dfvalue']) ? explode(',', $value['dfvalue']) : [];
+                                    foreach ($multi_vals as $_mv) {
+                                        $_mv = addslashes(trim($_mv));
+                                        if (!empty($dfvalue_tmp) && !in_array($_mv, $dfvalue_tmp)) $_mv = md5($_mv);
+                                        $or_conds[] = "{$fieldname} = '".$_mv."'";
+                                    }
+                                    array_push($where_multiple, count($or_conds) > 1 ? "(" . implode(' OR ', $or_conds) . ")" : $or_conds[0]);
+                                } else if ('select' == $value['dtype'] && !$is_multi_on) {
+                                    $dfvalue_tmp = !empty($value['dfvalue']) ? explode(',', $value['dfvalue']) : [];
+                                    $val_arr[0] = addslashes($val_arr[0]);
+                                    if (!empty($dfvalue_tmp) && !in_array($val_arr[0], $dfvalue_tmp)) $val_arr[0] = md5($val_arr[0]);
+                                    $wheres[$fieldname] = $val_arr[0];
                                 } else {
                                     if (!empty($value['dfvalue'])) {
                                         $dfvalue_tmp = explode(',', $value['dfvalue']);
@@ -1364,9 +1417,18 @@ class TagList extends Base
             }
             /*结束*/
         }
-
+        $archives_flag_list = Db::name('archives_flag')->field('flag_attr,flag_fieldname')->where(['status'=>1])->cache(true, EYOUCMS_CACHE_TIME, 'archives_flag')->select();
+        $flagRow = [];
+        foreach ($archives_flag_list as $key => $v) {
+            $flagRow[$v['flag_attr']]=$v['flag_fieldname'];
+        }  
         $web_stypeid_open = tpCache('web.web_stypeid_open');
         $site_showall = tpCache('site.site_showall'); // 多城市站点 - 全国是否显示分站的文档
+        // 多城市
+        $citysite_list = [];
+        if (self::$city_switch_on) {
+            $citysite_list = get_citysite_list();
+        }
         // 应用搜索条件
         foreach (['keywords','keyword','typeid','notypeid','channel','flag','noflag'] as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
@@ -1461,24 +1523,8 @@ class TagList extends Base
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
                     foreach ($flag_arr as $k2 => $v2) {
-                        if ($v2 == "c") {
-                            array_push($where_or_flag, "a.is_recom = 1");
-                        } elseif ($v2 == "h") {
-                            array_push($where_or_flag, "a.is_head = 1");
-                        } elseif ($v2 == "a") {
-                            array_push($where_or_flag, "a.is_special = 1");
-                        } elseif ($v2 == "j") {
-                            array_push($where_or_flag, "a.is_jump = 1");
-                        } elseif ($v2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic = 1");
-                        } elseif ($v2 == "b") {
-                            array_push($where_or_flag, "a.is_b = 1");
-                        } elseif ($v2 == "s") {
-                            array_push($where_or_flag, "a.is_slide = 1");
-                        } elseif ($v2 == "r") {
-                            array_push($where_or_flag, "a.is_roll = 1");
-                        } elseif ($v2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr = 1");
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} = 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
@@ -1489,29 +1535,13 @@ class TagList extends Base
                 elseif ($key == 'noflag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
-                    foreach ($flag_arr as $nk2 => $nv2) {
-                        if ($nv2 == "c") {
-                            array_push($where_or_flag, "a.is_recom <> 1");
-                        } elseif ($nv2 == "h") {
-                            array_push($where_or_flag, "a.is_head <> 1");
-                        } elseif ($nv2 == "a") {
-                            array_push($where_or_flag, "a.is_special <> 1");
-                        } elseif ($nv2 == "j") {
-                            array_push($where_or_flag, "a.is_jump <> 1");
-                        } elseif ($nv2 == "p") {
-                            array_push($where_or_flag, "a.is_litpic <> 1");
-                        } elseif ($nv2 == "b") {
-                            array_push($where_or_flag, "a.is_b <> 1");
-                        } elseif ($nv2 == "s") {
-                            array_push($where_or_flag, "a.is_slide <> 1");
-                        } elseif ($nv2 == "r") {
-                            array_push($where_or_flag, "a.is_roll <> 1");
-                        } elseif ($nv2 == "d") {
-                            array_push($where_or_flag, "a.is_diyattr <> 1");
+                    foreach ($flag_arr as $k2 => $v2) {
+                        if(isset($flagRow[$v2]) && !empty($flagRow[$v2])){
+                            array_push($where_or_flag, "a.{$flagRow[$v2]} <> 1");  
                         }
                     }
                     if (!empty($where_or_flag)) {
-                        $where_flag_str = " (".implode(" OR ", $where_or_flag).") ";
+                        $where_flag_str = " (".implode(" AND ", $where_or_flag).") ";
                         $condition[] = Db::raw($where_flag_str);
                     }
                 }
@@ -1683,6 +1713,11 @@ class TagList extends Base
                 $arcval['old_price'] = floatval($arcval['old_price']);
                 $arcval['real_sales'] = $arcval['sales_num']; // 真实总销量
                 $arcval['sales_num'] = $arcval['sales_all']; // 总虚拟销量
+                        
+                // 所属城市区域
+                $arcval['province_name'] = empty($citysite_list[$arcval['province_id']]) ? '' : $citysite_list[$arcval['province_id']]['name'];
+                $arcval['city_name'] = empty($citysite_list[$arcval['city_id']]) ? '' : $citysite_list[$arcval['city_id']]['name'];
+                $arcval['area_name'] = empty($citysite_list[$arcval['area_id']]) ? '' : $citysite_list[$arcval['area_id']]['name'];
                 
                 /*获取指定路由模式下的URL*/
                 if (!empty($arcval['is_part']) && $arcval['is_part'] == 1) {
@@ -1823,8 +1858,9 @@ class TagList extends Base
             /*--end*/
         }
 
-        // 如果存在分销插件则处理分销商商品URL(携带分销商参数，用于绑定分销商上下级)
-        $list = $this->handleDealerGoodsURL($list);
+        // 处理商品数据信息
+        if (!empty($list)) $list = $this->handleGoodsInfo($list);
+        // dump($list);exit;
 
         $result['pages'] = $pages; // 分页显示输出
         $result['list'] = $list; // 赋值数据集

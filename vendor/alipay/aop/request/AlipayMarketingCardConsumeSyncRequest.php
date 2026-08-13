@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.marketing.card.consume.sync request
  *
  * @author auto create
- * @since 1.0, 2016-10-18 15:46:55
+ * @since 1.0, 2024-01-19 14:19:38
  */
 class AlipayMarketingCardConsumeSyncRequest
 {

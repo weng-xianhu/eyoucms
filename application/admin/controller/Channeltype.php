@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -79,10 +79,14 @@ class Channeltype extends Base
             ])->group('channel_id')
             ->getAllWithIndex('channel_id');
         // 留言属性数
-        $gbAttributeRow = Db::name('guestbook_attribute')->field('8 as channel_id, count(attr_id) as num')
+        $gbAttributeRow = Db::name('guestbook_attribute')->alias('a')
+            ->field('8 as channel_id, count(a.attr_id) as num')
+            ->join('__ARCTYPE__ b', 'a.typeid = b.id', 'LEFT')
             ->where([
-                'lang'      => $this->admin_lang,
-                'is_del'    => 0,
+                'a.form_type' => 0,
+                'a.lang'      => $this->admin_lang,
+                'a.is_del'    => 0,
+                'b.id'        => ['gt', 0],
             ])->getAllWithIndex('channel_id');
         if (is_array($channelfieldRow) && is_array($gbAttributeRow)) {
             $channelfieldRow = array_merge($channelfieldRow, $gbAttributeRow);
@@ -439,7 +443,7 @@ class Channeltype extends Base
                         $filelist = explode("\n\r", $fileStr);
                         foreach ($filelist as $k1 => $v1) {
                             $v1 = trim($v1);
-                            if (!empty($v1)) {
+                            if (!empty($v1) && '.htaccess' != $v1) {
                                 @unlink($v1);
                             }
                         }
@@ -452,11 +456,9 @@ class Channeltype extends Base
                     adminLog('删除模型：'.implode(',', $title_list));
                     $this->success('删除成功');
                 }
-                $this->error('删除失败');
             }
-            $this->error('参数有误');
         }
-        $this->error('非法访问');
+        $this->error('删除失败');
     }
 
     // 解析sql语句
@@ -491,7 +493,7 @@ class Channeltype extends Base
         $fileArr = []; // 生成的相关文件记录
         $filelist = getDirFile($demopath);
         foreach ($filelist as $key => $file) {
-            if (stristr($file, 'custom_model_path')) {
+            if (preg_match('/(.htaccess|custom_model_path)/i', $file)) {
                 unset($filelist[$key]);
                 continue;
             }
@@ -568,19 +570,31 @@ EOF;
         $sqlFormat  = $this->sql_split($tableSql, PREFIX);
 
         // 执行SQL语句
-        try {
-            $counts = count($sqlFormat);
-            for ($i = 0; $i < $counts; $i++) {
-                $sql = trim($sqlFormat[$i]);
-                if (stristr($sql, 'CREATE TABLE')) {
-                    Db::execute($sql);
-                } else {
-                    if(trim($sql) == '')
-                       continue;
-                    Db::execute($sql);
+        $error_sql = [];
+        $counts = count($sqlFormat);
+        for ($i = 0; $i < $counts; $i++) {
+            $sql = trim($sqlFormat[$i]);
+            if (stristr($sql, 'CREATE TABLE')) {
+                try{
+                    $r = @Db::execute($sql);
+                }catch(\Exception $e){
+                    if (stristr($e->getMessage(), 'Storage engine MyISAM is disabled')) {
+                        $sql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $sql);
+                        $r = @Db::execute($sql);
+                    }
                 }
+                if ($r === false) {
+                    $error_sql[] = $sql;
+                    break;
+                }
+            } else {
+                if (trim($sql) == '') {
+                   continue;
+                }
+                Db::execute($sql);
             }
-        } catch (\Exception $e) {
+        }
+        if (!empty($error_sql)) {
             $this->error("创建失败，数据库已存在{$table}表，请自行排查");
         }
     }
@@ -719,6 +733,10 @@ EOF;
                             $planPath = realpath($tplplan);
                             if (file_exists($planPath)) {
                                 foreach ($tpltype as $k2 => $val) {
+                                    // 验证模板名称只包含合法字符，防止路径遍历攻击
+                                    if (!preg_match('/^[\w\-]+$/', $val)) {
+                                        continue;
+                                    }
                                     $source = realpath("data/model/template/".TPL_THEME."{$theme}/{$val}_custommodel.{$view_suffix}");
                                     $dest = ROOT_PATH."template/".TPL_THEME."{$theme}/{$val}_{$row['nid']}.{$view_suffix}";
                                     if (!file_exists($dest)) {

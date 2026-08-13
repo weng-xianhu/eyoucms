@@ -2,7 +2,7 @@
 /**
  * 易优CMS
  * ============================================================================
- * 版权所有 2016-2028 海口快推科技有限公司，并保留所有权利。
+ * 版权所有 2016-2028 海南赞赞网络科技有限公司，并保留所有权利。
  * 网站地址: http://www.eyoucms.com
  * ----------------------------------------------------------------------------
  * 如果商业用途务必到官方购买正版授权, 以免引起不必要的法律纠纷.
@@ -46,7 +46,9 @@ class User extends UserBase
         ];
         $users_id = Db::name('wx_users')->where($where)->getField('users_id');
         // 输出查询结果，确认是否正确获取到 users_id
-       
+        if (empty($users_id) && is_dir('./weapp/WxLogin/')) {
+            $users_id = Db::name('weapp_wxlogin')->where($where)->getField('users_id');
+        }
         if (empty($users_id)) {
             return false;
         } else {
@@ -615,7 +617,8 @@ private function h5_login($post)
         // 用户认证的token
         $token = "{$randstr1}eyoucms{$users_id}eyoucms{$openid}eyoucms{$randstr2}eyoucms{$session_key}eyoucms{$salt}";
 
-        return mchStrCode($token, 'ENCODE', '#!@diyminipro#!$');
+        // 安全修复：令牌密钥改为“固定串 + 每站唯一密钥(get_auth_code)”，避免跨站点硬编码密钥被伪造
+        return mchStrCode($token, 'ENCODE', '#!@diyminipro#!$' . get_auth_code());
     }
 
     /**
@@ -1342,6 +1345,24 @@ private function h5_login($post)
         }else{
             $this->error('验证码错误！');
         }
+
+    /*限制注册 - 同一IP注册时间限制检查*/
+    $config_value = getUsersConfigData('users.users_reg_limit_time');
+    $users_reg_limit_time = ($config_value !== null && $config_value !== '') ? intval($config_value) : 24;
+        if ($users_reg_limit_time > 0) {
+            $current_ip = clientIP();
+            $limit_time = getTime() - ($users_reg_limit_time * 3600); // 转换为秒
+            $reg_count = Db::name('users')->where([
+                'last_ip' => $current_ip,
+                'register_place' => 2, // 前台注册
+                'reg_time' => ['>=', $limit_time]
+            ])->count();
+            if ($reg_count > 0) {
+                $this->error("同一IP在{$users_reg_limit_time}小时内只能注册一次，请稍后再试！");
+            }
+        }
+        /*--end*/
+
         $users_id = $this->setReg($post);
         if (!empty($users_id)) {
             Db::name('users_list')->insert(['users_id'=>$users_id,'para_id'=>1,'info'=>$post['mobile'],'lang'=>self::$lang,'add_time'=>getTime(),'update_time'=>getTime()]);
@@ -1427,17 +1448,34 @@ private function h5_login($post)
                 $this->error("确认密码不能为空!");
             }
 
-            if ($post["password"] != $post["confirm_password"]) {
-                $this->error("两次输入密码不一致!");
-            }
-        } else {
-            // 用户名注册时需要提那些密码但是不需要填写重复密码
-            if (empty($post["password"]) || !trim($post["password"])) {
-                $this->error("密码不能为空!");
-            }
+        if ($post["password"] != $post["confirm_password"]) {
+            $this->error("两次输入密码不一致!");
         }
+    } else {
+        // 用户名注册时需要提那些密码但是不需要填写重复密码
+        if (empty($post["password"]) || !trim($post["password"])) {
+            $this->error("密码不能为空!");
+        }
+    }
 
-        $users_id = $this->setAccountReg($post);
+    /*限制注册 - 同一IP注册时间限制检查*/
+    $config_value = getUsersConfigData('users.users_reg_limit_time');
+    $users_reg_limit_time = ($config_value !== null && $config_value !== '') ? intval($config_value) : 24;
+    if ($users_reg_limit_time > 0) {
+        $current_ip = clientIP();
+        $limit_time = getTime() - ($users_reg_limit_time * 3600); // 转换为秒
+        $reg_count = Db::name('users')->where([
+            'last_ip' => $current_ip,
+            'register_place' => 2, // 前台注册
+            'reg_time' => ['>=', $limit_time]
+        ])->count();
+        if ($reg_count > 0) {
+            $this->error("同一IP在{$users_reg_limit_time}小时内只能注册一次，请稍后再试！");
+        }
+    }
+    /*--end*/
+
+    $users_id = $this->setAccountReg($post);
 
         if(!empty($users_id)) {
             // 更新会员信息
