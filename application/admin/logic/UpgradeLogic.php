@@ -516,6 +516,24 @@ class UpgradeLogic extends Model
                             continue;
                         }
                         Db::execute($sql);
+
+                        try {
+                            $r = @Db::execute($sql);
+                        } catch (\Exception $e) {
+                            $r = false;
+                        }
+                        if ($r === false) {
+                            $sql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $sql);
+                            try {
+                                $r = @Db::execute($sql);
+                            } catch (\Exception $e) {
+                                $r = false;
+                            }
+                            if ($r === false) {
+                                $error_sql[] = $sql;
+                            }
+                        }
+                        
                     }
                 } catch (\Exception $e) {
                     return ['code' => -2, 'msg' => "数据库执行中途失败，请点击开始检测，数据库结构是否异常！"];

@@ -79,7 +79,6 @@
             </form>
             <div class="iDiv" style="display: none;"></div>
         </div>
-        {notempty name="list"}
         <div class="tDiv">
             <div class="tDiv2">
                 <div class="fbutton checkboxall">
@@ -106,6 +105,7 @@
                         </div>
                     </a>
                 </div>
+                {notempty name="list"}
                 <div class="fbuttonr">
                     <div class="pages">
                        {$pageStr}
@@ -124,12 +124,11 @@
                        </h5>
                     </div>
                 </div>
+                {/notempty}
             </div>
             <div style="clear:both"></div>
         </div>
         <!--分页位置-->
-        {$pageStr}
-        {/notempty}
     </div>
 </div>
 <script>
@@ -179,6 +178,7 @@
     // tr数,取唯一标识
     var tr_id = $('#Template .tr').length;
     function add(){
+        $('#Template .no-data').closest('tr').remove();
         var AddHtml = [];
         AddHtml +=
             '<tr class="tr" id="tr_'+tr_id+'">'+

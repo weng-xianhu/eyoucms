@@ -382,17 +382,29 @@ abstract class Connection
             // 返回结果集
             return $this->getResult($pdo, $procedure);
         } catch (\PDOException $e) {
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->query($sql, $bind, $master, $pdo);
+            }
             if ($this->isBreak($e)) {
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
             // echo '错误语句:'. $sql;
             throw new PDOException($e, $this->config, $this->getLastsql());
         } catch (\Throwable $e) {
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->query($sql, $bind, $master, $pdo);
+            }
             if ($this->isBreak($e)) {
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
             throw $e;
         } catch (\Exception $e) {
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->query($sql, $bind, $master, $pdo);
+            }
             if ($this->isBreak($e)) {
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
@@ -459,8 +471,10 @@ abstract class Connection
                 }
             }
             /*--end*/
-            // 修复表
-            $this->repairTable($sql);
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->execute($sql, $bind, $query);
+            }
             
             if ($this->isBreak($e)) {
                 return $this->close()->execute($sql, $bind, $query);
@@ -475,8 +489,10 @@ abstract class Connection
                 }
             }
             /*--end*/
-            // 修复表
-            $this->repairTable($sql);
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->execute($sql, $bind, $query);
+            }
             
             if ($this->isBreak($e)) {
                 return $this->close()->execute($sql, $bind, $query);
@@ -490,8 +506,10 @@ abstract class Connection
                 }
             }
             /*--end*/
-            // 修复表
-            $this->repairTable($sql);
+            // 表损坏时自动修复并重试一次
+            if ($this->repairTable($sql, $e)) {
+                return $this->close()->execute($sql, $bind, $query);
+            }
             
             if ($this->isBreak($e)) {
                 return $this->close()->execute($sql, $bind, $query);
@@ -501,15 +519,47 @@ abstract class Connection
     }
 
     /**
-     * 修复数据表
-     * @param  [type] $sql [description]
-     * @return [type]      [description]
+     * 修复数据表（仅针对MyISAM表损坏类错误，同一张表短时间内只修复一次，避免并发REPAIR加剧损坏）
+     * @param  string $sql 出错的SQL语句
+     * @param  \Exception|\Throwable|null $e 异常对象
+     * @return bool 是否执行了修复（可重试原语句）
      */
-    private function repairTable($sql)
+    private function repairTable($sql, $e = null)
     {
-        // 修复setting表
-        if (preg_match('/^(\s*)UPDATE(\s+)(`)?' . $this->config['prefix'] . 'setting(`)?(\s+)SET(\s+)/i', $sql) || preg_match('/^(\s*)INSERT(\s+)INTO(\s+)(`)?' . $this->config['prefix'] . 'setting(`)?(\s+)/i', $sql)) {
-            @Db::query("REPAIR TABLE " . $this->config['prefix'] . "setting");
+        if (empty($e) || !is_object($e)) {
+            return false;
+        }
+        // 识别表损坏类错误（errno 126/130/144/145/1034/1194/1195等）
+        $message = $e->getMessage();
+        if (false === stripos($message, 'marked as crashed')
+            && false === stripos($message, 'Incorrect key file for table')
+            && false === stripos($message, 'is crashed')) {
+            return false;
+        }
+        if (!preg_match("/table\s+'([^']+)'/i", $message, $matches)) {
+            return false;
+        }
+        // 错误信息里可能是路径形式（如 .\\dbname\\ey_setting 或 ./dbname/ey_setting.MYI），取表名
+        $table = basename(str_replace('\\', '/', $matches[1]));
+        $table = preg_replace('/\.(MYI|MYD|frm)$/i', '', $table);
+        if (empty($table) || !preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+            return false;
+        }
+        // 同一张表30秒内只允许发起一次修复
+        $lockFile = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'eyou_repair_' . md5($this->config['hostname'] . '.' . $this->config['database'] . '.' . $table) . '.lock';
+        if (is_file($lockFile) && time() - filemtime($lockFile) < 30) {
+            return false;
+        }
+        @touch($lockFile);
+        try {
+            $this->initConnect(true);
+            if (!$this->linkID) {
+                return false;
+            }
+            $this->linkID->exec("REPAIR TABLE `{$table}`");
+            return true;
+        } catch (\Exception $e2) {
+            return false;
         }
     }
 

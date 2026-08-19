@@ -354,7 +354,10 @@
             shade: layer_shade,
             title: '导航管理',
             area: ['80%', '90%'],
-            content: url
+            content: url,
+            end: function () {
+                window.location.reload();
+            }
         });
     }
     function copyToClipBoard(position_id) {

@@ -1243,12 +1243,40 @@ class Request
      */
     public function filterExp(&$value)
     {
-        // 过滤查询特殊字符
-        if (is_string($value) && preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT LIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOT EXISTS|NOTEXISTS|EXISTS|NOT NULL|NOTNULL|NULL|BETWEEN TIME|NOT BETWEEN TIME|NOTBETWEEN TIME|NOTIN|NOT IN|IN)$/i', $value)) {
+        // 过滤查询特殊字符（多语言的语言标识除外，如 lt、or 等）
+        if (is_string($value) && preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT LIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOT EXISTS|NOTEXISTS|EXISTS|NOT NULL|NOTNULL|NULL|BETWEEN TIME|NOT BETWEEN TIME|NOTBETWEEN TIME|NOTIN|NOT IN|IN)$/i', $value) && !$this->isLanguageMark($value)) {
             $value .= ' ';
         }
         // TODO 其他安全过滤
         $this->checkedUrlParams();
+    }
+
+    /**
+     * 是否为多语言的语言标识
+     * @param string $value
+     * @return bool
+     */
+    private function isLanguageMark($value)
+    {
+        static $marks = null;
+        if (null === $marks) {
+            $marks = [];
+            try {
+                if (defined('EYOUCMS_CACHE_TIME')) {
+                    $langRow = \think\Db::name('language')->field('mark')->cache(true, EYOUCMS_CACHE_TIME, 'language')->select();
+                } else {
+                    $langRow = \think\Db::name('language')->field('mark')->select();
+                }
+                foreach ($langRow as $row) {
+                    if (!empty($row['mark'])) {
+                        $marks[] = strtolower($row['mark']);
+                    }
+                }
+            } catch (\Exception $e) {
+                $marks = [];
+            }
+        }
+        return !empty($marks) && in_array(strtolower($value), $marks);
     }
     
     /**

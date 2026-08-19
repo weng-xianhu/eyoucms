@@ -1572,7 +1572,7 @@ if (!function_exists('wxh_source_filelist')) {
      */
     function wxh_source_filelist()
     {
-        $filepath = 'E:/wwwdede/update_eyoucms_com/other/repair/v1.8.1/';
+        $filepath = 'E:/wwwdede/update_eyoucms_com/other/repair/v1.8.2/';
         // 删除无效文件
         $invalid_list = [
             'application/weapp',

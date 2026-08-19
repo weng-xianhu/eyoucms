@@ -128,12 +128,19 @@ if (!function_exists('adminlogin_lock_clear'))
             if ('all' == $clear_type) {
                 unset($where['update_time']);
             }
-            $r = \think\Db::name('setting')->where($where)->delete();
-            if ($r !== false) {
-                if (!in_array(config('database.type'), array('dm', 'kingbase'))) { // 达梦、人大金仓优化
-                    \think\Db::query("REPAIR TABLE " . config('database.prefix') . "setting");
-                    \think\Db::query("ALTER TABLE " . config('database.prefix') . " AUTO_INCREMENT 1");
+            if ('all' != $clear_type) {
+                // 默认清理限流：登录页、登录失败等高频入口每隔10分钟才真正清理一次，减少setting表的写入频率
+                $lock_key = 'adminlogin_lock_clear_time';
+                $last_time = (int)cache($lock_key);
+                if ($last_time && getTime() - $last_time < 600) {
+                    return;
                 }
+                cache($lock_key, getTime());
+            }
+            // 先查后删，没有过期数据时不产生写操作（MyISAM为表级锁，减少写锁争用）
+            $count = \think\Db::name('setting')->where($where)->count();
+            if ($count > 0) {
+                \think\Db::name('setting')->where($where)->delete();
             }
         } catch (\Exception $e) {
             

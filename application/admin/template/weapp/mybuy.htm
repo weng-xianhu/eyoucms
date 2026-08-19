@@ -66,16 +66,16 @@
                                 {eq name="'Weapp@install'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" onclick="install(this);" data-id="{$vo['id']}" class="btn blue">安装</a>
                                 {/eq}
-                                <!-- {eq name="'Weapp@del'|is_check_access" value="1"}
+                                {eq name="'Weapp@del'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" data-url="{:url('Weapp/del')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="delfun(this);">删除</a>
-                                {/eq} -->
+                                {/eq}
                             {else /}
                                 {eq name="'Weapp@install'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" onclick="remoteInstall('{$vo['code']}', '{$vo['min_version']|default=$vo['config']['min_version']}');">安装</a>
                                 {/eq}
-                                <!-- {eq name="'Weapp@del_remote'|is_check_access" value="1"}
+                                {eq name="'Weapp@del_remote'|is_check_access" value="1"}
                                 <a href="javascript:void(0);" data-url="{:url('Weapp/del_remote')}" data-id="{$vo.id}" data-name="{$vo.name}" onClick="del_remote(this);">删除</a>
-                                {/eq} -->
+                                {/eq}
                             {/empty}
                         {else /}
                             {eq name="'Weapp@execute'|is_check_access" value="1"}

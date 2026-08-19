@@ -107,34 +107,42 @@ class Tags extends Base
             );
             $total = M('taglist')->where($map)
                 ->count('tid');
-            M('tagindex')->where([
-                    'id'    => $tagid,
-                    'lang'  => $this->home_lang,
-                ])->inc('count')
-                ->inc('weekcc')
-                ->inc('monthcc')
-                ->update(array('total'=>$total));
 
             $ntime = getTime();
             $oneday = 24 * 3600;
 
+            // 浏览量、周/月统计合并为一条更新语句，减少对tagindex表的写入次数
+            $updateData = array(
+                'total'   => $total,
+                'count'   => \think\Db::raw('`count` + 1'),
+            );
+
             //周统计
             if(ceil( ($ntime - $tagindexInfo['weekup'])/$oneday ) > 7)
             {
-                M('tagindex')->where([
-                        'id'    => $tagid,
-                        'lang'  => $this->home_lang,
-                    ])->update(array('weekcc'=>0, 'weekup'=>$ntime));
+                $updateData['weekcc'] = 0;
+                $updateData['weekup'] = $ntime;
+            }
+            else
+            {
+                $updateData['weekcc'] = \think\Db::raw('`weekcc` + 1');
             }
 
             //月统计
             if(ceil( ($ntime - $tagindexInfo['monthup'])/$oneday ) > 30)
             {
-                M('tagindex')->where([
-                        'id'    => $tagid,
-                        'lang'  => $this->home_lang,
-                    ])->update(array('monthcc'=>0, 'monthup'=>$ntime));
+                $updateData['monthcc'] = 0;
+                $updateData['monthup'] = $ntime;
             }
+            else
+            {
+                $updateData['monthcc'] = \think\Db::raw('`monthcc` + 1');
+            }
+
+            M('tagindex')->where([
+                    'id'    => $tagid,
+                    'lang'  => $this->home_lang,
+                ])->update($updateData);
         } else {
             abort(404);
         }

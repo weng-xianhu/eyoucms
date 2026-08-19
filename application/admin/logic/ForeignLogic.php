@@ -42,8 +42,11 @@ class ForeignLogic
                 $foreign_is_status = tpSetting('foreign.foreign_is_status', '', 'cn');
                 $seo_titleurl_format = !empty($seo_config['seo_titleurl_format']) ? intval($seo_config['seo_titleurl_format']) : 0;
                 if (!empty($foreign_is_status) && !empty($seo_titleurl_format)) {
-                    $htmlfilename = $post['htmlfilename'] . $seo_config['seo_title_symbol'] . $aid;
-                    Db::name('archives')->where(['aid'=>$aid])->update(['htmlfilename'=>$htmlfilename]);
+                    $htmlfilename = $post['htmlfilename'];
+                    if ($this->exists_htmlfilename($htmlfilename, $aid)) {
+                        $htmlfilename .= $seo_config['seo_title_symbol'] . $aid;
+                        Db::name('archives')->where(['aid'=>$aid])->update(['htmlfilename'=>$htmlfilename]);
+                    }
                 }
             }
         }
@@ -67,11 +70,33 @@ class ForeignLogic
             if (!empty($foreign_is_status) && !empty($seo_titleurl_format)) {
                 $htmlfilename = $this->get_title_htmlfilename(trim($post['title']));
                 if ('edit' == $opt) {
-                    $htmlfilename .= $globalConfig['seo_title_symbol'] . $post['aid'];
+                    if ($this->exists_htmlfilename($htmlfilename, intval($post['aid']))) {
+                        $htmlfilename .= $globalConfig['seo_title_symbol'] . $post['aid'];
+                    }
                 }
             }
         }
         return $htmlfilename;
+    }
+
+    /**
+     * 判断外贸链接是否与其他文档冲突（重名或纯数字与文档ID冲突）
+     * @param  string $htmlfilename 待检测的自定义文件名
+     * @param  int    $aid          当前文档ID（排除自身）
+     * @return bool
+     */
+    public function exists_htmlfilename($htmlfilename, $aid = 0)
+    {
+        if ('' == trim($htmlfilename)) {
+            return false;
+        }
+        if (preg_match('/^\d+$/', $htmlfilename)) {
+            return true;
+        }
+        $count = Db::name('archives')
+            ->where(['htmlfilename'=>$htmlfilename, 'aid'=>['NEQ', intval($aid)]])
+            ->count();
+        return $count > 0;
     }
 
     /**
@@ -225,12 +250,17 @@ class ForeignLogic
         $msg = "";
         $globalConfig = tpCache('global');
         $update = [];
+        $used_htmlfilenames = [];
         foreach ($result as $key => $val) {
             $update[$key] = [
                 'aid' => $val['aid'],
             ];
             if (in_array('up_htmlfilename', $handle_type)) {
                 $htmlfilename = $this->get_new_htmlfilename($val['htmlfilename'], $val, 'edit', $globalConfig);
+                if ('' != $htmlfilename && in_array($htmlfilename, $used_htmlfilenames)) {
+                    $htmlfilename .= $globalConfig['seo_title_symbol'] . $val['aid'];
+                }
+                $used_htmlfilenames[] = $htmlfilename;
                 $update[$key]['htmlfilename'] = $htmlfilename;
             }
             if (in_array('up_seo_desc', $handle_type)) {

@@ -17,7 +17,7 @@ return array(
     // 服务器地址
     'hostname'        => '127.0.0.1',
     // 数据库名
-    'database'        => 'dev166_0720',
+    'database'        => 'dev164',
     // 用户名
     'username'        => 'root',
     // 密码
