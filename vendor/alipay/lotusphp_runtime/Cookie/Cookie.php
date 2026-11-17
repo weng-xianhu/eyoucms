@@ -36,12 +36,10 @@ class LtCookie
 	 */
 	protected function decrypt($encryptedText)
 	{
-		$key = $this->secretKey;
+		$key = substr(str_pad($this->secretKey, 32, "\0"), 0, 32);
 		$cryptText = base64_decode($encryptedText);
-		$ivSize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
-		$iv = mcrypt_create_iv($ivSize, MCRYPT_RAND);
-		$decryptText = mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $cryptText, MCRYPT_MODE_ECB, $iv);
-		return trim($decryptText);
+		$decryptText = openssl_decrypt($cryptText, 'aes-256-ecb', $key, OPENSSL_RAW_DATA);
+		return trim((string)$decryptText);
 	}
 
 	/**
@@ -52,11 +50,9 @@ class LtCookie
 	 */
 	protected function encrypt($plainText)
 	{
-		$key = $this->secretKey;
-		$ivSize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
-		$iv = mcrypt_create_iv($ivSize, MCRYPT_RAND);
-		$encryptText = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $plainText, MCRYPT_MODE_ECB, $iv);
-		return trim(base64_encode($encryptText));
+		$key = substr(str_pad($this->secretKey, 32, "\0"), 0, 32);
+		$encryptText = openssl_encrypt($plainText, 'aes-256-ecb', $key, OPENSSL_RAW_DATA);
+		return trim(base64_encode((string)$encryptText));
 	}
 
 	/**

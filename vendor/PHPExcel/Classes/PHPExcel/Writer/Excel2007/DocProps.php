@@ -34,7 +34,7 @@ class PHPExcel_Writer_Excel2007_DocProps extends PHPExcel_Writer_Excel2007_Write
      * @return     string         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeDocPropsApp(PHPExcel $pPHPExcel = null)
+    public function writeDocPropsApp($pPHPExcel = null)
     {
         // Create XML writer
         $objWriter = null;
@@ -131,7 +131,7 @@ class PHPExcel_Writer_Excel2007_DocProps extends PHPExcel_Writer_Excel2007_Write
      * @return     string         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeDocPropsCore(PHPExcel $pPHPExcel = null)
+    public function writeDocPropsCore($pPHPExcel = null)
     {
         // Create XML writer
         $objWriter = null;
@@ -198,7 +198,7 @@ class PHPExcel_Writer_Excel2007_DocProps extends PHPExcel_Writer_Excel2007_Write
      * @return     string         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeDocPropsCustom(PHPExcel $pPHPExcel = null)
+    public function writeDocPropsCustom($pPHPExcel = null)
     {
         $customPropertyList = $pPHPExcel->getProperties()->getCustomProperties();
         if (empty($customPropertyList)) {

@@ -24,6 +24,9 @@ $web_htmlcache_expires_in = -1;
 if (1 == $web_cmsmode) { // 运营模式
     $app_debug = false;
     $web_htmlcache_expires_in = isset($global['web_htmlcache_expires_in']) ? $global['web_htmlcache_expires_in'] : 7200;
+} else {
+    // 开发模式：调试信息只对已登录管理员可见，避免匿名访客看到源码、环境变量、Session 等报错详情
+    $app_debug = is_adminlogin() ? true : false;
 }
 /*--end*/
 

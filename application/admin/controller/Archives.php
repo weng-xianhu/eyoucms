@@ -19,6 +19,7 @@ use app\common\logic\ArctypeLogic;
 
 class Archives extends Base
 {
+    public $callback_url;
     // 允许发布文档的模型ID
     public $allowReleaseChannel = array();
     
@@ -279,9 +280,14 @@ class Archives extends Base
             $orderby = "a.aid desc";
         }
 
-        // 手机端后台管理插件特定使用参数
+        // 手机端后台管理插件特定使用参数：手机端内容管理支持文章(1)、产品(2)模型
         $isMobile = input('param.isMobile/d', 0);
-        if (!empty($isMobile)) $condition['a.channel'] = 1;
+        if (!empty($isMobile)) {
+            // channel 参数用于手机端顶部切换（1=文章 2=产品），未传则两者都显示
+            $mbChannel = input('param.channel/d', 0);
+            if (!in_array($mbChannel, [1, 2])) $mbChannel = 0;
+            $condition['a.channel'] = !empty($mbChannel) ? array('eq', $mbChannel) : array('IN', [1, 2]);
+        }
 
         // 数据查询，搜索出主键ID的值
         $SqlQuery = Db::name('archives')->alias('a')->where($condition)->where($continueNew)->fetchSql()->count('aid');
@@ -1079,93 +1085,6 @@ class Archives extends Base
             $html = $this->fetch('field/addonextitem');
             $this->success('请求成功', null, ['html'=>$html, 'htmltextField'=>$htmltextField]);
         }
-    }
-
-    /**
-     * 新建模板文件
-     */
-    public function ajax_newtpl()
-    {
-        $this->error('已废弃');
-        if (IS_POST) {
-            $post = input('post.', '', null);
-            $content = input('post.content', '', null);
-            $view_suffix = config('template.view_suffix');
-            if (!empty($post['filename'])) {
-                if (!preg_match("/^[\w\-\_]{1,}$/u", $post['filename'])) {
-                    $this->error('文件名称只允许字母、数字、下划线、连接符的任意组合！');
-                }
-                $filename = "{$post['type']}_{$post['nid']}_{$post['filename']}.{$view_suffix}";
-            } else {
-                $filename = "{$post['type']}_{$post['nid']}.{$view_suffix}";
-            }
-
-            $content = !empty($content) ? $content : '';
-            $tpldirpath = !empty($post['tpldir']) ? '/template/'.TPL_THEME.trim($post['tpldir']) : '/template/'.TPL_THEME.'pc';
-            if (file_exists(ROOT_PATH.ltrim($tpldirpath, '/').'/'.$filename)) {
-                $this->error('文件名称已经存在，请重新命名！', null, ['focus'=>'filename']);
-            }
-
-            $nosubmit = input('param.nosubmit/d');
-            if (1 == $nosubmit) {
-                $this->success('检测通过');
-            }
-
-            $filemanagerLogic = new \app\admin\logic\FilemanagerLogic;
-            $r = $filemanagerLogic->editFile($filename, $tpldirpath, $content);
-            if ($r === true) {
-                $this->success('操作成功', null, ['filename'=>$filename,'type'=>$post['type']]);
-            } else {
-                $this->error($r);
-            }
-        }
-        $type = input('param.type/s');
-        $nid = input('param.nid/s');
-        $tpldirList = glob('template/'.TPL_THEME.'*');
-        $tpl_theme = str_replace('/', '\\/', TPL_THEME);
-        foreach ($tpldirList as $key => $val) {
-            if (!preg_match('/template\/'.$tpl_theme.'(pc|mobile)$/i', $val)) {
-                unset($tpldirList[$key]);
-            } else {
-                $tpldirList[$key] = preg_replace('/^(.*)template\/'.$tpl_theme.'(pc|mobile)$/i', '$2', $val);
-            }
-        }
-        !empty($tpldirList) && arsort($tpldirList);
-        $this->assign('tpldirList', $tpldirList);
-
-        $content = '';
-        if ('special' == $nid) {
-            $fileContent = @file_get_contents('./data/model/template/pc/view_custommodel.htm');
-            if (!empty($fileContent)) {
-                $content = $fileContent;
-                $replace = <<<EOF
-<section class="article-list">
-                            {eyou:specnode code="default1" id="field"}
-                            <article>
-                                {eyou:notempty name="\$field.is_litpic"}
-                                <a href="{\$field.arcurl}" target="_blank" title="{\$field.title}" style="float: left; margin-right: 10px"> <img src="{\$field.litpic}" alt="{\$field.title}" height="100" /> </a>
-                                {/eyou:notempty} 
-                                <h2><a href="{\$field.arcurl}" target="_blank">{\$field.title}</a><span>{\$field.click}°C</span></h2>
-                                <div class="excerpt">
-                                    <p>{\$field.seo_description}</p>
-                                </div>
-                                <div class="meta">
-                                    <span class="item"><time>{\$field.add_time|MyDate='Y-m-d',###}</time></span>
-                                    <span class="item"><a href="{\$field.typeurl}" target="_blank">{\$field.typename}</a></span>
-                                </div>
-                            </article>
-                            {/eyou:specnode}
-                        </section>
-EOF;
-                $content = str_replace("<!-- #special# -->", $replace, $content);
-            }
-        }
-        $this->assign('content', $content);
-
-        $this->assign('type', $type);
-        $this->assign('nid', $nid);
-        $this->assign('tpl_theme', TPL_THEME);
-        return $this->fetch();
     }
 
     /**

@@ -127,7 +127,6 @@ final class Editor implements EditorInterface
             throw new \Exception(sprintf('Invalid blend type "%s".', $type));
         }
 
-        imagedestroy( $gd1 ); // Free resource
 
         $image1 = new Image(
             $canvas,
@@ -228,7 +227,6 @@ final class Editor implements EditorInterface
         );
 
         // Free memory of old resource
-        imagedestroy($image->getCore());
 
         // Cropped image instance
         $image = new Image(
@@ -363,7 +361,6 @@ final class Editor implements EditorInterface
             $hex  = $gift->encode($image->getBlocks());
             $gd   = imagecreatefromstring(pack('H*', $hex)); // Recreate resource from blocks
 
-            imagedestroy( $old ); // Free resource
             $image = new Image(
                 $gd,
                 $image->getImageFile(),
@@ -401,7 +398,6 @@ final class Editor implements EditorInterface
      */
     public function free( &$image )
     {
-        imagedestroy($image->getCore());
         return $this;
     }
 
@@ -692,7 +688,6 @@ final class Editor implements EditorInterface
             throw new \Exception('Error rotating image.');
         }
 
-        imagedestroy( $old ); // Free resource
         $image = new Image( $new, $image->getImageFile(), $image->getWidth(), $image->getHeight(), $image->getType() );
 
         return $this;
@@ -1009,7 +1004,6 @@ final class Editor implements EditorInterface
             for ($x = 0; $x < $w; $x++) {
                 imagecopy($new, $old, $w - $x - 1, 0, $x, 0, 1, $h);
             }
-            imagedestroy($old); // Free resource
             return new Image(
                 $new,
                 $image->getImageFile(),
@@ -1024,7 +1018,6 @@ final class Editor implements EditorInterface
             for ($y = 0; $y < $h; $y++) {
                 imagecopy($new, $old, 0, $h - $y - 1, 0, $y, $w, 1);
             }
-            imagedestroy($old); // Free resource
             return new Image(
                 $new,
                 $image->getImageFile(),
@@ -1117,7 +1110,6 @@ final class Editor implements EditorInterface
             );
 
             // Free memory of old resource
-            imagedestroy($image->getCore());
 
             // Resize image instance
             $image = new Image(

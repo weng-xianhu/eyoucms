@@ -291,7 +291,7 @@ class EyouCmsLogic extends Model
     {
         $sys_info['os']             = PHP_OS;
         $sys_info['zlib']           = function_exists('gzclose') ? 'YES' : '<font color="red">NO（请开启 php.ini 中的php-zlib扩展）</font>';//zlib
-        $sys_info['safe_mode']      = (boolean) ini_get('safe_mode') ? 'YES' : 'NO';//safe_mode = Off       
+        $sys_info['safe_mode']      = (bool) ini_get('safe_mode') ? 'YES' : 'NO';//safe_mode = Off       
         $sys_info['timezone']       = function_exists("date_default_timezone_get") ? date_default_timezone_get() : "no_timezone";
         $sys_info['curl']           = function_exists('curl_init') ? 'YES' : '<font color="red">NO（请开启 php.ini 中的php-curl扩展）</font>';  
         $web_server                 = $_SERVER['SERVER_SOFTWARE'];
@@ -370,6 +370,10 @@ class EyouCmsLogic extends Model
             'checked'   => 1,
         ])->order('quick_sort asc, id asc')->select();
         foreach ($weappMenuList as $key => $val) {
+            if (is_weapp_invalid($val['code'])) {
+                unset($weappMenuList[$key]);
+                continue;
+            }
             if (!empty($val['config'])){
                 $val['config'] = json_decode($val['config'],true);
                 if (0 == $val['is_system']){
@@ -1107,6 +1111,10 @@ EOF;
             'checked'   => 1,
         ])->order('quick_sort asc, id asc')->select();
         foreach ($weappMenuList as $key => $val) {
+            if (is_weapp_invalid($val['code'])) {
+                unset($weappMenuList[$key]);
+                continue;
+            }
             if (!empty($val['config'])){
                 $val['config'] = json_decode($val['config'],true);
                 if (0 == $val['is_system']){

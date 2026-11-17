@@ -81,7 +81,7 @@ class PHPExcel_HashTable
      * @param    PHPExcel_IComparable $pSource    Item to add
      * @throws    PHPExcel_Exception
      */
-    public function add(PHPExcel_IComparable $pSource = null)
+    public function add($pSource = null)
     {
         $hash = $pSource->getHashCode();
         if (!isset($this->items[$hash])) {
@@ -96,7 +96,7 @@ class PHPExcel_HashTable
      * @param    PHPExcel_IComparable $pSource    Item to remove
      * @throws    PHPExcel_Exception
      */
-    public function remove(PHPExcel_IComparable $pSource = null)
+    public function remove($pSource = null)
     {
         $hash = $pSource->getHashCode();
         if (isset($this->items[$hash])) {

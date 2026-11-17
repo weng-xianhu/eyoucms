@@ -74,12 +74,12 @@
 class getID3_cached_mysql extends getID3
 {
 	/**
-	 * @var resource
+	 * @var \mysqli_result|bool
 	 */
 	private $cursor;
 
 	/**
-	 * @var resource
+	 * @var \mysqli
 	 */
 	private $connection;
 
@@ -103,20 +103,15 @@ class getID3_cached_mysql extends getID3
 	 */
 	public function __construct($host, $database, $username, $password, $table='getid3_cache') {
 
-		// Check for mysql support
-		if (!function_exists('mysql_pconnect')) {
-			throw new Exception('PHP not compiled with mysql support.');
+		// Check for mysqli support
+		if (!function_exists('mysqli_connect')) {
+			throw new Exception('PHP not compiled with mysqli support.');
 		}
 
-		// Connect to database
-		$this->connection = mysql_pconnect($host, $username, $password);
+		// Connect to database (persistent connection)
+		$this->connection = mysqli_connect('p:'.$host, $username, $password, $database);
 		if (!$this->connection) {
-			throw new Exception('mysql_pconnect() failed - check permissions and spelling.');
-		}
-
-		// Select database
-		if (!mysql_select_db($database, $this->connection)) {
-			throw new Exception('Cannot use database '.$database);
+			throw new Exception('mysqli_connect() failed - check permissions and spelling.');
 		}
 
 		// Set table
@@ -128,13 +123,13 @@ class getID3_cached_mysql extends getID3
 		// Check version number and clear cache if changed
 		$version = '';
 		$SQLquery  = 'SELECT `value`';
-		$SQLquery .= ' FROM `'.mysql_real_escape_string($this->table).'`';
-		$SQLquery .= ' WHERE (`filename` = \''.mysql_real_escape_string(getID3::VERSION).'\')';
+		$SQLquery .= ' FROM `'.mysqli_real_escape_string($this->connection, $this->table).'`';
+		$SQLquery .= ' WHERE (`filename` = \''.mysqli_real_escape_string($this->connection, getID3::VERSION).'\')';
 		$SQLquery .= ' AND (`filesize` = -1)';
 		$SQLquery .= ' AND (`filetime` = -1)';
 		$SQLquery .= ' AND (`analyzetime` = -1)';
-		if ($this->cursor = mysql_query($SQLquery, $this->connection)) {
-			list($version) = mysql_fetch_array($this->cursor);
+		if ($this->cursor = mysqli_query($this->connection, $SQLquery)) {
+			list($version) = mysqli_fetch_array($this->cursor);
 		}
 		if ($version != getID3::VERSION) {
 			$this->clear_cache();
@@ -150,8 +145,8 @@ class getID3_cached_mysql extends getID3
 	 */
 	public function clear_cache() {
 
-		$this->cursor = mysql_query('DELETE FROM `'.mysql_real_escape_string($this->table).'`', $this->connection);
-		$this->cursor = mysql_query('INSERT INTO `'.mysql_real_escape_string($this->table).'` VALUES (\''.getID3::VERSION.'\', -1, -1, -1, \''.getID3::VERSION.'\')', $this->connection);
+		$this->cursor = mysqli_query($this->connection, 'DELETE FROM `'.mysqli_real_escape_string($this->connection, $this->table).'`');
+		$this->cursor = mysqli_query($this->connection, 'INSERT INTO `'.mysqli_real_escape_string($this->connection, $this->table).'` VALUES (\''.getID3::VERSION.'\', -1, -1, -1, \''.getID3::VERSION.'\')');
 	}
 
 
@@ -177,14 +172,14 @@ class getID3_cached_mysql extends getID3
 
 			// Lookup file
 			$SQLquery  = 'SELECT `value`';
-			$SQLquery .= ' FROM `'.mysql_real_escape_string($this->table).'`';
-			$SQLquery .= ' WHERE (`filename` = \''.mysql_real_escape_string($filename).'\')';
-			$SQLquery .= '   AND (`filesize` = \''.mysql_real_escape_string($filesize).'\')';
-			$SQLquery .= '   AND (`filetime` = \''.mysql_real_escape_string($filetime).'\')';
-			$this->cursor = mysql_query($SQLquery, $this->connection);
-			if (mysql_num_rows($this->cursor) > 0) {
+			$SQLquery .= ' FROM `'.mysqli_real_escape_string($this->connection, $this->table).'`';
+			$SQLquery .= ' WHERE (`filename` = \''.mysqli_real_escape_string($this->connection, $filename).'\')';
+			$SQLquery .= '   AND (`filesize` = \''.mysqli_real_escape_string($this->connection, $filesize).'\')';
+			$SQLquery .= '   AND (`filetime` = \''.mysqli_real_escape_string($this->connection, $filetime).'\')';
+			$this->cursor = mysqli_query($this->connection, $SQLquery);
+			if ($this->cursor && mysqli_num_rows($this->cursor) > 0) {
 				// Hit
-				list($result) = mysql_fetch_array($this->cursor);
+				list($result) = mysqli_fetch_array($this->cursor);
 				return unserialize(base64_decode($result));
 			}
 		}
@@ -194,13 +189,13 @@ class getID3_cached_mysql extends getID3
 
 		// Save result
 		if (file_exists($filename)) {
-			$SQLquery  = 'INSERT INTO `'.mysql_real_escape_string($this->table).'` (`filename`, `filesize`, `filetime`, `analyzetime`, `value`) VALUES (';
-			$SQLquery .=   '\''.mysql_real_escape_string($filename).'\'';
-			$SQLquery .= ', \''.mysql_real_escape_string($filesize).'\'';
-			$SQLquery .= ', \''.mysql_real_escape_string($filetime).'\'';
-			$SQLquery .= ', \''.mysql_real_escape_string(time()   ).'\'';
-			$SQLquery .= ', \''.mysql_real_escape_string(base64_encode(serialize($analysis))).'\')';
-			$this->cursor = mysql_query($SQLquery, $this->connection);
+			$SQLquery  = 'INSERT INTO `'.mysqli_real_escape_string($this->connection, $this->table).'` (`filename`, `filesize`, `filetime`, `analyzetime`, `value`) VALUES (';
+			$SQLquery .=   '\''.mysqli_real_escape_string($this->connection, $filename).'\'';
+			$SQLquery .= ', \''.mysqli_real_escape_string($this->connection, $filesize).'\'';
+			$SQLquery .= ', \''.mysqli_real_escape_string($this->connection, $filetime).'\'';
+			$SQLquery .= ', \''.mysqli_real_escape_string($this->connection, time()   ).'\'';
+			$SQLquery .= ', \''.mysqli_real_escape_string($this->connection, base64_encode(serialize($analysis))).'\')';
+			$this->cursor = mysqli_query($this->connection, $SQLquery);
 		}
 		return $analysis;
 	}
@@ -214,14 +209,14 @@ class getID3_cached_mysql extends getID3
 	 */
 	private function create_table($drop=false) {
 
-		$SQLquery  = 'CREATE TABLE IF NOT EXISTS `'.mysql_real_escape_string($this->table).'` (';
+		$SQLquery  = 'CREATE TABLE IF NOT EXISTS `'.mysqli_real_escape_string($this->connection, $this->table).'` (';
 		$SQLquery .=   '`filename` VARCHAR(990) NOT NULL DEFAULT \'\'';
 		$SQLquery .= ', `filesize` INT(11) NOT NULL DEFAULT \'0\'';
 		$SQLquery .= ', `filetime` INT(11) NOT NULL DEFAULT \'0\'';
 		$SQLquery .= ', `analyzetime` INT(11) NOT NULL DEFAULT \'0\'';
 		$SQLquery .= ', `value` LONGTEXT NOT NULL';
 		$SQLquery .= ', PRIMARY KEY (`filename`, `filesize`, `filetime`))';
-		$this->cursor = mysql_query($SQLquery, $this->connection);
-		echo mysql_error($this->connection);
+		$this->cursor = mysqli_query($this->connection, $SQLquery);
+		echo mysqli_error($this->connection);
 	}
 }

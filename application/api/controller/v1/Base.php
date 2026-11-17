@@ -67,7 +67,7 @@ class Base extends \app\api\controller\Base
 
                 if (!in_array($request_token, $request_token_arr)) {
                     $this->error('API请求验证不通过！');
-                } else if ($times - $request_time > 300) { // 每个接口时效是5分钟
+                } else if (abs($times - $request_time) > 300) { // 每个接口时效是5分钟（同时拒绝时间戳超前/滞后的重放请求）
                     $this->error('当前API请求已过期！');
                 }
             }

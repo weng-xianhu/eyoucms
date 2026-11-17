@@ -18,6 +18,7 @@ use think\Db;
 use think\Config;
 
 class PayApi extends Base {
+    public $pay_api_config_db;
 
     /**
      * 构造方法

@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="./css/install.css?v=v1.6.4" />
   <script src="./js/jquery.js?v=v1.6.4"></script> 
   <?php 
-    $uri = $_SERVER['REQUEST_URI'];
-    $root = substr($uri, 0,strpos($uri, "install"));
+    $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    $root = substr($uri, 0, strpos($uri, "install"));
     $admin = $root."../login.php";
   ?>
 </head>

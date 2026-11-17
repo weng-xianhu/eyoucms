@@ -550,14 +550,15 @@ class Uploadify extends Base {
             return json_encode($data);
         }
 
-        //获取请求头并检测死链
-        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
-        if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
+        // 逐跳校验重定向，避免 public -> 302 -> 内网 绕过校验
+        $safeTarget = resolve_remote_redirect($imgUrl, 3);
+        if (empty($safeTarget)) {
             $data = array(
                 'state' => '链接不可用',
             );
             return json_encode($data);
         }
+        $heads = $safeTarget['headers'];
         //格式验证(扩展名验证和Content-Type验证)
         if(preg_match("/^http(s?):\/\/(mmbiz.qpic.cn|thirdwx.qlogo.cn)\/(.*)/", $imgUrl) != 1){
             $fileType = strtolower(strrchr($imgUrl,'.'));
@@ -569,12 +570,28 @@ class Uploadify extends Base {
             }
         }
 
-        //打开输出缓冲区并获取远程图片
+        //打开输出缓冲区并获取远程图片（按已校验IP直连，且禁止跟随跳转）
+        $pinnedUrl = pin_remote_url_ip($safeTarget['url'], $safeTarget['ip']);
+        if (false === $pinnedUrl) {
+            $data = array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
+        $hostHeader = $safeTarget['host_header'];
         ob_start();
-        $context = get_remote_stream_context($imgUrl);
-        readfile($imgUrl,false,$context);
-        $img = ob_get_contents();
+        $context = get_remote_stream_context($pinnedUrl, $hostHeader, false);
+        $img = '';
+        if (false !== @readfile($pinnedUrl, false, $context)) {
+            $img = ob_get_contents();
+        }
         ob_end_clean();
+        if (empty($img)) {
+            $data = array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
         preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/",$imgUrl,$m);
 
         $dirname = './'.$this->upload_path.'ueditor/'.$this->sub_name;
@@ -939,12 +956,22 @@ class Uploadify extends Base {
 
         if ($info) {
             $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
+            $file_url = ROOT_DIR . '/' . $file_path;
+            // 同步到第三方对象存储空间
+            $bucket_data = SynImageObjectBucket('/' . $file_path);
+            if (!empty($bucket_data)) {
+                if (!empty($bucket_data['local_save']) && $bucket_data['local_save'] == 1) {
+                    unset($info);
+                    $this->del_local('/' . $file_path);//解除文件的进程占用
+                }
+                if (!empty($bucket_data['url'])) {
+                    $file_url = $bucket_data['url'];
+                }
+            }
             $data = array(
                 'state'    => 'SUCCESS',
-                'url'      => '/' . $file_path,
+                'url'      => $file_url,
             );
-
-            $data['url'] = ROOT_DIR . $data['url'];
         } else {
             $data = array('state' => 'ERROR' . $info->getError());
         }
@@ -1086,18 +1113,33 @@ class Uploadify extends Base {
 
         if($info){
             $file_path = $savePath.$info->getSaveName();
+            $file_size = $info->getSize();
             $newfileName = preg_replace('/\.([^\.]+)$/', '', $fileName);
             $newfileName = preg_replace('#(\\\|\/|\.)#i', '', $newfileName);
+            $file_url = '/' . $file_path;
+            $uhash    = $this->uhash($file_path);
+            $md5file  = md5_file($file_path);
+            // 同步到第三方对象存储空间
+            $bucket_data = SynImageObjectBucket($file_url);
+            if (!empty($bucket_data)) {
+                if (!empty($bucket_data['local_save']) && $bucket_data['local_save'] == 1) {
+                    unset($info);
+                    $this->del_local('/' . $file_path);//解除文件的进程占用
+                }
+                if (!empty($bucket_data['url'])) {
+                    $file_url = $bucket_data['url'];
+                }
+            }
             $return = array(
                 'code'      => 1,
                 'msg'       => foreign_lang('system10'),
-                'file_url'  => '/' . $file_path,
+                'file_url'  => $file_url,
                 'file_mime' => $file->getInfo('type'),
                 'file_name' => $newfileName.'.'.$file_ext,
                 'file_ext'  => '.' . $file_ext,
-                'file_size' => $info->getSize(),
-                'uhash'     => $this->uhash($file_path),
-                'md5file'   => md5_file($file_path),
+                'file_size' => $file_size,
+                'uhash'     => $uhash,
+                'md5file'   => $md5file,
             );
         }else{
             $return = array('msg' => $info->getError());
@@ -1185,14 +1227,29 @@ class Uploadify extends Base {
             $file_path = UPLOAD_PATH.$this->savePath.$info->getSaveName();
 
             $file_size = $info->getSize();
+            $save_name = $info->getSaveName();
+            $save_ext  = $info->getExtension();
+
+            $file_url = ROOT_DIR . '/' . $file_path;
+            // 同步到第三方对象存储空间
+            $bucket_data = SynImageObjectBucket('/' . $file_path);
+            if (!empty($bucket_data)) {
+                if (!empty($bucket_data['local_save']) && $bucket_data['local_save'] == 1) {
+                    unset($info);
+                    $this->del_local('/' . $file_path);//解除文件的进程占用
+                }
+                if (!empty($bucket_data['url'])) {
+                    $file_url = $bucket_data['url'];
+                }
+            }
 
             $data = array(
                 'state'    => 'SUCCESS',
-                'url'      => ROOT_DIR . '/' . $file_path,
+                'url'      => $file_url,
                 'time'     => $fileduration,
                 'title'    => $newfileName,
-                'original' => $info->getSaveName(),
-                'type'     => '.' . $info->getExtension(),
+                'original' => $save_name,
+                'type'     => '.' . $save_ext,
                 'size'     => $file_size,
                 'mime'     => $file->getInfo('type'),
             );
@@ -1203,7 +1260,7 @@ class Uploadify extends Base {
                 'type_id'     => 0,
                 'group_code'  => 'video',
                 'image_url'   => $data['url'],
-                'title'       => $info->getSaveName(),
+                'title'       => $save_name,
                 'intro'       => '',
                 'width'       => 0,
                 'height'      => 0,

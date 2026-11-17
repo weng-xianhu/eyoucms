@@ -107,6 +107,8 @@ class DownloadFile extends Model
             {
                 $vvv = trim($vvv);
                 if($vvv == null || empty($vvv)) continue;
+                $validateResult = validateRemoteUrl($vvv);
+                if (empty($validateResult['code'])) continue;
                 $server_name = !empty($post['server_name'][$kkk]) ? trim($post['server_name'][$kkk]) : '';
                 $extract_code = !empty($post['extract_code'][$kkk]) ? trim($post['extract_code'][$kkk]) : '';
                 ++$sort_order;

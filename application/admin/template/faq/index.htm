@@ -157,7 +157,7 @@
      * @param limit 条数
      */
     function copyToClipBoard(id, limit) {
-        var faqStr = "{eyou:faq group_id='" + id + "'}\r\n   <div>标题: {$"+"field.asklist_title}</div>\r\n   <div>说明: {$"+"field.asklist_content}</div>\r\n{/eyou:faq";
+        var faqStr = "{eyou:faq group_id='" + id + "' loop='100'}\r\n   <div>标题: {$"+"field.asklist_title}</div>\r\n   <div>说明: {$"+"field.asklist_content}</div>\r\n{/eyou:faq";
         var contentStr = '<div class="dialog_content" style="margin: 0px; padding: 0px;"><dl style="padding:10px 30px;line-height:30px"><dd>标签 faq 调用：</dd>';
         contentStr += '<textarea rows="4" cols="60" style="width:400px; height:80px;">' + faqStr + '}</textarea>';
         contentStr += '<dd style="border-top: dotted 1px #E7E7E7; color: #F60;">请将标签faq代码复制并粘贴到对应模板文件中！</dd></dl></div>';

@@ -22,6 +22,8 @@ use think\Page;
  */
 class Download extends Base
 {
+    public $download_order_db;
+
     public function _initialize() {
         parent::_initialize();
 
@@ -238,7 +240,7 @@ class Download extends Base
         }
         // 接收数据读取解析
         $paystr = input('param.paystr/s', '');
-        $paydata = !empty($paystr) ? cookie($paystr) : [];
+        $paydata = !empty($paystr) ? eySafeOrderCookie(cookie($paystr)) : eySafeOrderCookie([]);
         if (!empty($paydata['order_id']) && !empty($paydata['order_code'])) {
             // 订单信息
             $order_id   = !empty($paydata['order_id']) ? intval($paydata['order_id']) : 0;

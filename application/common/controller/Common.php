@@ -56,7 +56,11 @@ class Common extends Controller {
             // IE浏览器cookie跨域
             header("P3P:CP=CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV");
             // Chrome等浏览器cookie跨域（一定要加上secure，否则SameSite无效）
-            @ini_set('session.cookie_samesite', "None;secure");
+            // session.cookie_samesite 自 PHP 7.3 起才支持，低版本无此配置项
+            if (PHP_VERSION_ID >= 70300) {
+                @ini_set('session.cookie_samesite', 'None');
+                @ini_set('session.cookie_secure', '1');
+            }
         }
 
         session('admin_info'); // 传后台信息到前台，此处可视化用到

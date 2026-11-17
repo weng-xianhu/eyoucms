@@ -45,7 +45,7 @@ class PHPExcel_Chart_Title
     /**
      * Create a new PHPExcel_Chart_Title
      */
-    public function __construct($caption = null, PHPExcel_Chart_Layout $layout = null)
+    public function __construct($caption = null, $layout = null)
     {
         $this->caption = $caption;
         $this->layout = $layout;

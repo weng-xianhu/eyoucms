@@ -256,6 +256,11 @@
                         <span>批量删除</span>
                     </div>
                 </a>
+                <a onclick="batch_level(this, 'ids');" data-url="{:url('Member/users_batch_level')}" class="layui-btn layui-btn-primary">
+                    <div class="add">
+                        <span>批量修改会员级别</span>
+                    </div>
+                </a>
             </div>
             {/eq}
 			{include file="public/page" /}
@@ -263,6 +268,27 @@
         </div>
         {/notempty}
 	</div>
+</div>
+<div id="batch_level_box" style="display: none;">
+    <div style="padding: 20px 25px;">
+        <div style="margin-bottom: 15px;">
+            <label style="display: inline-block; width: 90px; text-align: right; margin-right: 8px;">会员级别：</label>
+            <select id="batch_level_select" style="width: 240px; height: 32px; border: 1px solid #ddd; padding: 0 6px;">
+                <option value="">请选择会员级别</option>
+                {foreach name="$level" item="vo" key="k"}
+                <option value="{$vo.level_id}">{$vo.level_name}</option>
+                {/foreach}
+            </select>
+        </div>
+        <div id="batch_level_days_box" style="display: none; margin-bottom: 15px;">
+            <label style="display: inline-block; width: 90px; text-align: right; margin-right: 8px;">会员天数：</label>
+            <input type="text" id="batch_level_days" value="" maxlength="10" placeholder="请输入会员有效期天数"
+                   onkeyup="this.value=this.value.replace(/[^0-9]/g,'');"
+                   style="width: 230px; height: 30px; border: 1px solid #ddd; padding: 0 6px;">
+            <p style="color: #999; font-size: 12px; line-height: 18px; margin: 6px 0 0 98px;">有效期从操作时刻开始重新计算，36600天及以上视为终身会员</p>
+        </div>
+        <p style="color: #999; font-size: 12px; line-height: 18px; margin: 0;">选择注册会员（默认级别）将清空会员有效期；选择其他级别须填写有效期天数</p>
+    </div>
 </div>
 <script>
     $(function(){
@@ -394,6 +420,87 @@
         });
     }
     
+    /**
+     * 批量修改会员级别
+     */
+    function batch_level(obj, name) {
+        var a = [];
+        $('input[name^='+name+']').each(function(i,o){
+            if($(o).is(':checked')){
+                a.push($(o).val());
+            }
+        })
+        if(a.length == 0){
+            layer.alert('请至少选择一项', {
+                shade: layer_shade,
+                area: ['480px', '190px'],
+                move: false,
+                title: '提示',
+                btnAlign:'r',
+                closeBtn: 3,
+                success: function () {
+                      $(".layui-layer-content").css('text-align', 'left');
+                  }
+            });
+            return;
+        }
+
+        layer.open({
+            type: 1,
+            title: '批量修改会员级别（已选' + a.length + '个会员）',
+            area: ['480px', '300px'],
+            shade: layer_shade,
+            shadeClose: false,
+            btn: ['确定', '取消'],
+            content: $('#batch_level_box').html(),
+            success: function(layero, index){
+                layero.find('#batch_level_select').on('change', function(){
+                    if (1 == $(this).val()) {
+                        layero.find('#batch_level_days_box').hide();
+                    } else {
+                        layero.find('#batch_level_days_box').show();
+                    }
+                });
+            },
+            yes: function(index, layero){
+                var level_id = layero.find('#batch_level_select').val();
+                if (!level_id) {
+                    layer.msg('请选择会员级别', {icon: 2});
+                    return false;
+                }
+                var days = layero.find('#batch_level_days').val();
+                if (1 != level_id && (!/^\d+$/.test(days) || parseInt(days, 10) <= 0)) {
+                    layer.msg('请填写会员有效期天数', {icon: 2});
+                    return false;
+                }
+
+                layer_loading('正在处理');
+                $.ajax({
+                    type: "POST",
+                    url: $(obj).attr('data-url'),
+                    data: {users_id:a, level:level_id, level_maturity_days:days, _ajax:1},
+                    dataType: 'json',
+                    success: function (data) {
+                        layer.closeAll();
+                        if(data.code == 1){
+                            layer.msg(data.msg, {icon: 1});
+                            window.location.reload();
+                        }else{
+                            layer.alert(data.msg, {icon: 2, title:false});
+                        }
+                    },
+                    error:function(e){
+                        layer.closeAll();
+                        layer.alert(e.responseText, {icon: 2, title:false});
+                    }
+                });
+            },
+            cancel: function(index){
+                layer.close(index);
+            }
+        });
+    }
+
     $(document).keydown(function(event){
         if(event.keyCode ==13){
             OrderQuery();

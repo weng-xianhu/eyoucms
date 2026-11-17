@@ -49,9 +49,10 @@ class Taglist extends Model
             'tag_arr'   => '',
             'tid_arr'   => '',
         ];
+        // update_time 记录标签在该文档中的录入顺序，以此保证编辑页按原输入顺序展示
         $result = Db::name('Taglist')->field($field)
             ->where(array('aid'=>$aid))
-            ->order('aid asc, tid asc')
+            ->order('update_time asc, tid asc')
             ->select();
         if ($result) {
             $tag_arr = get_arr_column($result, 'tag');
@@ -102,6 +103,9 @@ class Taglist extends Model
             $tags = explode(',', $tag);
             $tags = array_map('trim', $tags);
             $tags = array_unique($tags);
+            // update_time 依次递增，记录标签在输入框中的先后顺序
+            $baseTime = getTime();
+            $sortIndex = 0;
             foreach($tags as $tag)
             {
                 $tag = trim($tag);
@@ -109,10 +113,11 @@ class Taglist extends Model
                     continue;
                 }
 
-                $r = $this->InsertOneTag($tag, $aid, $typeid,$arcrank);
+                $r = $this->InsertOneTag($tag, $aid, $typeid, $arcrank, $baseTime + $sortIndex);
                 if ($rs !== false) {
                     $rs = $r;
                 }
+                $sortIndex++;
             }
         } else if ($opt == 'edit') {
             $rs = $this->UpdateOneTag($aid, $typeid, $tag,$arcrank);
@@ -131,7 +136,7 @@ class Taglist extends Model
      * @param     int  $typeid  栏目ID
      * @return    void
      */
-    private function InsertOneTag($tag, $aid, $typeid = 0, $arcrank = 0)
+    private function InsertOneTag($tag, $aid, $typeid = 0, $arcrank = 0, $update_time = 0)
     {
         $tag = trim($tag);
         if (empty($tag)) {
@@ -142,6 +147,8 @@ class Taglist extends Model
         }
         $rs = false;
         $addtime = getTime();
+        // 未指定排序时间时，按当前时间写入
+        $update_time = empty($update_time) ? $addtime : $update_time;
         $row = Db::name('tagindex')->where([
                 'tag'   => $tag,
                 'lang'  => get_admin_lang(),
@@ -181,7 +188,7 @@ class Taglist extends Model
                 'arcrank' => $arcrank,
                 'lang' => get_admin_lang(),
                 'add_time' => $addtime,
-                'update_time' => $addtime,
+                'update_time' => $update_time,
             ]);
         }
 
@@ -218,14 +225,16 @@ class Taglist extends Model
                 $lower_newtags[$key] = strtolower($val);
             }
 
-            foreach($new_tags as $tag)
+            // 以同一次保存的时间为基准，按标签在输入框中的位置递增，作为展示排序依据
+            $time = getTime();
+            foreach($new_tags as $index => $tag)
             {
                 $tag = trim($tag);
                 if (empty($tag) || $tag != stripslashes($tag)) {
                     continue;
                 }
                 if (!in_array(strtolower($tag), $lower_oldtags)) {
-                    $r = $this->InsertOneTag($tag, $aid, $typeid,$arcrank);
+                    $r = $this->InsertOneTag($tag, $aid, $typeid, $arcrank, $time + $index);
                     if ($rs !== false) {
                         $rs = $r;
                     }
@@ -241,10 +250,10 @@ class Taglist extends Model
                 unset($taglistRow[$key]);
             }
 
-            $time = getTime();
             foreach ($oldtags as $key => $tag)
             {
-                $update_time = $time + (false === array_search(strtolower($tag), $lower_newtags) ? 0 : array_search(strtolower($tag), $lower_newtags));
+                $new_index = array_search(strtolower($tag), $lower_newtags);
+                $update_time = (false === $new_index) ? $time : $time + $new_index;
                 if(!in_array(strtolower($tag), $lower_newtags))
                 {
                     Db::name('taglist')->where(['aid'=>$aid,'tag'=>$tag])->delete();

@@ -24,7 +24,7 @@
             <li>使用场景：运营模式下及个别插件，如模板做了修改，需要清理缓存后生效；同时支持数据缓存清理</li>
             <li>使用技巧：清除单一页面缓存，在URL后面加上 ?clear=1 访问即可（静态html不需操作）</li>
             <li>定时清理：通过第三方采集、Excel等工具导入数据，要在宝塔里设置定时清理任务，前台才能及时显示</li>
-            <li style="text-indent: 5em;background:unset;">清理缓存api接口 {$Request.domain}__ROOT_DIR__/index.php?m=api&c=Ajax&a=clear_cache 仅支持服务器，可参考（<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=30612&origin_eycms=1" onclick="openFullframe(this,'在宝塔里定时清理网站缓存');">宝塔定时教程</a>）</li>
+            <li style="text-indent: 5em;background:unset;">清理缓存api接口 {$Request.domain}__ROOT_DIR__/index.php?m=api&c=Ajax&a=clear_cache&token={$clear_cache_api_token} 仅支持服务器，可参考（<a href="JavaScript:void(0);" data-href="https://www.eyoucms.com/plus/view.php?aid=30612&origin_eycms=1" onclick="openFullframe(this,'在宝塔里定时清理网站缓存');">宝塔定时教程</a>）</li>
         </ul>
     </div>
     <form class="form-horizontal" id="cleanCache" method="post">

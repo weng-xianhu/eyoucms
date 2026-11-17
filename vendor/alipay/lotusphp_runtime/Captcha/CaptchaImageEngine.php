@@ -3,6 +3,7 @@
  * Lotus Captcha component is inspired by "cool-php-captcha" project
  * http://code.google.com/p/cool-php-captcha
  */
+#[\AllowDynamicProperties]
 class LtCaptchaImageEngine
 {
 	public $conf;
@@ -89,7 +90,6 @@ class LtCaptchaImageEngine
         // Cleanup
         if (!empty($this->im))
         {
-            imagedestroy($this->im);
         }
 
         $this->im = imagecreatetruecolor($this->conf['width'] * $this->conf['scale'], $this->conf['height'] * $this->conf['scale']); 
@@ -191,7 +191,6 @@ class LtCaptchaImageEngine
             $this->conf['width'], $this->conf['height'],
             $this->conf['width'] * $this->conf['scale'], $this->conf['height'] * $this->conf['scale']
             );
-        imagedestroy($this->im);
         $this->im = $imResampled;
     }
 }

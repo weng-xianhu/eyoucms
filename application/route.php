@@ -101,8 +101,9 @@ if (is_dir('./weapp/Tags/')) {
         $is_tags_weapp = true;
     }
 }
-$uiset = input('param.uiset/s', 'off');
-if ('on' == trim($uiset, '/')) { // 可视化页面必须是兼容模式的URL
+$uiset = trim(input('param.uiset/s', 'off'), '/');
+// 安全修复：可视化装修模式仅限已登录管理员，防止匿名请求借 uiset 切换站点 URL 形态
+if ('on' == $uiset && is_adminlogin()) { // 可视化页面必须是兼容模式的URL
     config('ey_config.seo_inlet', 0);
     config('ey_config.seo_pseudo', 1);
     config('ey_config.seo_dynamic_format', 1);

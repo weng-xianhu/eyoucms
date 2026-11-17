@@ -88,12 +88,13 @@ class PayApi extends Model
 
         // 请求接口成功
         if (!empty($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
-            if ('FAIL' == $result['result_code'] && !empty($result['err_code']) && !empty($result['err_code_des'])) {
+            if (!empty($result['result_code']) && 'FAIL' == $result['result_code'] && !empty($result['err_code']) && !empty($result['err_code_des'])) {
+                // 验证时使用的是随机openid，微信提示openid无效即说明AppID、商户号、KEY均已通过校验
                 if (stristr($result['err_code_des'], 'openid')) {
                     return true;
                 } else {
                     $result['return_code'] = 'FAIL';
-                    $result['return_msg'] = $result['err_code_des'];
+                    $result['return_msg'] = wechatPayErrorMsg($result);
                     return $result;
                 }
             } else {
@@ -102,14 +103,12 @@ class PayApi extends Model
         }
         // 请求接口失败
         else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-            if (stristr($result['return_msg'], '签名错误')) {
-                $result['return_msg'] = '微信支付KEY密钥不正确';
-            } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '微信支付商户号配置不正确';
-            } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '微信支付AppID配置不正确';
-            }
+            $result['return_msg'] = wechatPayErrorMsg($result);
             return $result;
+        }
+        // 未收到有效响应（如网络不通、返回非XML）
+        else {
+            return ['return_code' => 'FAIL', 'return_msg' => wechatPayErrorMsg($result)];
         }
     }
 
@@ -117,6 +116,34 @@ class PayApi extends Model
     public function VerifyAliPayConfig($alipay = [])
     {
         if (!empty($alipay)) {
+            $scene = '支付宝配置验证';
+            $appId      = isset($alipay['app_id']) ? trim($alipay['app_id']) : '';
+            $privateKey = isset($alipay['merchant_private_key']) ? trim($alipay['merchant_private_key']) : '';
+            $publicKey  = isset($alipay['alipay_public_key']) ? trim($alipay['alipay_public_key']) : '';
+
+            // 先做本地校验，避免 SDK 内部 die() 直接中断请求
+            if ('' === $appId) {
+                return '请填写支付宝 APPID';
+            }
+            if (!preg_match('/^\d{8,32}$/', $appId)) {
+                return '支付宝 APPID 格式不正确，应为纯数字（通常 16 位），请到开放平台【我的应用】核对';
+            }
+            if ('' === $privateKey) {
+                return '请填写商户（应用）私钥';
+            }
+            if ('' === $publicKey) {
+                return '请填写支付宝公钥';
+            }
+            if (!function_exists('openssl_pkey_get_private') || !function_exists('curl_init')) {
+                return '服务器 PHP 未开启 openssl 或 curl 扩展，无法使用支付宝支付，请在 php.ini 中启用后重试';
+            }
+            if (!alipayRsaKeyValid($privateKey, true)) {
+                return '商户（应用）私钥格式不正确，请粘贴开放平台“密钥工具”生成的应用私钥纯字符串（去掉 BEGIN/END 行、换行和空格），不要填成应用公钥';
+            }
+            if (!alipayRsaKeyValid($publicKey, false)) {
+                return '支付宝公钥格式不正确，请到开放平台【接口加签方式】复制“支付宝公钥”（注意不是应用公钥）粘贴到后台';
+            }
+
             // 时间戳当订单号
             $order_number = getTime();
 
@@ -130,32 +157,53 @@ class PayApi extends Model
             $RequestBuilder->setOutTradeNo($out_trade_no);
 
             // 处理支付宝配置数据
-            $config['app_id']     = $alipay['app_id'];
-            $config['merchant_private_key'] = $alipay['merchant_private_key'];
+            $config['app_id']     = $appId;
+            $config['merchant_private_key'] = $privateKey;
             $config['charset']    = 'UTF-8';
             $config['sign_type']  = 'RSA2';
             $config['gatewayUrl'] = 'https://openapi.alipay.com/gateway.do';
-            $config['alipay_public_key'] = $alipay['alipay_public_key'];
+            $config['alipay_public_key'] = $publicKey;
 
-            // 实例化支付宝配置
-            $aop = new \AlipayTradeService($config);
+            // SDK 出错时会把通讯错误 echo 出来或抛异常，这里统一捕获
+            $obLevel = ob_get_level();
+            ob_start();
+            $result = null;
+            $exceptionMsg = '';
+            try {
+                $aop = new \AlipayTradeService($config);
+                $result = $aop->IsQuery($RequestBuilder, 'admin_pay');
+            } catch (\Exception $e) {
+                $exceptionMsg = $e->getMessage();
+            }
+            $output = '';
+            while (ob_get_level() > $obLevel) {
+                $output = ob_get_clean() . $output;
+            }
+            $output = trim($output);
 
-            // 返回结果
-            $result = $aop->IsQuery($RequestBuilder, 'admin_pay');
+            // SDK 返回的中文字符串提示（APPID错误/公钥错误/验签出错）
+            if (is_string($result) && '' !== trim($result)) {
+                return alipayErrorMsg($result, $scene);
+            }
             $result = json_decode(json_encode($result), true);
 
-            // 判断结果
-            if ('40004' == $result['code'] && 'Business Failed' == $result['msg']) {
-                // 用于支付宝支付配置验证
-                return 'ok';
-            } else if ('40001' == $result['code'] && 'Missing Required Arguments' == $result['msg']) {
-                return '商户私钥错误！';
-            } else if (is_array($result)) {
-                $msg = !empty($result['sub_msg']) ? $result['sub_msg'] : '请确保配置正确，且检查支付宝平台的权限';
-                return $msg;
-            } else {
-                return $result;
+            if (!is_array($result) || empty($result)) {
+                if ('' !== $output) {
+                    return alipayErrorMsg($output, $scene);
+                }
+                if ('' !== $exceptionMsg) {
+                    return alipayErrorMsg($exceptionMsg, $scene);
+                }
+                return alipayErrorMsg('', $scene);
             }
+
+            // 判断结果：订单不存在说明密钥/APPID 均正确，配置可用
+            $code = isset($result['code']) ? strval($result['code']) : '';
+            $msg  = isset($result['msg']) ? strval($result['msg']) : '';
+            if ('40004' == $code && 'Business Failed' == $msg) {
+                return 'ok';
+            }
+            return alipayErrorMsg($result, $scene);
         }
     }
 
@@ -223,14 +271,16 @@ class PayApi extends Model
         // 返回错误提示
         if (curl_errno($ch)) return 'Errno: ' . curl_error($ch);
         // 返回成功数据
-        curl_close($ch);
         return $result;
     }
 
     // XML转array
     private function xmlToArray($xml = '')
     {
-        @libxml_disable_entity_loader(true);
+        // curl 请求失败时返回的是错误字符串，转成统一的失败结构，便于后续给出中文提示
+        if (is_string($xml) && 0 === strpos($xml, 'Errno:')) {
+            return ['return_code' => 'FAIL', 'return_msg' => $xml];
+        }
         $xmlstring = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
         $val = json_decode(json_encode($xmlstring),true);
         return $val;
@@ -325,23 +375,21 @@ class PayApi extends Model
                 }
                 // 申请失败
                 else if (!empty($result['result_code']) && $result['result_code'] == 'FAIL') {
-                    $result['return_msg'] = $result['err_code_des'];
+                    $result['return_msg'] = wechatPayErrorMsg($result, '微信退款');
                     $result['return_code'] = $result['result_code'];
                 }
             }
             // 请求接口失败
             else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-                if (stristr($result['return_msg'], '签名错误')) {
-                    $result['return_msg'] = '微信支付KEY密钥不正确';
-                } else if (stristr($result['return_msg'], 'mch_id')) {
-                    $result['return_msg'] = '微信支付商户号配置不正确';
-                } else if (stristr($result['return_msg'], 'appid')) {
-                    $result['return_msg'] = '微信支付AppID配置不正确';
-                }
+                $result['return_msg'] = wechatPayErrorMsg($result, '微信退款');
             }
             if (isset($result[0]) && false === $result[0]) {
                 $result['return_msg'] = '请检查微信支付证书是否过期或未上传';
                 $result['return_code'] = 'FAIL';
+            }
+            if (empty($result['return_code'])) {
+                $result['return_code'] = 'FAIL';
+                $result['return_msg'] = wechatPayErrorMsg($result, '微信退款');
             }
             return ['return_code' => $result['return_code'], 'return_msg' => $result['return_msg']];
         }

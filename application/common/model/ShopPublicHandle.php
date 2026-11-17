@@ -24,6 +24,7 @@ use think\Cookie;
 load_trait('controller/Jump');
 class ShopPublicHandle
 {
+    public $times;
     use \traits\controller\Jump;
 
     private $sendTerminal = '';

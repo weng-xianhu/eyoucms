@@ -102,7 +102,7 @@ class WeappController
      * @access public
      * @param Request $request Request 对象
      */
-    public function __construct(Request $request = null)
+    public function __construct($request = null)
     {
         if (!session_id()) {
             Session::start();

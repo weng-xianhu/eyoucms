@@ -151,7 +151,11 @@ class ShopComment extends Base
             $post = input('post.');
             // 是否选择评价分
             $post['order_id'] = intval($post['order_id']);
-            if (empty($post['total_score'])) $this->error('请选择全部商品评价分');
+            if (empty($post['total_score']) || !is_array($post['total_score'])
+                || empty($post['details_id']) || !is_array($post['details_id'])
+                || empty($post['content']) || !is_array($post['content'])) {
+                $this->error('请选择全部商品评价分');
+            }
             $count = $content = 0;
             foreach ($post['total_score'] as $key => $value) {
                 if (!empty($value)) $count++;
@@ -160,47 +164,73 @@ class ShopComment extends Base
             if (0 === intval($count) || intval($count) !== intval(count($post['details_id']))) $this->error('请选择全部商品评价分');
             if (0 === intval($content) || intval($content) !== intval(count($post['details_id']))) $this->error('请填写全部商品评价内容');
 
-            // 再次查询确认商品是否已评价过
-            $where = [
+            // 校验订单归属与状态：只能评价本人已完成且未评价的订单
+            $orderWhere = [
                 'users_id' => $this->users_id,
                 'order_id' => $post['order_id'],
-                'is_comment' => 1
             ];
-            $resultID = Db::name('shop_order')->where($where)->count();
-            if (!empty($resultID)) $this->error('订单已评价过');
+            $orderInfo = Db::name('shop_order')->where($orderWhere)->field('order_id, order_code, order_status, is_comment')->find();
+            if (empty($orderInfo)) $this->error('订单不存在');
+            if (3 !== intval($orderInfo['order_status'])) $this->error('订单暂不可评价');
+            if (!empty($orderInfo['is_comment']) && 1 === intval($orderInfo['is_comment'])) $this->error('订单已评价过');
+
+            // 查询该订单内待评价的商品明细，用于校验提交的 details_id/product_id 是否属于本订单
+            $detailsList = Db::name('shop_order_details')->where([
+                'users_id'   => $this->users_id,
+                'order_id'   => $post['order_id'],
+                'is_comment' => 0,
+            ])->field('details_id, product_id')->select();
+            $detailsMap = [];
+            foreach ($detailsList as $detailsItem) {
+                $detailsMap[intval($detailsItem['details_id'])] = intval($detailsItem['product_id']);
+            }
+            if (empty($detailsMap)) $this->error('订单商品不存在或已评价');
 
             // 批量添加商品评价(一次评价一个订单内的所有商品)
             $insertAll = $details_idArr = $product_idArr = [];
             foreach ($post['total_score'] as $k => $v) {
-                if (!empty($v) && !empty($post['details_id'][$k]) && !empty($post['product_id'][$k])) {
-                    // 如果是旧版评分则执行，旧版评分转换新版评分
-                    if (empty($post['newCommnet'])) {
-                        if (1 === intval($v)) {
-                            $v = 5;
-                        } else if (2 === intval($v)) {
-                            $v = 3;
-                        } else if (3 === intval($v)) {
-                            $v = 1;
-                        }
-                    }
-                    $details_idArr[] = intval($post['details_id'][$k]);
-                    $product_idArr[] = intval($post['product_id'][$k]);
-                    $insertAll[] = [
-                        'product_id'  => intval($post['product_id'][$k]),
-                        'users_id'    => $this->users_id,
-                        'order_id'    => $post['order_id'],
-                        'order_code'  => $post['order_code'],
-                        'details_id'  => intval($post['details_id'][$k]),
-                        'total_score' => $v,
-                        'content'     => !empty($post['content'][$k]) ? serialize(htmlspecialchars($post['content'][$k])) : '',
-                        'upload_img'  => !empty($post['upload_img'][$k][0]) ? serialize(implode(',', $post['upload_img'][$k])) : '',
-                        'ip_address'  => clientIP(),
-                        'is_new_comment' => 1,
-                        'add_time'    => getTime(),
-                        'update_time' => getTime()
-                    ];
+                $details_id = !empty($post['details_id'][$k]) ? intval($post['details_id'][$k]) : 0;
+                $product_id = !empty($post['product_id'][$k]) ? intval($post['product_id'][$k]) : 0;
+                if (empty($v) || empty($details_id) || empty($product_id)) {
+                    continue;
                 }
+                // 商品明细必须属于当前订单，且商品ID与明细一致，防止伪造评价
+                if (!isset($detailsMap[$details_id]) || $detailsMap[$details_id] !== $product_id) {
+                    $this->error('评价商品信息有误，请刷新后重试');
+                }
+                // 如果是旧版评分则执行，旧版评分转换新版评分
+                if (empty($post['newCommnet'])) {
+                    if (1 === intval($v)) {
+                        $v = 5;
+                    } else if (2 === intval($v)) {
+                        $v = 3;
+                    } else if (3 === intval($v)) {
+                        $v = 1;
+                    }
+                }
+                // 评价分合法范围 1-5
+                $score = intval($v);
+                if ($score < 1 || $score > 5) {
+                    $this->error('评价分不合法');
+                }
+                $details_idArr[] = $details_id;
+                $product_idArr[] = $product_id;
+                $insertAll[] = [
+                    'product_id'  => $product_id,
+                    'users_id'    => $this->users_id,
+                    'order_id'    => $post['order_id'],
+                    'order_code'  => $orderInfo['order_code'],
+                    'details_id'  => $details_id,
+                    'total_score' => $score,
+                    'content'     => !empty($post['content'][$k]) ? serialize(htmlspecialchars($post['content'][$k])) : '',
+                    'upload_img'  => !empty($post['upload_img'][$k][0]) ? serialize(implode(',', $post['upload_img'][$k])) : '',
+                    'ip_address'  => clientIP(),
+                    'is_new_comment' => 1,
+                    'add_time'    => getTime(),
+                    'update_time' => getTime()
+                ];
             }
+            if (empty($insertAll)) $this->error('请选择需要评价的商品');
             $resultID = Db::name('shop_order_comment')->insertAll($insertAll);
             if (!empty($resultID)) {
                 // 商品主表增加评价数
@@ -277,16 +307,30 @@ class ShopComment extends Base
             $post['details_id'] = intval($post['details_id']);
             $post['product_id'] = intval($post['product_id']);
 
-            // 再次查询确认商品是否已评价过
-            $where = [
-                'users_id' => $this->users_id,
-                'order_id' => $post['order_id'],
+            // 校验商品明细归属：只能评价本人订单中的商品
+            $detailsInfo = Db::name('shop_order_details')->where([
                 'details_id' => $post['details_id'],
-                'product_id' => $post['product_id'],
-                'is_comment' => 1
-            ];
-            $resultID = Db::name('shop_order_details')->where($where)->count();
-            if (!empty($resultID)) $this->error('商品已评价过');
+                'users_id'   => $this->users_id,
+            ])->field('details_id, order_id, product_id, is_comment')->find();
+            if (empty($detailsInfo)) $this->error('商品不存在');
+            if (!empty($detailsInfo['is_comment'])) $this->error('商品已评价过');
+
+            // 校验订单状态：仅已完成订单可评价
+            $orderInfo = Db::name('shop_order')->where([
+                'order_id' => $detailsInfo['order_id'],
+                'users_id' => $this->users_id,
+            ])->field('order_id, order_code, order_status')->find();
+            if (empty($orderInfo)) $this->error('订单不存在');
+            if (3 !== intval($orderInfo['order_status'])) $this->error('订单暂不可评价');
+
+            // 以数据库中的订单与商品数据为准，忽略客户端提交值
+            $post['order_id']   = intval($detailsInfo['order_id']);
+            $post['product_id'] = intval($detailsInfo['product_id']);
+            $post['order_code'] = $orderInfo['order_code'];
+
+            // 评价分合法范围 1-5
+            $post['total_score'] = intval($post['total_score']);
+            if ($post['total_score'] < 1 || $post['total_score'] > 5) $this->error('评价分不合法');
 
             // 是否开启评价自动审核
             $shopOpenCommentAudit = getUsersConfigData('shop.shop_open_comment_audit');
@@ -316,13 +360,15 @@ class ShopComment extends Base
                     Db::name('archives')->where($where)->setInc('appraise', 1);
                 }
                 
-                // 同步更新订单商品为已评价
-                $update = [
-                    'details_id'  => $insert['details_id'],
+                // 同步更新订单商品为已评价（限定本人订单与明细）
+                Db::name('shop_order_details')->where([
+                    'details_id' => $insert['details_id'],
+                    'order_id'   => $insert['order_id'],
+                    'users_id'   => $this->users_id,
+                ])->update([
                     'is_comment'  => 1,
                     'update_time' => getTime()
-                ];
-                Db::name('shop_order_details')->update($update);
+                ]);
 
                 // 如果订单商品已经全部评价，那么订单主表is_comment == 1
                 $where = [
@@ -359,7 +405,7 @@ class ShopComment extends Base
         // 排除字段
         $field1 = 'add_time, update_time, apply_service';
         // 查询字段
-        $field2 = 'b.order_code, b.add_time';
+        $field2 = 'b.order_code, b.add_time, b.order_status';
         // 查询条件
         $where = [
             'a.users_id'   => $this->users_id,
@@ -378,6 +424,8 @@ class ShopComment extends Base
         $url = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : url("user/Shop/shop_centre", ['select_status'=>3]);
         if (empty($Details)) $this->error('商品已评价过', $url);
         if (1 == !empty($Details['is_comment'])) $this->error('商品已评价过', $url);
+        // 仅已完成订单可评价
+        if (3 !== intval($Details['order_status'])) $this->error('订单暂不可评价', $url);
 
         // 商品规格
         $Details['spec_value'] = htmlspecialchars_decode(safe_unserialize($Details['data'])['spec_value']);

@@ -101,6 +101,12 @@ class PayApi extends Model
         $result = $this->getParamsArr($this->executePostRequest($this->getParamsXml($params)));
         // 请求接口成功
         if (!empty($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
+            // 业务失败（如未开通JSAPI、openid无效等）
+            if (empty($result['prepay_id']) && !empty($result['err_code'])) {
+                $result['return_code'] = 'FAIL';
+                $result['return_msg'] = wechatPayErrorMsg($result);
+                return $result;
+            }
             // 返回支付所需参数
             return [
                 'appId'     => $PayInfo['appid'],
@@ -114,13 +120,7 @@ class PayApi extends Model
         }
         // 请求接口失败
         else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-            if (stristr($result['return_msg'], '签名错误')) {
-                $result['return_msg'] = '微信支付KEY密钥不正确';
-            } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '微信支付商户号配置不正确';
-            } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '微信支付AppID配置不正确';
-            }
+            $result['return_msg'] = wechatPayErrorMsg($result);
             return $result;
         } else {
             $result['postCode'] = 'error';
@@ -181,19 +181,12 @@ class PayApi extends Model
             if (!empty($result['mweb_url'])) return $result['mweb_url'];
             if (!empty($result['err_code'])) {
                 $result['return_code'] = 'FAIL';
-                $result['return_msg'] = $result['err_code_des'];
-                // return $result['err_code_des'];
+                $result['return_msg'] = wechatPayErrorMsg($result, '微信H5支付');
             }
         }
         // 请求接口失败
         else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-            if (stristr($result['return_msg'], '签名错误')) {
-                $result['return_msg'] = '微信支付KEY密钥不正确';
-            } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '微信支付商户号配置不正确';
-            } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '微信支付AppID配置不正确';
-            }
+            $result['return_msg'] = wechatPayErrorMsg($result, '微信H5支付');
             return $result;
         }
         return $result;
@@ -247,17 +240,15 @@ class PayApi extends Model
             $result = $this->getParamsArr($this->executePostRequest($this->getParamsXml($params)));
             // 请求接口成功
             if (isset($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
-                return $result['code_url'];
+                if (!empty($result['code_url'])) return $result['code_url'];
+                if (!empty($result['err_code'])) {
+                    $result['return_code'] = 'FAIL';
+                    $result['return_msg'] = wechatPayErrorMsg($result, '微信扫码支付');
+                }
             }
             // 请求接口失败
             else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-                if (stristr($result['return_msg'], '签名错误')) {
-                    $result['return_msg'] = '微信支付KEY密钥不正确';
-                } else if (stristr($result['return_msg'], 'mch_id')) {
-                    $result['return_msg'] = '微信支付商户号配置不正确';
-                } else if (stristr($result['return_msg'], 'appid')) {
-                    $result['return_msg'] = '微信支付AppID配置不正确';
-                }
+                $result['return_msg'] = wechatPayErrorMsg($result, '微信扫码支付');
                 return $result;
             }
             return $result;
@@ -307,8 +298,8 @@ class PayApi extends Model
         // 调用接口返回数据
         $result = $this->getParamsArr($this->executePostRequest($this->getParamsXml($params)));
         // 请求接口成功
-        if ($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
-            if ($result['result_code'] == 'SUCCESS') {
+        if (!empty($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
+            if (!empty($result['result_code']) && $result['result_code'] == 'SUCCESS') {
                 // 返回支付所需参数
                 return [
                     'prepay_id' => $result['prepay_id'],
@@ -319,16 +310,14 @@ class PayApi extends Model
                     'paySign' => $this->getPaySign($miniproInfo['appid'], $params['nonce_str'], $result['prepay_id']),
                 ];
             }
+            else if (!empty($result['err_code'])) {
+                $result['return_code'] = 'FAIL';
+                $result['return_msg'] = wechatPayErrorMsg($result, '小程序支付');
+            }
         }
         // 请求接口失败
         else if (!empty($result['return_code']) && $result['return_code'] == 'FAIL') {
-            if (stristr($result['return_msg'], '签名错误')) {
-                $result['return_msg'] = '小程序支付APIv2密钥不正确';
-            } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '小程序支付商户号配置不正确';
-            } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '小程序支付AppID配置不正确';
-            }
+            $result['return_msg'] = wechatPayErrorMsg($result, '小程序支付');
             return $result;
         }
         return $result;
@@ -366,14 +355,8 @@ class PayApi extends Model
         $this->url = 'https://api.mch.weixin.qq.com/pay/orderquery';
         // 调用接口返回数据
         $result = $this->getParamsArr($this->executePostRequest($this->getParamsXml($params)));
-        if (!empty($result['return_msg'])) {
-            if (stristr($result['return_msg'], '签名错误')) {
-                $result['return_msg'] = '小程序支付密钥不正确';
-            } else if (stristr($result['return_msg'], 'mch_id')) {
-                $result['return_msg'] = '小程序商户号配置不正确';
-            } else if (stristr($result['return_msg'], 'appid')) {
-                $result['return_msg'] = '小程序AppID配置不正确';
-            }
+        if (!empty($result['return_code']) && 'FAIL' == $result['return_code']) {
+            $result['return_msg'] = wechatPayErrorMsg($result, '小程序支付查询');
         }
         return $result;
     }
@@ -417,15 +400,17 @@ class PayApi extends Model
         // 返回错误提示
         if (curl_errno($ch)) return 'Errno: ' . curl_error($ch);
         // 返回成功数据
-        curl_close($ch);
         return $result;
     }
 
     // 获取返回参数数组(xml转成arr)
     private function getParamsArr($xml = [])
     {
+        // curl 请求失败时返回的是错误字符串，转成统一的失败结构，便于后续给出中文提示
+        if (is_string($xml) && 0 === strpos($xml, 'Errno:')) {
+            return ['return_code' => 'FAIL', 'return_msg' => $xml];
+        }
         // 禁止引用外部xml实体
-        @libxml_disable_entity_loader(true);
         return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
@@ -469,14 +454,20 @@ class PayApi extends Model
             'pay_mark' => 'alipay'
         ];
         $PayApiConfig = Db::name('pay_api_config')->field('pay_info, pay_terminal')->where($where)->find();
-        if (empty($PayApiConfig['pay_info'])) return false;
+        if (empty($PayApiConfig['pay_info'])) return '后台尚未配置支付宝支付参数，请联系管理员！';
         $PayInfo = safe_unserialize($PayApiConfig['pay_info']);
         $PayTerminal = !empty($PayApiConfig['pay_terminal']) ? safe_unserialize($PayApiConfig['pay_terminal']) : [];
         
         // 后台支付宝支付配置信息
-        $config['app_id'] = $PayInfo['app_id'];
-        $config['merchant_private_key'] = $PayInfo['merchant_private_key'];
-        $config['alipay_public_key'] = $PayInfo['alipay_public_key'];
+        $config['app_id'] = !empty($PayInfo['app_id']) ? trim($PayInfo['app_id']) : '';
+        $config['merchant_private_key'] = !empty($PayInfo['merchant_private_key']) ? trim($PayInfo['merchant_private_key']) : '';
+        $config['alipay_public_key'] = !empty($PayInfo['alipay_public_key']) ? trim($PayInfo['alipay_public_key']) : '';
+        if ('' === $config['app_id'] || '' === $config['merchant_private_key'] || '' === $config['alipay_public_key']) {
+            return '后台支付宝支付配置不完整（APPID/商户私钥/支付宝公钥），请联系管理员！';
+        }
+        if (!alipayRsaKeyValid($config['merchant_private_key'], true)) {
+            return '后台支付宝商户私钥格式不正确，无法发起支付，请联系管理员到后台重新粘贴应用私钥！';
+        }
 
         // 支付订单类型
         $config['transaction_type'] = $type = $data['transaction_type'];
@@ -523,19 +514,26 @@ class PayApi extends Model
         $PayContentBuilder->setOutTradeNo($out_trade_no);
         $PayContentBuilder->setTotalAmount($total_amount);
 
-        // 调用SDK进行支付宝支付
-        $TradeService = new \AlipayTradeService($config);
-
-        // 支付宝支付终端分发调用
-        if (true === isMobile() && !empty($PayTerminal['mobile'])) {
-            // 支付宝手机端支付调用
-            $response = $TradeService->wapPay($PayContentBuilder, $config['return_url'], $config['notify_url']);
-        } else if (!empty($PayTerminal['computer']) || !empty($PayTerminal[0])) {
-            // 支付宝电脑端支付调用
-            $response = $TradeService->pagePay($PayContentBuilder, $config['return_url'], $config['notify_url']);
-        } else {
-            // 支付终端全部关闭
+        // 支付终端全部关闭
+        $isMobilePay = (true === isMobile() && !empty($PayTerminal['mobile']));
+        if (!$isMobilePay && empty($PayTerminal['computer']) && empty($PayTerminal[0])) {
             return '后台支付宝支付配置中支付终端全部关闭，请联系管理员！';
+        }
+
+        // 调用SDK进行支付宝支付（SDK 会直接输出跳转表单，异常时转成中文提示返回）
+        try {
+            $TradeService = new \AlipayTradeService($config);
+            if ($isMobilePay) {
+                // 支付宝手机端支付调用
+                $TradeService->wapPay($PayContentBuilder, $config['return_url'], $config['notify_url']);
+            } else {
+                // 支付宝电脑端支付调用
+                $TradeService->pagePay($PayContentBuilder, $config['return_url'], $config['notify_url']);
+            }
+        } catch (\think\exception\HttpResponseException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return alipayErrorMsg($e->getMessage(), '支付宝支付');
         }
     }
 

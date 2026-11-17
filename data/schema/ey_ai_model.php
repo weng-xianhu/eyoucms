@@ -1,99 +1,72 @@
 <?php 
 return array (
-  'page_id' => 
+  'id' => 
   array (
-    'name' => 'page_id',
-    'type' => 'int(11) unsigned',
+    'name' => 'id',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => NULL,
     'primary' => true,
     'autoinc' => true,
   ),
-  'page_type' => 
+  'provider_id' => 
   array (
-    'name' => 'page_type',
-    'type' => 'tinyint(3)',
+    'name' => 'provider_id',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
-    'default' => '-1',
+    'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
-  'page_name' => 
+  'capability' => 
   array (
-    'name' => 'page_name',
-    'type' => 'varchar(255)',
+    'name' => 'capability',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => 'chat',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'model' => 
+  array (
+    'name' => 'model',
+    'type' => 'varchar(150)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
-  'page_data' => 
+  'params' => 
   array (
-    'name' => 'page_data',
-    'type' => 'longtext',
+    'name' => 'params',
+    'type' => 'text',
     'notnull' => false,
     'default' => NULL,
     'primary' => false,
     'autoinc' => false,
   ),
-  'mini_id' => 
+  'is_default' => 
   array (
-    'name' => 'mini_id',
-    'type' => 'int(11) unsigned',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'is_home' => 
-  array (
-    'name' => 'is_home',
+    'name' => 'is_default',
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
-  'is_system' => 
+  'status' => 
   array (
-    'name' => 'is_system',
-    'type' => 'tinyint(1)',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'is_show' => 
-  array (
-    'name' => 'is_show',
+    'name' => 'status',
     'type' => 'tinyint(1)',
     'notnull' => false,
     'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),
-  'is_del' => 
-  array (
-    'name' => 'is_del',
-    'type' => 'tinyint(3) unsigned',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'lang' => 
-  array (
-    'name' => 'lang',
-    'type' => 'varchar(10)',
-    'notnull' => false,
-    'default' => 'cn',
-    'primary' => false,
-    'autoinc' => false,
-  ),
   'add_time' => 
   array (
     'name' => 'add_time',
-    'type' => 'int(11) unsigned',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -102,7 +75,34 @@ return array (
   'update_time' => 
   array (
     'name' => 'update_time',
-    'type' => 'int(11) unsigned',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_status' => 
+  array (
+    'name' => 'last_test_status',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_time' => 
+  array (
+    'name' => 'last_test_time',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_latency' => 
+  array (
+    'name' => 'last_test_latency',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,

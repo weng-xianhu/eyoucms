@@ -983,15 +983,17 @@
                 this.error(res, index, upload);
             },
             error: function(res, index, upload){
-                if (res.msg){
-                    var tr = demoListView.find('tr#upload-'+ index),
+                var respData = (res && typeof res === 'object') ? res : null;
+                var fileIndex = respData ? index : res;
+                var tr = demoListView.find('tr#upload-'+ fileIndex),
                     tds = tr.children();
-                    tds.eq(3).html('<span style="color: #FF5722;">'+res.msg+'</span>');
+                if (respData && respData.msg){
+                    tds.eq(3).html('<span style="color: #FF5722;">'+respData.msg+'</span>');
+                    showErrorAlert(respData.msg);
                 }else{
-                    msg = "请求上传接口出现异常,请打开<a style='color:red;' target='_blank' href='https://www.eyoucms.com/plus/view.php?aid=28315&origin_eycms=1'>教程</a>查看是否存在配置错误";
-                    showSuccessAlert(msg);
+                    var msg = "上传失败：服务器未返回有效数据，请排查：<br>1、服务器安全软件（防篡改/防火墙/WAF/云锁/安全狗）拦截了上传请求；<br>2、uploads 目录没有写入权限；<br>3、PHP 的 upload_max_filesize、post_max_size 过小；<br>4、CDN/反向代理拦截。<br>可在浏览器开发者工具 Network 中查看该请求的返回内容，或<a style='color:red;' target='_blank' href='https://www.eyoucms.com/plus/view.php?aid=28315&origin_eycms=1'>查看教程</a>。";
+                    showErrorAlert(msg);
                 }
-
                 return false;
             }
         });

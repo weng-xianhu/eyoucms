@@ -119,55 +119,51 @@ class ActionBeginBehavior {
             }
             /*---------强制必须开启密保问题认证 end----------*/
 
-            $nosubmit = input('param.nosubmit/d');
-            // 修复：验证所有请求（GET和POST），不再只验证POST
-            if (empty($nosubmit)) {
-                if (!empty($security['security_ask_open']) && security_verify_func($ctl_act)) {
-
-                } else {
-                    return true;
-                }
-
-                $admin_info = session('admin_info');
-                $admin_id = !empty($admin_info['admin_id']) ? (int)$admin_info['admin_id'] : 0;
-
-                // 优先检查 Session（快速路径）
-                $session_key = 'security_verified_' . $admin_id;
-                $is_verified = session($session_key);
-
-                // 如果已验证，允许访问（不检查超时时间）
-                if (!empty($is_verified)) {
-                    return true;
-                }
-
-                // Session 丢失时查数据库（兼容 CDN 环境）
-                if ($admin_id > 0) {
-                    $admin_row = \think\Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$admin_id])->find();
-                    if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
-                        session($session_key, $admin_row['security_verify_time']);
-                        return true;
-                    }
-                }
-
-                // 未验证，拒绝访问
-                // 对于 GET 请求，让它通过，由 ViewFilterBehavior 来处理弹窗
-                // 对于 POST/AJAX 请求，进行拦截
-                if ('POST' == self::$method || request()->isAjax()) {
-                    if (request()->isAjax()) {
-                        $result = [
-                            'code' => 0,
-                            'msg' => '需要进行安全验证',
-                            'need_security_verify' => true,
-                            'security_ask' => !empty($security['security_ask']) ? $security['security_ask'] : ''
-                        ];
-                        header('Content-Type: application/json');
-                        exit(json_encode($result));
-                    } else {
-                        $this->error("<span style='display:none;'>__html__</span>出于安全考虑<br/>请先通过密保验证", null, '', 3);
-                    }
-                }
-                // GET 请求正常通过，由 ViewFilterBehavior 处理
+            // nosubmit 仅用于让“预检类”动作在控制器内部提前返回，不能作为跳过密保校验的开关
+            // 验证所有请求（GET和POST），不再只验证POST
+            if (empty($security['security_ask_open']) || !security_verify_func($ctl_act)) {
+                return true;
             }
+
+            $admin_info = session('admin_info');
+            $admin_id = !empty($admin_info['admin_id']) ? (int)$admin_info['admin_id'] : 0;
+
+            // 优先检查 Session（快速路径）
+            $session_key = 'security_verified_' . $admin_id;
+            $is_verified = session($session_key);
+
+            // 如果已验证，允许访问（不检查超时时间）
+            if (!empty($is_verified)) {
+                return true;
+            }
+
+            // Session 丢失时查数据库（兼容 CDN 环境）
+            if ($admin_id > 0) {
+                $admin_row = \think\Db::name('admin')->field('security_verify_time,last_login')->where(['admin_id'=>$admin_id])->find();
+                if (!empty($admin_row['security_verify_time']) && $admin_row['security_verify_time'] >= $admin_row['last_login']) {
+                    session($session_key, $admin_row['security_verify_time']);
+                    return true;
+                }
+            }
+
+            // 未验证，拒绝访问
+            // 对于 GET 请求，让它通过，由 ViewFilterBehavior 来处理弹窗
+            // 对于 POST/AJAX 请求，进行拦截
+            if ('POST' == self::$method || request()->isAjax()) {
+                if (request()->isAjax()) {
+                    $result = [
+                        'code' => 0,
+                        'msg' => '需要进行安全验证',
+                        'need_security_verify' => true,
+                        'security_ask' => !empty($security['security_ask']) ? $security['security_ask'] : ''
+                    ];
+                    header('Content-Type: application/json');
+                    exit(json_encode($result));
+                } else {
+                    $this->error("<span style='display:none;'>__html__</span>出于安全考虑<br/>请先通过密保验证", null, '', 3);
+                }
+            }
+            // GET 请求正常通过，由 ViewFilterBehavior 处理
         }
     }
 

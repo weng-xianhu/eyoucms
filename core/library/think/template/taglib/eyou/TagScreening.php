@@ -21,6 +21,9 @@ use think\Db;
  */
 class TagScreening extends Base
 {
+    public $channelfield_db;
+    public $dirname;
+
     //初始化
     protected function _initialize()
     {

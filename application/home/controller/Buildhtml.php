@@ -38,6 +38,10 @@ class Buildhtml extends Base
         if (!session('?admin_id')) {
             $this->error("只允许后台管理员操作！");
         } else {
+            // 只允许带 X-Requested-With 头的 AJAX 请求，防止 CSRF 通过普通链接/图片触发生成
+            if (!$this->request->isAjax(true)) {
+                $this->error("非法请求！");
+            }
             $seo_pseudo = tpCache('seo.seo_pseudo');
             if (2 != $seo_pseudo) {
                 $this->error('当前不是静态页面模式！');
@@ -230,8 +234,18 @@ class Buildhtml extends Base
                 if(!empty($seo_html_templet_arr[0])){
                     $tpl = $seo_html_templet_arr[0];
                 }
-                $this->request->get(['m' => 'Index']); // 首页焦点
-                $this->filePutContents($savepath, $tpl, 'pc', 0, '/', 0, 1, $result);
+                /*首页焦点：让首页模板的head走首页SEO分支*/
+                $requestGetBak = $this->request->get(); // 备份当前请求参数
+                $this->request->get(['m' => 'Index']);
+                try {
+                    $this->filePutContents($savepath, $tpl, 'pc', 0, '/', 0, 1, $result);
+                    /*渲染结束立即恢复请求参数，避免同一请求内接着生成栏目页时被误判为首页，导致栏目页输出首页的SEO信息*/
+                    $this->request->get($requestGetBak);
+                } catch (\Exception $e) {
+                    /*渲染结束立即恢复请求参数，避免同一请求内接着生成栏目页时被误判为首页，导致栏目页输出首页的SEO信息*/
+                    $this->request->get($requestGetBak);
+                    throw $e;
+                }
                 if ($seo_html_position){
                     @copy($savepath, $seo_html_position);
                     @copy($savepath, './index.html');
@@ -1442,7 +1456,7 @@ class Buildhtml extends Base
 
             $jsStr = <<<EOF
     <meta http-equiv="mobile-agent" content="format=xhtml;url={$url}">
-    <script type="text/javascript">if(window.location.toString().indexOf('pref=padindex') != -1){}else{if(/applewebkit.*mobile/i.test(navigator.userAgent.toLowerCase()) || (/midp|symbianos|nokia|samsung|lg|nec|tcl|alcatel|bird|dbtel|dopod|philips|haier|lenovo|mot-|nokia|sonyericsson|sie-|amoi|zte/.test(navigator.userAgent.toLowerCase()))){try{if(/android|windows phone|webos|iphone|ipod|blackberry/i.test(navigator.userAgent.toLowerCase())){window.location.href="{$url}";}else if(/ipad/i.test(navigator.userAgent.toLowerCase())){}else{}}catch(e){}}}</script>
+    <script type="text/javascript">if(window.location.toString().indexOf('pref=padindex') != -1){}else{if(/applewebkit.*mobile/i.test(navigator.userAgent.toLowerCase()) || (/midp|symbianos|nokia|samsung|lg|nec|tcl|alcatel|bird|dbtel|dopod|philips|haier|lenovo|mot-|nokia|sonyericsson|sie-|amoi|zte|openharmony|harmonyos|arkweb/.test(navigator.userAgent.toLowerCase()))){try{if(/android|windows phone|webos|iphone|ipod|blackberry|openharmony|harmonyos|arkweb/i.test(navigator.userAgent.toLowerCase())){window.location.href="{$url}";}else if(/ipad/i.test(navigator.userAgent.toLowerCase())){}else{}}catch(e){}}}</script>
 EOF;
             $html  = str_ireplace('</head>', $jsStr . "\n</head>", $html);
         } else { // 响应式模板
@@ -1458,7 +1472,7 @@ EOF;
                 $mobileDomain = $this->eyou['global']['web_mobile_domain'] . '.' . $this->request->rootDomain();
                 $jsStr        = <<<EOF
     <meta http-equiv="mobile-agent" content="format=xhtml;url={$url}">
-    <script type="text/javascript">if(window.location.toString().indexOf('pref=padindex') != -1){}else{if(/applewebkit.*mobile/i.test(navigator.userAgent.toLowerCase()) || (/midp|symbianos|nokia|samsung|lg|nec|tcl|alcatel|bird|dbtel|dopod|philips|haier|lenovo|mot-|nokia|sonyericsson|sie-|amoi|zte/.test(navigator.userAgent.toLowerCase()))){try{if(/android|windows phone|webos|iphone|ipod|blackberry/i.test(navigator.userAgent.toLowerCase())){if(window.location.toString().indexOf('{$mobileDomain}') == -1){window.location.href="{$url}";}}else if(/ipad/i.test(navigator.userAgent.toLowerCase())){}else{}}catch(e){}}}</script>
+    <script type="text/javascript">if(window.location.toString().indexOf('pref=padindex') != -1){}else{if(/applewebkit.*mobile/i.test(navigator.userAgent.toLowerCase()) || (/midp|symbianos|nokia|samsung|lg|nec|tcl|alcatel|bird|dbtel|dopod|philips|haier|lenovo|mot-|nokia|sonyericsson|sie-|amoi|zte|openharmony|harmonyos|arkweb/.test(navigator.userAgent.toLowerCase()))){try{if(/android|windows phone|webos|iphone|ipod|blackberry|openharmony|harmonyos|arkweb/i.test(navigator.userAgent.toLowerCase())){if(window.location.toString().indexOf('{$mobileDomain}') == -1){window.location.href="{$url}";}}else if(/ipad/i.test(navigator.userAgent.toLowerCase())){}else{}}catch(e){}}}</script>
 EOF;
                 $html         = str_ireplace('</head>', $jsStr . "\n</head>", $html);
             }

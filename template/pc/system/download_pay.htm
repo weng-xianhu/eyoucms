@@ -34,19 +34,14 @@
 		<div class="el-form-item" style="text-align: center;">
 			<div class="el-form-item__content pay-type-select">
 				<!-- 支付API列表，套板请务必将整块代码一起复制，包含隐藏域 -->
-				<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
 				{eyou:sppayapilist id='vo'}
 				{eyou:notempty name="$vo.pay_id"}
-				{neq name="$vo.pay_mark" value="Hupijiaopay"}
-				{eyou:php}$pay_mark_vars = "users/skin/images/".$vo['pay_mark'].".png";{/eyou:php}
 				<div class="pay-item"  onclick="LayerPaySelect(this);" data-mark="{$vo.pay_mark}" data-parameter="'{$vo.pay_id}','{$vo.pay_mark}'">
 					<a href="JavaScript:void(0);" >
-						<!--onclick="SelectPayMethodLayer('{$vo.pay_id}', '{$vo.pay_mark}');"-->
-						<img src="{eyou:empty name='$vo.pay_img'}{eyou:static file='$pay_mark_vars' /}{eyou:else/}{$vo.pay_img}{/eyou:empty}">
+						<img src="{$vo.pay_img}">
                         <span></span>
 					</a>
 				</div>
-				{/neq}
 				{/eyou:notempty}
 				{$vo.hidden}
 				{/eyou:sppayapilist}
@@ -57,11 +52,9 @@
 				{eyou:if condition="1 != $data.transaction_type && 1 == $data.pay_balance_open"}
 				<div class="pay-item" data-toggle="modal" data-target="#pay-order-modal" onclick="LayerPaySelect(this);"  data-mark="balance" data-parameter="'{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}'">
 					<a  href="JavaScript:void(0);" id="PayBalancePayment" >
-						<!--onclick="PayBalancePayment('{$data.unified_id}','{$data.unified_number}','{$data.transaction_type}');"-->
 						<img src="{eyou:static file='users/skin/images/pay_yiyou.png' /}" >
                         <span></span>
 					</a>
-					<!--<span>拥有余额：￥{$users.users_money}</span>-->
 				</div>
 				<script type="text/javascript">
 					// 余额支付，购买商品+视频支付使用
@@ -72,7 +65,7 @@
 						$('#PayBalancePayment').prop("disabled", true).css("pointer-events", "none");
 						var parentObj = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
 						// 发送请求
-						layer_loading('订单处理中');
+						layer_loading();
 						$.ajax({
 							url: '{$RootDir}/index.php?m=user&c=PayApi&a=balance_payment&_ajax=1',
 							data: {unified_id: unified_id, unified_number: unified_number, transaction_type: transaction_type},

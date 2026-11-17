@@ -43,7 +43,7 @@
                         {if isset($channelRow.data.qiniuyun_open) && $channelRow.data.qiniuyun_open == 1}
                         <a href="javascript:void(0);" class="fc-colours" id="qiniu_upload_video_sys_1" onclick="click_qiniu_sys(1);">七牛云上传</a>
                         {elseif isset($channelRow.data.oss_open) && $channelRow.data.oss_open == 1}
-                        <a href="javascript:void(0);" class="fc-colours" id="oss_upload_video_sys_1" onclick="click_oss_sys(1);">oss上传</a>
+                        <a href="javascript:void(0);" class="fc-colours" id="upload_video_sys_1" data-num='1'>oss上传</a>
                         {elseif isset($channelRow.data.cos_open) && $channelRow.data.cos_open == 1}
                         <a href="javascript:void(0);" class="fc-colours" id="cos_upload_video_sys_1" onclick="click_cos_sys(1);">cos上传</a>
                         {elseif isset($channelRow.data.aws_open) && $channelRow.data.aws_open == 1}
@@ -71,7 +71,7 @@
         {if isset($channelRow.data.qiniuyun_open) && $channelRow.data.qiniuyun_open == 1}
         &nbsp;<a href="javascript:void(0);" class="el-button el-button--primary is-plain el-button--small" id="upload_addonFieldExt_courseware_qiniu" onclick="$('#courseware_file').attr('data-type','qiniu').trigger('click');">七牛云上传</a>
         {elseif isset($channelRow.data.oss_open) && $channelRow.data.oss_open == 1}
-        &nbsp;<a href="javascript:void(0);" class="el-button el-button--primary is-plain el-button--small" id="upload_addonFieldExt_courseware_oss" onclick="$('#courseware_file').attr('data-type','oss').trigger('click');">oss上传</a>
+        &nbsp;<a href="javascript:void(0);" class="el-button el-button--primary is-plain el-button--small" id="upload_addonFieldExt_courseware_local" onclick="$('#courseware_file').attr('data-type','local').trigger('click');">oss上传</a>
         {elseif isset($channelRow.data.cos_open) && $channelRow.data.cos_open == 1}
         &nbsp;<a href="javascript:void(0);" class="el-button el-button--primary is-plain el-button--small" id="upload_addonFieldExt_courseware_cos" onclick="$('#courseware_file').attr('data-type', 'cos').trigger('click');">cos上传</a>
         {elseif isset($channelRow.data.aws_open) && $channelRow.data.aws_open == 1}
@@ -82,6 +82,7 @@
     </div>
 </div>
 <script>
+    var ey_local_upload_text = '{if isset($channelRow.data.oss_open) && $channelRow.data.oss_open == 1}oss上传{else/}本地上传{/if}';
     layui.use('upload', function(){
         var upload = layui.upload;
         //执行实例
@@ -127,12 +128,12 @@
                     $("#video_name_sys_1").val(res.title);
                     $("#upload_video_sys_1").text(ey_foreign_system10);
                     setTimeout(function(){
-                        $('#upload_video_sys_1').text('本地上传');
+                        $('#upload_video_sys_1').text(ey_local_upload_text);
                     }, 2000 )
                 }else {
                     $("#upload_video_sys_1").text('上传失败');
                     setTimeout(function(){
-                        $('#upload_video_sys_1').text('本地上传');
+                        $('#upload_video_sys_1').text(ey_local_upload_text);
                     }, 2000 )
                     layer.msg(res.state,{icon: 2});
                 }
@@ -176,7 +177,7 @@
         if (is_show_qiniuyun == 1) {
             html += "                     <a href=\"javascript:void(0);\" class=\"fc-colours\" id=\"qiniu_upload_video_sys_"+num+"\" onclick=\"click_qiniu_sys('"+num+"');\">七牛云上传</a>\n";
         }else if (is_show_oss == 1) {
-            html += "                     <a href=\"javascript:void(0);\" class=\"fc-colours\" id=\"oss_upload_video_sys_"+num+"\" onclick=\"click_oss_sys('"+num+"');\">oss上传</a>\n";
+            html += "                      <a href=\"javascript:void(0);\" class=\"fc-colours\" id=\"upload_video_sys_"+num+"\" data-num='"+num+"'>oss上传</a>\n" ;
         }else if (is_show_cos == 1) {
             html += "                     <a href=\"javascript:void(0);\" class=\"fc-colours\" id=\"cos_upload_video_sys_"+num+"\" onclick=\"click_cos_sys('"+num+"');\">cos上传</a>\n";
         }else if (is_show_aws == 1) {
@@ -240,12 +241,12 @@
                         $("#video_name_sys_"+n).val(res.title);
                         $("#upload_video_sys_"+num).text(ey_foreign_system10);
                         setTimeout(function(){
-                            $('#upload_video_sys_'+num).text('本地上传');
+                            $('#upload_video_sys_'+num).text(ey_local_upload_text);
                         }, 2000 )
                     }else {
                         $("#upload_video_sys_"+num).text('上传失败');
                         setTimeout(function(){
-                            $('#upload_video_sys_'+num).text('本地上传');
+                            $('#upload_video_sys_'+num).text(ey_local_upload_text);
                         }, 2000 )
                         layer.msg(res.state,{icon: 2});
                     }
@@ -297,14 +298,14 @@
                 success: function (res) {
                     if (res.code==0){
                         showErrorMsg(res.msg);
-                        $('#upload_addonFieldExt_courseware_local').html('本地上传');
+                        $('#upload_addonFieldExt_courseware_local').html(ey_local_upload_text);
                     }if (res.state && !res.url) {
                         showErrorMsg(res.state);
-                        $('#upload_addonFieldExt_courseware_local').html('本地上传');
+                        $('#upload_addonFieldExt_courseware_local').html(ey_local_upload_text);
                     }else {
                         $("#upload_addonFieldExt_courseware_local").html(ey_foreign_system10);
                         setTimeout(function(){
-                            $('#upload_addonFieldExt_courseware_local').html('本地上传');
+                            $('#upload_addonFieldExt_courseware_local').html(ey_local_upload_text);
                         }, 2000 );
                         var ori_url = $('#addonFieldExt_courseware').val();
                         $("#addonFieldExt_courseware").val(res.url);
@@ -468,7 +469,13 @@
                             }
                         },
                         error: function(e){
-                            showErrorMsg(e.responseText);
+                            var msg = e.responseText ? $(e.responseText).find('Message').text() || e.responseText : '上传到OSS失败：请检查OSS Bucket的跨域设置（CORS）是否允许当前站点域名';
+                            $("#upload_addonFieldExt_courseware_oss").html('上传失败');
+                            setTimeout(function(){
+                                $('#upload_addonFieldExt_courseware_oss').html('oss上传');
+                            }, 2000 );
+                            $("#courseware_file").val('');
+                            showErrorMsg(msg);
                             return false;
                         }
                     });
@@ -672,7 +679,13 @@
                             }
                         },
                         error : function(e) {
-                            console.log(e.responseText);
+                            var msg = e.responseText ? $(e.responseText).find('Message').text() || e.responseText : '上传到OSS失败：请检查OSS Bucket的跨域设置（CORS）是否允许当前站点域名';
+                            $("#oss_upload_video_sys_"+num).text('上传失败');
+                            setTimeout(function(){
+                                $('#oss_upload_video_sys_'+num).text('oss上传');
+                            }, 2000 )
+                            $("#oss_click_sys_"+num).val('');
+                            showErrorMsg(msg);
                         }
                     });
                 }else{

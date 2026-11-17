@@ -18,6 +18,7 @@ use think\Db;
 
 class Download extends Base
 {
+    public $callback_url;
     // 模型标识
     public $nid = 'download';
     // 模型ID

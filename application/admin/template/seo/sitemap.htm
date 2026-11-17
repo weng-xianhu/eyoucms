@@ -21,6 +21,18 @@
                         {/notempty}
                          <!-- <a href="javascript:void(0);" onclick="update_sitemap_xml();">手工更新</a> -->
                          <a href="javascript:void(0);" class='getValuesButton' data-id="1">手工更新</a> 
+                         {notempty name="citysiteSitemap"}
+                         <div style="margin-top:6px;">
+                             分站地图：共 {$citysiteSitemapCount} 个
+                             <a href="javascript:void(0);" onclick="toggleCitysiteSitemap(this);">展开</a>
+                             <div id="citysite_sitemap_box" style="display:none; max-height:132px; overflow-y:auto; margin-top:4px; line-height:24px;">
+                                 {volist name="citysiteSitemap" id="cs"}
+                                 <a href="{$cs.sitemap_url}" target="_blank" title="{$cs.domain}" style="display:inline-block; margin-right:12px;">{$cs.name}</a>
+                                 {/volist}
+                             </div>
+                         </div>
+                         <p class="notic2">已开启独立域名的城市分站，其地图会单独生成（点上方“手工更新”一并重建）。主站地图不含分站 URL，请到各分站自己的搜索资源平台单独提交对应的分站地图地址。</p>
+                         {/notempty}
                     </span>
                     <br/>
                     <label class="curpoin"><input type="checkbox" name="sitemap_txt" value="1" onclick="sitemap_type(this);" {if condition="isset($config.sitemap_txt) && $config.sitemap_txt eq 1"}checked="checked"{/if}>txt地图</label>&nbsp;&nbsp;
@@ -234,6 +246,17 @@
     function sitemap_exp(id)
     {
         $('#'+id).toggle();
+    }
+    function toggleCitysiteSitemap(obj)
+    {
+        var box = $('#citysite_sitemap_box');
+        if (box.is(':visible')) {
+            box.hide();
+            $(obj).text('展开');
+        } else {
+            box.show();
+            $(obj).text('收起');
+        }
     }
     function sitemap_type(obj)
     {

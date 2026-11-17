@@ -26,7 +26,7 @@ class InitHookBehavior {
                 if (!empty($hooks)) {
                     foreach ($hooks as $key => $val) {
                         $module = $val['module'];
-                        if (!empty($module) && isset($weappRow[$module]) && 1 == $weappRow[$module]['is_valid']) {
+                        if (!empty($module) && isset($weappRow[$module]) && 1 == $weappRow[$module]['is_valid'] && !is_weapp_invalid($module)) {
                             Hook::add($val['name'], get_weapp_class($module));
                         }
                     }
@@ -35,6 +35,23 @@ class InitHookBehavior {
             }
         }else{
             if (!empty($data)) {
+                foreach ($data as $tag => $classList) {
+                    if (!is_array($classList)) {
+                        continue;
+                    }
+                    foreach ($classList as $k => $class) {
+                        if (!is_string($class)) {
+                            continue;
+                        }
+                        $class = ltrim($class, '\\');
+                        if (0 === stripos($class, WEAPP_DIR_NAME . '\\')) {
+                            $parts = explode('\\', $class);
+                            if (isset($parts[1]) && is_weapp_invalid($parts[1])) {
+                                unset($data[$tag][$k]);
+                            }
+                        }
+                    }
+                }
                 Hook::import($data, false);
             }
         }

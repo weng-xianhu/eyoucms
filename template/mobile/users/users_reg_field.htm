@@ -160,6 +160,184 @@
                 {/eyou:if}
                 <!-- 邮箱文本框 end -->
             {/eyou:case}
+            {eyou:case value="text"}
+                <!-- 单行文本框 start -->
+                <div class="wx-form-group">
+                    <input type="text" class="wx-form-control" required id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}" placeholder="{$vo.title}{eyou:eq name="$vo.is_required" value="1"}（必填）{/eyou:eq}">
+                </div>
+                <!-- 单行文本框 end -->
+            {/eyou:case}
+            {eyou:case value="multitext"}
+                <!-- 多行文本框 start -->
+                <div class="wx-form-group">
+                    <textarea rows="5" cols="60" class="wx-form-control" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]"  placeholder="{$vo.title}{eyou:eq name="$vo.is_required" value="1"}（必填）{/eyou:eq}">{$vo.dfvalue|default=''}</textarea>
+                </div>
+                <!-- 多行文本框 end -->
+            {/eyou:case}
+            
+            {eyou:case value="checkbox"}
+                <!-- 复选框 start -->
+                <div class="wx-form-group" style="display:block;">
+                    <div class="fieldext-title">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</div>
+                    <div class="fieldext-options">
+                        {eyou:volist name="$vo.dfvalue" id="v2"}
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
+                                <span class="check-mark"></span>
+                                <span>{$v2}</span>
+                            </label>
+                        {/eyou:volist}
+                    </div>
+                </div>
+                <!-- 复选框 end -->
+            {/eyou:case}
 
+            {eyou:case value="radio"}
+                <!-- 单选项 start -->
+                <div class="wx-form-group" style="display:block;">
+                    <div class="fieldext-title">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</div>
+                    <div class="fieldext-options">
+                            {eyou:volist name="$vo.dfvalue" id="v2"}
+                            <label class="radio-label">
+                                <input type="radio" class="radio" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}checked="checked"{/eyou:if}>
+                                <span class="check-mark"></span>
+                                <span>{$v2}</span>
+                            </label>
+                         {/eyou:volist}
+                    </div>
+                </div>
+                <!-- 单选项 end -->
+            {/eyou:case}
+
+            {eyou:case value="select"}
+                <!-- 下拉框 start -->
+                <div class="wx-form-group">
+                    <select name="{$vo.fieldArr}[{$vo.name|default=''}]" id="{$vo.fieldArr}_{$vo.name|default=''}" class="wx-form-control">
+                        <option value="">{$vo.title}{eyou:if condition="1 == $vo.is_required"}(必填){/eyou:if}</option>
+                        {eyou:volist name="$vo.dfvalue" id="v2"}
+                            <option value="{$v2}" {eyou:if condition="isset($vo['trueValue']) AND in_array($v2, $vo['trueValue'])"}selected{/eyou:if}>{$v2}</option>
+                        {/eyou:volist}
+                    </select>
+                </div>
+                <!-- 下拉框 end -->
+            {/eyou:case}
+            <!-- 扩展 start -->
+            <!-- 扩展 -->
+            {eyou:case value="img"}
+                <!-- 单张图 start -->
+                <div class="wx-form-group">
+                    <input type="hidden" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value=""><!--{$vo.info|default=''}-->
+                    <input type="text" readonly class="wx-form-control {$vo.fieldArr}_{$vo.name|default=''}_input" placeholder="{$vo.title}{eyou:if condition='1 == $vo.is_required'}(必填){/eyou:if}" onClick="GetUploadify(1,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back','{:url(\'user/Uploadify/upload\',[\'resource\'=>\'reg\'])}')">
+                </div>
+                <script type="text/javascript">
+                    function {$vo.fieldArr}_{$vo.name|default=''}_call_back(fileurl_tmp)
+                    {
+                        $("#{$vo.fieldArr}_{$vo.name|default=''}").val(fileurl_tmp);
+                        $(".{$vo.fieldArr}_{$vo.name|default=''}_input").val(fileurl_tmp);
+                    }
+                </script>
+                <!-- 单张图 end -->
+            {/eyou:case}
+
+            {eyou:case value="imgs"}
+            <!-- 多张图 start -->
+            <div class="wx-form-group images_upload_main" style="display:block;">
+                <button type="button" class="wx-form-control" style="text-align: left;" onClick="GetUploadify(100,'','allimg','{$vo.fieldArr}_{$vo.name|default=''}_call_back', '', '{$vo.title|default=\'\'}');">
+                    {$vo.title}<span style="float: right;font-size: 16px;">点击上传</span>
+                </button>
+                <div style="margin: 10px 0 0;border: 1px dashed #ebeced;display: none; flex-wrap: wrap;padding: 10px;" id="upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}"><!--上传填充-->
+                </div>
+
+                <!-- 上传图片显示的样板 start -->
+                <div class="{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl" style="display: none;">
+                    <div class="fieldext_upload fieldext_upload_html" style="margin:0 6px 6px 0;">
+                        <div class="images_upload_item">
+                            <input type="hidden" name="{$vo.fieldArr}[{$vo.name|default=''}][]" value="">
+                            <a href="" target="_blank">
+                                <img src="__STATIC__/admin/images/add-button.jpg">
+                            </a>
+                            <a class="delete" href="javascript:void(0)" title="删除"></a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 上传图片显示的样板 end -->
+            </div>
+            <script type="text/javascript">
+                var GetUploadify_url = "{:url('user/Uploadify/upload',['resource'=>'reg'])}";
+
+                // 上传多图回调函数
+                function {$vo.fieldArr}_{$vo.name|default=''}_call_back(paths){
+                    var  last_div = $(".{$vo.fieldArr}_{$vo.name|default=''}_upload_tpl").html();
+                    for (var i=0;i<paths.length ;i++ )
+                    {
+                        if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+                            $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','flex');
+                        }
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").append(last_div);  // 插入一个 新图片
+
+
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(0)').attr('href',paths[i]).attr('onclick','').attr('target', "_blank");// 修改他的链接地址
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('img').attr('src',paths[i]);// 修改他的图片路径
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('a:eq(1)').attr('onclick',"{$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(this,'"+paths[i]+"')").text('');
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html:last").find('input').val(paths[i]); // 设置隐藏域 要提交的值
+                    }
+                }
+                /*
+             * 上传之后删除组图input
+             * @access   public
+             * @val      string  删除的图片input
+             */
+                function {$vo.fieldArr}_{$vo.name|default=''}_ClearPicArr2(obj,path)
+                {
+                    $(obj).parent().parent().remove();
+                    if ($("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''} .fieldext_upload_html").length == 0) {
+                        $("#upload_imgs_{$vo.fieldArr}_{$vo.name|default=''}").css('display','none');
+                    }
+                }
+            </script>
+            <!-- 多张图 end -->
+            {/eyou:case}
+
+            {case value="file"}
+            {eyou:static file="/public/plugins/layui/css/layui.css" /}
+            {eyou:static file="/public/plugins/layui/layui.js" /}
+            <!-- 单个文件 start -->
+            <div class="wx-form-group" style="display:block;">
+                <input type="hidden" id="{$vo.fieldArr}_{$vo.name|default=''}" name="{$vo.fieldArr}[{$vo.name|default=''}]" value="{$vo.dfvalue|default=''}">
+                <button type="button" style="text-align: left;" class="wx-form-control" id="upload_{$vo.fieldArr}_{$vo.name|default=''}" >{$vo.title}<span style="float: right;font-size: 16px;" id="btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}">{eyou:notempty name="$vo.dfvalue"}已上传{eyou:else /}点击上传{/eyou:notempty}</span></button>
+            </div>
+
+            <script>
+                $(function(){
+                    layui.use('upload', function(){
+                        var upload = layui.upload;
+
+                        //执行实例
+                        upload.render({
+                            elem: "#upload_{$vo.fieldArr}_{$vo.name|default=''}" //绑定元素
+                            ,url: "{:url('user/Uploadify/DownloadUploadFileAjax', ['resource'=>'reg'])}"
+                            ,exts: '{$vo.ext}'
+                            ,size: {$vo.filesize} //限制文件大小，单位 KB
+                            ,accept: 'file' //普通文件
+                            ,done: function(res){
+                                //上传完毕回调
+                                if (res.state=="SUCCESS"){
+                                    layer.msg(ey_foreign_system10)
+                                    $("#{$vo.fieldArr}_{$vo.name|default=''}").val(res.url);
+                                    $("#btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}").text('已上传');
+                                }else {
+                                    $("#btntxt_file_{$vo.fieldArr}_{$vo.name|default=''}").text('点击上传');
+                                }
+                            }
+                            ,error: function(){
+                                //请求异常回调
+                            }
+                        });
+                    });
+                })
+            </script>
+            <!-- 单个文件 end -->
+            {/case}
+            <!-- 扩展 end -->
         {/eyou:switch}
 {/eyou:volist}

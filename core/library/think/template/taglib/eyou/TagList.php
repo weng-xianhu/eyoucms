@@ -202,7 +202,7 @@ class TagList extends Base
                             $_v = trim($_v);
                             if (empty($_v)) {
                                 unset($keywordArr[$_k]);
-                                break;
+                                continue;
                             } else {
                                 $keywordArr[$_k] = addslashes($_v);
                             }
@@ -804,7 +804,7 @@ class TagList extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
                             $keywordArr[$_k] = addslashes($_v);
                         }
@@ -1448,7 +1448,7 @@ class TagList extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
                             $keywordArr[$_k] = addslashes($_v);
                         }

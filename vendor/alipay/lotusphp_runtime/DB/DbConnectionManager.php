@@ -31,7 +31,7 @@ class LtDbConnectionManager
 		}
 		else
 		{
-			trigger_error("db server can not be connected: group=$group, node=$node, role=$role", E_USER_ERROR);
+			throw new \RuntimeException("db server can not be connected: group=$group, node=$node, role=$role");
 			return false;
 		}
 	}

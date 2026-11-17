@@ -683,26 +683,26 @@ class Validate
     protected function getImageType($image)
     {
         if (function_exists('exif_imagetype')) {
-            return exif_imagetype($image);
+            $type = exif_imagetype($image);
+            if (false !== $type) {
+                return $type;
+            }
         } else {
-            try {
-                $info = @getimagesize($image);
-                if ($info) {
-                    return $info[2];
-                } else {
-                    if (function_exists('simplexml_load_file')) {
-                        $svgXML = simplexml_load_file($image);
-                        $xmlattributes = $svgXML->attributes();
-                        if (is_object($xmlattributes)) {
-                            return 8080;
-                        }
-                    }
-                    return false;
-                }
-            } catch (\Exception $e) {
-                return false;
+            $info = @getimagesize($image);
+            if ($info) {
+                return $info[2];
             }
         }
+        // exif_imagetype/getimagesize 均不支持SVG，改为读取文件头判断是否为SVG，返回约定的8080标识
+        $handle = @fopen($image, 'rb');
+        if ($handle) {
+            $header = fread($handle, 4096);
+            fclose($handle);
+            if (false !== $header && preg_match('/<svg[\s:>\/]/i', $header)) {
+                return 8080;
+            }
+        }
+        return false;
     }
 
     /**

@@ -22,6 +22,7 @@ use think\Cookie;
  */
 class TagSporderlist extends Base
 {
+    public $weappInfo;
     public $users_id = 0;
     public $usersTplVersion    = '';
     public $usersTpl2xVersion    = '';
@@ -225,6 +226,10 @@ class TagSporderlist extends Base
                 }
                 $result['list'][$key]['details'] = $details;
 
+                // 订单ID强制整型，订单号用 json_encode + HTML 属性转义后再拼入 JS，防止引号闭合 XSS
+                $order_id = intval($value['order_id']);
+                $orderCodeJs = htmlspecialchars(json_encode((string)$value['order_code']), ENT_QUOTES, 'UTF-8');
+
                 // 待付款订单处理
                 if (empty($value['order_status'])) {
                     // 付款地址处理，对ID和订单号加密，拼装url路径
@@ -241,11 +246,11 @@ class TagSporderlist extends Base
                     // 跳转链接
                     $result['list'][$key]['PaymentUrl'] = urldecode(url('user/Pay/pay_recharge_detail',['paystr'=>$payStr]));
                     // 手机端微信支付(JSAPI支付)
-                    $result['list'][$key]['wechatJsApiPay'] = " onclick=\"wechatJsApiPay('{$value['order_id']}', '{$value['order_code']}', 2);\" ";
+                    $result['list'][$key]['wechatJsApiPay'] = " onclick=\"wechatJsApiPay({$order_id}, {$orderCodeJs}, 2);\" ";
                 }
 
                 // 封装取消订单JS
-                $result['list'][$key]['CancelOrder'] = " onclick=\"CancelOrder('{$value['order_id']}');\" ";
+                $result['list'][$key]['CancelOrder'] = " onclick=\"CancelOrder({$order_id});\" ";
                 
                 $result['list'][$key]['order_status_name'] = !empty($order_status_arr[$value['order_status']]) ? $order_status_arr[$value['order_status']] : '';
                 if (!empty($this->weappInfo) && 2 === intval($value['logistics_type']) && 1 === intval($value['order_status'])) {
@@ -267,10 +272,10 @@ class TagSporderlist extends Base
                 $result['list'][$key]['OrderDetailsUrl'] = urldecode(url('user/Shop/shop_order_details',['order_id'=>$value['order_id']]));
 
                 // 封装订单催发货JS
-                $result['list'][$key]['OrderRemind'] = " onclick=\"OrderRemind('{$value['order_id']}','{$value['order_code']}');\" ";
+                $result['list'][$key]['OrderRemind'] = " onclick=\"OrderRemind({$order_id}, {$orderCodeJs});\" ";
                  
                 // 封装确认收货JS
-                $result['list'][$key]['Confirm'] = " onclick=\"Confirm('{$value['order_id']}','{$value['order_code']}');\" ";
+                $result['list'][$key]['Confirm'] = " onclick=\"Confirm({$order_id}, {$orderCodeJs});\" ";
 
                 // 订单商品售后选择列表
                 $result['list'][$key]['ServiceList'] = urldecode(url('user/Shop/service_list', ['order_id' => $value['order_id']]));
@@ -287,10 +292,11 @@ class TagSporderlist extends Base
                     } else {
                         $ExpressUrl = "https://www.kuaidi100.com/chaxun?com=".$value['express_code']."&nu=".$value['express_order'];
                     }
-                    // 微信端、小程序使用跳转方式进行物流查询
-                    $result['list'][$key]['MobileExpressUrl'] = $ExpressUrl;
+                    // 微信端、小程序使用跳转方式进行物流查询（当前URL来自请求，输出到 href 前必须转义）
+                    $result['list'][$key]['MobileExpressUrl'] = htmlspecialchars($ExpressUrl, ENT_QUOTES, 'UTF-8');
                     // PC端，手机浏览器使用弹框方式进行物流查询
-                    $result['list'][$key]['LogisticsInquiry'] = " onclick=\"LogisticsInquiry('{$ExpressUrl}');\" ";
+                    $ExpressUrlJs = htmlspecialchars(json_encode($ExpressUrl), ENT_QUOTES, 'UTF-8');
+                    $result['list'][$key]['LogisticsInquiry'] = " onclick=\"LogisticsInquiry({$ExpressUrlJs});\" ";
                 }
 
                 $result['list'][$key]['order_amount'] = !empty($value['order_amount']) ? unifyPriceHandle($value['order_amount']) : 0;

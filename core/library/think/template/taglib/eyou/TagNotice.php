@@ -20,6 +20,7 @@ use think\Db;
  */
 class TagNotice extends Base
 {
+    public $users_id;
     public $users    = [];
 
     //初始化

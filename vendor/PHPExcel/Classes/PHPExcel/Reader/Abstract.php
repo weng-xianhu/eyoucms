@@ -150,7 +150,7 @@ abstract class PHPExcel_Reader_Abstract implements PHPExcel_Reader_IReader
      */
     public function setIncludeCharts($pValue = false)
     {
-        $this->includeCharts = (boolean) $pValue;
+        $this->includeCharts = (bool) $pValue;
         return $this;
     }
 

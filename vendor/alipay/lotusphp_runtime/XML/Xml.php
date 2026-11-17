@@ -236,7 +236,6 @@ class LtXml {
 	 * 释放xml_parser
 	 */
 	public function free() {
-		xml_parser_free($this->_handler);
 	}
 
 	private function _getParser($encoding) {

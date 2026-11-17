@@ -127,10 +127,14 @@ class TagArclist extends Base
         }  
         // 查询条件
         $condition = array();
+        $bind = array();
         foreach (array('keywords','keyword','typeid','notypeid','flag','noflag','channel') as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
-                    array_push($condition, "a.title LIKE '%{$param[$key]}%'");
+                    $keywords = trim($param[$key]);
+                    $keywords = str_replace(['<','>','"',';',',','@','&'], '', $keywords);
+                    $condition[] = 'a.title LIKE :ey_keywords';
+                    $bind['ey_keywords'] = '%'.$keywords.'%';
                 } elseif ($key == 'keyword' && !empty($param[$key])) {
                     $keyword = str_replace('，', ',', $param[$key]);
                     $keywordArr = explode(',', $keyword);
@@ -139,20 +143,30 @@ class TagArclist extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
-                            $keywordArr[$_k] = addslashes($_v);
+                            $keywordArr[$_k] = $_v;
                         }
                     }
                     $keyword = implode('|', $keywordArr);
-                    $condition[] = Db::raw(" CONCAT(a.title,a.seo_keywords) REGEXP '$keyword' ");
+                    $condition[] = ' CONCAT(a.title,a.seo_keywords) REGEXP :ey_keyword ';
+                    $bind['ey_keyword'] = $keyword;
                 } elseif ($key == 'channel') {
                     array_push($condition, "a.channel IN ({$channeltype})");
                 } elseif ($key == 'typeid') {
+                    $typeidIntArr = array_filter(array_map('intval', explode(',', $typeid)), function ($v) {
+                        return $v > 0;
+                    });
+                    $typeid = empty($typeidIntArr) ? '0' : implode(',', $typeidIntArr);
                     array_push($condition, "a.typeid IN ({$typeid})");
                 } elseif ($key == 'notypeid') {
                     $param[$key] = str_replace('，', ',', $param[$key]);
-                    array_push($condition, "a.typeid NOT IN (".$param[$key].")");
+                    $notypeidArr = array_filter(array_map('intval', explode(',', $param[$key])), function ($v) {
+                        return $v > 0;
+                    });
+                    if (!empty($notypeidArr)) {
+                        array_push($condition, "a.typeid NOT IN (".implode(',', $notypeidArr).")");
+                    }
                 } elseif ($key == 'flag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
@@ -178,7 +192,7 @@ class TagArclist extends Base
                         array_push($condition, $where_flag_str);
                     }
                 } else {
-                    array_push($condition, "a.{$key} = '".$param[$key]."'");
+                    array_push($condition, "a.{$key} = '".addslashes(trim($param[$key]))."'");
                 }
             }
         }
@@ -214,7 +228,7 @@ class TagArclist extends Base
             ->alias('a')
             ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
            
-            ->where($where_str)
+            ->whereRaw($where_str, $bind)
             ->orderRaw($orderby)
             ->limit($limit)
             ->select();

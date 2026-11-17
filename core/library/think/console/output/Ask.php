@@ -191,18 +191,8 @@ class Ask
 
     protected function getHiddenResponse($inputStream)
     {
-        if ('\\' === DIRECTORY_SEPARATOR) {
-            $exe = __DIR__ . '/../bin/hiddeninput.exe';
-
-            $value = rtrim(shell_exec($exe));
-            $this->output->writeln('');
-
-            if (isset($tmpExe)) {
-                unlink($tmpExe);
-            }
-
-            return $value;
-        }
+        // Windows 下已移除第三方二进制 hiddeninput.exe，无法隐藏输入时抛出异常，
+        // 由 doAsk() 根据 Question::isHiddenFallback()（默认 true）回退为明文输入
 
         if ($this->hasSttyAvailable()) {
             $sttyMode = shell_exec('stty -g');
@@ -224,7 +214,7 @@ class Ask
         if (false !== $shell = $this->getShell()) {
             $readCmd = $shell === 'csh' ? 'set mypassword = $<' : 'read -r mypassword';
             $command = sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
-            $value   = rtrim(shell_exec($command));
+            $value   = rtrim((string) shell_exec($command));
             $this->output->writeln('');
 
             return $value;

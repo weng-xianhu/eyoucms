@@ -140,7 +140,7 @@ class WechatLogic extends Model
             return json_encode($data);
         }
         //获取请求头并检测死链
-        $heads = get_headers($imgUrl);
+        $heads = get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
         if(!(stristr($heads[0],"200") && stristr($heads[0],"OK"))){
             $data=array(
                 'state' => '链接不可用',
@@ -161,11 +161,7 @@ class WechatLogic extends Model
 
         //打开输出缓冲区并获取远程图片
         ob_start();
-        $context = stream_context_create(
-            array('http' => array(
-                'follow_location' => false // don't follow redirects
-            ))
-        );
+        $context = get_remote_stream_context($imgUrl);
         readfile($imgUrl,false,$context);
         $img = ob_get_contents();
         ob_end_clean();

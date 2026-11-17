@@ -18,6 +18,9 @@ use think\Page;
 
 class Ask extends Base
 {
+    public $ask_db;
+    public $ask_answer_db;
+    public $ask_type_db;
 
     public function _initialize()
     {

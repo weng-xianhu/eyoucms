@@ -22,7 +22,15 @@ use think\Config;
 load_trait('controller/Jump');
 class TikTok
 {
+    public $times;
+    public $headers;
     use \traits\controller\Jump;
+
+    public $ajaxRequest;
+    public $tikTokConfig;
+    public $users;
+    public $users_id;
+    public $open_id;
 
     // 构造函数
     public function __construct($tikTokConfig = [])

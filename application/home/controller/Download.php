@@ -100,9 +100,23 @@ class Download extends Base
                 $this->success('待审核稿件，你没有权限阅读！', ROOT_DIR.'/');
             }
         }
-        // 外部链接跳转
-        if ($result['is_jump'] == 1) {
-            header('Location: ' . $result['jumplinks']);
+        // 外部链接跳转（只允许 http/https 或站内路径，拦截 javascript: 等危险协议）
+        $jumplinks = isset($result['jumplinks']) ? trim($result['jumplinks']) : '';
+        $is_safe_jump = false;
+        if (!empty($jumplinks) && false === strpos($jumplinks, '\\')) {
+            if (0 === strpos($jumplinks, '/')) {
+                // 站内路径或协议相对外链
+                $is_safe_jump = true;
+            } else {
+                $url_parse = parse_url($jumplinks);
+                if (!empty($url_parse['scheme']) && !empty($url_parse['host'])
+                    && in_array(strtolower($url_parse['scheme']), ['http', 'https'], true)) {
+                    $is_safe_jump = true;
+                }
+            }
+        }
+        if ($result['is_jump'] == 1 && $is_safe_jump) {
+            header('Location: ' . $jumplinks);
             exit;
         }
         /*--end*/

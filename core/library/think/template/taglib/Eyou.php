@@ -130,7 +130,7 @@ class Eyou extends Taglib
         //自定义url
         'diyurl'   => ['attr' => 'type,link,vars,suffix,domain,seo_pseudo,seo_pseudo_format,seo_inlet', 'close' => 0],
         // 相关文档
-        'likearticle'    => ['attr' => 'modelid,channelid,limit,row,loop,titlelen,bodylen,infolen,mytypeid,typeid,byabs,empty,mod,name,id,key,thumb', 'alias' => 'relevarticle'],
+        'likearticle'    => ['attr' => 'modelid,channelid,limit,row,loop,titlelen,bodylen,infolen,mytypeid,typeid,byabs,empty,mod,name,id,key,thumb,sort', 'alias' => 'relevarticle'],
         // 视频播放
         'videoplay'  => ['attr' => 'aid,empty,id,autoplay'],
         // 视频列表
@@ -3957,6 +3957,8 @@ class Eyou extends Taglib
         $empty   = htmlspecialchars($empty);
         $mod     = !empty($tag['mod']) && is_numeric($tag['mod']) ? $tag['mod'] : '2';
         $byabs = !empty($tag['byabs']) ? $tag['byabs'] : 0;
+        // 相关文档的标签优先顺序：new=最新创建的标签优先，留空=按文档录入标签的顺序
+        $sort = !empty($tag['sort']) && 'new' == $tag['sort'] ? 'new' : '';
         $titlelen = !empty($tag['titlelen']) && is_numeric($tag['titlelen']) ? intval($tag['titlelen']) : 100;
         $bodylen  = !empty($tag['bodylen']) && is_numeric($tag['bodylen']) ? intval($tag['bodylen']) : 160;
         if (isset($tag['infolen'])) {
@@ -3990,7 +3992,7 @@ class Eyou extends Taglib
 
         } else { // 查询数据库获取的数据集
             $parseStr .= ' $tagLikearticle = new \think\template\taglib\eyou\TagLikearticle;';
-            $parseStr .= ' $_result = $tagLikearticle->getLikearticle('.$modelid.','.$mytypeid.', "'.$limit.'", "'.$byabs.'", "'.$thumb.'");';
+            $parseStr .= ' $_result = $tagLikearticle->getLikearticle('.$modelid.','.$mytypeid.', "'.$limit.'", "'.$byabs.'", "'.$thumb.'", "'.$sort.'");';
             $parseStr .= 'if(is_array($_result) || $_result instanceof \think\Collection || $_result instanceof \think\Paginator): $' . $key . ' = 0; $e = 1;';
             // 设置了输出数组长度
             $parseStr .= ' $__LIST__ = $_result;';
@@ -4753,9 +4755,13 @@ class Eyou extends Taglib
         $empty  = htmlspecialchars($empty);
         $key    = !empty($tag['key']) ? $tag['key'] : 'i';
         $mod    = !empty($tag['mod']) && is_numeric($tag['mod']) ? $tag['mod'] : '2';
-        $ordermode = !empty($tag['ordermode']) ? $tag['ordermode'] : 'desc';
-        $pagesize = !empty($tag['pagesize']) ? trim($tag['pagesize']) : 10;
-        $page = !empty($tag['page']) ? trim($tag['page']) : 1;
+        $ordermode = !empty($tag['ordermode']) && is_string($tag['ordermode']) ? strtolower(trim($tag['ordermode'])) : 'desc';
+        // 白名单：排序方式只允许 asc/desc，防止拼接进编译后的 PHP 代码
+        if (!in_array($ordermode, ['asc', 'desc'], true)) {
+            $ordermode = 'desc';
+        }
+        $pagesize = !empty($tag['pagesize']) ? intval($tag['pagesize']) : 10;
+        $page = !empty($tag['page']) ? intval($tag['page']) : 1;
         // 允许使用函数设定数据集
         $parseStr = '<?php ';
 

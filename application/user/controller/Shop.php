@@ -21,6 +21,20 @@ use app\common\logic\ShopCommonLogic;
 
 class Shop extends Base
 {
+    public $users_db;
+    public $users_money_db;
+    public $shop_cart_db;
+    public $shop_order_db;
+    public $shop_order_details_db;
+    public $shop_order_service_db;
+    public $shop_address_db;
+    public $archives_db;
+    public $product_attr_db;
+    public $product_attribute_db;
+    public $region_db;
+    public $shipping_template_db;
+    public $shop_model;
+    public $shop_common;
     // 初始化
     public function _initialize() {
         parent::_initialize();
@@ -206,11 +220,12 @@ class Shop extends Base
         if (IS_AJAX_POST) {
             $order_id = input('param.order_id/d');
             if (!empty($order_id)) {
-                // 更新条件
+                // 更新条件（仅待付款订单可取消，防止已付款/已发货订单被取消，或重复取消反复回补库存）
                 $Where = [
-                    'order_id' => $order_id,
-                    'users_id' => $this->users_id,
-                    'lang'     => $this->home_lang,
+                    'order_id'     => $order_id,
+                    'users_id'     => $this->users_id,
+                    'lang'         => $this->home_lang,
+                    'order_status' => 0,
                 ];
                 // 更新数据
                 $Data  = [
@@ -298,10 +313,12 @@ class Shop extends Base
         if (IS_AJAX_POST) {
             $param = input('param.');
             $param['aid'] = intval($param['aid']);
-            // 商品是否已售罄
+            $param['num'] = intval($param['num']);
+            $param['spec_value_id'] = (!empty($param['spec_value_id']) && is_string($param['spec_value_id'])) ? $param['spec_value_id'] : '';
+            // 商品是否已售罄（含库存不小于购买数量校验）
             $this->IsSoldOut($param);
-            // 数量不可为空
-            if (empty($param['num']) || 0 > $param['num']) $this->error(show_foreign_lang('请选择数量！'));
+            // 数量必须为正整数
+            if ($param['num'] < 1) $this->error(show_foreign_lang('请选择数量！'));
 
             // 查询条件
             $archives_where = [
@@ -324,8 +341,10 @@ class Shop extends Base
                 }
                 $cartInfo = $this->shop_cart_db->field('product_num')->where($cart_where)->find();
                 if (!empty($cartInfo)) {
-                    // 购物车内已有相同产品，进行数量更新。
-                    $data['product_num'] = $param['num'] + intval($cartInfo['product_num']); //与购物车数量进行叠加
+                    // 购物车内已有相同产品，进行数量更新（累计数量同样不能超过库存）
+                    $total_num = $param['num'] + intval($cartInfo['product_num']);
+                    $this->IsSoldOut(['aid' => $param['aid'], 'num' => $total_num, 'spec_value_id' => $param['spec_value_id']]);
+                    $data['product_num'] = $total_num; //与购物车数量进行叠加
                     $data['update_time'] = getTime();
                     $cart_id = $this->shop_cart_db->where($cart_where)->update($data);
                 } else {
@@ -357,8 +376,10 @@ class Shop extends Base
         if (IS_AJAX_POST) {
             $aid    = input('post.aid/d');
             $symbol = input('post.symbol');
-            $num    = input('post.num/d');
+            $symbol = is_string($symbol) ? $symbol : '';
+            $num    = intval(input('post.num/d'));
             $spec_value_id = input('post.spec_value_id');
+            $spec_value_id = is_string($spec_value_id) ? $spec_value_id : '';
 
             // 查询条件
             $archives_where = [
@@ -380,13 +401,19 @@ class Shop extends Base
                 $product_num = $this->shop_cart_db->where($cart_where)->getField('product_num');
                 // 处理购物车产品数量
                 if (!empty($product_num)) {
-                    // 更新数组
+                    // 更新数组：数量必须为正整数，且不能超过库存
                     if ('+' == $symbol) {
-                        $data['product_num'] = $product_num + 1;
+                        $target_num = intval($product_num) + 1;
+                        $this->IsSoldOut(['aid' => $aid, 'num' => $target_num, 'spec_value_id' => $spec_value_id]);
+                        $data['product_num'] = $target_num;
                     }else if ('-' == $symbol) {
-                        $data['product_num'] = $product_num - 1;
+                        $data['product_num'] = intval($product_num) - 1;
                     }else if ('change' == $symbol) {
+                        if ($num < 1) $this->error(show_foreign_lang('商品数量最少为1'), null, ['error'=>'0']);
+                        $this->IsSoldOut(['aid' => $aid, 'num' => $num, 'spec_value_id' => $spec_value_id]);
                         $data['product_num'] = $num;
+                    } else {
+                        $this->error(show_foreign_lang('非法操作'), null, ['error'=>'0']);
                     }
                     $data['update_time'] = getTime();
                     // 更新数据
@@ -1040,6 +1067,11 @@ class Shop extends Base
             // 订单提交处理 -- 其他逻辑公共调用方法，部分逻辑改动不适合直接修改原文件时请在此方法做处理和兼容
             $OrderData = model('ShopPublicHandle')->orderSubmitPublicHandle($OrderData, $this->usersConfig, $this->users_id, $post, $list);
 
+            // 订单金额校验：数量与库存已在上游校验，此处禁止负数金额、空数量订单
+            if (floatval($OrderData['order_amount']) < 0 || intval($OrderData['order_total_num']) < 1) {
+                $this->error(show_foreign_lang('订单金额异常，请重新下单！'));
+            }
+
             // // 如果后台【商城中心】-【商城配置】-【订单设置】-收货后可维权时间设置为0，则表示订单不允许申请维权
             // if (empty($this->usersConfig['order_right_protect_time'])) $OrderData['allow_service'] = 1;
 
@@ -1126,33 +1158,37 @@ class Shop extends Base
                             if ((!empty($this->users['open_id']) || 0 === intval($this->users['thirdparty'])) && !empty($PayInfo) && 0 === intval($PayInfo['is_open_wechat'])) {
                                 $payment_type = $post['payment_type'];
                                 if ('yezf_balance' == $payment_type) {
-                                    // 余额支付
-                                    if ($this->users['users_money'] < $OrderData['order_amount']) {
-                                        // 余额不足，支付失败
-                                        $this->error(show_foreign_lang('余额不足，支付失败！'), null, ['url' => url('user/Shop/shop_centre')]);
-                                    } else {
-                                        // 余额充足，进行支付
-                                        $ret = Db::name('users')->where(['users_id' => $this->users_id])->update([
-                                            'users_money' => Db::raw('users_money-'.$OrderData['order_amount']),
-                                            'update_time' => getTime(),
-                                        ]);
-                                        if (false !== $ret) {
-                                            $pay_details = [
-                                                'unified_id'        => $OrderData['order_id'],
-                                                'unified_number'    => $OrderData['order_code'],
-                                                'transaction_type'  => 2,
-                                                'payment_amount'    => $OrderData['order_amount'],
-                                                'payment_type'      => "余额支付",
-                                            ];
-                                            $returnData = pay_success_logic($this->users_id, $OrderData['order_code'], $pay_details, 'balance', true, $this->users);
-                                            if (is_array($returnData)) {
-                                                if (1 == $returnData['code']) {
-                                                    $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
-                                                } else {
-                                                    $this->error($returnData['msg'], null, ['url'=>url('user/Shop/shop_centre')]);
-                                                }
+                                    // 余额支付：金额必须为正，且以条件更新扣款，防止并发扣成负数
+                                    $payAmount = sprintf('%.2f', floatval($OrderData['order_amount']));
+                                    if ($payAmount <= 0) {
+                                        $this->error(show_foreign_lang('订单金额异常，支付失败！'), null, ['url' => url('user/Shop/shop_centre')]);
+                                    }
+                                    $ret = Db::name('users')->where([
+                                        'users_id'    => $this->users_id,
+                                        'users_money' => ['egt', $payAmount],
+                                    ])->update([
+                                        'users_money' => Db::raw('users_money-'.$payAmount),
+                                        'update_time' => getTime(),
+                                    ]);
+                                    if (false !== $ret && 0 < $ret) {
+                                        $pay_details = [
+                                            'unified_id'        => $OrderData['order_id'],
+                                            'unified_number'    => $OrderData['order_code'],
+                                            'transaction_type'  => 2,
+                                            'payment_amount'    => $OrderData['order_amount'],
+                                            'payment_type'      => "余额支付",
+                                        ];
+                                        $returnData = pay_success_logic($this->users_id, $OrderData['order_code'], $pay_details, 'balance', true, $this->users);
+                                        if (is_array($returnData)) {
+                                            if (1 == $returnData['code']) {
+                                                $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
+                                            } else {
+                                                $this->error($returnData['msg'], null, ['url'=>url('user/Shop/shop_centre')]);
                                             }
                                         }
+                                    } else {
+                                        // 余额不足，支付失败
+                                        $this->error(show_foreign_lang('余额不足，支付失败！'), null, ['url' => url('user/Shop/shop_centre')]);
                                     }
                                 } else {
                                     // 微信内支付、小程序内支付 -- 微信端不存在支付宝支付
@@ -1197,32 +1233,38 @@ class Shop extends Base
                                 // 余额支付、微信支付、支付宝支付、其他第三方支付
                                 $payment_type = $post['payment_type'];
                                 if ('yezf_balance' == $payment_type) {
-                                    // 余额支付
-                                    if ($this->users['users_money'] < $OrderData['order_amount']) {
-                                        $url = url('user/Shop/shop_centre');
-                                        $this->error(show_foreign_lang('余额不足，支付失败！'), null, ['url'=>$url]);
-                                    } else {
-                                        $ret = Db::name('users')->where(['users_id'=>$this->users_id])->update([
-                                            'users_money' => Db::raw('users_money-'.$OrderData['order_amount']),
-                                            'update_time' => getTime(),
-                                        ]);
-                                        if (false !== $ret) {
-                                            $pay_details = [
-                                                'unified_id'        => $OrderData['order_id'],
-                                                'unified_number'    => $OrderData['order_code'],
-                                                'transaction_type'  => 2,
-                                                'payment_amount'    => $OrderData['order_amount'],
-                                                'payment_type'      => "余额支付",
-                                            ];
-                                            $returnData = pay_success_logic($this->users_id, $OrderData['order_code'], $pay_details, 'balance', true, $this->users);
-                                            if (is_array($returnData)) {
-                                                if (1 == $returnData['code']) {
-                                                    $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
-                                                } else {
-                                                    $this->error($returnData['msg'], null, ['url'=>url('user/Shop/shop_centre')]);
-                                                }
+                                    // 余额支付：金额必须为正，且以条件更新扣款，防止并发扣成负数
+                                    $payAmount = sprintf('%.2f', floatval($OrderData['order_amount']));
+                                    if ($payAmount <= 0) {
+                                        $this->error(show_foreign_lang('订单金额异常，支付失败！'), null, ['url' => url('user/Shop/shop_centre')]);
+                                    }
+                                    $ret = Db::name('users')->where([
+                                        'users_id'    => $this->users_id,
+                                        'users_money' => ['egt', $payAmount],
+                                    ])->update([
+                                        'users_money' => Db::raw('users_money-'.$payAmount),
+                                        'update_time' => getTime(),
+                                    ]);
+                                    if (false !== $ret && 0 < $ret) {
+                                        $pay_details = [
+                                            'unified_id'        => $OrderData['order_id'],
+                                            'unified_number'    => $OrderData['order_code'],
+                                            'transaction_type'  => 2,
+                                            'payment_amount'    => $OrderData['order_amount'],
+                                            'payment_type'      => "余额支付",
+                                        ];
+                                        $returnData = pay_success_logic($this->users_id, $OrderData['order_code'], $pay_details, 'balance', true, $this->users);
+                                        if (is_array($returnData)) {
+                                            if (1 == $returnData['code']) {
+                                                $this->success($returnData['msg'], $returnData['url'], $returnData['data']);
+                                            } else {
+                                                $this->error($returnData['msg'], null, ['url'=>url('user/Shop/shop_centre')]);
                                             }
                                         }
+                                    } else {
+                                        // 余额不足，支付失败
+                                        $url = url('user/Shop/shop_centre');
+                                        $this->error(show_foreign_lang('余额不足，支付失败！'), null, ['url'=>$url]);
                                     }
                                 } else if (in_array($payment_type, ['zxzf_wechat', 'zxzf_alipay', 'zxzf_Paypal', 'zxzf_UnionPay', 'zxzf_PersonPay'])) {
                                     // 内置第三方在线支付
@@ -1818,6 +1860,8 @@ class Shop extends Base
                 'users_id' => $this->users_id,
                 'lang'     => $this->home_lang,
             ];
+            // 仅允许“已发货(2)”的订单确认收货，防止未付款/未发货订单直接完成
+            $confirmWhere = array_merge($where, ['order_status' => 2]);
             // 更新数据
             $update = [
                 'order_status' => 3,
@@ -1827,7 +1871,7 @@ class Shop extends Base
                 'allow_service' => !empty($this->usersConfig['order_right_protect_time']) ? 0 : 1
             ];
             // 更新订单主表
-            $return = $this->shop_order_db->where($where)->update($update);
+            $return = $this->shop_order_db->where($confirmWhere)->update($update);
             if (!empty($return)) {
                 // 查询订单是否存在多商家，存在多商家则执行
                 $shopOrder = $this->shop_order_db->where($where)->find();
@@ -2122,30 +2166,72 @@ class Shop extends Base
                 if (empty($post['mobile'])) $this->error('请填写您的手机号码！');
             }
             $time = getTime();
-            $post['order_id'] = intval($post['order_id']);
-            $post['details_id'] = intval($post['details_id']);
-            $post['product_id'] = intval($post['product_id']);
-            $post['product_num'] = intval($post['product_num']);
-            $post['service_type'] = intval($post['service_type']);
-            $post['refund_price'] = unifyPriceHandle($post['refund_price']);
-            // 查询订单详情信息
-            $details = $this->shop_model->GetOrderDetailsInfo($post['details_id'], $this->users_id);
+            $details_id = intval($post['details_id']);
+            // 查询订单详情信息（校验明细归属、是否已申请过、是否允许售后）
+            $details = $this->shop_model->GetOrderDetailsInfo($details_id, $this->users_id);
             if (isset($details['code']) && 0 === intval($details['code'])) $this->error($details['msg']);
-            // 组合添加数据
-            $data = [
-                'users_id'    => $this->users_id,
-                'merchant_id' => $details['merchant_id'],
-                'address'     => $post['addrinfo'].' '.$post['address'],
-                'upload_img'  => !empty($post['upload_img']) ? implode(',', $post['upload_img']) : '',
-                'refund_balance' => '',
-                'refund_point' => '',
-                'refund_code' => 'HH' . $time . rand(10,99),
-                'add_time'    => $time,
-                'update_time' => $time,
+
+            // 订单状态校验：仅已付款(待发货)、已发货(待收货)、已完成订单允许申请售后
+            if (!in_array(intval($details['order_status']), [1, 2, 3])) {
+                $this->error('当前订单状态不允许申请售后！');
+            }
+
+            // 退款金额校验：换货不涉及退款，不做金额限制；退款/退货按明细实付金额校验（明细商品金额与订单实付金额取较小值）
+            $refund_price = unifyPriceHandle(isset($post['refund_price']) ? $post['refund_price'] : 0);
+            if (1 !== intval($post['service_type'])) {
+                $order_amount = floatval(Db::name('shop_order')->where(['order_id' => intval($details['order_id'])])->value('order_amount'));
+                $max_refund = min(
+                    unifyPriceHandle(floatval($details['product_price']) * intval($details['num'])),
+                    unifyPriceHandle($order_amount)
+                );
+                if (floatval($refund_price) < 0 || floatval($refund_price) > floatval($max_refund)) {
+                    $this->error('退款金额不能超过该商品的实付金额！');
+                }
+            }
+
+            // 入参类型兜底
+            $content    = (isset($post['content']) && is_string($post['content'])) ? $post['content'] : '';
+            $addrinfo   = (isset($post['addrinfo']) && is_string($post['addrinfo'])) ? $post['addrinfo'] : '';
+            $address    = (isset($post['address']) && is_string($post['address'])) ? $post['address'] : '';
+            $consignee  = (isset($post['consignee']) && is_string($post['consignee'])) ? $post['consignee'] : '';
+            $mobile     = (isset($post['mobile']) && is_string($post['mobile'])) ? $post['mobile'] : '';
+            $upload_img = '';
+            if (!empty($post['upload_img'])) {
+                if (is_array($post['upload_img'])) {
+                    $upload_img = implode(',', $post['upload_img']);
+                } else if (is_string($post['upload_img'])) {
+                    $upload_img = $post['upload_img'];
+                }
+            }
+
+            // 售后数据只取白名单字段，status 由服务端固定为 1，禁止客户端写入 status/refund_balance/order_code 等敏感字段
+            $applyData = [
+                'service_type'   => intval($post['service_type']),
+                'users_id'       => $this->users_id,
+                'merchant_id'    => intval($details['merchant_id']),
+                'order_id'       => intval($details['order_id']),
+                'order_code'     => $details['order_code'],
+                'details_id'     => intval($details['details_id']),
+                'product_id'     => intval($details['product_id']),
+                'product_name'   => msubstr((string)$details['product_name'], 0, 190, false, 'utf-8'),
+                'product_spec'   => msubstr((string)$details['spec_value'], 0, 190, false, 'utf-8'),
+                'product_num'    => intval($details['num']),
+                'product_img'    => (string)$details['litpic'],
+                'content'        => msubstr($content, 0, 500, false, 'utf-8'),
+                'upload_img'     => msubstr($upload_img, 0, 3000, false, 'utf-8'),
+                'address'        => msubstr(trim($addrinfo.' '.$address), 0, 500, false, 'utf-8'),
+                'consignee'      => msubstr($consignee, 0, 30, false, 'utf-8'),
+                'mobile'         => msubstr($mobile, 0, 20, false, 'utf-8'),
+                'refund_price'   => $refund_price,
+                'refund_balance' => 0,
+                'refund_point'   => 0,
+                'status'         => 1, // 固定为审核中
+                'lang'           => $this->home_lang,
+                'add_time'       => $time,
+                'update_time'    => $time,
             ];
-            if (2 === intval($post['service_type']) && !empty($post['refund_price'])) $data['refund_code'] = 'TK' . $time . rand(10,99);
-            // 售后逻辑变动统一处理
-            $insert = model('ShopServiceHandle')->addServiceDataHandle(array_merge($post, $data));
+            // 售后逻辑变动统一处理（生成售后单号与类型文案）
+            $insert = model('ShopServiceHandle')->addServiceDataHandle($applyData);
             // 添加售后订单
             $resultID = $this->shop_order_service_db->insertGetId($insert);
             if (!empty($resultID)) {
@@ -2154,10 +2240,13 @@ class Shop extends Base
                     'apply_service' => 1,
                     'update_time' => getTime()
                 ];
-                $this->shop_order_details_db->where('details_id', $post['details_id'])->update($update);
+                $this->shop_order_details_db->where([
+                    'details_id' => intval($details['details_id']),
+                    'users_id'   => $this->users_id,
+                ])->update($update);
 
                 // 添加订单服务记录
-                OrderServiceLog($resultID, $post['order_id'], $this->users_id, 0, '会员提交' . $insert['service_type_text'] . '申请，待管理员审核！');
+                OrderServiceLog($resultID, intval($details['order_id']), $this->users_id, 0, '会员提交' . $insert['service_type_text'] . '申请，待管理员审核！');
 
                 // 返回结束
                 $this->success('已申请，待审核', url('user/Shop/after_service_details', ['service_id' => $resultID]));
@@ -2232,32 +2321,45 @@ class Shop extends Base
     {
         if (IS_AJAX_POST) {
             $param = input('param.');
-            if (empty($param['service_id']) || empty($param['details_id'])) $this->error('请选择需要取消的服务单');
-            // 取消服务单
-            $where = [
+            if (empty($param['service_id'])) $this->error('请选择需要取消的服务单');
+            $service_id = intval($param['service_id']);
+            // 查询服务单，details_id/order_id 一律取服务单自身记录，不信任客户端提交
+            $service = $this->shop_order_service_db->where([
                 'users_id'   => $this->users_id,
-                'service_id' => intval($param['service_id']),
-            ];
-            $update = [
+                'service_id' => $service_id,
+            ])->field('service_id, details_id, order_id, service_type, status')->find();
+            if (empty($service)) $this->error('售后服务单不存在');
+
+            // 已完成/退款完成/已取消的服务单不允许再次取消
+            $not_cancel_status = [3, 6, 7, 8];
+            if (in_array(intval($service['status']), $not_cancel_status)) $this->error('当前服务单状态不允许取消');
+
+            // 取消服务单（带状态条件，防止并发重复取消）
+            $resultID = $this->shop_order_service_db->where([
+                'users_id'   => $this->users_id,
+                'service_id' => $service_id,
+                'status'     => ['NOT IN', $not_cancel_status],
+            ])->update([
                 'status' => 8,
                 'update_time' => getTime(),
-            ];
-            $resultID = $this->shop_order_service_db->where($where)->update($update);
+            ]);
             if (!empty($resultID)) {
-                // 更新订单明细表中对应商品为未申请服务
-                $where = [
+                // 更新订单明细表中对应商品为未申请服务（使用服务单记录的 details_id）
+                $this->shop_order_details_db->where([
                     'users_id'   => $this->users_id,
-                    'details_id' => intval($param['details_id'])
-                ];
-                $update = [
+                    'details_id' => intval($service['details_id']),
+                ])->update([
                     'apply_service' => 0,
                     'update_time' => getTime()
-                ];
-                $this->shop_order_details_db->where($where)->update($update);
+                ]);
 
                 // 添加记录单
-                $param['users_id'] = $this->users_id;
-                $param['status'] = 8;
+                $param['service_id']   = $service_id;
+                $param['details_id']   = intval($service['details_id']);
+                $param['order_id']     = intval($service['order_id']);
+                $param['service_type'] = intval($service['service_type']);
+                $param['users_id']     = $this->users_id;
+                $param['status']       = 8;
                 $this->shop_common->AddOrderServiceLog($param, 1);
 
                 $this->success('取消成功');

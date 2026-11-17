@@ -503,6 +503,10 @@ class Arctype extends Model
      */
     public function getAllPid($id, $is_RecycleBin = false)
     {
+        $id = intval($id);
+        if ($id <= 0) {
+            return [];
+        }
         $seo_pseudo = 0;
         $city_switch_on = config('city_switch_on');
         if ($city_switch_on) {
@@ -519,9 +523,17 @@ class Arctype extends Model
                 'status'    => 1,
             ];
             if (false === $is_RecycleBin) $map['is_del'] = 0;
-            $arctype_list = Db::name('Arctype')->field('*, id as typeid')
-                ->where($map)
-                ->getAllWithIndex('id');
+            /* 性能优化：同一请求内只加载一次栏目表，并自动排除 longtext 等大字段，
+               避免首页每个栏目各把整表（含大字段）加载一遍 */
+            static $arctypePool = [];
+            $poolKey = $is_RecycleBin ? 'rb' : 'normal';
+            if (!isset($arctypePool[$poolKey])) {
+                $arctypePool[$poolKey] = Db::name('Arctype')
+                    ->field($this->getArctypeSelectFields())
+                    ->where($map)
+                    ->getAllWithIndex('id');
+            }
+            $arctype_list = $arctypePool[$poolKey];
             if (isset($arctype_list[$typeid])) {
                 // 第一个先装起来
                 $arctype_list[$typeid]['typeurl'] = $this->getTypeUrl($arctype_list[$typeid]);
@@ -530,14 +542,12 @@ class Arctype extends Model
                 return $data;
             }
 
-            while (true)
+            while (isset($arctype_list[$typeid]))
             {
                 $typeid = $arctype_list[$typeid]['parent_id'];
-                if($typeid > 0 && $id != $typeid){
-                    if (isset($arctype_list[$typeid])) {
-                        $arctype_list[$typeid]['typeurl'] = $this->getTypeUrl($arctype_list[$typeid]);
-                        $data[$typeid] = $arctype_list[$typeid];
-                    }
+                if($typeid > 0 && $id != $typeid && isset($arctype_list[$typeid]) && !isset($data[$typeid])){
+                    $arctype_list[$typeid]['typeurl'] = $this->getTypeUrl($arctype_list[$typeid]);
+                    $data[$typeid] = $arctype_list[$typeid];
                 } else {
                     break;
                 }
@@ -548,6 +558,34 @@ class Arctype extends Model
         }
 
         return $data;
+    }
+
+    /**
+     * 栏目表常规查询字段：自动排除 longtext/mediumtext 等大字段，保留全部普通字段（含自定义字段）
+     * @return string
+     */
+    private function getArctypeSelectFields()
+    {
+        static $fields = null;
+        if (null === $fields) {
+            $fieldArr = [];
+            $fieldTypes = Db::name('Arctype')->getTableInfo('', 'type');
+            foreach ((array)$fieldTypes as $name => $type) {
+                $type = strtolower(preg_replace('/\(.*/s', '', (string)$type));
+                if (in_array($type, ['mediumtext', 'longtext', 'mediumblob', 'longblob'])) {
+                    continue;
+                }
+                $fieldArr[] = $name;
+            }
+            if (empty($fieldArr)) {
+                $fields = '*, id as typeid';
+            } else {
+                $fieldArr[] = 'id as typeid';
+                $fields = implode(',', $fieldArr);
+            }
+        }
+
+        return $fields;
     }
 
     /**

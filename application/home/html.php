@@ -20,10 +20,19 @@ empty($global) && $global = tpCache('global');
 $web_cmsmode = isset($global['web_cmsmode']) ? $global['web_cmsmode'] : 2;
 /*页面缓存有效期*/
 $app_debug = true;
-$uiset = input('param.uiset/s', 'off');
-if (1 == $web_cmsmode && 'on' != $uiset) { // 运营模式
-    $app_debug = false;
-    $html_cache_arr = config('HTML_CACHE_ARR');
+$uiset = trim(input('param.uiset/s', 'off'), '/');
+if (1 == $web_cmsmode) { // 运营模式
+    // 安全修复：只有已登录管理员的可视化装修模式才允许开启调试，
+    // 防止匿名请求带 uiset=on 打开调试模式导致源码、Session 等信息泄露
+    if ('on' == $uiset && is_adminlogin()) {
+        $app_debug = true;
+    } else {
+        $app_debug = false;
+        $html_cache_arr = config('HTML_CACHE_ARR');
+    }
+} else {
+    // 开发模式：调试信息只对已登录管理员可见，避免匿名访客看到源码、环境变量、Session 等报错详情
+    $app_debug = is_adminlogin() ? true : false;
 }
 /*--end*/
 

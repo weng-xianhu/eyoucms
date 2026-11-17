@@ -93,6 +93,8 @@ $session_conf = [
     // 端口
     // 'port'           => 11211,
     'path'  => $session_path,
+    // 阻止 JS 读取 Session Cookie（PHPSESSID），防止 XSS 窃取会话
+    'httponly' => true,
 ];
 $session_file = APP_PATH.'admin/conf/session_conf.php';
 if (file_exists($session_file)) {
@@ -340,7 +342,7 @@ return array(
         //  cookie 启用安全传输
         'secure'    => false,
         // httponly设置
-        'httponly'  => '', // 设置为true时，通过阻止 JS 读取 Cookie 来 防止XSS 攻击
+        'httponly'  => true, // 设置为true时，通过阻止 JS 读取 Cookie 来 防止XSS 攻击
         // 是否使用 setcookie
         'setcookie' => true,
         // 防止跨站请求伪造（CSRF）攻击

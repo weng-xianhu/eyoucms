@@ -629,8 +629,24 @@ class Filemanager extends Base
             return json(['code' => 0, 'msg' => '参数有误']);
         }
 
+        // 安全修复：禁止读取系统关键文件（配置文件、数据库文件、PHP源码等）
+        if (!$this->checkForbiddenFile($filename, $activepath)) {
+            return json(['code' => 0, 'msg' => '禁止读取系统文件']);
+        }
+
         $filepath = $this->baseDir . $activepath . '/' . $filename;
-        if (!file_exists($filepath)) {
+
+        // 安全修复：限制在模板目录（maxDir）内，防止目录穿越读取任意文件
+        $base_path = realpath($this->baseDir . $this->maxDir);
+        $real_path = realpath($filepath);
+        if (false === $real_path || false === $base_path) {
+            return json(['code' => 0, 'msg' => '目录不存在']);
+        }
+        if ($real_path !== $base_path && 0 !== strpos($real_path, $base_path . DIRECTORY_SEPARATOR)) {
+            return json(['code' => 0, 'msg' => '非法路径访问，禁止目录穿越']);
+        }
+
+        if (!file_exists($real_path)) {
             return json(['code' => 0, 'msg' => '文件不存在']);
         }
 
@@ -644,7 +660,7 @@ class Filemanager extends Base
             'php' => 'text/x-php'
         ];
 
-        $content = file_get_contents($filepath);
+        $content = file_get_contents($real_path);
         return json([
             'code' => 1,
             'data' => [

@@ -2,6 +2,7 @@
 /**
  * The Component class
  */
+#[\AllowDynamicProperties]
 abstract class LtComponent
 {
 	/**

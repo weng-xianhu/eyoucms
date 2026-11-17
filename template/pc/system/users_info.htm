@@ -6,9 +6,20 @@
         <div class="drop-menu"  id='user_nav_z'>
         <ul onmouseout="head_nav_b();">
             <li><a href="{eyou:Diyurl link='user/Users/index' /}">个人中心</a></li>
+            {eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+            <li><a href="{eyou:Diyurl link='user/Shop/shop_centre' /}">我的订单</a></li>
+            {/eyou:if}
             <li><a href="{eyou:Diyurl link='user/Users/collection_index' /}">我的收藏</a></li>
             <li><a href="{eyou:Diyurl link='user/Users/logout' /}">安全退出</a></li>
         </ul>
         </div>
     </div>
 </div>
+{eyou:if condition="getUsersConfigData('shop.shop_open') == 1"}
+<div class="shopBar badge-corner">
+    <a href="{eyou:Diyurl link='user/Shop/shop_cart_list' /}" class="shop-ico">
+        {notempty name='$users.cart_num'}<span class="badge bg-yellow">{$users.cart_num}</span>{/notempty}
+        <i class="iconfont icon-shopping-cart" aria-hidden="true"></i>
+    </a>
+</div>   
+{/eyou:if}

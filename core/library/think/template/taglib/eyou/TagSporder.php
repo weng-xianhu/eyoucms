@@ -23,6 +23,7 @@ use think\Cookie;
 load_trait('controller/Jump');
 class TagSporder extends Base
 {
+    public $weappInfo;
     use \traits\controller\Jump;
 
     public $users_id = 0;
@@ -46,6 +47,8 @@ class TagSporder extends Base
         if (empty($order_id)) {
             $order_id = input('param.order_id');
         }
+        // 订单ID必须是正整数，禁止请求参数原样参与查询与 JS 拼接（防止 SQL 注入 / 反射型 XSS）
+        $order_id = is_scalar($order_id) ? intval($order_id) : 0;
 
         if (!empty($order_id)) {
             // 公共条件
@@ -103,8 +106,8 @@ class TagSporder extends Base
             // 封装查询物流链接
             $result['OrderData']['LogisticsInquiry'] = $MobileExpressUrl = '';
             if (('2' == $result['OrderData']['order_status'] || '3' == $result['OrderData']['order_status']) && empty($result['OrderData']['prom_type'])) {
-                // 移动端查询物流链接
-                $result['OrderData']['MobileExpressUrl'] = "//m.kuaidi100.com/index_all.html?type=".$result['OrderData']['express_code']."&postid=".$result['OrderData']['express_order']."&callbackurl=".$ReturnUrl;
+                // 移动端查询物流链接（当前URL来自请求，输出到 href 前必须转义）
+                $result['OrderData']['MobileExpressUrl'] = htmlspecialchars("//m.kuaidi100.com/index_all.html?type=".$result['OrderData']['express_code']."&postid=".$result['OrderData']['express_order']."&callbackurl=".$ReturnUrl, ENT_QUOTES, 'UTF-8');
 
                 if (isMobile()) {
                     $MobileExpressUrl = "//m.kuaidi100.com/index_all.html?type=".$result['OrderData']['express_code']."&postid=".$result['OrderData']['express_order']."&callbackurl=".$ReturnUrl;
@@ -112,7 +115,9 @@ class TagSporder extends Base
                     $MobileExpressUrl = "https://www.kuaidi100.com/chaxun?com=".$result['OrderData']['express_code']."&nu=".$result['OrderData']['express_order'];
                 }
 
-                $result['OrderData']['LogisticsInquiry'] = " onclick=\"LogisticsInquiry('{$MobileExpressUrl}');\" ";
+                // JS 中的值用 json_encode 编码后再做 HTML 属性转义，避免引号闭合造成 XSS
+                $MobileExpressUrlJs = htmlspecialchars(json_encode($MobileExpressUrl), ENT_QUOTES, 'UTF-8');
+                $result['OrderData']['LogisticsInquiry'] = " onclick=\"LogisticsInquiry({$MobileExpressUrlJs});\" ";
             }
             // 是否移动端，1表示移动端，0表示PC端
             $result['OrderData']['IsMobile'] = isMobile() ? 1 : 0;
@@ -307,8 +312,9 @@ class TagSporder extends Base
                     }
                     $result['OrderData']['pay_name'] = $pay_name;
                 }
-                // 封装取消订单JS
-                $result['OrderData']['CancelOrder']   = " onclick=\"CancelOrder('{$order_id}');\" ";
+                // 封装取消订单JS（order_id 已强制整型，order_code 编码后再输出）
+                $orderCodeJs = htmlspecialchars(json_encode((string)$result['OrderData']['order_code']), ENT_QUOTES, 'UTF-8');
+                $result['OrderData']['CancelOrder']   = " onclick=\"CancelOrder({$order_id});\" ";
                 // 封装收货地址
                 if ($this->usersTplVersion == 'v3') {
                     $result['OrderData']['ConsigneeInfo'] = $result['OrderData']['province'].' '.$result['OrderData']['city'].' '.$result['OrderData']['district'].' '.$result['OrderData']['address'];
@@ -318,11 +324,11 @@ class TagSporder extends Base
                 //售后
                 $result['OrderData']['ServiceList'] = urldecode(url('user/Shop/service_list', ['order_id' => $order_id]));
                 // 封装订单催发货JS
-                $result['OrderData']['OrderRemind'] = " onclick=\"OrderRemind('{$order_id}','{$result['OrderData']['order_code']}');\" ";
+                $result['OrderData']['OrderRemind'] = " onclick=\"OrderRemind({$order_id}, {$orderCodeJs});\" ";
                 //评价
                 $result['OrderData']['AddProduct'] = urldecode(url('user/ShopComment/comment_list', ['order_id' => $order_id]));
                 //确认收货
-                $result['OrderData']['Confirm'] = " onclick=\"Confirm('{$order_id}','{$result['OrderData']['order_code']}');\" ";
+                $result['OrderData']['Confirm'] = " onclick=\"Confirm({$order_id}, {$orderCodeJs});\" ";
 
                 // 传入JS参数
                 $data['is_wap'] = isWeixin() || isMobile() ? 1 : 0;

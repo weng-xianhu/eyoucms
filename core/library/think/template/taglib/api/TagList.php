@@ -131,13 +131,14 @@ class TagList extends Base
         }  
         // 查询条件
         $condition = array();
+        $bind = array();
         foreach (array('keywords','keyword','typeid','notypeid','flag','noflag','channel','content') as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
                     $keywords = trim($param[$key]);
                     $keywords = str_replace(['<','>','"',';',',','@','&'], '', $keywords);
-                    $keywords = addslashes($keywords);
-                    $condition[] = Db::raw('a.title LIKE "%'.$keywords.'%"');
+                    $condition[] = 'a.title LIKE :ey_keywords';
+                    $bind['ey_keywords'] = '%'.$keywords.'%';
                 } elseif ($key == 'keyword' && !empty($param[$key])) {
                     $keyword = str_replace('，', ',', $param[$key]);
                     $keywordArr = explode(',', $keyword);
@@ -146,16 +147,21 @@ class TagList extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
-                            $keywordArr[$_k] = addslashes($_v);
+                            $keywordArr[$_k] = $_v;
                         }
                     }
                     $keyword = implode('|', $keywordArr);
-                    $condition[] = Db::raw(" CONCAT(a.title,a.seo_keywords) REGEXP '$keyword' ");
+                    $condition[] = ' CONCAT(a.title,a.seo_keywords) REGEXP :ey_keyword ';
+                    $bind['ey_keyword'] = $keyword;
                 } elseif ($key == 'channel') {
                     array_push($condition, "a.channel IN ({$channeltype})");
                 } elseif ($key == 'typeid') {
+                    $typeidIntArr = array_filter(array_map('intval', explode(',', $typeid)), function ($v) {
+                        return $v > 0;
+                    });
+                    $typeid = empty($typeidIntArr) ? '0' : implode(',', $typeidIntArr);
                     $web_stypeid_open = tpCache('web.web_stypeid_open'); // 是否开启副栏目
                     if (empty($web_stypeid_open)) { // 关闭副栏目
                         array_push($condition, "a.typeid IN ({$typeid})");
@@ -240,7 +246,7 @@ class TagList extends Base
         if (!empty($Customfieldname)) { // 筛选逻辑用到
             $builder->join('product_content c', 'a.aid = c.aid', 'LEFT');
         }
-        $builder->whereRaw($where_str);  // 使用动态的where条件
+        $builder->whereRaw($where_str, $bind);  // 使用动态的where条件
         $builder->orderRaw($orderby);  // 使用动态的排序
         $pages = $builder->paginate($pagesize, false, $paginate);  // 分页
     

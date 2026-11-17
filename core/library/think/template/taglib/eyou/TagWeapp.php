@@ -52,6 +52,9 @@ class TagWeapp extends Base
             }
 
             $code = $val['code'];
+            if (is_weapp_invalid($code)) {
+                continue;
+            }
             $class    =   get_weapp_class($code);
             if (class_exists($class)) {
                 $weappClass  =   new $class;

@@ -676,12 +676,10 @@ class getid3_bmp extends getid3_handler
 			}
 			if (headers_sent()) {
 				echo 'plotted '.($BMPinfo['resolution_x'] * $BMPinfo['resolution_y']).' pixels in '.(time() - $starttime).' seconds<BR>';
-				imagedestroy($im);
 				exit;
 			} else {
 				header('Content-type: image/png');
 				imagepng($im);
-				imagedestroy($im);
 				return true;
 			}
 		}

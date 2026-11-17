@@ -88,7 +88,7 @@
                     <label for="name">操作权限</label>
                 </dt>
                 <dd class="opt">
-                    <p><label><input type="checkbox" id="select_cud"{if condition="! empty($info.cud) && count($info.cud)>=3"} checked="checked"{/if} />完全控制</label></p>
+                    <p><label><input type="checkbox" id="select_cud"{if condition="! empty($info.cud) && ! array_diff(['add','edit','del','changetableval','rebackdraft'], $info.cud)"} checked="checked"{/if} />完全控制</label></p>
                     <p><label><input type="checkbox" name="cud[]" value="add"{if condition="! empty($info.cud) && in_array('add', $info.cud)"} checked="checked"{/if} />添加信息</label></p>
                     <p><label><input type="checkbox" name="cud[]" value="edit"{if condition="! empty($info.cud) && in_array('edit', $info.cud)"} checked="checked"{/if} />修改信息</label></p>
                     <p><label><input type="checkbox" name="cud[]" value="del"{if condition="! empty($info.cud) && in_array('del', $info.cud)"} checked="checked"{/if} />删除信息</label></p>

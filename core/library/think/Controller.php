@@ -95,7 +95,7 @@ class Controller
      * @access public
      * @param Request $request Request 对象
      */
-    public function __construct(Request $request = null)
+    public function __construct($request = null)
     {
         if (is_null($request)) {
             $request = Request::instance();

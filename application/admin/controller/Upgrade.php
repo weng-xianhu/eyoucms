@@ -50,7 +50,7 @@ class Upgrade extends Controller {
     {
         $sys_info['os']             = PHP_OS;
         $sys_info['zlib']           = function_exists('gzclose') ? 'YES' : 'NO';//zlib
-        $sys_info['safe_mode']      = (boolean) ini_get('safe_mode') ? 'YES' : 'NO';//safe_mode = Off       
+        $sys_info['safe_mode']      = (bool) ini_get('safe_mode') ? 'YES' : 'NO';//safe_mode = Off       
         $sys_info['timezone']       = function_exists("date_default_timezone_get") ? date_default_timezone_get() : "no_timezone";
         $sys_info['curl']           = function_exists('curl_init') ? 'YES' : 'NO';  
         $sys_info['web_server']     = $_SERVER['SERVER_SOFTWARE'];

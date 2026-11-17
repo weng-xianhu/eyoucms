@@ -21,6 +21,10 @@ use think\Request;
 
 class Media extends Base
 {
+    public $users_db;
+    public $media_order_db;
+    public $media_play_record_db;
+
     public function _initialize()
     {
         parent::_initialize();

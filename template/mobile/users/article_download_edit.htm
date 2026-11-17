@@ -365,104 +365,54 @@
                 return false;
             }
         }
-        var date = new Date();
-        var y = date.getFullYear();
-        var m = date.getMonth() + 1;
-        m = m < 10 ? '0' + m : m;
-        var d = date.getDate();
-        d = d < 10 ? ('0' + d) : d;
-
-        $.ajax({
-            type: 'POST',
-            url : "{:url('plugins/AliyunOss/oss_upload')}",
-            data: {_ajax:1,down:1},
-            dataType: "JSON",
-            success: function(res1){
-                if (1 == res1.code){
-                    var accessid = res1.data.accessid;
-                    var policy = res1.data.policy;
-                    var signature = res1.data.signature;
-                    var filePath = res1.data.filePath;
-                    for(var i = 0 ;i<document.getElementById("ossFile").files.length;i++) {
-                        file = document.getElementById("ossFile").files[i];
-                        var fileName = file.name;
-
-                        var request = new FormData();
-                        request.append("OSSAccessKeyId",accessid);
-                        request.append("policy",policy);
-                        request.append("Signature",signature);
-                        request.append("success_action_status",201);
-
-                        var fileExt = fileName.substr(fileName.lastIndexOf('.')).toLowerCase();
-                        var num = round_num();
-                        //存储文件名
-                        var name = 'U'+admin_id+'-'+ new Date().getTime()+num+ fileExt;
-                        fileName = filePath + y + m + d + "/"+ name;
-
-                        request.append("key", fileName);
-                        request.append('file', file);
-
-                        var tr = $("#upload-" + arr[i]);
-                        new Promise(function() {
-                            var tr = $("#upload-" + arr[i]);
-                            var file_mime = file.type;
-                            var file_name = file.name;
-                            var file_size = file.size;
-                            var file_ext = fileExt;
-                            $.ajax({
-                                url: res1.data.host,
-                                data: request,
-                                processData: false,
-                                cache: false,
-                                contentType: false,
-                                dataType: 'xml',
-                                type : 'post',
-                                xhr: function () {
-                                    myXhr = $.ajaxSettings.xhr();
-                                    if (myXhr.upload) {
-                                        myXhr.upload.addEventListener('progress', function (e) {
-                                            var curr = e.loaded;
-                                            var total = e.total;
-                                            process = parseInt(curr / total * 100);
-                                            tr.children("td").eq(3).text('上传中...' + process + "%");
-                                        });
-                                    }
-
-                                    return myXhr;
-                                },
-                                success: function (res2) {
-                                    var res = $(res2).find('PostResponse');
-                                    if (res) {
-                                        var key = res.find('Key').text();
-                                        var video_url = res1.data.domain + "/" + key;
-                                        var html = '';
-                                        html += '<input type="hidden" name="fileupload[file_url][]" value="' + video_url + '">';
-                                        html += '<input type="hidden" name="fileupload[file_mime][]" value="' + file_mime + '">';
-                                        html += '<input type="hidden" name="fileupload[file_name][]" value="' + file_name + '">';
-                                        html += '<input type="hidden" name="fileupload[file_ext][]" value="' + file_ext + '">';
-                                        html += '<input type="hidden" name="fileupload[file_size][]" value="' + file_size + '">';
-
-                                        var tds = tr.children();
-                                        tds.eq(3).html('<span style="color: #5FB878;">'+ey_foreign_system10+'</span>');
-                                        tds.eq(4).html('<span class="layui-btn layui-btn-xs layui-btn-danger" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</span>' + html);
-                                    }
-
-                                },
-                                error: function (e) {
-                                    showErrorMsg(e.responseText);
-                                    return false;
-                                }
+        var files = document.getElementById("ossFile").files;
+        for(var i = 0 ;i<files.length;i++) {
+            (function(file, tr){
+                var request = new FormData();
+                request.append('file', file);
+                $.ajax({
+                    url: "{:url('user/Uploadify/DownloadUploadFile')}",
+                    data: request,
+                    processData: false,
+                    cache: false,
+                    contentType: false,
+                    dataType: 'json',
+                    type : 'post',
+                    xhr: function () {
+                        var myXhr = $.ajaxSettings.xhr();
+                        if (myXhr.upload) {
+                            myXhr.upload.addEventListener('progress', function (e) {
+                                var process = parseInt(e.loaded / e.total * 100);
+                                tr.children("td").eq(3).text('上传中...' + process + "%");
                             });
-                        })
+                        }
+                        return myXhr;
+                    },
+                    success: function (res) {
+                        var tds = tr.children();
+                        if (1 == res.code) {
+                            var html = '';
+                            html += '<input type="hidden" name="fileupload[file_url][]" value="' + res.file_url + '">';
+                            html += '<input type="hidden" name="fileupload[file_mime][]" value="' + res.file_mime + '">';
+                            html += '<input type="hidden" name="fileupload[file_name][]" value="' + res.file_name + '">';
+                            html += '<input type="hidden" name="fileupload[file_ext][]" value="' + res.file_ext + '">';
+                            html += '<input type="hidden" name="fileupload[file_size][]" value="' + res.file_size + '">';
+                            html += '<input type="hidden" name="fileupload[uhash][]" value="' + res.uhash + '">';
+                            html += '<input type="hidden" name="fileupload[md5file][]" value="' + res.md5file + '">';
+                            tds.eq(3).html('<span style="color: #5FB878;">' + res.msg + '</span>');
+                            tds.eq(4).html('<span class="layui-btn layui-btn-xs layui-btn-danger" style="line-height:unset;height: unset;" onclick="DeleteFile(this);">移除</span>' + html);
+                        } else {
+                            tds.eq(3).html('<span style="color: #FF5722;">' + res.msg + '</span>');
+                        }
+                    },
+                    error: function (e) {
+                        tr.children("td").eq(3).html('<span style="color: #FF5722;">上传失败</span>');
+                        showErrorMsg(e.responseText);
                     }
-                }else{
-                    showErrorMsg(res1.msg);
-                }
-            },
-            error: function(e){
-                showErrorMsg(e.responseText);
-            }
-        });
+                });
+            })(files[i], $("#upload-" + arr[i]));
+        }
+        $("#ossFile").val('');
     }
     function aws_download__upload() {
         var awsFileObj = document.getElementById("awsFile").files;

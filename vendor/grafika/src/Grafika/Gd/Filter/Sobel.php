@@ -90,7 +90,6 @@ class Sobel implements FilterInterface
 
             }
         }
-        imagedestroy($old); // Free resource
         // Create and return new image with updated core
         return new Image(
             $new,

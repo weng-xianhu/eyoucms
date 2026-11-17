@@ -18,6 +18,19 @@ use think\Config;
 use app\admin\logic\MemberLogic;
 
 class Member extends Base {
+    public $users_db;
+    public $users_list_db;
+    public $users_level_db;
+    public $users_config_db;
+    public $users_money_db;
+    public $field_type_db;
+    public $users_parameter_db;
+    public $users_type_manage_db;
+    public $shop_address_db;
+    public $shop_cart_db;
+    public $shop_order_db;
+    public $shop_order_log_db;
+    public $shop_order_details_db;
 
     /**
      * 构造方法
@@ -597,6 +610,80 @@ class Member extends Base {
             }
         }
         $this->error('删除失败');
+    }
+
+    // 会员批量修改级别
+    public function users_batch_level()
+    {
+        if (!IS_AJAX_POST) {
+            $this->error('非法操作');
+        }
+
+        $users_id = input('users_id/a');
+        if (empty($users_id) || !is_array($users_id)) {
+            $this->error('请至少选择一个会员');
+        }
+        $users_id = eyIntval($users_id);
+        $users_id = array_values(array_unique(array_filter($users_id, function ($val) {
+            return intval($val) > 0;
+        })));
+        if (empty($users_id)) {
+            $this->error('请至少选择一个会员');
+        }
+        if (count($users_id) > 10000) {
+            $this->error('一次最多只能修改10000个会员');
+        }
+
+        // 校验会员级别
+        $level_id = input('level/d', 0);
+        $levelRow = Db::name('users_level')->where([
+            'level_id' => $level_id,
+            'lang'     => get_main_lang(),
+        ])->find();
+        if (empty($levelRow)) {
+            $this->error('会员级别不存在');
+        }
+
+        $saveData = [
+            'level'       => $level_id,
+            'update_time' => getTime(),
+        ];
+        // 默认级别视为注册会员，清空会员有效期；其他级别从当前时间重新计算有效期
+        if (1 == $level_id) {
+            $saveData['level_maturity_days'] = 0;
+            $saveData['open_level_time']     = 0;
+        } else {
+            $level_maturity_days = input('level_maturity_days/d', 0);
+            if (0 >= $level_maturity_days) {
+                $this->error('请填写会员有效期天数！');
+            }
+            $saveData['level_maturity_days'] = min($level_maturity_days, 99999999);
+            $saveData['open_level_time']     = getTime();
+        }
+
+        // 分批更新，避免大批量操作造成长事务与锁等待
+        $result = true;
+        foreach (array_chunk($users_id, 1000) as $chunk) {
+            $r = $this->users_db->where([
+                'users_id' => ['IN', $chunk],
+                'is_del'   => 0,
+            ])->update($saveData);
+            if (false === $r) {
+                $result = false;
+                break;
+            }
+        }
+
+        if (true === $result) {
+            // 日志只记录前100个会员ID，避免日志内容过长
+            $log_ids = implode(',', array_slice($users_id, 0, 100));
+            if (count($users_id) > 100) {
+                $log_ids .= '等'.count($users_id).'个会员';
+            }
+            adminLog('批量修改会员级别为'.$levelRow['level_name'].'：'.$log_ids);
+            $this->success('批量修改成功');
+        }
+        $this->error('操作失败');
     }
 
     // 级别列表
@@ -1448,17 +1535,40 @@ class Member extends Base {
             $config['gatewayUrl'] = 'https://openapi.alipay.com/gateway.do';
             $config['alipay_public_key'] = $alipay['alipay_public_key'];
 
-            // 实例化支付宝配置
-            $aop = new \AlipayTradeService($config);
-
-            // 返回结果
-            if (!empty($admin_pay)) {
-                $result = $aop->IsQuery($RequestBuilder,$admin_pay);
-            }else{
-                $result = $aop->Query($RequestBuilder);
+            // 实例化支付宝配置并查询（SDK 出错时会 echo 通讯日志或抛异常，统一捕获转中文）
+            $scene = !empty($admin_pay) ? '支付宝配置验证' : '支付宝订单查询';
+            $obLevel = ob_get_level();
+            ob_start();
+            $result = null;
+            $exceptionMsg = '';
+            try {
+                $aop = new \AlipayTradeService($config);
+                if (!empty($admin_pay)) {
+                    $result = $aop->IsQuery($RequestBuilder,$admin_pay);
+                }else{
+                    $result = $aop->Query($RequestBuilder);
+                }
+            } catch (\Exception $e) {
+                $exceptionMsg = $e->getMessage();
             }
+            $output = '';
+            while (ob_get_level() > $obLevel) {
+                $output = ob_get_clean() . $output;
+            }
+            $output = trim($output);
 
+            // SDK 返回的中文字符串提示（APPID错误/公钥错误/验签出错）
+            if (is_string($result) && '' !== trim($result)) {
+                return alipayErrorMsg($result, $scene);
+            }
             $result = json_decode(json_encode($result),true);
+            if (!is_array($result) || empty($result)) {
+                $raw = '' !== $output ? $output : $exceptionMsg;
+                return alipayErrorMsg($raw, $scene);
+            }
+            !isset($result['code']) && $result['code'] = '';
+            !isset($result['msg']) && $result['msg'] = '';
+            !isset($result['trade_status']) && $result['trade_status'] = '';
 
             // 判断结果
             if ('40004' == $result['code'] && 'Business Failed' == $result['msg']) {
@@ -1468,19 +1578,15 @@ class Member extends Base {
                 return '订单在支付宝中不存在！';
             }else if ('10000' == $result['code'] && 'WAIT_BUYER_PAY' == $result['trade_status']) {
                 return '订单在支付宝中生成，但并未支付完成！';
-            }else if ('10000' == $result['code'] && 'TRADE_SUCCESS' == $result['trade_status']) {
+            }else if ('10000' == $result['code'] && in_array($result['trade_status'], ['TRADE_SUCCESS', 'TRADE_FINISHED'])) {
                 return '订单已使用支付宝支付完成！';
+            }else if ('10000' == $result['code'] && 'TRADE_CLOSED' == $result['trade_status']) {
+                return '订单在支付宝中已关闭（未付款超时或已退款）！';
+            }else if ('10000' == $result['code']) {
+                return '订单在支付宝中的交易状态：' . $result['trade_status'];
             }
 
-            // 用于支付宝支付配置验证
-            if (!empty($admin_pay) && !empty($result)) {
-                if ('40001' == $result['code'] && 'Missing Required Arguments' == $result['msg']) {
-                    return '商户私钥错误！';
-                }
-                if (!is_array($result)) {
-                    return $result;
-                }
-            }
+            return alipayErrorMsg($result, $scene);
         }
     }
 
@@ -1854,12 +1960,13 @@ class Member extends Base {
             $order_code_list = get_arr_column($result, 'order_code');
             // 删除订单列表数据
             $return = Db::name('media_order')->where($Where)->delete();
-            if ($return) {
+            if ($return > 0) {
                 adminLog('删除订单：'.implode(',', $order_code_list));
                 $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
+            } elseif ($return === 0) {
+                $this->error('订单不存在或已被删除');
             }
+            $this->error('删除失败');
         }
         $this->error('参数有误');
     }
@@ -1978,12 +2085,13 @@ class Member extends Base {
             $order_code_list = get_arr_column($result, 'order_code');
             // 删除订单列表数据
             $return = Db::name('article_order')->where($Where)->delete();
-            if ($return) {
+            if ($return > 0) {
                 adminLog('删除文章订单：'.implode(',', $order_code_list));
                 $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
+            } elseif ($return === 0) {
+                $this->error('订单不存在或已被删除');
             }
+            $this->error('删除失败');
         }
         $this->error('参数有误');
     }
@@ -2328,12 +2436,13 @@ class Member extends Base {
             $order_code_list = get_arr_column($result, 'order_code');
             // 删除订单列表数据
             $return = Db::name('download_order')->where($Where)->delete();
-            if ($return) {
+            if ($return > 0) {
                 adminLog('删除下载订单：'.implode(',', $order_code_list));
                 $this->success('删除成功');
-            } else {
-                $this->error('删除失败');
+            } elseif ($return === 0) {
+                $this->error('订单不存在或已被删除');
             }
+            $this->error('删除失败');
         }
         $this->error('参数有误');
     }

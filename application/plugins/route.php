@@ -18,6 +18,9 @@ $weappRow = \think\Db::name('weapp')->field('code')->where([
     'status'    => 1,
 ])->cache(true, null, "weapp")->select();
 foreach ($weappRow as $key => $val) {
+    if (is_weapp_invalid($val['code'])) {
+        continue;
+    }
     $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'route.php';
     if (file_exists($file)) {
         $route_value = include_once $file;

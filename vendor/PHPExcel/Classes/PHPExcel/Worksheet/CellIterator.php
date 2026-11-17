@@ -81,7 +81,7 @@ abstract class PHPExcel_Worksheet_CellIterator
      */
     public function setIterateOnlyExistingCells($value = true)
     {
-        $this->onlyExistingCells = (boolean) $value;
+        $this->onlyExistingCells = (bool) $value;
 
         $this->adjustForExistingOnlyRange();
     }

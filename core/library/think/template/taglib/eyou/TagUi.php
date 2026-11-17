@@ -36,7 +36,8 @@ class TagUi extends Base
         $v = I('param.v/s', 'pc');
         $v = trim($v, '/');
         $parseStr = '';
-        if ("on" == $this->uiset) {
+        // 安全修复：可视化装修模式仅限已登录管理员，避免匿名请求加载装修脚本并泄露后台入口路径
+        if ("on" == $this->uiset && is_adminlogin()) {
 
             /*权限控制 by 小虎哥*/
             $admin_info = session('admin_info');

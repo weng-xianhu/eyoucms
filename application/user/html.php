@@ -20,6 +20,9 @@ $web_cmsmode = isset($global['web_cmsmode']) ? $global['web_cmsmode'] : 2;
 $app_debug = true;
 if (1 == $web_cmsmode) { // 运营模式
     $app_debug = false;
+} else {
+    // 开发模式：调试信息只对已登录管理员可见，避免匿名访客看到源码、环境变量、Session 等报错详情
+    $app_debug = is_adminlogin() ? true : false;
 }
 /*--end*/
 

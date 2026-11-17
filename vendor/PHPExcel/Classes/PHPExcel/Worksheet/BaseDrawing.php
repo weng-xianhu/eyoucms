@@ -213,7 +213,7 @@ class PHPExcel_Worksheet_BaseDrawing implements PHPExcel_IComparable
      * @throws     PHPExcel_Exception
      * @return PHPExcel_Worksheet_BaseDrawing
      */
-    public function setWorksheet(PHPExcel_Worksheet $pValue = null, $pOverrideOld = false)
+    public function setWorksheet($pValue = null, $pOverrideOld = false)
     {
         if (is_null($this->worksheet)) {
             // Add drawing to PHPExcel_Worksheet
@@ -462,7 +462,7 @@ class PHPExcel_Worksheet_BaseDrawing implements PHPExcel_IComparable
      * @throws     PHPExcel_Exception
      * @return PHPExcel_Worksheet_BaseDrawing
      */
-    public function setShadow(PHPExcel_Worksheet_Drawing_Shadow $pValue = null)
+    public function setShadow($pValue = null)
     {
            $this->shadow = $pValue;
            return $this;

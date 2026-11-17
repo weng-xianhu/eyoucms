@@ -33,6 +33,10 @@ class Index extends Base
         $assign_data = [];
 
         $preview_templet = input('param.templet/s');
+        /* 首页模板预览仅限已登录的后台管理员使用，防止游客指定模板渲染 */
+        if (!empty($preview_templet) && !session('?admin_id')) {
+            $preview_templet = '';
+        }
         /*处理多语言首页链接最后带斜杆，进行301跳转*/
         $lang = input('param.lang/s');
         if (preg_match("/\?lang=".$this->home_lang."\/$/i", $this->request->url(true)) && $lang == $this->home_lang.'/') {
@@ -161,7 +165,6 @@ class Index extends Base
         $inputXml = file_get_contents("php://input");
         if (!empty($inputXml)) {
             // 禁止引用外部xml实体，防止XXE攻击
-            @libxml_disable_entity_loader(true);
             // 解析参数
             $jsonXml = json_encode(simplexml_load_string($inputXml, 'SimpleXMLElement', LIBXML_NOCDATA));
             // 转换数组

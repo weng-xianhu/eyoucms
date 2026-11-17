@@ -41,9 +41,9 @@ class PHPExcel_Reader_Excel2007_Chart
             if ($format == 'string') {
                 return (string) $attributes[$name];
             } elseif ($format == 'integer') {
-                return (integer) $attributes[$name];
+                return (int) $attributes[$name];
             } elseif ($format == 'boolean') {
-                return (boolean) ($attributes[$name] === '0' || $attributes[$name] !== 'true') ? false : true;
+                return (bool) ($attributes[$name] === '0' || $attributes[$name] !== 'true') ? false : true;
             } else {
                 return (float) $attributes[$name];
             }

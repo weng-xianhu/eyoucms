@@ -22,7 +22,8 @@ use think\Db;
  */
 load_trait('controller/Jump');
 class TagSpsubmitorder extends Base
-{ 
+{
+    public $usersTpl2xVersion; 
     use \traits\controller\Jump;
 
     /**
@@ -51,14 +52,18 @@ class TagSpsubmitorder extends Base
     {
         // 获取解析数据
         $aid = 0;
+        $num = 0;
+        $spec_value_id = '';
         $GetMd5 = input('param.querystr/s', '');
         if (!empty($GetMd5)) {
-            $querystr = cookie($GetMd5);
-            if(empty($querystr)) $this->error('下单链接已过期！');
+            $cookieData = cookie($GetMd5);
+            if (empty($cookieData)) $this->error('下单链接已过期！');
+            // 严格解析 Cookie 数据，防止数组注入查询条件
+            $querystr = eySafeOrderCookie($cookieData);
             // 赋值数据
-            $aid = !empty($querystr['aid']) ? $querystr['aid'] : 0;
-            $num = !empty($querystr['product_num']) ? $querystr['product_num'] : 0;
-            $spec_value_id = !empty($querystr['spec_value_id']) ? $querystr['spec_value_id'] : '';
+            $aid = $querystr['aid'];
+            $num = $querystr['product_num'];
+            $spec_value_id = $querystr['spec_value_id'];
         }
 
         if (!empty($aid)) {

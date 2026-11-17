@@ -1146,15 +1146,16 @@ EOF;
     public function ajax_setfield()
     {
         $field  = input('field'); // 修改哪个字段
-        $field = preg_replace('/([^\w\-])/i', '', $field);
-        $field = str_replace(['password'], '', $field);
-        // 安全修复：禁止通过该接口修改权限/身份等敏感字段，防止低权限管理员越权提升为超级管理员
-        $denyFields = ['role_id', 'parent_id', 'admin_id', 'user_name', 'password'];
-        if (in_array(strtolower($field), $denyFields)) {
+        $field = is_string($field) ? preg_replace('/([^\w\-])/i', '', $field) : '';
+        // 安全修复：只允许修改管理员自身的展示类字段，禁止修改权限、状态、密保时间等敏感字段，
+        // 防止低权限管理员越权提升权限或绕过密保验证
+        $allowFields = ['pen_name', 'true_name'];
+        if (!in_array(strtolower($field), $allowFields)) {
             $this->error('不允许修改该字段');
         }
         if (IS_POST && !empty($field)) {
-            $value  = input('value', '', null); // 修改字段值  
+            $value  = input('value', '', null); // 修改字段值
+            $value  = is_string($value) ? msubstr(trim(strip_tags($value)), 0, 50, false, 'utf-8') : '';
             if (!empty($this->admin_info['admin_id'])) {
                 $r = Db::name('admin')->where('admin_id', $this->admin_info['admin_id'])->save([
                         $field=>$value,
@@ -1678,8 +1679,11 @@ EOF;
         $opt = input('param.opt/s');
         if ('bind' == $opt) {
             $admin_id = input('post.admin_id/d', 0);
+            if (empty($admin_id)) $this->error('参数错误');
+            // 短时签名 token：绑定关系由后台签发，防止他人伪造 admin_id 把自己的微信绑定到目标账号
+            $token = wechat_bind_token_create('admin', $admin_id, 600);
             // 默认授权页面链接
-            $defaultAuthorize = request()->domain() . ROOT_DIR . '/index.php?m=api&c=Ajax&a=defaultAuthorize&admin_id=' . $admin_id;
+            $defaultAuthorize = request()->domain() . ROOT_DIR . '/index.php?m=api&c=Ajax&a=defaultAuthorize&token=' . urlencode($token);
             // 二维码图片完整目录
             $defaultAuthorizePic = UPLOAD_PATH . 'system/wechat_followed/' . $admin_id . '/';
             // 创建文件夹

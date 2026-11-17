@@ -330,7 +330,6 @@ class Image_XMP
 		if (xml_parser_set_option($xml_parser, XML_OPTION_SKIP_WHITE, 0) == false)
 		{
 			// Error setting case folding - destroy the parser and return
-			xml_parser_free($xml_parser);
 			return false;
 		}
 
@@ -340,7 +339,6 @@ class Image_XMP
 		if (xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, 0) == false)
 		{
 			// Error setting case folding - destroy the parser and return
-			xml_parser_free($xml_parser);
 			return false;
 		}
 
@@ -348,12 +346,10 @@ class Image_XMP
 		if (xml_parse_into_struct($xml_parser, $xmltext, $values, $tags) == 0)
 		{
 			// Error Parsing XML - destroy the parser and return
-			xml_parser_free($xml_parser);
 			return false;
 		}
 
 		// Destroy the xml parser
-		xml_parser_free($xml_parser);
 
 		// Clear the output array
 		$xmp_array = array();

@@ -918,6 +918,193 @@ if (!function_exists('get_head_pic'))
         return $pic_url;
     }
 }
+
+if (!function_exists('get_memberlist_public_config'))
+{
+    /**
+     * 会员列表标签允许对外展示的字段配置
+     * 手机、邮箱、余额、积分、openid 等敏感字段不允许输出
+     */
+    function get_memberlist_public_config()
+    {
+        return array(
+            // 会员表内置字段白名单（仅这些字段允许参与输出替换和排序）
+            'fields' => array('users_id', 'username', 'nickname', 'head_pic', 'sex', 'level', 'reg_time', 'last_login', 'province', 'city', 'district', 'login_count'),
+            // 会员自定义字段类型白名单：只允许结构化字段；自由文本(text/multitext/htmltext)与上传类(img/imgs/file/media)一律不输出
+            'allow_dtype' => array('select', 'radio', 'radios', 'checkbox', 'checkboxs', 'switch', 'int', 'float', 'decimal', 'datetime', 'region', 'cascade'),
+        );
+    }
+}
+
+if (!function_exists('get_clear_cache_token'))
+{
+    /**
+     * 定时清理缓存接口的签名 token（由站点安装序列号生成，每个站点不同）
+     * @return string
+     */
+    function get_clear_cache_token()
+    {
+        $secret = (defined('SERIALNUMBER') && !empty(SERIALNUMBER)) ? SERIALNUMBER : (string) config('database.password');
+        $install = defined('INSTALL_DATE') ? INSTALL_DATE : '';
+        return md5('clear_cache|' . $secret . '|' . $install);
+    }
+}
+
+if (!function_exists('get_rewrite_setinlet_token'))
+{
+    /**
+     * 隐藏 index.php 设置接口的 CSRF token（与当前会话绑定，防止跨站请求）
+     * @return string
+     */
+    function get_rewrite_setinlet_token()
+    {
+        $secret = (defined('SERIALNUMBER') && !empty(SERIALNUMBER)) ? SERIALNUMBER : (string) config('database.password');
+        return md5('rewrite_setinlet|' . $secret . '|' . session_id());
+    }
+}
+
+if (!function_exists('wechat_bind_token_key'))
+{
+    /**
+     * 扫码绑定微信 openid 的签名密钥（每个站点不同）
+     * @return string
+     */
+    function wechat_bind_token_key()
+    {
+        $secret = (defined('SERIALNUMBER') && !empty(SERIALNUMBER)) ? SERIALNUMBER : (string) config('database.password');
+        $install = defined('INSTALL_DATE') ? INSTALL_DATE : '';
+        return md5('wechat_bind|' . $secret . '|' . $install);
+    }
+}
+
+if (!function_exists('wechat_bind_token_create'))
+{
+    /**
+     * 生成扫码绑定微信 openid 的短时签名 token（仅服务端签发，客户端不可伪造）
+     * @param string $scope admin=管理员 users=会员
+     * @param int    $id    管理员ID或会员ID
+     * @param int    $ttl   有效期（秒）
+     * @return string
+     */
+    function wechat_bind_token_create($scope, $id, $ttl = 600)
+    {
+        $scope = (string)$scope;
+        $id = intval($id);
+        $expire = getTime() + intval($ttl);
+        $payload = $scope . '|' . $id . '|' . $expire;
+        $sign = hash_hmac('sha256', $payload, wechat_bind_token_key());
+        return $scope . '-' . $id . '-' . $expire . '-' . $sign;
+    }
+}
+
+if (!function_exists('wechat_bind_token_check'))
+{
+    /**
+     * 校验扫码绑定微信 openid 的签名 token
+     * @param string $token
+     * @return array|bool 校验通过返回 ['scope'=>..., 'id'=>...]，否则返回 false
+     */
+    function wechat_bind_token_check($token)
+    {
+        $token = (string)$token;
+        if (empty($token) || strlen($token) > 200) {
+            return false;
+        }
+        $arr = explode('-', $token);
+        if (count($arr) !== 4) {
+            return false;
+        }
+        list($scope, $id, $expire, $sign) = $arr;
+        if (!in_array($scope, array('admin', 'users'), true)) {
+            return false;
+        }
+        // ID 与有效期必须是纯数字，避免负数、科学计数等绕过
+        if (!ctype_digit($id) || !ctype_digit($expire)) {
+            return false;
+        }
+        $id = intval($id);
+        $expire = intval($expire);
+        if ($id <= 0 || $expire < getTime()) {
+            return false;
+        }
+        $payload = $scope . '|' . $id . '|' . $expire;
+        $calcSign = hash_hmac('sha256', $payload, wechat_bind_token_key());
+        if (!hash_equals($calcSign, $sign)) {
+            return false;
+        }
+        return array('scope' => $scope, 'id' => $id);
+    }
+}
+
+if (!function_exists('verify_code_fail_times'))
+{
+    /**
+     * 验证码失败次数统计与限制
+     * @param string $key    业务唯一标识（如 场景|账号）
+     * @param string $action check=检查是否超限，inc=失败次数+1，clear=清空计数
+     * @param int    $limit  允许的最大失败次数
+     * @param int    $expire 统计有效期（秒）
+     * @return bool|int
+     */
+    function verify_code_fail_times($key, $action = 'check', $limit = 5, $expire = 600)
+    {
+        $cacheKey = 'verify_code_fail_' . md5($key);
+        $num = intval(\think\Cache::get($cacheKey));
+        if ('check' == $action) {
+            return $num >= $limit;
+        }
+        if ('clear' == $action) {
+            \think\Cache::rm($cacheKey);
+            return 0;
+        }
+        $num = $num + 1;
+        \think\Cache::set($cacheKey, $num, $expire);
+        return $num;
+    }
+}
+
+if (!function_exists('sms_send_limit_check'))
+{
+    /**
+     * 短信发送频控：按 IP / 会话 / 手机号多维限制，防止短信轰炸与费用消耗
+     * @param string $mobile        接收手机号
+     * @param string $scene         发送场景（用于区分会话计数维度）
+     * @param int    $ipLimit       单 IP 每小时上限
+     * @param int    $sessionLimit  单会话每小时上限
+     * @param int    $mobileLimit   单手机号每小时上限
+     * @return bool true=允许发送，false=超出限制
+     */
+    function sms_send_limit_check($mobile = '', $scene = '', $ipLimit = 100, $sessionLimit = 20, $mobileLimit = 5)
+    {
+        // 使用 REMOTE_ADDR，避免客户端伪造 X-Forwarded-For 绕过
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+        $rules = array(
+            array('key' => 'ip|' . $ip, 'limit' => intval($ipLimit), 'ttl' => 3600),
+        );
+        $sid = session_id();
+        if (!empty($sid)) {
+            $rules[] = array('key' => 'session|' . $sid . '|' . $scene, 'limit' => intval($sessionLimit), 'ttl' => 3600);
+        }
+        if (!empty($mobile)) {
+            $rules[] = array('key' => 'mobile|' . $mobile, 'limit' => intval($mobileLimit), 'ttl' => 3600);
+        }
+
+        // 全部检查通过后再统一计数，避免部分计数造成误伤
+        foreach ($rules as $rule) {
+            $cacheKey = 'sms_send_limit_' . md5($rule['key']);
+            if (intval(\think\Cache::get($cacheKey)) >= $rule['limit']) {
+                return false;
+            }
+        }
+        foreach ($rules as $rule) {
+            $cacheKey = 'sms_send_limit_' . md5($rule['key']);
+            $num = intval(\think\Cache::get($cacheKey));
+            \think\Cache::set($cacheKey, $num + 1, $rule['ttl']);
+        }
+        return true;
+    }
+}
+
 if (!function_exists('get_absolute_url'))
 {
     /*
@@ -960,6 +1147,7 @@ if (!function_exists('get_absolute_url'))
         return $str;
     }
 }
+
 if (!function_exists('get_default_pic'))
 {
     /**
@@ -2539,6 +2727,431 @@ if (!function_exists('sendSms'))
     }
 }
 
+if (!function_exists('wechatPayErrorMsg'))
+{
+    /**
+     * 将微信支付接口(APIv2)返回的错误转成中文可操作提示
+     * @param array|string $result 接口返回数组(含 return_msg / err_code / err_code_des)，或 curl 错误等原始字符串
+     * @param string $scene 场景名称，如：微信支付、小程序支付、微信退款
+     * @return string
+     */
+    function wechatPayErrorMsg($result = [], $scene = '微信支付')
+    {
+        $code = '';
+        $msg  = '';
+        if (is_array($result)) {
+            $code = !empty($result['err_code']) ? trim(strval($result['err_code'])) : '';
+            if (!empty($result['err_code_des'])) {
+                $msg = $result['err_code_des'];
+            } else if (!empty($result['return_msg'])) {
+                $msg = $result['return_msg'];
+            }
+        } else {
+            $msg = $result;
+        }
+        $msg = preg_replace('/\s+/', ' ', trim(strip_tags(strval($msg))));
+
+        if ('' === $code && '' === $msg) {
+            return $scene . '接口未返回有效数据，请检查服务器能否访问 api.mch.weixin.qq.com，以及 PHP 是否开启 curl、openssl、simplexml 扩展';
+        }
+        // 已经翻译过的提示直接返回
+        if (false !== strpos($msg, '原始信息：') || false !== strpos($msg, '错误码：')) {
+            return $msg;
+        }
+
+        // 一、微信支付 err_code 错误码
+        $codeMap = array(
+            'NOAUTH'                => '商户号未开通此支付产品权限，请到微信商户平台【产品中心】开通对应支付产品（JSAPI/Native/H5）',
+            'NOTENOUGH'             => '用户微信余额不足，请更换支付方式',
+            'ORDERPAID'             => '该订单已支付，请勿重复支付',
+            'ORDERCLOSED'           => '订单已关闭，请重新下单',
+            'SYSTEMERROR'           => '微信支付系统繁忙，请稍后重试',
+            'APPID_NOT_EXIST'       => 'AppID 不存在，请检查后台填写的 AppID 是否正确',
+            'MCHID_NOT_EXIST'       => '商户号不存在，请检查后台填写的商户号（mch_id）是否正确',
+            'APPID_MCHID_NOT_MATCH' => 'AppID 与商户号不匹配，请到微信商户平台【产品中心-AppID账号管理】确认已绑定该 AppID',
+            'LACK_PARAMS'           => '缺少必要参数，请检查后台支付配置是否填写完整',
+            'OUT_TRADE_NO_USED'     => '商户订单号重复，请重新下单',
+            'SIGNERROR'             => 'API密钥（KEY）不正确导致签名失败，请到微信商户平台【账户中心-API安全】核对 APIv2 密钥（32位）是否与后台一致',
+            'XML_FORMAT_ERROR'      => '请求数据格式错误，请检查订单标题、附加数据等参数是否含有特殊字符',
+            'REQUIRE_POST_METHOD'   => '请求方式错误，接口需使用 POST 提交',
+            'POST_DATA_EMPTY'       => '提交给微信的数据为空，请检查服务器 curl 请求是否正常',
+            'NOT_UTF8'              => '编码格式错误，请确保参数使用 UTF-8 编码',
+            'ORDERNOTEXIST'         => '订单不存在，请确认订单号是否正确',
+            'INVALID_REQUEST'       => '请求参数无效或商户号未开通相关权限，请检查后台支付配置',
+            'PARAM_ERROR'           => '参数错误，请检查后台支付配置及订单参数',
+            'TRADE_OVERDUE'         => '订单已超过可退款期限，无法退款',
+            'ERROR'                 => '微信支付业务错误，请根据原始信息排查或联系微信支付客服',
+            'USER_ACCOUNT_ABNORMAL' => '用户账户异常（如已注销），无法退款',
+            'INVALID_REQ_TOO_MUCH'  => '无效请求过多，请稍后重试',
+            'INVALID_TRANSACTIONID' => '微信订单号无效，请检查参数',
+            'FREQUENCY_LIMITED'     => '请求频率超限，请稍后重试',
+            'NOTSUPORTCARD'         => '该银行卡不支持退款，请联系微信支付客服',
+            'REFUNDNOTEXIST'        => '退款单不存在，请检查退款单号',
+            'BIZERR_NEED_RETRY'     => '退款业务流程错误，请稍后重试',
+            'TRADE_STATE_ERROR'     => '订单状态错误，仅已支付且未全额退款的订单可申请退款',
+            'REFUND_FEE_INVALID'    => '退款金额无效，请检查退款金额是否超过订单实付金额',
+            'CERT_ERROR'            => '商户API证书校验失败，请重新上传 apiclient_cert.pem / apiclient_key.pem 证书文件',
+            'REFUND_FEE_MISMATCH'   => '退款金额与订单金额不一致，请核对退款金额',
+            'ORDER_REVERSED'        => '订单已撤销，无法操作',
+            'AUTH_CODE_INVALID'     => '授权码无效，请重新扫码',
+            'USERPAYING'            => '用户正在支付中，请稍后查询支付结果',
+        );
+        $tip = '';
+        if ('' !== $code && isset($codeMap[$code])) {
+            $tip = $codeMap[$code];
+        }
+
+        // 二、按 return_msg / err_code_des / curl 错误的关键词匹配
+        if ('' === $tip) {
+            $rules = array(
+                array('/call to undefined function curl|curl_init|undefined function/i',
+                    'PHP 未开启 curl 扩展，无法请求微信支付接口，请开启 curl 扩展或联系空间商'),
+                array('/could not resolve|getaddrinfo|resolving timed out|name or service not known/i',
+                    '无法解析微信支付接口域名（api.mch.weixin.qq.com），请检查服务器 DNS 设置及网络是否正常'),
+                array('/unable to set private key|unable to use client certificate|could not load pem|sslcert|sslkey|private key|证书/i',
+                    '商户API证书（apiclient_cert.pem / apiclient_key.pem）无效或路径错误，请重新上传微信支付证书'),
+                array('/ssl|tls|certificate|handshake/i',
+                    '请求微信支付接口时 SSL 连接失败，请确认 PHP 已开启 openssl 扩展，且服务器 CA 证书及系统时间正确'),
+                array('/errno|timed out|timeout|connection refused|failed to connect|couldn\'t connect|network is unreachable|connection reset|recv failure|empty reply/i',
+                    '连接微信支付接口失败或超时，请检查服务器外网访问及防火墙是否放行 443 端口，稍后重试'),
+                array('/签名错误|签名验证|invalid signature|sign(ature)? ?(error|invalid|fail)|签名/i',
+                    'API密钥（KEY）不正确导致签名错误，请到微信商户平台【账户中心-API安全】核对 APIv2 密钥（32位）是否与后台填写一致'),
+                array('/mch_?id.*appid|appid.*mch_?id|not match|不匹配/i',
+                    '商户号与 AppID 不匹配，请到微信商户平台【产品中心-AppID账号管理】确认该商户号已绑定此 AppID'),
+                array('/mch_?id|商户号/i',
+                    '商户号（mch_id）不正确或格式有误，请检查后台填写的商户号（纯数字）'),
+                array('/app_?id/i',
+                    'AppID 不正确，请检查后台填写的 AppID 是否正确且已开通微信支付'),
+                array('/openid|用户标识/i',
+                    'openid 无效或与当前 AppID 不匹配，请确认用户是在当前公众号/小程序下授权登录'),
+                array('/total_fee|金额|amount/i',
+                    '订单金额有误，请检查金额是否为大于 0 的整数（单位：分）'),
+                array('/spbill_create_ip|终端ip/i',
+                    '终端IP（spbill_create_ip）参数有误，请检查服务器获取客户端IP的方式'),
+                array('/notify_url|回调/i',
+                    '回调地址（notify_url）不合法，请确保网站域名可通过公网 http(s) 访问'),
+                array('/out_trade_no|订单号/i',
+                    '商户订单号有误或已被使用，请重新下单'),
+                array('/trade_type|scene_info|h5|支付类型|未开通/i',
+                    '该支付类型未开通或参数不正确，请到微信商户平台【产品中心】开通对应支付产品（JSAPI/Native/H5）'),
+                array('/缺少参数|lack|missing|参数/i',
+                    '请求参数有误或缺失，请检查后台支付配置是否填写完整'),
+                array('/xml|simplexml|malformed/i',
+                    '微信支付接口返回数据格式异常，请稍后重试，如持续出现请检查服务器网络'),
+                array('/(?<!\d)50[0-4](?!\d)|bad gateway|service unavailable|system error|busy/i',
+                    '微信支付接口暂时不可用，请稍后重试'),
+            );
+            foreach ($rules as $rule) {
+                if (preg_match($rule[0], $msg)) {
+                    $tip = $rule[1];
+                    break;
+                }
+            }
+        }
+
+        // 三、兜底
+        if ('' === $tip) {
+            if (preg_match('/[\x{4e00}-\x{9fa5}]/u', $msg)) {
+                // 微信已返回中文说明，补充场景与错误码即可
+                return $scene . '失败：' . $msg . ('' !== $code ? '（错误码：' . $code . '）' : '');
+            }
+            $tip = $scene . '失败，请核对 AppID、商户号、API密钥（KEY）是否填写正确，且商户号已开通对应支付产品';
+        }
+
+        // 附带错误码及有限长度的原始信息，便于排查
+        $extra = array();
+        if ('' !== $code) {
+            $extra[] = '错误码：' . $code;
+        }
+        if ('' !== $msg) {
+            if (function_exists('mb_strlen') && mb_strlen($msg, 'UTF-8') > 200) {
+                $msg = mb_substr($msg, 0, 200, 'UTF-8') . '...';
+            }
+            $extra[] = '原始信息：' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8');
+        }
+        return $tip . (!empty($extra) ? '（' . implode('，', $extra) . '）' : '');
+    }
+}
+
+if (!function_exists('alipayRsaKeyValid'))
+{
+    /**
+     * 校验后台填写的支付宝 RSA 密钥字符串能否被 openssl 正常加载
+     * @param string $key 密钥纯字符串（不含 BEGIN/END 行）
+     * @param bool $isPrivate true=商户（应用）私钥，false=支付宝公钥
+     * @return bool
+     */
+    function alipayRsaKeyValid($key = '', $isPrivate = false)
+    {
+        $key = preg_replace('/\s+/', '', strval($key));
+        $key = preg_replace('/-----(BEGIN|END)[A-Z ]*-----/', '', $key);
+        if ('' === $key || !function_exists('openssl_pkey_get_private')) {
+            return false;
+        }
+        $body = wordwrap($key, 64, "\n", true);
+        if ($isPrivate) {
+            $res = openssl_pkey_get_private("-----BEGIN RSA PRIVATE KEY-----\n" . $body . "\n-----END RSA PRIVATE KEY-----");
+            if (false === $res) {
+                $res = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . $body . "\n-----END PRIVATE KEY-----");
+            }
+        } else {
+            $res = openssl_pkey_get_public("-----BEGIN PUBLIC KEY-----\n" . $body . "\n-----END PUBLIC KEY-----");
+        }
+        return false !== $res;
+    }
+}
+
+if (!function_exists('alipayErrorMsg'))
+{
+    /**
+     * 将支付宝开放平台接口返回的错误转换成中文可操作提示
+     * @param array|object|string|bool|null $result 网关返回（含 code/msg/sub_code/sub_msg，可带 xxx_response 外层），或 SDK 异常、curl 错误等原始字符串
+     * @param string $scene 场景名称，如：支付宝支付、支付宝配置验证、支付宝订单查询
+     * @return string
+     */
+    function alipayErrorMsg($result = [], $scene = '支付宝支付')
+    {
+        if (is_object($result)) {
+            $result = json_decode(json_encode($result), true);
+        }
+        $code = $subCode = $msg = $subMsg = '';
+        if (is_array($result)) {
+            if (!isset($result['code']) && !isset($result['sub_code']) && !isset($result['msg'])) {
+                foreach ($result as $k => $v) {
+                    if (is_array($v) && (preg_match('/_response$/', strval($k)) || isset($v['code']))) {
+                        $result = $v;
+                        break;
+                    }
+                }
+            }
+            $code    = isset($result['code']) && is_scalar($result['code']) ? trim(strval($result['code'])) : '';
+            $subCode = isset($result['sub_code']) && is_scalar($result['sub_code']) ? trim(strval($result['sub_code'])) : '';
+            $msg     = isset($result['msg']) && is_scalar($result['msg']) ? strval($result['msg']) : '';
+            $subMsg  = isset($result['sub_msg']) && is_scalar($result['sub_msg']) ? strval($result['sub_msg']) : '';
+            if ('' === $msg && '' === $subMsg && !empty($result['curl_error']) && is_scalar($result['curl_error'])) {
+                $msg = strval($result['curl_error']);
+            }
+        } else if (is_scalar($result)) {
+            $msg = trim(strval($result));
+            // SDK logCommunicationError() 直接 echo 的 JSON 日志：[时间, 接口, appid, OS, SDK版本, 请求URL, 错误码, 响应内容]
+            if ('' !== $msg && '[' === substr($msg, 0, 1)) {
+                $log = json_decode($msg, true);
+                if (is_array($log) && isset($log[6]) && array_keys($log) === range(0, count($log) - 1)) {
+                    $msg = trim(strval($log[6]) . ' ' . (isset($log[7]) ? strval($log[7]) : ''));
+                }
+            }
+        }
+        $msg    = preg_replace('/\s+/', ' ', trim(strip_tags($msg)));
+        $subMsg = preg_replace('/\s+/', ' ', trim(strip_tags($subMsg)));
+
+        if ('' === $code && '' === $subCode && '' === $msg && '' === $subMsg) {
+            return $scene . '接口未返回有效数据，请检查服务器能否访问 openapi.alipay.com，以及 PHP 是否已开启 curl、openssl 扩展';
+        }
+        // 已经是本函数生成的提示，直接返回避免重复包装
+        if (false !== strpos($msg, '原始信息：') || false !== strpos($msg, '错误码：') || false !== strpos($msg, '接口未返回有效数据')) {
+            return $msg;
+        }
+
+        $hasChinese = function ($str) {
+            return preg_match('/[\x{4e00}-\x{9fa5}]/u', $str) > 0;
+        };
+
+        $tip = '';
+        $subCodeMap = array(
+            // 应用 / APPID
+            'isv.invalid-app-id'                        => '支付宝 APPID 无效，请到开放平台【控制台-我的应用】核对 APPID 并重新填写',
+            'isv.missing-app-id'                        => '未填写支付宝 APPID，请到后台支付宝配置中填写',
+            'isv.app-call-limited'                      => '应用调用支付宝接口次数超限，请稍后再试',
+            'isv.method-call-limited'                   => '该接口调用次数超限，请稍后再试',
+            'isv.invalid-app-status'                    => '应用状态异常（未上线或已下架），请到开放平台检查应用状态',
+            // 签名 / 密钥
+            'isv.invalid-signature'                     => '签名验证失败，请确认后台填写的“商户私钥”与开放平台上传的“应用公钥”是同一对密钥，且粘贴的是不含 BEGIN/END 行、无换行空格的纯字符串',
+            'isv.missing-signature'                     => '请求缺少签名，通常是商户私钥未填写或格式不正确，请重新粘贴开放平台生成的应用私钥',
+            'isv.missing-signature-type'                => '缺少签名类型参数，请检查 SDK 配置的 sign_type 是否为 RSA2',
+            'isv.invalid-signature-type'                => '签名类型不正确，请确认开放平台加签方式为 RSA2(SHA256)',
+            'isv.missing-signature-key'                 => '开放平台未配置应用公钥，请到【开发设置-接口加签方式】上传应用公钥后再试',
+            'isv.invalid-timestamp'                     => '服务器时间与支付宝相差过大，请校准服务器系统时间（NTP 同步）',
+            'isv.decryption-error-missing-encrypt-type' => '加密类型缺失，请检查开放平台接口内容加密设置',
+            'isv.invalid-encrypt'                       => '请求内容解密失败，请检查开放平台配置的 AES 密钥',
+            'isv.invalid-encrypt-type'                  => '加密类型不正确，请检查接口内容加密设置',
+            'isv.missing-encrypt'                       => '请求缺少加密内容，请检查接口内容加密设置',
+            // 权限
+            'isv.insufficient-isv-permissions'          => 'ISV 权限不足，请到开放平台确认该应用已添加并签约对应支付产品（电脑网站支付/手机网站支付/小程序支付），且已通过审核生效',
+            'isv.insufficient-permissions'              => '权限不足，请到开放平台为该应用添加对应支付能力并完成签约',
+            'isv.permission-not-exist'                  => '该应用没有此接口权限，请到开放平台添加对应支付产品并签约',
+            'isv.permission-api-error'                  => '接口权限校验异常，请到开放平台确认接口权限已生效',
+            'isv.invalid-auth-token'                    => '授权令牌无效或已过期，请重新授权',
+            'isv.invalid-app-auth-token'                => '第三方应用授权令牌无效，请重新完成商家授权',
+            'isv.invalid-app-auth-token-status'         => '第三方应用授权已失效，请重新完成商家授权',
+            // 参数
+            'isv.missing-method'                        => '缺少接口方法名参数，请检查 SDK 调用',
+            'isv.invalid-method'                        => '接口方法名不正确，请检查 SDK 版本',
+            'isv.invalid-format'                        => '返回格式参数不正确，请检查 SDK 配置',
+            'isv.invalid-charset'                       => '字符编码参数不正确，请确认网站文件为 UTF-8 编码',
+            'isv.invalid-digest'                        => '请求摘要校验失败，请检查请求参数是否被篡改',
+            'isv.invalid-parameter'                     => '请求参数无效，请检查订单号、金额、商品标题等参数',
+            'isv.missing-parameter'                     => '缺少必要请求参数，请检查订单号、金额等参数是否为空',
+            'isv.invalid-version'                       => '接口版本参数不正确，请检查 SDK 配置',
+            'isv.upload-fail'                           => '文件上传失败，请稍后重试',
+            'isv.invalid-file-extension'                => '文件类型不支持',
+            'isv.invalid-file-size'                     => '文件大小超过限制',
+            // 系统
+            'isp.unknow-error'                          => '支付宝服务暂不可用，请稍后重试',
+            'aop.unknow-error'                          => '支付宝服务暂不可用，请稍后重试',
+            'aop.invalid-app-id'                        => '支付宝 APPID 无效，请到开放平台核对 APPID',
+            'aop.invalid-signature'                     => '签名验证失败，请确认商户私钥与开放平台上传的应用公钥匹配',
+            'aop.unsupported-response-type'             => '返回类型不支持，请检查 SDK 配置',
+            // 交易（ACQ）
+            'ACQ.SYSTEM_ERROR'                          => '支付宝系统繁忙，请稍后重试',
+            'ACQ.INVALID_PARAMETER'                     => '请求参数无效，请检查订单号、金额、商品标题等参数',
+            'ACQ.ACCESS_FORBIDDEN'                      => '该应用无权限使用此支付产品，请到开放平台确认已签约“电脑网站支付/手机网站支付”并已生效',
+            'ACQ.EXIST_FORBIDDEN_WORD'                  => '订单标题或商品描述中含有支付宝违禁词，请修改后重试',
+            'ACQ.PARTNER_ERROR'                         => '应用 APPID 填写错误，请到后台支付宝配置中核对',
+            'ACQ.TOTAL_FEE_EXCEED'                      => '订单总金额超过支付宝限额，请调整金额',
+            'ACQ.CONTEXT_INCONSISTENT'                  => '订单信息与已存在的交易不一致（同一订单号金额/标题被修改），请更换订单号重新下单',
+            'ACQ.TRADE_HAS_SUCCESS'                     => '该订单已支付成功，请勿重复支付',
+            'ACQ.TRADE_HAS_CLOSE'                       => '该订单交易已关闭，请重新下单',
+            'ACQ.TRADE_NOT_EXIST'                       => '交易不存在：买家尚未发起付款或订单号有误',
+            'ACQ.TRADE_STATUS_ERROR'                    => '交易状态不合法，当前状态下无法进行此操作',
+            'ACQ.BUYER_BALANCE_NOT_ENOUGH'              => '买家支付宝余额不足，请更换支付方式',
+            'ACQ.BUYER_BANKCARD_BALANCE_NOT_ENOUGH'     => '买家银行卡余额不足，请更换支付方式',
+            'ACQ.BUYER_SELLER_EQUAL'                    => '买家与卖家为同一支付宝账号，不能进行交易',
+            'ACQ.BUYER_ENABLE_STATUS_FORBID'            => '买家支付宝账号状态异常，无法付款',
+            'ACQ.ERROR_BUYER_CERTIFY_LEVEL_LIMIT'       => '买家未完成实名认证，无法付款',
+            'ACQ.PAYMENT_REQUEST_HAS_RISK'              => '本次支付被支付宝风控拦截，请稍后再试或更换支付方式',
+            'ACQ.NO_PAYMENT_INSTRUMENTS_AVAILABLE'      => '买家没有可用的支付方式',
+            'ACQ.NOT_SUPPORT_PAYMENT_INST'              => '不支持该支付方式',
+            'ACQ.SELLER_BEEN_BLOCKED'                   => '商家支付宝账号已被冻结，请联系支付宝客服',
+            'ACQ.MERCHANT_STATUS_NOT_LEGAL'             => '商家账号状态异常，请联系支付宝客服',
+            'ACQ.SECONDARY_MERCHANT_STATUS_ERROR'       => '二级商户状态异常，请联系支付宝客服',
+            'ACQ.SELLER_BALANCE_NOT_ENOUGH'             => '商家支付宝余额不足，无法退款，请先充值后再试',
+            'ACQ.REFUND_AMT_NOT_EQUAL_TOTAL'            => '退款金额超过订单实付金额，请检查退款金额',
+            'ACQ.REASON_TRADE_BEEN_FREEZEN'             => '该交易已被冻结，暂时无法退款',
+            'ACQ.REFUND_CHARGE_ERROR'                   => '退款手续费异常，请联系支付宝客服',
+            'ACQ.DISCORDANT_REPEAT_REQUEST'             => '退款请求号重复但参数不一致，请更换退款单号',
+            'ACQ.TRADE_SETTLE_ERROR'                    => '交易结算异常，请联系支付宝客服',
+            'ACQ.OPEN_ID_NOT_MATCH'                     => '买家 openid 与当前小程序不匹配，请重新登录小程序后再支付',
+            'ACQ.BUYER_NOT_EXIST'                       => '买家账号不存在，请重新登录小程序后再支付',
+            'ACQ.INVALID_RECEIVE_ACCOUNT'               => '收款账号无效，请检查商家收款账号',
+            'ACQ.SUB_MERCHANT_CREATE_FAIL'              => '二级商户创建失败，请稍后重试',
+        );
+        if ('' !== $subCode) {
+            foreach ($subCodeMap as $k => $v) {
+                if (0 === strcasecmp($k, $subCode)) {
+                    $tip = $v;
+                    break;
+                }
+            }
+        }
+
+        // 支付宝已给出中文 sub_msg 时直接使用，信息最准确
+        if ('' === $tip && '' !== $subMsg && $hasChinese($subMsg)) {
+            $tip = $scene . '失败：' . rtrim($subMsg, '。！!');
+        }
+
+        $text = trim($subMsg . ' ' . $msg);
+        if ('' === $tip) {
+            $rules = array(
+                // 环境
+                '/curl.{0,10}(not|未|没有).{0,10}(exist|install|enable|开启|安装)|call to undefined function curl_/iu' => '服务器 PHP 未开启 curl 扩展，无法请求支付宝接口，请在 php.ini 中启用 curl',
+                '/openssl.{0,20}(not|未|没有)|call to undefined function openssl_/iu' => '服务器 PHP 未开启 openssl 扩展，无法进行支付宝签名，请在 php.ini 中启用 openssl',
+                // SDK 配置为空
+                '/appid should not be NULL|app_?id.{0,10}(empty|null|为空)/iu' => '后台支付宝配置中 APPID 为空，请填写 APPID',
+                '/private_key should not be NULL|private.?key.{0,10}(empty|null|为空)/iu' => '后台支付宝配置中商户私钥为空，请填写应用私钥',
+                '/alipay_public_key should not be NULL|public.?key.{0,10}(empty|null|为空)/iu' => '后台支付宝配置中支付宝公钥为空，请填写支付宝公钥',
+                '/charset should not be NULL|gateway_url should not be NULL|format should not be NULL|should not be NULL/iu' => 'SDK 基础参数缺失（charset/gateway/format），请检查支付宝配置',
+                '/encryptType and encryptKey must not null|encrypt request is not supperted|encrypt.{0,20}(not|must)/iu' => '接口内容加密参数配置错误，请检查 AES 密钥配置或关闭内容加密',
+                // 密钥格式
+                '/私钥格式|私钥.{0,6}(错误|不正确|加载失败)|rsa ?private ?key|openssl_(pkey_)?get_private|private key.{0,20}(invalid|error|format)/iu' => '商户（应用）私钥格式不正确，请粘贴开放平台“密钥工具”生成的应用私钥纯字符串（去掉 BEGIN/END 行、换行和空格）',
+                '/支付宝公钥错误|公钥错误|公钥文件格式|RSA公钥|public ?key.{0,20}(invalid|error|format)|openssl_(pkey_)?get_public/iu' => '支付宝公钥格式不正确，请到开放平台【接口加签方式】复制“支付宝公钥”（注意不是应用公钥）粘贴到后台',
+                '/支付宝APPID错误/iu' => '支付宝网关返回了未签名的错误响应，通常是 APPID 不存在/无效，或商户私钥与该 APPID 不匹配导致签名校验失败，请核对 APPID 与商户私钥是否属于同一个应用',
+                // 验签
+                '/check ?sign ?fail|signData is Empty|验签(出错|失败)|sign.{0,10}(verify|check).{0,10}fail|invalid.{0,10}sign|signature.{0,20}(invalid|fail|mismatch)/iu' => '支付宝返回数据验签失败，请确认后台填写的是开放平台的“支付宝公钥”而不是“应用公钥”，并且与当前加签方式（公钥/证书）一致',
+                '/sign.{0,10}(empty|missing)|missing.{0,10}sign/iu' => '请求缺少签名，请检查商户私钥是否填写完整',
+                // 网络
+                '/could not resolve|couldn\'t resolve|getaddrinfo|name or service not known|resolve host|dns/iu' => '无法解析支付宝网关域名 openapi.alipay.com，请检查服务器 DNS 设置或网络连接',
+                '/ssl|tls|certificate|handshake|cert verify|peer/iu' => '与支付宝网关建立 SSL/TLS 安全连接失败，请检查服务器 openssl/curl 版本、CA 证书及系统时间是否正确',
+                '/timed? ?out|timeout|operation too slow/iu' => '连接支付宝网关超时，请检查服务器出站网络（防火墙/代理）是否允许访问 openapi.alipay.com:443',
+                '/connection refused|failed to connect|couldn\'t connect|could not connect|network is unreachable|no route to host|connection reset|recv failure|send failure|empty reply|unable to connect/iu' => '无法连接支付宝网关，请检查服务器出站网络（防火墙/代理）是否允许访问 openapi.alipay.com:443',
+                '/HTTP_ERROR_5\d\d|HTTP_ERROR_0\b|\b50[0-9]\b.{0,20}(gateway|server|unavailable)|bad gateway|service unavailable|gateway time/iu' => '支付宝网关暂时不可用（HTTP 5xx），请稍后重试',
+                '/HTTP_ERROR_4\d\d|\b40[0-9]\b.{0,20}(forbidden|not found|bad request)/iu' => '支付宝网关拒绝了请求（HTTP 4xx），请检查网关地址是否为 https://openapi.alipay.com/gateway.do',
+                '/HTTP_RESPONSE_NOT_WELL_FORMED|not well formed|json.{0,20}(error|invalid|malformed)|malformed|<html|<!doctype/iu' => '支付宝网关返回的数据格式异常（非 JSON），可能是网络被劫持/代理拦截或网关地址错误，请稍后重试',
+                '/HTTP_ERROR/iu' => '请求支付宝网关失败（HTTP 通讯错误），请检查服务器网络后重试',
+                // 网关通用 msg
+                '/Missing Required Arguments/iu' => '缺少必选参数，通常是商户私钥不正确或未填写完整导致签名缺失，请重新粘贴开放平台生成的应用私钥并核对 APPID',
+                '/Invalid Arguments|Invalid Parameter|参数.{0,4}(无效|不合法|非法)/iu' => '请求参数无效，请检查后台支付宝配置（APPID、密钥）以及订单号、金额等参数',
+                '/Insufficient Permissions|permission|no privilege|forbidden|权限/iu' => '接口权限不足，请到开放平台确认该应用已签约并添加对应支付产品，且审核已通过',
+                '/Service Currently Unavailable|unavailable|system error|system busy|busy|internal error/iu' => '支付宝服务暂时不可用，请稍后重试',
+                '/rate limit|too many|frequen|限流|频繁/iu' => '请求过于频繁，已被支付宝限流，请稍后再试',
+                '/app.{0,10}(not exist|invalid|not found)|invalid app/iu' => '支付宝 APPID 不存在或无效，请到开放平台核对 APPID',
+                '/timestamp|时间戳/iu' => '服务器时间与支付宝相差过大，请校准服务器系统时间',
+                '/charset|编码/iu' => '字符编码不一致，请确认网站文件及配置均为 UTF-8 编码',
+                '/total_amount|amount|金额/iu' => '订单金额参数有误（应为 0.01～100000000 之间且最多两位小数），请检查订单金额',
+                '/out_trade_no|trade_no|订单号/iu' => '订单号参数有误（不能为空、需唯一且不超过 64 位），请检查订单号',
+                '/notify_url|return_url|回调|callback/iu' => '回调地址参数有误，请检查网站域名配置及 notify_url/return_url 是否可被外网访问',
+                '/subject|body|title|标题/iu' => '订单标题/描述参数有误（不能为空且不能含违禁词），请检查商品名称',
+                '/buyer|openid|user_id|买家/iu' => '买家信息参数有误，请让用户重新登录后再支付',
+                '/refund|退款/iu' => '退款请求失败，请检查退款金额、退款单号是否正确，以及商家余额是否充足',
+                '/closed|close|已关闭/iu' => '该订单交易已关闭，请重新下单',
+                '/not exist|不存在/iu' => '交易不存在：买家尚未发起付款或订单号有误',
+                '/Business Failed/iu' => '支付宝业务处理失败',
+            );
+            foreach ($rules as $pattern => $v) {
+                if ('' !== $text && preg_match($pattern, $text)) {
+                    $tip = $v;
+                    break;
+                }
+            }
+        }
+
+        if ('' === $tip && '' !== $code) {
+            $codeMap = array(
+                '20000' => '支付宝服务暂不可用，请稍后重试',
+                '20001' => '授权权限不足，请重新完成授权',
+                '40001' => '缺少必选参数，通常是商户私钥不正确导致签名缺失，请重新粘贴开放平台生成的应用私钥并核对 APPID',
+                '40002' => '请求参数非法，请检查后台支付宝配置（APPID 是否正确、密钥是否为纯字符串）',
+                '40003' => '业务条件不满足，请检查订单参数',
+                '40004' => '支付宝业务处理失败',
+                '40005' => '接口调用频次超限，请稍后再试',
+                '40006' => '权限不足，请到开放平台确认该应用已签约并添加对应支付产品',
+            );
+            if (isset($codeMap[$code])) {
+                $tip = $codeMap[$code];
+            }
+        }
+
+        if ('' === $tip) {
+            if ('' !== $subMsg && $hasChinese($subMsg)) {
+                $tip = $scene . '失败：' . rtrim($subMsg, '。！!');
+            } else if ('' !== $msg && $hasChinese($msg)) {
+                $tip = $scene . '失败：' . rtrim($msg, '。！!');
+            } else {
+                $tip = $scene . '失败，请检查后台支付宝配置（APPID、商户私钥、支付宝公钥）以及服务器网络';
+            }
+        } else if (0 !== strpos($tip, $scene)) {
+            $tip = $scene . '失败：' . $tip;
+        }
+
+        $extra = array();
+        $codeStr = $code . ('' !== $subCode ? ('' !== $code ? '/' : '') . $subCode : '');
+        if ('' !== $codeStr) {
+            $extra[] = '错误码：' . htmlspecialchars($codeStr, ENT_QUOTES, 'UTF-8');
+        }
+        $raw = '' !== $subMsg ? $subMsg : $msg;
+        if ('' !== $raw && false === strpos($tip, $raw)) {
+            $raw = preg_replace('/(sign|signSourceData|biz_content|private_key|app_id)\s*=\s*[^,\]\s]+/i', '$1=***', $raw);
+            $raw = preg_replace('#https?://\S+#i', '[url]', $raw);
+            if (function_exists('mb_strlen') && mb_strlen($raw, 'UTF-8') > 200) {
+                $raw = mb_substr($raw, 0, 200, 'UTF-8') . '...';
+            } else if (!function_exists('mb_strlen') && strlen($raw) > 200) {
+                $raw = substr($raw, 0, 200) . '...';
+            }
+            $extra[] = '原始信息：' . htmlspecialchars($raw, ENT_QUOTES, 'UTF-8');
+        }
+        return $tip . (!empty($extra) ? '（' . implode('，', $extra) . '）' : '');
+    }
+}
+
 if (!function_exists('get_country_list')){
     /**
      * 获得全部国家列表
@@ -3091,8 +3704,9 @@ if (!function_exists('download_file'))
      * 下载文件
      * @param $down_path 文件路径
      * @param $file_mime 文件类型
+     * @param $allow_dirs 本地文件允许访问的绝对目录白名单，默认仅允许上传目录
      */
-    function download_file($down_path = '', $file_mime = '', $file_name = '')
+    function download_file($down_path = '', $file_mime = '', $file_name = '', $allow_dirs = array())
     {
         //设置脚本的最大执行时间，设置为0则无时间限制
         function_exists('set_time_limit') && set_time_limit(0);
@@ -3102,10 +3716,18 @@ if (!function_exists('download_file'))
         $display_path = $down_path;
         // 判断是否是远程 URL，如果不是才进行本地路径处理
         if (!is_http_url($down_path)) {
-            $down_path = iconv("utf-8", "GBK//IGNORE", $down_path);
-
             /*支持子目录*/
             $down_path = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $down_path);
+            /*--end*/
+
+            /* 安全校验：先转换编码，保证校验路径与实际 fopen 路径一致，防止路径穿越读取任意文件 */
+            $down_path = iconv("utf-8", "GBK//IGNORE", $down_path);
+            $safe_path = get_safe_local_file_path($down_path, $allow_dirs);
+            if (false === $safe_path) {
+                header('HTTP/1.1 404 Not Found');
+                exit;
+            }
+            $down_path = $safe_path;
             /*--end*/
         }
 
@@ -3135,13 +3757,34 @@ if (!function_exists('download_file'))
             $down_path = 'https:' . $down_path;
         }
 
+        // 远程附件必须做内网校验并逐跳校验重定向，禁止通过下载入口抓取内网/元数据地址（SSRF）
+        $safeTarget    = array();
+        $remoteContext = null;
+        if (is_http_url($down_path)) {
+            $safeTarget = resolve_remote_redirect($down_path, 3);
+            $pinnedUrl  = empty($safeTarget) ? false : pin_remote_url_ip($safeTarget['url'], $safeTarget['ip']);
+            if (false === $pinnedUrl) {
+                header('HTTP/1.1 403 Forbidden');
+                exit;
+            }
+            $down_path     = $pinnedUrl;
+            $remoteContext = get_remote_stream_context($pinnedUrl, $safeTarget['host_header'], false);
+        }
+
         //文件大小
         preg_match("/^((\w)*:)?(\/\/).*$/", $down_path, $match);
         if (empty($match)) { // 本地文件
             $filesize = filesize('.'.$down_path);
         } else { // 远程文件
-            $header_array = get_headers($down_path, true);
-            $filesize = !empty($header_array['Content-Length']) ? $header_array['Content-Length'] : 0;
+            $filesize = 0;
+            if (!empty($safeTarget['headers'])) {
+                foreach ($safeTarget['headers'] as $hk => $hv) {
+                    if (is_string($hk) && 'content-length' === strtolower($hk)) {
+                        $filesize = is_array($hv) ? intval(end($hv)) : intval($hv);
+                        break;
+                    }
+                }
+            }
         }
 
         // 清空输出缓冲区，避免污染文件内容
@@ -3167,7 +3810,7 @@ if (!function_exists('download_file'))
         //针对大文件，规定每次读取文件的字节数为2MB，直接输出数据
         $read_buffer = 1024 * 1024 * 2; // 2MB
         if (is_http_url($down_path)) {
-            $file = fopen($down_path, 'rb');
+            $file = $remoteContext ? fopen($down_path, 'rb', false, $remoteContext) : fopen($down_path, 'rb');
         } else {
             $file = fopen('.' . $down_path, 'rb');
         }
@@ -4874,9 +5517,11 @@ if (!function_exists('pay_success_logic'))
             $where = [
                 'order_id' => intval($orderData['order_id']),
                 'users_id' => intval($orderData['users_id']),
+                'order_status' => 0,
             ];
             $ret = \think\Db::name('shop_order')->where($where)->update($saveData);
-            if (false !== $ret) {
+            // 安全修复：仅当「未付款→已付款」真正发生（受影响行数>0）才执行后续副作用，保证支付回调幂等
+            if ($ret) {
                 // 更新订单变量，保存最新数据
                 $orderData = array_merge($orderData, $saveData);
 
@@ -6083,6 +6728,242 @@ if (!function_exists('sitemap_all'))
     function sitemap_all($type = 'all',$is_langs=[])
     {
         sitemap_xml($type,$is_langs);
+        sitemap_citysite($type,$is_langs); // 城市分站（独立域名）单独生成 sitemap
+    }
+}
+
+if (!function_exists('get_archive_citysite'))
+{
+    /**
+     * 获取文档归属的独立域名城市分站
+     * 判定顺序与 arcurl() 保持一致：area_id > city_id > province_id
+     * @return array 命中的分站信息；不属于分站 / 命中默认主站时返回空数组
+     */
+    function get_archive_citysite($province_id = 0, $city_id = 0, $area_id = 0)
+    {
+        if (false === config('city_switch_on')) {
+            return [];
+        }
+        static $citysiteList = null;
+        static $site_default_home = null;
+        if (null === $citysiteList) {
+            $citysiteList = get_citysite_list();
+        }
+        if (empty($citysiteList)) {
+            return [];
+        }
+        if (null === $site_default_home) {
+            $site_default_home = (int)tpCache('site.site_default_home');
+        }
+        $regionArr = [(int)$area_id, (int)$city_id, (int)$province_id];
+        foreach ($regionArr as $region_id) {
+            if ($region_id > 0 && !empty($citysiteList[$region_id])) {
+                if ($site_default_home == $region_id) { // 默认主站走主域名
+                    return [];
+                }
+                $site = $citysiteList[$region_id];
+                $site['id'] = $region_id;
+                return $site;
+            }
+        }
+
+        return [];
+    }
+}
+
+if (!function_exists('replace_url_host'))
+{
+    /**
+     * 替换 URL 的域名（协议、路径、参数保持不变）
+     */
+    function replace_url_host($url, $host)
+    {
+        if (preg_match('#^(https?)://[^/]+#i', $url, $m)) {
+            return $m[1] . '://' . $host . substr($url, strlen($m[0]));
+        }
+        return preg_replace('#^//[^/]+#i', '//' . $host, $url);
+    }
+}
+
+if (!function_exists('sitemap_citysite'))
+{
+    /**
+     * 生成独立域名城市分站的 sitemap（每个分站一份，仅含该分站自身域名的 URL）
+     * 文件位置：网站根目录 sitemap_{domain}.xml / sitemap_{domain}.txt
+     * 各子域名共用同一网站根目录，可通过 https://{domain}.{根域名}/sitemap_{domain}.xml 访问
+     */
+    function sitemap_citysite($type = 'all', $is_langs = [])
+    {
+        if (false === config('city_switch_on')) {
+            return;
+        }
+        $globalConfig = tpCache('global');
+        $do_xml = ('xml' == $type) || (!empty($globalConfig['sitemap_xml']) && in_array($type, ['all', 'xml']));
+        $do_txt = ('txt' == $type) || (!empty($globalConfig['sitemap_txt']) && in_array($type, ['all', 'txt']));
+        if (!$do_xml && !$do_txt) {
+            return;
+        }
+
+        // 开启了独立域名的分站
+        $siteList = \think\Db::name('citysite')->field('id, name, level, domain, is_open')
+            ->where(['status' => 1, 'is_open' => 1])
+            ->order('sort_order asc, id asc')
+            ->select();
+        if (empty($siteList)) {
+            return;
+        }
+
+        $mainDomain = request()->domain();  // 当前主站域名，含协议
+        $rootDomain = request()->rootDomain();
+        $lang = get_current_lang();
+
+        // 栏目（各分站共用同一套栏目）
+        $typeMap = [
+            'status' => 1,
+            'is_del' => 0,
+            'lang'   => $lang,
+        ];
+        if (!empty($globalConfig['sitemap_not1'])) {
+            $typeMap['is_hidden'] = 0;
+        }
+        if (!empty($globalConfig['sitemap_not2'])) {
+            $typeMap['is_part'] = 0;
+        }
+        $result_arctype = M('arctype')->field('*')->where($typeMap)
+            ->order('sort_order asc, id asc')
+            ->getAllWithIndex('id');
+
+        // 文档
+        if (!isset($globalConfig['sitemap_archives_num']) || $globalConfig['sitemap_archives_num'] === '') {
+            $sitemap_archives_num = 1000;
+        } else {
+            $sitemap_archives_num = intval($globalConfig['sitemap_archives_num']);
+        }
+        $result_archives = [];
+        if (0 < $sitemap_archives_num) {
+            $arcMap = [
+                'channel' => ['IN', config('global.allow_release_channel')],
+                'arcrank' => ['gt', -1],
+                'status'  => 1,
+                'is_del'  => 0,
+                'lang'    => $lang,
+            ];
+            if (!empty($globalConfig['sitemap_not2'])) {
+                $arcMap['is_jump'] = 0;
+            }
+            /*定时文档显示插件*/
+            if (is_dir('./weapp/TimingTask/')) {
+                $weappModel = new \app\admin\model\Weapp;
+                $TimingTaskRow = $weappModel->getWeappList('TimingTask');
+                if (!empty($TimingTaskRow['status']) && 1 == $TimingTaskRow['status']) {
+                    $arcMap['add_time'] = ['elt', getTime()]; // 只显当天或之前的文档
+                }
+            }
+            /*end*/
+            $field = 'aid, channel, is_jump, jumplinks, add_time, update_time, typeid, province_id, city_id, area_id';
+            $result_archives = M('archives')->field($field)->where($arcMap)
+                ->order('aid desc')
+                ->limit($sitemap_archives_num)
+                ->select();
+        }
+
+        // 文档按分站归集
+        $arcGroup = [];
+        foreach ($result_archives as $val) {
+            $siteinfo = get_archive_citysite($val['province_id'], $val['city_id'], $val['area_id']);
+            if (empty($siteinfo) || empty($siteinfo['is_open'])) {
+                continue;
+            }
+            $arcGroup[$siteinfo['id']][] = $val;
+        }
+
+        // 更新频率 / 优先级别
+        $changefreq_index = !empty($globalConfig['sitemap_changefreq_index']) ? $globalConfig['sitemap_changefreq_index'] : 'always';
+        $changefreq_list = !empty($globalConfig['sitemap_changefreq_list']) ? $globalConfig['sitemap_changefreq_list'] : 'hourly';
+        $changefreq_view = !empty($globalConfig['sitemap_changefreq_view']) ? $globalConfig['sitemap_changefreq_view'] : 'daily';
+        $priority_index = !empty($globalConfig['sitemap_priority_index']) ? $globalConfig['sitemap_priority_index'] : '1.0';
+        $priority_list = !empty($globalConfig['sitemap_priority_list']) ? $globalConfig['sitemap_priority_list'] : '0.8';
+        $priority_view = !empty($globalConfig['sitemap_priority_view']) ? $globalConfig['sitemap_priority_view'] : '0.5';
+
+        $now = date('Y-m-d');
+        $xml_wrapper = <<<XML
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+</urlset>
+XML;
+        // 禁止引用外部xml实体，防止XXE攻击
+        @libxml_disable_entity_loader(true);
+
+        foreach ($siteList as $site) {
+            if (empty($site['domain'])) {
+                continue;
+            }
+            $subHost = $site['domain'] . '.' . $rootDomain;
+            $subBase = replace_url_host($mainDomain, $subHost); // 例：http://hainan.meiz20.hk
+            $filename = ROOT_PATH . "sitemap_{$site['domain']}.xml";
+            $filename_txt = ROOT_PATH . "sitemap_{$site['domain']}.txt";
+            $urls_txt = [];
+
+            if (function_exists('simplexml_load_string')) {
+                $xml = @simplexml_load_string($xml_wrapper);
+            } else if (class_exists('SimpleXMLElement')) {
+                $xml = new SimpleXMLElement($xml_wrapper);
+            }
+            if (!$xml) {
+                continue;
+            }
+
+            // 首页
+            $url = $subBase . ROOT_DIR . '/';
+            $xml = join_xml($xml, $url, $now, $changefreq_index, $priority_index, 'pc');
+            array_push($urls_txt, htmlspecialchars_decode($url));
+
+            // 栏目
+            foreach ($result_arctype as $sub) {
+                if (!is_array($sub)) {
+                    continue;
+                }
+                if ($sub['is_part'] == 1 && !empty($sub['typelink'])) {
+                    $url = $sub['typelink'];
+                } else {
+                    $url = get_typeurl($sub, false);
+                }
+                $url = replace_url_host($url, $subHost);
+                $url = str_replace('&amp;', '&', $url);
+                $url = str_replace('&', '&amp;', $url);
+                $xml = join_xml($xml, $url, $now, $changefreq_list, $priority_list, 'pc');
+                array_push($urls_txt, htmlspecialchars_decode($url));
+            }
+
+            // 该分站的文档
+            if (!empty($arcGroup[$site['id']])) {
+                foreach ($arcGroup[$site['id']] as $val) {
+                    if (!isset($result_arctype[$val['typeid']])) {
+                        continue;
+                    }
+                    $val = array_merge($result_arctype[$val['typeid']], $val);
+                    if ($val['is_jump'] == 1) {
+                        $url = $val['jumplinks'];
+                    } else {
+                        $url = get_arcurl($val, false);
+                    }
+                    $url = replace_url_host($url, $subHost);
+                    $url = str_replace('&amp;', '&', $url);
+                    $url = str_replace('&', '&amp;', $url);
+                    $lastmod_time = empty($val['update_time']) ? $val['add_time'] : $val['update_time'];
+                    $time_row = date('Y-m-d', $lastmod_time);
+                    $xml = join_xml($xml, $url, $time_row, $changefreq_view, $priority_view, 'pc');
+                    array_push($urls_txt, htmlspecialchars_decode($url));
+                }
+            }
+
+            if ($do_xml && !empty($filename)) {
+                @file_put_contents($filename, $xml->asXML());
+            }
+            if ($do_txt && !empty($filename_txt) && !empty($urls_txt)) {
+                @file_put_contents($filename_txt, implode(PHP_EOL, $urls_txt));
+            }
+        }
     }
 }
 
@@ -6090,10 +6971,10 @@ if (!function_exists('sitemap_xml'))
 {
     /**
      * 生成xml形式的sitemap,分页（入口页面、首页、栏目页、内容页、tags、问答）
-     * <mobile:mobile/> ：移动网页
-     * <mobile:mobile type="mobile"/> ：移动网页
-     * <mobile:mobile type="pc,mobile"/>：自适应网页  一个域名一个模板，
-     * <mobile:mobile type="htmladapt"/>：代码适配    一个域名两个模板，手机端浏览和pc端浏览显示内容不一样（根据硬件判断）
+     * 
+     * 注意：Google 和 Yandex 现已采用移动优先索引（Mobile-First Indexing）
+     * 对于响应式网站（同一 URL 适配 PC 和移动端），使用标准 sitemap 格式即可
+     * 不再需要使用过时的 <mobile:mobile> 标签
      */
     function sitemap_xml($type = 'all',$is_langs=[]){
         $globalConfig = tpCache('global');
@@ -6179,11 +7060,10 @@ if (!function_exists('sitemap_xml'))
         // header('Content-Type: text/xml');//这行很重要，php默认输出text/html格式的文件，所以这里明确告诉浏览器输出的格式为xml,不然浏览器显示不出xml的格式
         $xml_wrapper = <<<XML
 <?xml version='1.0' encoding='utf-8'?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </urlset>
 XML;
         // 禁止引用外部xml实体，防止XXE攻击
-        @libxml_disable_entity_loader(true);
         if (function_exists('simplexml_load_string')) {
             $xml = @simplexml_load_string($xml_wrapper);
         } else if (class_exists('SimpleXMLElement')) {
@@ -6365,6 +7245,11 @@ XML;
         foreach ($result_archives as $val) {
             if (is_array($val) && isset($result_arctype[$val['typeid']])) {
                 $val = array_merge($result_arctype[$val['typeid']], $val);
+                /* 归属独立域名城市分站的文档，不进主站 sitemap，由分站 sitemap 单独生成 */
+                $citysiteRow = get_archive_citysite($val['province_id'], $val['city_id'], $val['area_id']);
+                if (!empty($citysiteRow) && !empty($citysiteRow['is_open'])) {
+                    continue;
+                }
                 if ($val['is_jump'] == 1) {
                     $url = $val['jumplinks'];
                 } else {
@@ -6573,13 +7458,9 @@ if (!function_exists('join_xml'))
                 }
             }
         }
-        if ($model == 'mobile'){   //移动端
-            $item->addChild('mobile','','http://www.google.com/schemas/sitemap-mobile/1.0')->addAttribute("type","mobile");
-        }else if($model == 'pc,mobile'){
-            $item->addChild('mobile','','http://www.google.com/schemas/sitemap-mobile/1.0')->addAttribute("type","pc,mobile");
-        }else if($model == 'htmladapt'){
-            $item->addChild('mobile','','http://www.google.com/schemas/sitemap-mobile/1.0')->addAttribute("type","htmladapt");
-        }
+        // 注意：Google 和 Yandex 现已采用移动优先索引，不再需要 <mobile:mobile> 标签
+        // 对于响应式网站（同一 URL 适配 PC 和移动端），直接使用标准 sitemap 格式即可
+        // 移动端和 PC 端使用不同域名时，应分别生成独立的 sitemap 文件
 
         return $xml;
     }

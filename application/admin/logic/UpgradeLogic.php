@@ -444,6 +444,14 @@ class UpgradeLogic extends Model
             if ($zip->open($this->data_path.'backup'.DS.$downFileName) != true) {
                 return ['code' => 0, 'msg' => "升级包读取失败!"];
             }
+            // 安全修复：防止 Zip Slip（压缩包内目录穿越），解压前逐个校验条目路径
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                if (false !== strpos($entryName, '..') || 0 === strpos($entryName, '/') || preg_match('#^[a-zA-Z]:#', $entryName)) {
+                    $zip->close();
+                    return ['code' => 0, 'msg' => "升级包存在非法路径，已中止解压"];
+                }
+            }
             $zip->extractTo($this->data_path.'backup'.DS.$folderName.DS);//假设解压缩到在当前路径下backup文件夹内
             $zip->close();//关闭处理的zip文件
             /*--end*/
@@ -515,8 +523,7 @@ class UpgradeLogic extends Model
                         if ($this->skipUpgradeFieldSql($sql)) {
                             continue;
                         }
-                        Db::execute($sql);
-
+                        $sql = adaptSql($sql);
                         try {
                             $r = @Db::execute($sql);
                         } catch (\Exception $e) {
@@ -819,6 +826,15 @@ class UpgradeLogic extends Model
         } else {
             $fileUrl = str_replace('https://service', 'http://service', $fileUrl);
         }
+        // 安全修复：下载前校验地址协议与字面量主机，防止 SSRF
+        // 说明：此处只做协议白名单 + 字面量内网主机拦截，不做 DNS 解析校验，
+        // 避免因 DNS 解析失败/超时/受限环境导致升级下载被阻断（down_url 来自官方服务器，属可信源）
+        $parsedDown = parse_url($fileUrl);
+        $downScheme = isset($parsedDown['scheme']) ? strtolower($parsedDown['scheme']) : '';
+        $downHost   = isset($parsedDown['host']) ? strtolower($parsedDown['host']) : '';
+        if (!in_array($downScheme, array('http', 'https'), true) || in_array($downHost, array('localhost', '127.0.0.1', '0.0.0.0', '::1'), true)) {
+            return ['code' => 0, 'msg' => '升级包地址非法，已拒绝下载'];
+        }
         $content = @httpRequest($fileUrl, 'GET', [], $headers);
         if (empty($content) || false === $content) {
             $content = @file_get_contents($fileUrl, 0, null, 0, 1);
@@ -835,10 +851,8 @@ class UpgradeLogic extends Model
         if (!stristr($fileUrl, 'https://service')) {
             $ch = curl_init($fileUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $file = curl_exec ($ch);
-            curl_close ($ch);  
             if (empty($file)) {
                 $file = httpRequest($fileUrl, 'GET', [], $headers);
             }

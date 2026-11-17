@@ -76,6 +76,26 @@ class Sitemap extends Base
         $this->assign('is_home_lang',$is_home_lang);
         $this->assign('langlist',$langlist);
 
+        /* 城市分站（独立域名）地图链接：展示给后台管理员，便于单独提交收录 */
+        $citysiteSitemap = [];
+        if (config('city_switch_on')) {
+            $citysiteList = Db::name('citysite')->field('id,name,domain')
+                ->where(['status'=>1, 'is_open'=>1])
+                ->order('sort_order asc, id asc')
+                ->select();
+            $rootDomain = request()->rootDomain();
+            $scheme = request()->scheme();
+            foreach ($citysiteList as $citysiteVal) {
+                if (empty($citysiteVal['domain'])) {
+                    continue;
+                }
+                $citysiteVal['sitemap_url'] = $scheme.'://'.$citysiteVal['domain'].'.'.$rootDomain.ROOT_DIR.'/sitemap_'.$citysiteVal['domain'].'.xml';
+                $citysiteSitemap[] = $citysiteVal;
+            }
+        }
+        $this->assign('citysiteSitemap',$citysiteSitemap);
+        $this->assign('citysiteSitemapCount',count($citysiteSitemap));
+
         return $this->fetch('seo/sitemap');
     }
 

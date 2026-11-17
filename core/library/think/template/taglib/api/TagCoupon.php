@@ -133,7 +133,10 @@ class TagCoupon extends Base
         foreach (array('keywords','keyword','typeid','flag','noflag','aid') as $key) {
             if (isset($param[$key]) && $param[$key] !== '') {
                 if ($key == 'keywords') {
-                    array_push($condition, "a.title LIKE '%{$param[$key]}%'");
+                    $keywords = trim($param[$key]);
+                    $keywords = str_replace(['<','>','"',';',',','@','&'], '', $keywords);
+                    $keywords = addslashes($keywords);
+                    $condition[] = Db::raw('a.title LIKE "%'.$keywords.'%"');
                 } elseif ($key == 'keyword' && !empty($param[$key])) {
                     $keyword = str_replace('，', ',', $param[$key]);
                     $keywordArr = explode(',', $keyword);
@@ -142,7 +145,7 @@ class TagCoupon extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
                             $keywordArr[$_k] = addslashes($_v);
                         }
@@ -150,7 +153,12 @@ class TagCoupon extends Base
                     $keyword = implode('|', $keywordArr);
                     $condition[] = Db::raw(" CONCAT(a.title,a.seo_keywords) REGEXP '$keyword' ");
                 }  elseif ($key == 'typeid') {
-                    array_push($condition, "a.typeid IN ({$param[$key]})");
+                    $typeidArr = array_filter(array_map('intval', preg_split('/(?:,|\xEF\xBC\x8C)+/', $param[$key], -1, PREG_SPLIT_NO_EMPTY)), function ($v) {
+                        return $v > 0;
+                    });
+                    if (!empty($typeidArr)) {
+                        array_push($condition, "a.typeid IN (".implode(',', $typeidArr).")");
+                    }
                 }  elseif ($key == 'flag') {
                     $flag_arr = explode(",", $param[$key]);
                     $where_or_flag = array();
@@ -176,9 +184,14 @@ class TagCoupon extends Base
                         array_push($condition, $where_flag_str);
                     }
                 } elseif ($key == 'aid') {
-                    array_push($condition, "a.aid IN ({$param[$key]})");
+                    $aidArr = array_filter(array_map('intval', preg_split('/(?:,|\xEF\xBC\x8C)+/', $param[$key], -1, PREG_SPLIT_NO_EMPTY)), function ($v) {
+                        return $v > 0;
+                    });
+                    if (!empty($aidArr)) {
+                        array_push($condition, "a.aid IN (".implode(',', $aidArr).")");
+                    }
                 } else {
-                    array_push($condition, "a.{$key} = '".$param[$key]."'");
+                    array_push($condition, "a.{$key} = '".addslashes(trim($param[$key]))."'");
                 }
             }
         }

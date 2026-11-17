@@ -21,6 +21,15 @@ use app\user\logic\SmtpmailLogic;
 class Users extends Base
 {
     public $smtpmailLogic;
+    public $users_db;
+    public $users_level_db;
+    public $users_parameter_db;
+    public $users_list_db;
+    public $users_config_db;
+    public $users_money_db;
+    public $smtp_record_db;
+    public $sms_log_db;
+    public $pay_wechat_config;
 
     public function _initialize()
     {
@@ -912,7 +921,13 @@ EOF;
                 $this->error(foreign_lang('users30', $this->home_lang), null, ['status' => 1]);
             }
 
-            // 验证验证码
+            // 验证码失败次数限制
+            $failKey = 'mobile_login|' . $post['mobile'];
+            if (verify_code_fail_times($failKey, 'check')) {
+                $this->error('验证码错误次数过多，请10分钟后再试！', null, ['status' => 1]);
+            }
+
+            // 验证验证码（必须未使用且在有效期内）
             $RecordWhere = [
                 'source' => 2,
                 'mobile' => $post['mobile'],
@@ -920,15 +935,31 @@ EOF;
                 'is_use' => 0,
                 'lang'   => $this->home_lang
             ];
-            $is_verify = $this->sms_log_db->where($RecordWhere)->find();
+            $is_verify = $this->sms_log_db->where($RecordWhere)->field('id, add_time')->order('id desc')->find();
             if (!empty($is_verify)){
+                // 验证码有效期校验
+                if ($is_verify['add_time'] + Config::get('global.mobile_default_time_out') <= getTime()) {
+                    $this->sms_log_db->where(['id' => $is_verify['id']])->update(['is_use' => 1, 'update_time' => getTime()]);
+                    $this->error(foreign_lang('users31', $this->home_lang), null, ['status' => 1]);
+                }
                 $RecordData  = [
                     'is_use' => 1,
                     'update_time' => getTime()
                 ];
-                // 更新数据
-                $this->sms_log_db->where($RecordWhere)->update($RecordData);
+                // 更新数据（用后即焚）
+                $this->sms_log_db->where(['id' => $is_verify['id']])->update($RecordData);
+                verify_code_fail_times($failKey, 'clear');
             }else{
+                $failNum = verify_code_fail_times($failKey, 'inc');
+                if ($failNum >= 5) {
+                    // 失败次数达到上限，作废该手机号未使用的登录验证码
+                    $this->sms_log_db->where([
+                        'source' => 2,
+                        'mobile' => $post['mobile'],
+                        'is_use' => 0,
+                        'lang'   => $this->home_lang,
+                    ])->update(['is_use' => 1, 'update_time' => getTime()]);
+                }
                 $this->error(foreign_lang('users31', $this->home_lang), null, ['status' => 1]);
             }
 
@@ -1851,13 +1882,23 @@ EOF;
             if (empty($post['email'])) {
                 $this->error('邮箱地址不能为空！');
             }
+            // 图形验证码必须最先校验，避免比对邮箱验证码之后再校验而形成判定预言机
             if (1 == $is_vertify) {
                 if (empty($post['vertify'])) {
                     $this->error(foreign_lang('users19', $this->home_lang));
                 }
+                $verify = new Verify();
+                if (!$verify->check($post['vertify'], "users_retrieve_password")) {
+                    $this->error('图形验证码错误，请重新输入！');
+                }
             }
             if (empty($post['email_code'])) {
                 $this->error('邮箱验证码不能为空！');
+            }
+            // 验证码失败次数限制
+            $failKey = 'email_retrieve|' . $post['email'];
+            if (verify_code_fail_times($failKey, 'check')) {
+                $this->error('验证码错误次数过多，请10分钟后再试！');
             }
 
             // 判断会员输入的邮箱是否存在
@@ -1878,8 +1919,9 @@ EOF;
                 $this->error('邮箱未绑定，不能找回密码！');
             }
 
-            // 查询会员输入的邮箱验证码是否存在
+            // 查询会员输入的邮箱验证码是否存在（限定来源为找回密码）
             $RecordWhere = [
+                'source' => 4,
                 'code' => $post['email_code'],
                 'lang' => $this->home_lang,
                 'email' => ['eq', $post['email']],
@@ -1893,14 +1935,9 @@ EOF;
                 if ('1' == $RecordData['status'] || $RecordData['add_time'] <= $time) {
                     $this->error('邮箱验证码已被使用或超时，请重新发送！');
                 } else {
-                    // 图形验证码判断
-                    if (1 == $is_vertify) {
-                        $verify = new Verify();
-                        if (!$verify->check($post['vertify'], "users_retrieve_password")) {
-                            $this->error('图形验证码错误，请重新输入！');
-                        }
-                    }
-
+                    // 校验通过后立即将该验证码置为已使用，防止同一验证码被重复利用
+                    $this->smtp_record_db->where($RecordWhere)->update(['status' => 1, 'update_time' => getTime()]);
+                    verify_code_fail_times($failKey, 'clear');
                     session('users_retrieve_password_email', $post['email']); // 标识邮箱验证通过
                     $em  = rand(10, 99) . base64_encode($post['email']) . '/=';
                     $url = url('user/Users/reset_password', ['em' => base64_encode($em)]);
@@ -1908,6 +1945,16 @@ EOF;
                 }
 
             } else {
+                $failNum = verify_code_fail_times($failKey, 'inc');
+                if ($failNum >= 5) {
+                    // 失败次数达到上限，作废该邮箱未使用的找回密码验证码
+                    $this->smtp_record_db->where([
+                        'source' => 4,
+                        'email'  => $post['email'],
+                        'status' => 0,
+                        'lang'   => $this->home_lang,
+                    ])->update(['status' => 1, 'update_time' => getTime()]);
+                }
                 $this->error('邮箱验证码不正确，请重新输入！');
             }
         }
@@ -2058,6 +2105,16 @@ EOF;
             if (empty($post['mobile_code'])) $this->error(foreign_lang('users30', $this->home_lang));
             if (1 == $is_vertify) {
                 if (empty($post['vertify'])) $this->error(foreign_lang('users19', $this->home_lang));
+                // 图形验证码必须真正校验，不能只判断非空
+                $verify = new Verify();
+                if (!$verify->check($post['vertify'], "users_retrieve_password")) {
+                    $this->error('图形验证码错误，请重新输入！');
+                }
+            }
+            // 验证码失败次数限制
+            $failKey = 'mobile_retrieve|' . $post['mobile'];
+            if (verify_code_fail_times($failKey, 'check')) {
+                $this->error('验证码错误次数过多，请10分钟后再试！');
             }
 
             // 判断会员输入的手机是否存在
@@ -2074,8 +2131,9 @@ EOF;
             $UsersData  = $this->users_db->where($UsersWhere)->field('is_mobile')->find();
             if (empty($UsersData['is_mobile'])) $this->error(foreign_lang('users46', $this->home_lang));
 
-            // 判断验证码是否存在并且是否可用
+            // 判断验证码是否存在并且是否可用（限定来源为找回密码）
             $RecordWhere = [
+                'source' => 4,
                 'mobile' => $post['mobile'],
                 'code'   => $post['mobile_code'],
                 'lang'   => $this->home_lang
@@ -2101,10 +2159,21 @@ EOF;
                         'update_time' => $time
                     ];
                     $this->sms_log_db->where($RecordWhere)->update($RecordData);
+                    verify_code_fail_times($failKey, 'clear');
                     session('users_retrieve_password_mobile', $post['mobile']);
                     $this->success('验证通过', url('user/Users/reset_password_mobile'));
                 }
             } else {
+                $failNum = verify_code_fail_times($failKey, 'inc');
+                if ($failNum >= 5) {
+                    // 失败次数达到上限，作废该手机号未使用的找回密码验证码
+                    $this->sms_log_db->where([
+                        'source' => 4,
+                        'mobile' => $post['mobile'],
+                        'is_use' => 0,
+                        'lang'   => $this->home_lang,
+                    ])->update(['is_use' => 1, 'update_time' => getTime()]);
+                }
                 $this->error('手机验证码不正确，请重新输入！');
             }
         }

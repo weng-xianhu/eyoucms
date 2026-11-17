@@ -34,10 +34,21 @@ class UserBase extends Base
         if (!empty($token)) {
             // 安全修复：令牌密钥改为“固定串 + 每站唯一密钥(get_auth_code)”，与生成端保持一致
             $tokenDecode = mchStrCode($token, 'DECODE', '#!@diyminipro#!$' . get_auth_code());
-            if (preg_match_all('/^([0-9a-zA-Z]{8})eyoucms(\d{1,})eyoucms(.+)eyoucms([a-z]{8})eyoucms(.+)eyoucms_token_salt$/i', $tokenDecode, $matches)) {
-                $this->users_id = !empty($matches[2][0]) ? intval($matches[2][0]) : 0;
-                $openid = !empty($matches[3][0]) ? $matches[3][0] : '';
-                $session_key = !empty($matches[5][0]) ? $matches[5][0] : '';
+            $matches = [];
+            $is_expired = false;
+            if (!empty($tokenDecode)) {
+                /* 新格式：末尾带10位过期时间，超期不再建立登录态（客户端收到 code=-1 后重新登录） */
+                if (preg_match('/^([0-9a-zA-Z]{8})eyoucms(\d{1,})eyoucms(.+)eyoucms([a-z]{8})eyoucms(.+)eyoucms(\d{10})eyoucms_token_salt$/i', $tokenDecode, $matches)) {
+                    $is_expired = intval($matches[6]) < getTime();
+                } else if (preg_match('/^([0-9a-zA-Z]{8})eyoucms(\d{1,})eyoucms(.+)eyoucms([a-z]{8})eyoucms(.+)eyoucms_token_salt$/i', $tokenDecode, $matches)) {
+                    /* 旧格式：无过期时间，继续兼容放行，避免升级后已登录用户被强制下线 */
+                    $is_expired = false;
+                }
+            }
+            if (!empty($matches) && !$is_expired) {
+                $this->users_id = !empty($matches[2]) ? intval($matches[2]) : 0;
+                $openid = !empty($matches[3]) ? $matches[3] : '';
+                $session_key = !empty($matches[5]) ? $matches[5] : '';
                 // 记录缓存, 7天
                 $this->session = [
                     'openid'    => $openid,

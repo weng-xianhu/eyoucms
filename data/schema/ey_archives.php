@@ -626,7 +626,7 @@ return array (
     'name' => 'stock_code',
     'type' => 'varchar(100)',
     'notnull' => false,
-    'default' => NULL,
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),

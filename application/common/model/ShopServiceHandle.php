@@ -21,6 +21,7 @@ use think\Db;
 load_trait('controller/Jump');
 class ShopServiceHandle
 {
+    public $times;
     use \traits\controller\Jump;
 
     // 构造函数

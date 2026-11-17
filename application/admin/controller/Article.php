@@ -19,6 +19,7 @@ use think\Config;
 
 class Article extends Base
 {
+    public $callback_url;
     // 模型标识
     public $nid = 'article';
     // 模型ID

@@ -213,7 +213,7 @@ return [
         'name'  => '允许操作',
         'is_modules'    => 1,
         'sort_order'    => 100,
-        'auths' => 'Member@*',
+        'auths' => 'Member@*,Level@*',
     ],
     [
         'id' => 22,
@@ -493,5 +493,23 @@ return [
         'is_modules'    => 1,
         'sort_order'    => 20,
         'auths' => 'FAQ@*',
+    ],
+    [
+        'id' => 53,
+        'menu_id' => 2004,
+        'menu_id2' => 2004029,
+        'name'  => 'EyouMcp',
+        'is_modules'    => 1,
+        'sort_order'    => 20,
+        'auths' => 'EyouMcp@*',
+    ],
+    [
+        'id' => 54,
+        'menu_id' => 2004,
+        'menu_id2' => 2004030,
+        'name'  => 'AiConfig',
+        'is_modules'    => 1,
+        'sort_order'    => 20,
+        'auths' => 'AiConfig@*',
     ],
 ];

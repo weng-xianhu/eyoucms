@@ -19,6 +19,10 @@ use think\Config;
 use app\common\logic\ShopCommonLogic;
 
 class ShopService extends Base {
+    public $users_db;
+    public $shop_order_service_db;
+    public $shop_common;
+    public $shopOrderServiceModel;
 
     /**
      * 构造方法
@@ -229,6 +233,26 @@ class ShopService extends Base {
             if (empty($param['status'])) $this->error('请选择审核意见！');
             $param['manual_refund'] = !empty($param['manual_refund']) ? $param['manual_refund'] : 0;
 
+            // 退款金额校验：退款到余额时，金额必须为正且不超过该服务单对应订单明细的实付金额
+            if (7 == intval($param['status']) && (!isset($param['is_refund']) || 1 == intval($param['is_refund']))) {
+                $serviceInfo = $this->shop_order_service_db->where([
+                    'users_id'   => intval($param['users_id']),
+                    'service_id' => intval($param['service_id']),
+                ])->field('details_id, order_id, refund_price')->find();
+                if (empty($serviceInfo)) $this->error('维权订单不存在');
+                $detailsInfo = Db::name('shop_order_details')->where(['details_id' => intval($serviceInfo['details_id'])])->field('product_price, num')->find();
+                $orderInfo   = Db::name('shop_order')->where(['order_id' => intval($serviceInfo['order_id'])])->field('order_amount')->find();
+                $detailSubtotal = empty($detailsInfo) ? 0 : floatval($detailsInfo['product_price']) * intval($detailsInfo['num']);
+                $orderAmount    = empty($orderInfo) ? 0 : floatval($orderInfo['order_amount']);
+                $maxRefund      = min($detailSubtotal, $orderAmount);
+                $refundPrice = sprintf('%.2f', floatval($param['refund_price']));
+                if (floatval($refundPrice) <= 0 || floatval($refundPrice) > $maxRefund) {
+                    $this->error('退款金额必须大于 0 且不能超过该商品实付金额');
+                }
+                $param['refund_price'] = $refundPrice;
+                if (empty($param['order_id'])) $param['order_id'] = intval($serviceInfo['order_id']);
+            }
+
             // 换货时，卖家发货需判断快递公司及快递单号是否为空
             if (6 == $param['status']) {
                 // if (empty($param['delivery']['name'])) $this->error('请填写快递公司！', null, ['id'=>'name']);
@@ -245,7 +269,7 @@ class ShopService extends Base {
                 'status' => $param['status']
             ];
             if (!empty($param['admin_note'])) $update['admin_note'] = $param['admin_note'];
-            if (!empty($param['refund_price'])) $update['refund_balance'] = $param['refund_price'];
+            if (!empty($param['refund_price'])) $update['refund_balance'] = sprintf('%.2f', floatval($param['refund_price']));
             if (!empty($param['delivery'])) $update['admin_delivery'] = serialize($param['delivery']);
             $ResultID = $this->shop_order_service_db->where($where)->update($update);
 

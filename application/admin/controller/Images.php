@@ -18,6 +18,7 @@ use think\Db;
 
 class Images extends Base
 {
+    public $callback_url;
     // 模型标识
     public $nid = 'images';
     // 模型ID

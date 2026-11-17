@@ -19,6 +19,8 @@ use think\Config;
 use app\user\logic\PayApiLogic;
 
 class PayApi extends Base {
+    public $pay_api_config_db;
+    public $PayApiLogic;
 
     /**
      * 构造方法
@@ -233,8 +235,17 @@ class PayApi extends Base {
             }
             // 文章购买
             else if (9 == $post['transaction_type']) {
-                $Data = Db::name('article_order')->find($post['unified_id']);
+                $Data = Db::name('article_order')->where([
+                    'order_id' => $post['unified_id'],
+                    'users_id' => $this->users_id,
+                    'lang'     => $this->home_lang,
+                ])->find();
                 if (empty($Data)) $this->error('订单异常009，刷新重试');
+
+                // 校验订单支付方式与金额：积分文章（order_amount=0）不允许用余额 0 元支付
+                if (floatval($Data['order_amount']) <= 0 || floatval($Data['order_score']) > 0) {
+                    $this->error('该订单不支持余额支付');
+                }
 
                 $ViewUrl = cookie($this->users_id . '_' . $Data['product_id'] . '_EyouArticleViewUrl');
                 if (in_array($Data['order_status'], [1])) $this->success('订单已支付！即将跳转', $ViewUrl);
@@ -402,8 +413,17 @@ class PayApi extends Base {
             // 文章支付
             if (9 === intval($post['transaction_type'])) {
                 // 查询订单信息
-                $articleOrder = Db::name('article_order')->find($post['unified_id']);
+                $articleOrder = Db::name('article_order')->where([
+                    'order_id' => $post['unified_id'],
+                    'users_id' => $this->users_id,
+                    'lang'     => $this->home_lang,
+                ])->find();
                 if (empty($articleOrder)) $this->error('订单支付数据不存在，刷新重试');
+
+                // 校验订单支付方式与积分：余额文章（order_score=0）不允许用 0 积分支付
+                if (floatval($articleOrder['order_score']) <= 0 || floatval($articleOrder['order_amount']) > 0) {
+                    $this->error('该订单不支持积分支付');
+                }
                 // 如果订单已支付过，则跳转到详情页
                 $viewUrl = cookie($this->users_id . '_' . $articleOrder['product_id'] . '_EyouArticleViewUrl');
                 if (in_array($articleOrder['order_status'], [1])) $this->success('订单已支付！即将跳转', $viewUrl);
@@ -614,6 +634,10 @@ class PayApi extends Base {
     public function payOnDelivery()
     {
         if (IS_AJAX_POST) {
+            // 后台关闭货到付款时禁止使用
+            if (!empty($this->usersConfig['shop_open_offline'])) {
+                $this->error('货到付款功能已关闭，请选择其他支付方式');
+            }
             $post = input('post.');
             $post['unified_id'] = intval($post['unified_id']);
             if (empty($post['unified_id']) || !is_numeric($post['unified_id'])) $this->error('订单支付参数缺失，刷新重试');

@@ -21,6 +21,10 @@ use app\common\logic\ArctypeLogic;
  */
 class Ask extends Base
 {
+    public $ask_db;
+    public $ask_answer_db;
+    public $ask_answer_like_db;
+    public $ask_type_db;
     private $arctypeLogic;
    
     /**

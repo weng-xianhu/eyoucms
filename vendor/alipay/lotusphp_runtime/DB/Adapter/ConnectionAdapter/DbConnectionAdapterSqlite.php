@@ -30,7 +30,7 @@ class LtDbConnectionAdapterSqlite implements LtDbConnectionAdapter
 		$connResource = $func($connConf["host"] . $connConf["dbname"], 0666, $error);
 		if (!$connResource)
 		{
-			trigger_error($error, E_USER_ERROR);
+			throw new \RuntimeException($error);
 		} 
 		else
 		{

@@ -81,9 +81,12 @@ class Pay extends Model
         $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
         $result =  $this->https_post($url,$dataXML);
         $ret = $this->xmlToArray($result);
-        if($ret['return_code'] == 'SUCCESS' && $ret['return_msg'] == 'OK') {
+        if(isset($ret['return_code']) && $ret['return_code'] == 'SUCCESS' && $ret['return_msg'] == 'OK') {
             return $ret['code_url'];
         } else {
+            if (isset($ret['return_code']) && $ret['return_code'] == 'FAIL') {
+                $ret['return_msg'] = wechatPayErrorMsg($ret, '微信扫码支付');
+            }
             return $ret;
         }
     }
@@ -145,7 +148,6 @@ class Pay extends Model
         if (curl_errno($ch)) {
             return 'Errno: '.curl_error($ch);
         }
-        curl_close($ch);
         return $result;
     }
 
@@ -156,7 +158,10 @@ class Pay extends Model
     */
     private function xmlToArray($xml)
     {
-        @libxml_disable_entity_loader(true);
+        // curl 请求失败时返回的是错误字符串，转成统一的失败结构，便于后续给出中文提示
+        if (is_string($xml) && 0 === strpos($xml, 'Errno:')) {
+            return ['return_code' => 'FAIL', 'return_msg' => $xml];
+        }
         $xmlstring = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
         $val = json_decode(json_encode($xmlstring),true);
         return $val;

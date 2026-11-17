@@ -23,6 +23,7 @@ use app\common\logic\NavigationLogic;
  */
 class TagNavigation extends Base
 {
+    public $navigationlogic;
     private $arctypeAll = [];
     static $ReturnData = null;
     private $buildhtmlLogic = null;

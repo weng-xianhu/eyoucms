@@ -118,7 +118,7 @@ class WeappLogic extends Model
         $dir = WEAPP_DIR_NAME;
         $weapp_list = $this->dirscan($dir);
         foreach($weapp_list as $k=>$v){
-            if (!is_dir(WEAPP_DIR_NAME.DS.$v) || !file_exists(WEAPP_DIR_NAME.DS.$v.'/config.php')) {
+            if (!is_dir(WEAPP_DIR_NAME.DS.$v) || !file_exists(WEAPP_DIR_NAME.DS.$v.'/config.php') || is_weapp_invalid($v)) {
                 unset($weapp_list[$k]);
             }
             else
@@ -213,15 +213,23 @@ class WeappLogic extends Model
             }
         }
 
+        if (is_array($serviceVersionList)) {
+            // 仅保留升级包结构，忽略服务端新增的字符串型字段，避免 PHP8 下 "Cannot access offset of type string on string"
+            $serviceVersionList = array_values(array_filter($serviceVersionList, 'is_array'));
+        } else {
+            // 响应整体不是数组（如字符串/标量）时按无更新处理，避免 count() 在 PHP8 报类型错误
+            $serviceVersionList = array();
+        }
         if(!empty($serviceVersionList))
         {
             $upgradeArr = array();
             $introStr = '';
             $upgradeStr = '';
             foreach ($serviceVersionList as $key => $val) {
-                $upgrade = !empty($val['upgrade']) ? $val['upgrade'] : array();
+                $upgrade = !empty($val['upgrade']) && is_array($val['upgrade']) ? $val['upgrade'] : array();
                 $upgradeArr = array_merge($upgradeArr, $upgrade);
-                $introStr .= '<br/>'.filter_line_return($val['intro'], '<br/>');
+                $intro = isset($val['intro']) && is_string($val['intro']) ? $val['intro'] : '';
+                $introStr .= '<br/>'.filter_line_return($intro, '<br/>');
             }
             $upgradeArr = array_unique($upgradeArr);
             $upgradeStr = implode('<br/>', $upgradeArr); // 升级提示需要覆盖哪些文件
@@ -297,6 +305,9 @@ class WeappLogic extends Model
         error_reporting(0);//关闭所有错误报告
         if (empty($code)) {
             return ['code' => 0, 'msg' => "URL传参错误，缺少插件标识参数值！"];
+        }
+        if (is_weapp_invalid($code)) {
+            return ['code' => 0, 'msg' => '插件不存在！'];
         }
 
         $allow_url_fopen = ini_get('allow_url_fopen');
@@ -432,16 +443,33 @@ class WeappLogic extends Model
                 /**
                  * 执行SQL语句
                  */
+                $error_sql = [];
                 try {
                     $counts = count($sqlFormat);
                     for ($i = 0; $i < $counts; $i++) {
                         $sql = trim($sqlFormat[$i]);
-                        if (stristr($sql, 'CREATE TABLE')) {
-                            Db::execute($sql);
-                        } else {
-                            if(trim($sql) == '')
-                               continue;
-                            Db::execute($sql);
+                        if ($sql == '') {
+                            continue;
+                        }
+                        if ($this->skipUpgradeFieldSql($sql)) {
+                            continue;
+                        }
+                        $sql = adaptSql($sql);
+                        try {
+                            $r = @Db::execute($sql);
+                        } catch (\Exception $e) {
+                            $r = false;
+                        }
+                        if ($r === false) {
+                            $sql = str_replace('ENGINE=MyISAM', 'ENGINE=InnoDB', $sql);
+                            try {
+                                $r = @Db::execute($sql);
+                            } catch (\Exception $e) {
+                                $r = false;
+                            }
+                            if ($r === false) {
+                                $error_sql[] = $sql;
+                            }
                         }
                     }
                 } catch (\Exception $e) {
@@ -496,6 +524,84 @@ class WeappLogic extends Model
         $this->UpgradeLog($code, $serviceVersion['key_num']);
         
         return ['code' => $copy_data['code'], 'msg' => "升级成功{$copy_data['msg']}"];
+    }
+
+    private function skipUpgradeFieldSql($sql)
+    {
+        $matches = array();
+        $table = '';
+        $field = '';
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+ADD\s+(?:COLUMN\s+)?`?([^\s`,]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $field = $matches[2];
+            return $this->hasTableField($table, $field);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+DROP\s+(?:COLUMN\s+)?`?([^\s`,;]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $field = $matches[2];
+            return !$this->hasTableField($table, $field);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+ADD\s+(?:UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?(?:INDEX|KEY)\s+`?([^\s`(]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $index = $matches[2];
+            return $this->hasTableIndex($table, $index);
+        }
+
+        if (preg_match('/^ALTER\s+TABLE\s+`?([^\s`]+)`?\s+DROP\s+(?:INDEX|KEY)\s+`?([^\s`,;]+)`?/i', $sql, $matches)) {
+            $table = $matches[1];
+            $index = $matches[2];
+            return !$this->hasTableIndex($table, $index);
+        }
+
+        if (preg_match('/^CREATE\s+(?:UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?INDEX\s+`?([^\s`(]+)`?\s+ON\s+`?([^\s`(]+)`?/i', $sql, $matches)) {
+            $index = $matches[1];
+            $table = $matches[2];
+            return $this->hasTableIndex($table, $index);
+        }
+
+        return false;
+    }
+
+    private function hasTableField($table, $field)
+    {
+        if (empty($table) || empty($field)) {
+            return false;
+        }
+
+        $fields = Db::getTableFields($table);
+        if (empty($fields)) {
+            return false;
+        }
+
+        return in_array(strtolower($field), array_map('strtolower', $fields));
+    }
+
+    private function hasTableIndex($table, $index)
+    {
+        if (empty($table) || empty($index)) {
+            return false;
+        }
+
+        try {
+            $indexes = Db::query("SHOW INDEX FROM `{$table}`");
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        if (empty($indexes)) {
+            return false;
+        }
+
+        foreach ($indexes as $row) {
+            if (strtolower($row['Key_name']) === strtolower($index)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

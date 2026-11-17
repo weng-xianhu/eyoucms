@@ -38,6 +38,10 @@ class Weapp extends Model
     public function getList($where = array()){
         $result = Db::name('weapp')->where($where)->getAllWithIndex('code');
         foreach ($result as $key => $val) {
+            if (is_weapp_invalid($val['code'])) {
+                unset($result[$key]);
+                continue;
+            }
             $config = include WEAPP_PATH.$val['code'].DS.'config.php';
             $val['config'] = json_encode($config);
             $result[$key] = $val;

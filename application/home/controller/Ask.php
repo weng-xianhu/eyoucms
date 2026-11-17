@@ -19,6 +19,11 @@ use app\home\logic\AskLogic;
 
 class Ask extends Base
 {
+    public $AskLogic;
+    public $ask_db;
+    public $ask_answer_db;
+    public $ask_answer_like_db;
+    public $MenuTitle;
     public $users = [
         'users_id' => 0,
         'admin_id' => 0,
@@ -57,8 +62,9 @@ class Ask extends Base
             $this->nickname = $LatestData['nickname'];
             // 会员余额
             $this->users_money = $LatestData['users_money'];
-            // 后台管理员信息
-            $this->parent_id = session('admin_info.parent_id');
+            // 后台管理员信息（未登录后台时不允许具备创始人视角）
+            $adminInfo = session('?admin_id') ? session('admin_info') : null;
+            $this->parent_id = (!empty($adminInfo) && isset($adminInfo['parent_id'])) ? intval($adminInfo['parent_id']) : -1;
         } else {
             //过滤不需要登陆的行为
             $ctl_act = CONTROLLER_NAME . '@' . ACTION_NAME;
@@ -198,9 +204,18 @@ class Ask extends Base
     {
         if (IS_AJAX_POST || IS_POST) {
             $param = input('param.');
+            // 悬赏金额标准化：必须是数字且不小于 0，防止负数加余额或拼接注入
+            $moneyRaw = isset($param['money']) ? trim((string)$param['money']) : '';
+            if ('' !== $moneyRaw && !is_numeric($moneyRaw)) {
+                $this->error('悬赏金额格式有误！');
+            }
+            $param['money'] = round(floatval($moneyRaw), 2);
+            if ($param['money'] < 0) {
+                $this->error('悬赏金额不能为负数！');
+            }
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->ParamDealWith($param);
-            if ($param['money'] > 0 && $param['money'] > $this->users['users_money']) {
+            if ($param['money'] > 0 && $param['money'] > floatval($this->users['users_money'])) {
                 $this->error('余额不足以抵扣悬赏金额,请充值！');
             }
 
@@ -220,8 +235,12 @@ class Ask extends Base
             /* END */
             $ResultId = $this->ask_db->add($AddAsk);
             if (!empty($ResultId)) {
-                // 悬赏 积分奖励记录
-                $this->AskModel->setScore($this->users_id, $ResultId,0,1,$param['money']);
+                // 悬赏 积分奖励记录（悬赏金额扣减失败则回滚问题，避免白拿悬赏）
+                $setScoreRes = $this->AskModel->setScore($this->users_id, $ResultId, 0, 1, $param['money']);
+                if (false === $setScoreRes && $param['money'] > 0) {
+                    $this->ask_db->where('ask_id', intval($ResultId))->delete();
+                    $this->error('余额不足以抵扣悬赏金额,请充值！');
+                }
 
                 $url = $this->AskLogic->GetUrlData($param, 'NewDateUrl');
                 if (1 == $this->users['ask_is_review']) {
@@ -265,6 +284,15 @@ class Ask extends Base
         if (IS_AJAX_POST || IS_POST) {
             $param = input('param.');
             $param['ask_id'] = intval($param['ask_id']);
+            // 悬赏金额标准化：必须是数字且不小于 0
+            $moneyRaw = isset($param['money']) ? trim((string)$param['money']) : '';
+            if ('' !== $moneyRaw && !is_numeric($moneyRaw)) {
+                $this->error('悬赏金额格式有误！');
+            }
+            $param['money'] = round(floatval($moneyRaw), 2);
+            if ($param['money'] < 0) {
+                $this->error('悬赏金额不能为负数！');
+            }
             // 是否登录、是否允许发布问题、数据判断及处理，返回内容数据
             $content = $this->ParamDealWith($param, false);
             $ori_money = Db::name('ask')->where('ask_id', $param['ask_id'])->getField('money');
@@ -297,7 +325,12 @@ class Ask extends Base
             $ResultID = $this->ask_db->where($where)->update($UpAsk);
             if (!empty($ResultID)) {
                 if ($ori_money < $param['money']) {
-                    $this->AskModel->updateMoney($this->users_id, $param['money'], $ori_money, $param['ask_id']);
+                    $updateMoneyRes = $this->AskModel->updateMoney($this->users_id, $param['money'], $ori_money, $param['ask_id']);
+                    if (false === $updateMoneyRes) {
+                        // 扣款失败则回滚悬赏金额，避免白拿悬赏
+                        $this->ask_db->where($where)->update(['money' => $ori_money, 'update_time' => getTime()]);
+                        $this->error('余额不足以抵扣悬赏金额，请充值！');
+                    }
                 }
                 $url = $this->AskLogic->GetUrlData($param, 'AskDetailsUrl');
                 $this->success('编辑成功！', $url);
@@ -349,9 +382,13 @@ class Ask extends Base
             $param['answer_id'] = intval($param['answer_id']);
             // 查询提问信息
             $AskInfo = $this->ask_db->field('users_id, status')->where('ask_id', $param['ask_id'])->find();
-            if (!empty($this->users['admin_id']) || $AskInfo['users_id'] = input('post.users_id/d')) {
-                // 查询问答状态
-                $AskStatus = $this->ask_db->where('ask_id', $param['ask_id'])->getField('status');
+            if (empty($AskInfo)) $this->error('请选择采纳的回答');
+            // 采纳权限校验：管理员或问题发布者本人，且回答必须属于该问题
+            $AnswerCount = $this->ask_answer_db->where([
+                'ask_id'    => $param['ask_id'],
+                'answer_id' => $param['answer_id'],
+            ])->count();
+            if ((!empty($this->users['admin_id']) || $AskInfo['users_id'] == $this->users_id) && !empty($AnswerCount)) {
                 // 更新问题数据表
                 $Updata = [
                     'ask_id'        => $param['ask_id'],
@@ -360,23 +397,32 @@ class Ask extends Base
                     'bestanswer_id' => $param['answer_id'],
                     'update_time'   => getTime()
                 ];
-                $ResultID = $this->ask_db->update($Updata);
+                // 原子占用：只有"未解决 -> 已解决"的那一次请求成功，保证悬赏只发放一次
+                $ResultID = $this->ask_db->where(['ask_id' => $param['ask_id'], 'status' => 0])->update($Updata);
                 if (!empty($ResultID)) {
-                    // 将这个问题下的所有答案设置为非最佳答案
-                    $this->ask_answer_db->where('ask_id', $param['ask_id'])->update(['is_bestanswer' => 0]);
-                    // 设置当前问题为最佳答案
-                    $this->ask_answer_db->where('answer_id', $param['answer_id'])->update(['is_bestanswer' => 1]);
-                    // 问题未解决并存在悬赏金则执行
+                    $isFirstAdopt = true;
+                } else {
+                    // 已解决状态下允许修改最佳答案，但不再重复发放悬赏
+                    $currentStatus = $this->ask_db->where('ask_id', $param['ask_id'])->value('status');
+                    if (1 !== intval($currentStatus)) $this->error('请选择采纳的回答');
+                    $this->ask_db->update($Updata);
+                    $isFirstAdopt = false;
+                }
+
+                // 将这个问题下的所有答案设置为非最佳答案
+                $this->ask_answer_db->where('ask_id', $param['ask_id'])->update(['is_bestanswer' => 0]);
+                // 设置当前问题为最佳答案
+                $this->ask_answer_db->where('answer_id', $param['answer_id'])->update(['is_bestanswer' => 1]);
+                // 首次采纳且存在悬赏金才发放
+                if ($isFirstAdopt) {
                     $money = $this->ask_db->where('ask_id', $param['ask_id'])->value('money');
-                    if (isset($AskInfo['status']) && 0 == $AskInfo['status'] && 0 < $money) {
+                    if (0 < floatval($money)) {
                         $answer_user_id = $this->ask_answer_db->where('answer_id', $param['answer_id'])->value('users_id');
                         // 悬赏金额插入记录
                         $this->AskModel->setMoney($answer_user_id, $money, $param['ask_id'], $param['answer_id']);
                     }
-                    $this->success('已采纳');
-                } else {
-                    $this->error('请选择采纳的回答');
                 }
+                $this->success('已采纳');
             } else {
                 $this->error('无操作权限');
             }
@@ -571,6 +617,11 @@ class Ask extends Base
             if (empty($this->users['admin_id'])) $Where['users_id'] = $this->users_id;
             // 查询整个回答评论回复共有条数的ID
             $CountWhere['answer_pid'] = $answer_id;
+            // 非管理员且目标回答不属于本人时，连带删除的下级评论/回复必须限定为本人发表的内容，避免越权删除他人内容
+            $WhereCount = $this->ask_answer_db->where($Where)->count();
+            if (empty($this->users['admin_id']) && empty($WhereCount)) {
+                $CountWhere['users_id'] = $this->users_id;
+            }
             $AskAnswerID = $this->ask_answer_db->where($Where)->whereOr($CountWhere)->column('answer_id');
             // 执行删除
             $ResultID = $this->ask_answer_db->where($Where)->whereOr($CountWhere)->delete();
@@ -696,7 +747,7 @@ class Ask extends Base
     {
         if (IS_AJAX_POST) {
             // 创始人才有权限在前台审核评论
-            if (0 == $this->parent_id) {
+            if (session('?admin_id') && 0 === intval($this->parent_id)) {
                 $this->UsersIsLogin();
                 $param = input('param.');
                 if (empty($param['ask_id'])) $this->error('请选择需要审核的问题！');
@@ -719,7 +770,7 @@ class Ask extends Base
     {
         if (IS_AJAX_POST) {
             // 创始人才有权限在前台审核评论
-            if (0 == $this->parent_id) {
+            if (session('?admin_id') && 0 === intval($this->parent_id)) {
                 $this->UsersIsLogin();
                 $param = input('param.');
                 if (empty($param['ask_id']) || empty($param['answer_id'])) $this->error('提交信息有误，请刷新重试！');

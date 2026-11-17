@@ -20,6 +20,10 @@ class Sitemap extends Base
 {
     public function _initialize() {
         parent::_initialize();
+        // 只允许后台管理员操作，防止匿名触发全量重建 sitemap
+        if (!session('?admin_id')) {
+            $this->error('只允许后台管理员操作！');
+        }
     }
 
     /**
@@ -468,12 +472,34 @@ class Sitemap extends Base
                 $this->filePutContents($savepath, $tpl, 'llms.txt.htm');
                 $sitemapid = $last_type."_".$last_arc."_".$last_tag;
                 $r = tpSetting('system',['system_sitemapid1758600001'=>$sitemapid]);
+                $this->appendBrandPageLlms(); // 系统重建后把插件的品牌/城市清单块补回，避免互相覆盖
             } catch (\Exception $e) {
                 $msg .= '<span>llms.txt生成失败！' . $e->getMessage() . '</span><br>';
             }
         }
 
         return $msg;
+    }
+
+    /**
+     * BrandPage 插件也维护 /llms.txt（品牌实体 + 城市服务页清单），
+     * 系统重建后调用插件生成器把它的标记块追加回来；插件未装或出错时静默跳过。
+     */
+    private function appendBrandPageLlms()
+    {
+        if (!class_exists('\weapp\BrandPage\vendor\LlmsHelper')) {
+            return;
+        }
+        try {
+            $config = [];
+            $list = \think\Db::name('weapp_brandpage_config')->select();
+            foreach ($list as $item) {
+                $config[$item['config_key']] = $item['config_value'];
+            }
+            \weapp\BrandPage\vendor\LlmsHelper::generateSafe($config);
+        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+        }
     }
 
     public function ai_content_index()

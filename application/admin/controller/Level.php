@@ -17,6 +17,9 @@ use think\Db;
 use think\Config;
 
 class Level extends Base {
+    public $users_db;
+    public $users_money_db;
+    public $users_type_manage_db;
 
     /**
      * 构造方法

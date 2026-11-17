@@ -183,6 +183,9 @@
                                 {else/}
                                 <span>订单金额<span class="fr">{$field.order_total_amount}</span></span>
                                 {/empty}
+                                {eyou:if condition="$field.coupon_price > 0"}
+                                <span>优惠券<span class="fr">-￥{$field.coupon_price}</span></span>
+                                {/eyou:if}
                                 <span>实付金额<span class="fr" style="font-weight: 600;"><i class="ml5 red">{empty name="$field.points_shop_order"}￥{/empty}{$field.order_amount}</i></span></span>
                             </div>
                         </div>

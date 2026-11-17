@@ -264,7 +264,7 @@ class PHPExcel_Worksheet_AutoFilter_Column_Rule
      *
      * @param PHPExcel_Worksheet_AutoFilter_Column $pParent
      */
-    public function __construct(PHPExcel_Worksheet_AutoFilter_Column $pParent = null)
+    public function __construct($pParent = null)
     {
         $this->parent = $pParent;
     }
@@ -439,7 +439,7 @@ class PHPExcel_Worksheet_AutoFilter_Column_Rule
      * @param PHPExcel_Worksheet_AutoFilter_Column
      * @return PHPExcel_Worksheet_AutoFilter_Column_Rule
      */
-    public function setParent(PHPExcel_Worksheet_AutoFilter_Column $pParent = null)
+    public function setParent($pParent = null)
     {
         $this->parent = $pParent;
 

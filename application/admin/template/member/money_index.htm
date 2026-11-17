@@ -221,6 +221,10 @@
 									{else /}
 										<a class="btn grey" href="javascript:void(0);"> - </a>
 									{/if}
+                                    {eq name="'Member@money_del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Member/money_del')}" data-id="{$vo.moneyid}" data-msg="删除后不可恢复，且不会自动回退会员余额，确认删除？" onclick="delfun(this);">删除</a>
+                                    {/eq}
                                 </div>
                             </td>
                         </tr>

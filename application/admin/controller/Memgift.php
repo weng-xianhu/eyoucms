@@ -19,6 +19,7 @@ use think\Db;
 
 class Memgift extends Base
 {
+    public $score_name;
 
     public function _initialize()
     {

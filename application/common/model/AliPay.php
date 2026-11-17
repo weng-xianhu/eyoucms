@@ -90,7 +90,7 @@ class AliPay
         } else {
             return [
                 'success'    => false,
-                'err_tips'   => $response['alipay_trade_create_response']['sub_msg'], // 返回错误信息
+                'err_tips'   => alipayErrorMsg($response, '支付宝小程序支付'), // 返回中文错误信息
             ];
         }
     }
@@ -124,7 +124,7 @@ class AliPay
                 $jsonData = $jsonData['alipay_trade_query_response'];
             
                 // 支付成功判断
-                if (isset($jsonData['trade_status']) && 'TRADE_SUCCESS' === $jsonData['trade_status'] && !empty($jsonData['trade_no']) && !empty($jsonData['buyer_logon_id'])) {
+                if (isset($jsonData['trade_status']) && in_array($jsonData['trade_status'], ['TRADE_SUCCESS', 'TRADE_FINISHED']) && !empty($jsonData['trade_no']) && !empty($jsonData['buyer_logon_id'])) {
                     // 处理系统订单
                     $post['unified_id'] = $order['unified_id'];
                     $post['unified_number'] = $order['unified_number'];
@@ -137,15 +137,22 @@ class AliPay
                         $this->success('正在支付中');
                     }
                 }
+                // 交易已关闭
+                else if (isset($jsonData['trade_status']) && 'TRADE_CLOSED' === $jsonData['trade_status']) {
+                    if (true !== $notify) {
+                        $this->error('该订单的支付宝交易已关闭（未付款超时或已退款），请重新下单');
+                    }
+                }
                 // 订单异常，处理其他情况
                 else {
                     if (true !== $notify) {
-                        $this->error($jsonData['msg']);
+                        $status = !empty($jsonData['trade_status']) ? $jsonData['trade_status'] : '未知';
+                        $this->error('订单尚未支付完成，当前交易状态：' . $status . '，请稍后刷新');
                     }
                 }
             } else {
                 if (true !== $notify) {
-                    $this->error($jsonData['alipay_trade_query_response']['msg']);
+                    $this->error(alipayErrorMsg($jsonData, '支付宝订单查询'));
                 }
             }
         }
@@ -312,16 +319,22 @@ class AliPay
     
         // 检查是否发生错误
         if (curl_errno($ch)) {
-            // 如果发生错误，记录错误并返回空数组
-            error_log('cURL Error: ' . curl_error($ch));
-            return [];
+            // 如果发生错误，记录错误并把原始错误信息返回给调用方（供 alipayErrorMsg 转成中文提示）
+            $curlError = curl_error($ch);
+            error_log('cURL Error: ' . $curlError);
+            curl_close($ch);
+            return ['curl_error' => $curlError];
         }
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     
         // 关闭 cURL 连接
-        curl_close($ch);
     
         // 将返回的 JSON 响应解码为数组
-        return json_decode($response, true);
+        $result = json_decode($response, true);
+        if (!is_array($result)) {
+            return ['curl_error' => 'HTTP_ERROR_' . intval($httpCode) . ' ' . (is_string($response) ? substr(strip_tags($response), 0, 300) : '')];
+        }
+        return $result;
     }
 
 
@@ -374,21 +387,32 @@ class AliPay
     // 去掉末尾多余的 &
     $stringToSign = rtrim($stringToSign, '&');
     
-    // 确保私钥格式正确，自动拼接开始和结束部分
-    $formattedPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . trim($privateKey) . "\n-----END RSA PRIVATE KEY-----";
-    $privateKeyResource = openssl_pkey_get_private($formattedPrivateKey);
+    if (!function_exists('openssl_pkey_get_private')) {
+        $this->error('服务器 PHP 未开启 openssl 扩展，无法进行支付宝签名，请联系管理员在 php.ini 中开启');
+    }
+    $privateKey = trim(strval($privateKey));
+    if ('' === $privateKey) {
+        $this->error('后台支付宝小程序支付配置中应用私钥为空，请联系管理员到后台填写');
+    }
+
+    // 确保私钥格式正确：去掉已有的 BEGIN/END 行及空白后按 64 列换行，自动拼接开始和结束部分
+    $keyBody = preg_replace('/-----(BEGIN|END)[A-Z ]*-----/', '', $privateKey);
+    $keyBody = wordwrap(preg_replace('/\s+/', '', $keyBody), 64, "\n", true);
+    $privateKeyResource = openssl_pkey_get_private("-----BEGIN RSA PRIVATE KEY-----\n" . $keyBody . "\n-----END RSA PRIVATE KEY-----");
+    if (!$privateKeyResource) {
+        $privateKeyResource = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . $keyBody . "\n-----END PRIVATE KEY-----");
+    }
     
     if (!$privateKeyResource) {
-        die('私钥加载失败');
+        $this->error('支付宝应用私钥格式不正确，无法加载，请联系管理员到后台重新粘贴开放平台“密钥工具”生成的应用私钥（去掉 BEGIN/END 行）');
     }
 
     // 使用 RSA2 签名，采用 SHA256 算法
     if (!openssl_sign($stringToSign, $sign, $privateKeyResource, OPENSSL_ALGO_SHA256)) {
-        die('签名生成失败');
+        $this->error('支付宝签名生成失败，请检查应用私钥是否为 RSA2(SHA256) 密钥');
     }
 
     // 释放私钥资源
-    openssl_free_key($privateKeyResource);
 
     // 返回 Base64 编码后的签名
     return base64_encode($sign);

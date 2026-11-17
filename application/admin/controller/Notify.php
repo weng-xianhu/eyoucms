@@ -16,6 +16,10 @@ use think\Db;
 use think\Page;
 
 class Notify extends Base {
+    public $smtp_tpl_db;
+    public $sms_template_db;
+    public $users_notice_tpl_db;
+    public $users_notice_tpl_content_db;
 
     /**
      * 构造方法

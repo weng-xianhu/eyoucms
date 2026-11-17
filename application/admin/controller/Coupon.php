@@ -20,7 +20,12 @@ use app\admin\logic\ShopLogic;
 
 class Coupon extends Base
 {
+    public $channeltype;
     public $ShopLogic;
+    public $shop_coupon_db;
+    public $shop_coupon_use_db;
+    public $archives_db;
+    public $arctype_db;
 
     /**
      * 构造方法

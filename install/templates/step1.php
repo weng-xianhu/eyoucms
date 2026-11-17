@@ -64,7 +64,7 @@
         </div>
       </div>
       <div class="blank20"></div>
-      <div class="bottom tac"> <center><a id="next_submit" href="<?php echo $_SERVER['PHP_SELF']; ?>?step=2" class="btn_a">接 受</a></center> </div>
+      <div class="bottom tac"> <center><a id="next_submit" href="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=2" class="btn_a">接 受</a></center> </div>
     </div>
   </div>
   <div class="blank30"></div>

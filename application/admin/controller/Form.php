@@ -19,6 +19,9 @@ use app\admin\logic\FormLogic;
 
 class Form extends Base
 {
+    public $form_db;
+    public $formLogic;
+    public $form_model;
     // 表单类型
     public $attrInputTypeArr = array();
 

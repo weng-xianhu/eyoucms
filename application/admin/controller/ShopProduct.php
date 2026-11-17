@@ -29,6 +29,9 @@ class ShopProduct extends Base
     // 表单类型
     public $attrInputTypeArr = array();
     public $ShopLogic;
+    public $shop_product_attrlist_db;
+    public $productSpecLogic;
+    public $callback_url;
 
     public function _initialize()
     {

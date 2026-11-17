@@ -22,7 +22,12 @@ use think\Config;
 load_trait('controller/Jump');
 class BaiduPay
 {
+    public $times;
+    public $headers;
     use \traits\controller\Jump;
+
+    public $verify;
+    public $baiduPayConfig;
 
     // 构造函数
     public function __construct($baiduPayConfig = [], $verify = false)
@@ -301,7 +306,6 @@ class BaiduPay
         // 生成加密串
         $sign = '';
         openssl_sign($str, $sign, $priKey);
-        openssl_free_key($priKey);
         return base64_encode($sign);
     }
 

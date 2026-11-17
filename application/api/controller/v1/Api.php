@@ -76,6 +76,15 @@ class Api extends Base
 
     private function get_jsapi_ticket($row = [], $access_token = '')
     {
+        $appid = !empty($row['appid']) ? $row['appid'] : '';
+        // 优先使用缓存的 jsapi_ticket，避免匿名请求频繁调用微信接口、消耗接口额度
+        if (!empty($appid)) {
+            $setting = tpSetting(md5($appid));
+            if (!empty($setting['ticket']) && !empty($setting['ticket_expires_time']) && $setting['ticket_expires_time'] > getTime()) {
+                return $setting['ticket'];
+            }
+        }
+
         $url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token={$access_token}&type=jsapi";
         $data = httpRequest($url);
         $WeChatData = json_decode($data, true);
@@ -113,14 +122,13 @@ class Api extends Base
         $signature = sha1($string);
 
         $web_logo = tpCache('web.web_logo');
+        // 安全修复：只返回 wx.config 所需的签名结果，禁止把 jsapi_ticket 及其原始签名串下发给匿名用户
         $signPackage = array(
             "appId" => $tokenData['appid'],
             "nonceStr" => $nonceStr,
             "timestamp" => $timestamp,
             "url" => $url,
             "signature" => $signature,
-            "rawString" => $string,
-            "jsapiTicket" => $jsapiTicket,
             "web_logo" => $web_logo,
         );
         return $signPackage;
@@ -492,7 +500,6 @@ HTML;
             throw new \Exception("CURL 请求失败: $error, HTTP 状态码: $httpCode");
         }
     
-        curl_close($ch);
         return $response;
     }
       /**
@@ -505,7 +512,6 @@ HTML;
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);
-        curl_close($ch);
     
         // 将返回的 JSON 数据解析成数组
         return json_decode($response, true);
@@ -517,18 +523,25 @@ HTML;
             $weappInfo = model('ShopPublicHandle')->getWeappInfo('Logisticswx');
             
             if (!empty($weappInfo)) {
-                // 插件已安装，执行相关操作
+                // 必须登录，用户身份一律从 token 解析，禁止使用请求传入的 userId
+                $users = $this->getUser();
+                $userId = intval($users['users_id']);
+
                 $trackingNumber = input('post.trackingNumber', '', 'trim'); // 获取 POST 请求中的 trackingNumber
-                $userId = input('post.userId', '', 'trim'); // 获取 POST 请求中的 userId
-                $mobile = input('post.mobile', '', 'trim'); // 获取 POST 请求中的 userId
-                $delivery = input('post.delivery', '', 'trim'); // 获取 POST 请求中的 userId
-    
+                $mobile = input('post.mobile', '', 'trim'); // 收件人手机号
+                $delivery = input('post.delivery', '', 'trim'); // 物流公司编码
+
                 if (empty($trackingNumber)) {
                     return json(['code' => 0, 'msg' => 'Tracking number cannot be empty']);
                 }
-    
-                if (empty($userId)) {
-                    return json(['code' => 0, 'msg' => 'User ID cannot be empty']);
+
+                // 运单号必须属于当前用户的订单，防止越权查询他人运单
+                $orderCount = Db::name('shop_order')->where([
+                    'users_id'      => $userId,
+                    'express_order' => $trackingNumber,
+                ])->count();
+                if (empty($orderCount)) {
+                    return json(['code' => 0, 'msg' => 'Waybill not found']);
                 }
     
                 try {
@@ -611,22 +624,32 @@ HTML;
         }
         // 将服务器返回的XML数据转化为数组
         $data = $userModel->fromXml($xml);
+        if (empty($data) || !is_array($data) || empty($data['out_trade_no'])) {
+            $userModel->returnCode(false, '数据解析失败');
+        }
         // 订单信息
         $order = Db::name("shop_order")->where(['order_code' => $data['out_trade_no']])->find();
         empty($order) && $userModel->returnCode(false, '订单不存在');
         // 保存微信服务器返回的签名sign
-        $dataSign = $data['sign'];
+        $dataSign = isset($data['sign']) ? $data['sign'] : '';
         // sign不参与签名算法
         unset($data['sign']);
-        // 生成签名
+        // 生成签名（密钥未配置时返回空串，直接拒绝，避免空密钥伪造签名）
         $sign = $userModel->makeSign($data);
+        if (empty($sign)) {
+            $userModel->returnCode(false, '支付密钥未配置');
+        }
         // 判断签名是否正确 判断支付状态
         if (
-            ($sign !== $dataSign)
-            || ($data['return_code'] !== 'SUCCESS')
-            || ($data['result_code'] !== 'SUCCESS')
+            !hash_equals((string)$sign, strtoupper((string)$dataSign))
+            || empty($data['return_code']) || 'SUCCESS' !== $data['return_code']
+            || empty($data['result_code']) || 'SUCCESS' !== $data['result_code']
         ) {
             $userModel->returnCode(false, '签名失败');
+        }
+        // 校验实付金额与订单金额是否一致（微信返回单位为分）
+        if (!isset($data['total_fee']) || intval($data['total_fee']) !== intval(round(floatval($order['order_amount']) * 100))) {
+            $userModel->returnCode(false, '支付金额与订单金额不相符');
         }
 
         // 订单支付成功业务处理
@@ -660,22 +683,32 @@ HTML;
         }
         // 将服务器返回的XML数据转化为数组
         $data = $userModel->fromXml($xml);
+        if (empty($data) || !is_array($data) || empty($data['out_trade_no'])) {
+            $userModel->returnCode(false, '数据解析失败');
+        }
         // 订单信息
         $order = Db::name("users_money")->where(['order_number' => $data['out_trade_no']])->find();
         empty($order) && $userModel->returnCode(false, '订单不存在');
         // 保存微信服务器返回的签名sign
-        $dataSign = $data['sign'];
+        $dataSign = isset($data['sign']) ? $data['sign'] : '';
         // sign不参与签名算法
         unset($data['sign']);
-        // 生成签名
+        // 生成签名（密钥未配置时返回空串，直接拒绝，避免空密钥伪造签名）
         $sign = $userModel->makeSign($data);
+        if (empty($sign)) {
+            $userModel->returnCode(false, '支付密钥未配置');
+        }
         // 判断签名是否正确 判断支付状态
         if (
-            ($sign !== $dataSign)
-            || ($data['return_code'] !== 'SUCCESS')
-            || ($data['result_code'] !== 'SUCCESS')
+            !hash_equals((string)$sign, strtoupper((string)$dataSign))
+            || empty($data['return_code']) || 'SUCCESS' !== $data['return_code']
+            || empty($data['result_code']) || 'SUCCESS' !== $data['result_code']
         ) {
             $userModel->returnCode(false, '签名失败');
+        }
+        // 校验实付金额与订单金额是否一致（微信返回单位为分）
+        if (!isset($data['total_fee']) || intval($data['total_fee']) !== intval(round(floatval($order['money']) * 100))) {
+            $userModel->returnCode(false, '支付金额与订单金额不相符');
         }
 
         // 订单支付成功业务处理
@@ -709,22 +742,32 @@ HTML;
         }
         // 将服务器返回的XML数据转化为数组
         $data = $userModel->fromXml($xml);
+        if (empty($data) || !is_array($data) || empty($data['out_trade_no'])) {
+            $userModel->returnCode(false, '数据解析失败');
+        }
         // 订单信息
-        $order = Db::name("meida_order")->where(['order_code' => $data['out_trade_no']])->find();
+        $order = Db::name("media_order")->where(['order_code' => $data['out_trade_no']])->find();
         empty($order) && $userModel->returnCode(false, '订单不存在');
         // 保存微信服务器返回的签名sign
-        $dataSign = $data['sign'];
+        $dataSign = isset($data['sign']) ? $data['sign'] : '';
         // sign不参与签名算法
         unset($data['sign']);
-        // 生成签名
+        // 生成签名（密钥未配置时返回空串，直接拒绝，避免空密钥伪造签名）
         $sign = $userModel->makeSign($data);
+        if (empty($sign)) {
+            $userModel->returnCode(false, '支付密钥未配置');
+        }
         // 判断签名是否正确 判断支付状态
         if (
-            ($sign !== $dataSign)
-            || ($data['return_code'] !== 'SUCCESS')
-            || ($data['result_code'] !== 'SUCCESS')
+            !hash_equals((string)$sign, strtoupper((string)$dataSign))
+            || empty($data['return_code']) || 'SUCCESS' !== $data['return_code']
+            || empty($data['result_code']) || 'SUCCESS' !== $data['result_code']
         ) {
             $userModel->returnCode(false, '签名失败');
+        }
+        // 校验实付金额与订单金额是否一致（微信返回单位为分）
+        if (!isset($data['total_fee']) || intval($data['total_fee']) !== intval(round(floatval($order['order_amount']) * 100))) {
+            $userModel->returnCode(false, '支付金额与订单金额不相符');
         }
 
         // 订单支付成功业务处理
@@ -881,23 +924,36 @@ HTML;
         if (empty($this->globalConfig['web_users_switch'])) {
             $this->error('后台会员中心尚未开启！');
         }
-        
+
+        // 评论图片上传必须为已登录会员，未携带有效 token 直接拒绝（防止未授权文件上传）
+        $users = $this->getUser();
+
+        // 按会员限频：60 秒内最多 20 次，防止恶意刷上传
+        $limitKey = 'api_uploads_' . intval($users['users_id']);
+        $uploadCount = intval(\think\Cache::get($limitKey));
+        if ($uploadCount >= 20) {
+            $this->error('上传过于频繁，请稍后再试');
+        }
+        \think\Cache::set($limitKey, $uploadCount + 1, 60);
+
         if (IS_AJAX_POST) {
-            $file_type_str = '';
-            $image_type = tpCache('basic.image_type');
-            if (!empty($image_type)) {
-                $file_type_str .= '|' . $image_type;
+            // 该接口被小程序多处复用（评论图片、反馈附件等），后缀白名单取自后台配置；
+            // 同时强制剔除可执行/脚本类后缀，避免后台配置不当导致上传可执行文件
+            $extArr = [];
+            foreach (['basic.image_type', 'basic.file_type', 'basic.media_type'] as $configKey) {
+                $extVal = tpCache($configKey);
+                if (!empty($extVal)) {
+                    $extArr = array_merge($extArr, preg_split('/[|,]+/', strtolower(trim($extVal))));
+                }
             }
-            $file_type = tpCache('basic.file_type');
-            if (!empty($file_type)) {
-                $file_type_str .= '|' . $file_type;
+            $extArr = array_unique(array_filter(array_map('trim', $extArr)));
+            // 危险后缀黑名单（任何配置下都不允许上传）
+            $denyExt = ['php','php3','php4','php5','php6','php7','phtml','pht','phar','asp','aspx','asa','jsp','jspx','exe','dll','sh','bat','cmd','com','cgi','pl','py','js','html','htm','shtml','svg','xml','htaccess'];
+            $extArr = array_values(array_diff($extArr, $denyExt));
+            if (empty($extArr)) {
+                $extArr = ['jpg','jpeg','png','gif','bmp','webp'];
             }
-            $media_type = tpCache('basic.media_type');
-            if (!empty($media_type)) {
-                $file_type_str .= '|' . $media_type;
-            }
-            $file_type_str = trim($file_type_str, '|');
-            $file_type_str = preg_replace('/([\|]+)/', '|', $file_type_str);
+            $file_type_str = implode('|', $extArr);
 
             $data = func_common('file', 'minicode', $file_type_str);
             $is_absolute = input('param.is_absolute/d',0);
@@ -1212,8 +1268,13 @@ HTML;
 
             $aid = !empty($guestbookRow['aid']) ? $guestbookRow['aid'] : 0;
             if (empty($guestbookRow)) { // 非重复表单的才能写入数据库
-                $examine = Db::name('form')->where('form_id',$typeid)->value('open_examine');
-                $data['examine'] = empty($examine) ? 1 : 0;
+                // 留言审核开关仅自定义表单（form_type=1）存在；普通留言的 typeid 是栏目ID，不能当 form_id 查询
+                $examine = 1;
+                if (1 == $form_type) {
+                    $openExamine = Db::name('form')->where('form_id', intval($typeid))->value('open_examine');
+                    $examine = empty($openExamine) ? 1 : 0;
+                }
+                $data['examine'] = intval($examine);
                 $aid = Db::name('guestbook')->insertGetId($data);
                 if ($aid > 0) {
                     $res = model('v1.Api')->saveGuestbookAttr($post, $aid, $typeid, $form_type);
@@ -1293,20 +1354,38 @@ HTML;
     //获取表单令牌
     public function get_token()
     {
+        // 安全修复：匿名接口按 IP 限频，防止无限写入 session 文件消耗磁盘
+        $clientIP = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+        $rateKey = 'api_v1_get_token_' . md5($clientIP);
+        $rateNum = (int)\think\Cache::get($rateKey);
+        if ($rateNum >= 100) {
+            $this->error('请求过于频繁，请稍后再试');
+        }
+        \think\Cache::set($rateKey, $rateNum + 1, 300);
+
         $type = input('param.type/s');
-        $type = !empty($type) ? $type : 'mobile';
-        /*表单令牌*/
+        $type = (!empty($type) && is_string($type)) ? substr($type, 0, 32) : 'mobile';
+        /*表单令牌：令牌名与令牌值均使用加密安全随机数，避免按时间推测*/
         $token_name = md5($type.'_token_'.secure_random_string(16, true));
-        $token_value = md5($_SERVER['REQUEST_TIME_FLOAT']);
+        $token_value = secure_random_string(16, true);
+
         $session_path = \think\Config::get('session.path');
-        $session_file = ROOT_PATH . $session_path . "/sess_".$token_name;
-        $fp = fopen($session_file, "w+");
+        $session_dir = ROOT_PATH . $session_path;
+        if (!is_dir($session_dir)) {
+            tp_mkdir($session_dir);
+        }
+        $session_file = $session_dir . "/sess_".$token_name;
+        $writeOk = false;
+        $fp = @fopen($session_file, "w+");
         if (!empty($fp)) {
-            if (fwrite($fp, $token_value)) {
-                fclose($fp);
-            }
-        } else {
-            file_put_contents ( $session_file,  $token_value);
+            $writeOk = (fwrite($fp, $token_value) !== false);
+            fclose($fp);
+        }
+        if (false === $writeOk) {
+            $writeOk = (@file_put_contents($session_file, $token_value) !== false);
+        }
+        if (false === $writeOk) {
+            $this->error('获取令牌失败，请重试');
         }
         /*end*/
 
@@ -1391,8 +1470,8 @@ HTML;
             /* END */
 
 
-            /*发送并返回结果*/
-            $Result = sendSms($scene, $mobile, array('content' => mt_rand(1000, 9999)));
+            /*发送并返回结果：统一使用6位验证码，降低被爆破风险*/
+            $Result = sendSms($scene, $mobile, array('content' => mt_rand(100000, 999999)));
             if (intval($Result['status']) == 1) {
                 @unlink($session_file);
                 $this->success('发送成功！');

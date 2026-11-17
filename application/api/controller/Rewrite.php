@@ -37,7 +37,15 @@ class Rewrite extends Base
      */
     public function setInlet()
     {
-        $seo_inlet = input('param.seo_inlet/d', 1);
+        // 安全修复：仅已登录管理员且携带会话绑定的 CSRF token 才能修改，
+        // 防止匿名或跨站请求篡改全站 URL 形态
+        $token = input('param.token/s', '');
+        $token = is_string($token) ? $token : '';
+        if (!is_adminlogin() || empty($token) || !hash_equals(get_rewrite_setinlet_token(), $token)) {
+            abort(404);
+        }
+
+        $seo_inlet = input('param.seo_inlet/d', 1) ? 1 : 0;
         /*多语言*/
         if (is_language()) {
             $langRow = \think\Db::name('language')->order('id asc')->select();

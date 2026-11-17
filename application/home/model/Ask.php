@@ -47,6 +47,141 @@ class Ask extends Model
         $this->AskLogic           = new AskLogic;
     }
 
+    /**
+     * 问答内容 HTML 白名单过滤
+     * 先还原实体，再基于 DOM 按标签/属性白名单重建，避免黑名单正则被绕过
+     * @param string $content
+     * @return string
+     */
+    public static function sanitizeHtml($content)
+    {
+        if (empty($content) || !is_string($content)) {
+            return $content;
+        }
+        // 先还原 HTML 实体，再交给白名单过滤
+        $content = htmlspecialchars_decode($content, ENT_QUOTES);
+
+        // 环境不支持 DOM 时，直接转义为纯文本，保证不产生 XSS
+        if (!class_exists('DOMDocument')) {
+            return htmlspecialchars($content, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
+
+        $allowedTags = ['p','br','div','span','strong','b','em','i','u','s','del','ins','sub','sup','blockquote','pre','code','ul','ol','li','a','img','h1','h2','h3','h4','h5','h6','table','caption','colgroup','col','thead','tbody','tfoot','tr','td','th','hr','dl','dt','dd','figure','figcaption','section','article','header','footer','mark','small','abbr','center','font'];
+        $voidTags    = ['br','img','hr','col'];
+        // 危险标签：连同内部内容一起丢弃
+        $dropTags    = ['script','style','iframe','object','embed','svg','math','base','link','meta','form','input','button','textarea','select','option','noscript','template'];
+
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $libxmlPrev = libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="UTF-8"><div id="__ey_ask_html_root__">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($libxmlPrev);
+
+        $root = $doc->getElementById('__ey_ask_html_root__');
+        if (empty($root)) {
+            $divs = $doc->getElementsByTagName('div');
+            $root = $divs->length ? $divs->item(0) : null;
+        }
+        if (empty($root)) {
+            return htmlspecialchars($content, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
+
+        // 链接/图片地址校验：仅允许常见安全协议与相对地址
+        $isSafeUrl = function ($url, $allowMail = false) {
+            $url = trim((string)$url);
+            if ('' === $url) {
+                return '';
+            }
+            // 去除空白与控制字符、百分号解码后再判断协议，防止 `java\tscript:`、`javascript%3A` 绕过
+            $probe = rawurldecode($url);
+            $probe = preg_replace('/[\x00-\x20]+/', '', $probe);
+            if (preg_match('/^([a-z][a-z0-9+.\-]*):/i', $probe, $m)) {
+                $scheme = strtolower($m[1]);
+                $allow  = ['http', 'https', 'tel'];
+                if ($allowMail) {
+                    $allow[] = 'mailto';
+                }
+                if (!in_array($scheme, $allow)) {
+                    return '';
+                }
+            }
+            return $url;
+        };
+
+        // 属性白名单拼装
+        $sanitizeAttrs = function ($tag, $node) use ($isSafeUrl) {
+            $attrs = '';
+            if (empty($node->attributes)) {
+                return $attrs;
+            }
+            foreach ($node->attributes as $attr) {
+                $name  = strtolower($attr->nodeName);
+                $value = $attr->nodeValue;
+                if ('a' === $tag) {
+                    if ('href' === $name) {
+                        $href = $isSafeUrl($value, true);
+                        if ('' !== $href) {
+                            $attrs .= ' href="' . htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+                        }
+                    } elseif ('title' === $name) {
+                        $attrs .= ' title="' . htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+                    } elseif ('target' === $name && '_blank' === strtolower(trim($value))) {
+                        $attrs .= ' target="_blank" rel="noopener noreferrer"';
+                    }
+                } elseif ('img' === $tag) {
+                    if ('src' === $name) {
+                        $src = $isSafeUrl($value, false);
+                        if ('' !== $src) {
+                            $attrs .= ' src="' . htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+                        }
+                    } elseif ('alt' === $name || 'title' === $name) {
+                        $attrs .= ' ' . $name . '="' . htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+                    } elseif (in_array($name, ['width', 'height'])) {
+                        $num = intval($value);
+                        if ($num > 0) {
+                            $attrs .= ' ' . $name . '="' . $num . '"';
+                        }
+                    }
+                } elseif (in_array($tag, ['td', 'th']) && in_array($name, ['colspan', 'rowspan'])) {
+                    $num = intval($value);
+                    if ($num > 0 && $num < 100) {
+                        $attrs .= ' ' . $name . '="' . $num . '"';
+                    }
+                }
+            }
+            return $attrs;
+        };
+
+        $sanitizeNode = function ($node) use (&$sanitizeNode, $sanitizeAttrs, $allowedTags, $voidTags, $dropTags) {
+            $html = '';
+            foreach ($node->childNodes as $child) {
+                if (XML_TEXT_NODE === $child->nodeType || XML_CDATA_SECTION_NODE === $child->nodeType) {
+                    $html .= htmlspecialchars($child->nodeValue, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                    continue;
+                }
+                if (XML_ELEMENT_NODE !== $child->nodeType) {
+                    continue; // 注释、处理指令等丢弃
+                }
+                $tag = strtolower($child->nodeName);
+                if (in_array($tag, $dropTags)) {
+                    continue;
+                }
+                $inner = $sanitizeNode($child);
+                if (in_array($tag, $voidTags)) {
+                    $html .= '<' . $tag . $sanitizeAttrs($tag, $child) . '>';
+                } elseif (in_array($tag, $allowedTags)) {
+                    $html .= '<' . $tag . $sanitizeAttrs($tag, $child) . '>' . $inner . '</' . $tag . '>';
+                } else {
+                    // 非白名单标签：去掉标签，保留已过滤的内部内容
+                    $html .= $inner;
+                }
+            }
+            return $html;
+        };
+
+        return $sanitizeNode($root);
+    }
+
     // 用户信息及问题回答数据
     public function GetUsersAskCount($view_uid = null)
     {
@@ -572,7 +707,7 @@ class Ask extends Model
         // 时间友好显示处理
         $info['add_time'] = friend_date($info['add_time']);
         // 处理格式 - 使用安全的 HTML 解码函数防止 XSS 攻击
-        $info['content'] = safe_html_decode($info['content']);
+        $info['content'] = self::sanitizeHtml($info['content']);
         // seo信息
         $info['seo_title'] = $info['ask_title'].' - '.$info['type_name'];
         $info['seo_keywords'] = $info['ask_title'];
@@ -603,7 +738,7 @@ class Ask extends Model
             $RepliesWhere = ['answer_id' => $param['answer_id'], 'is_review' => 1];
         }
         // 若为则创始人则去除仅查询已审核评论这个条件，$parent_id = 0 表示为创始人
-        if (isset($parent_id) && 0 == $parent_id) unset($RepliesWhere['is_review']);
+        if (0 === $parent_id) unset($RepliesWhere['is_review']);
         /* END */
         /*评论读取条数*/
         $firstRow = !empty($param['firstRow']) ? $param['firstRow'] : 0;
@@ -647,7 +782,7 @@ class Ask extends Model
             // 友好显示时间
             $value['add_time'] = friend_date($value['add_time']);
             // 处理格式 - 使用安全的 HTML 解码函数防止 XSS 攻击
-            $value['content'] = safe_html_decode($value['content']);
+            $value['content'] = self::sanitizeHtml($value['content']);
             // 头像处理
             $value['head_pic'] = get_head_pic($value['head_pic']);
             // 个人主页URL
@@ -939,12 +1074,18 @@ class Ask extends Model
      */
     public function updateMoney($users_id = 0, $money = 0, $ori_money = 0, $ask_id = 0)
     {
-        Db::name('users')->where('users_id', $users_id)->setDec('users_money', $money - $ori_money);
+        // 金额标准化，仅对增加的差额做扣款（带余额条件，防止并发扣成负数）
+        $diff = round(floatval($money) - floatval($ori_money), 2);
+        if ($diff > 0) {
+            $deduct = Db::name('users')->where(['users_id' => intval($users_id)])->where('users_money', '>=', $diff)->setDec('users_money', $diff);
+            if (empty($deduct)) return false;
+        }
         $data = [
             'money'       => $money,
             'update_time' => getTime(),
         ];
         Db::name('users_score')->where(['ask_id' => $ask_id, 'users_id' => $users_id, 'type' => 1])->update($data);
+        return true;
     }
 
     /**
@@ -953,6 +1094,9 @@ class Ask extends Model
      */
     public function setScore($users_id = 0, $ask_id = 0, $reply_id = 0, $type = 1, $money = 0)
     {
+        // 悬赏金额标准化：仅允许非负两位小数，防止负数加余额或拼接注入
+        $money = round(floatval($money), 2);
+        if ($money < 0) $money = 0;
         //先判断是否开启问答送积分
         $data = getUsersConfigData('score');
 
@@ -962,12 +1106,12 @@ class Ask extends Model
         }
 
         if ($type == 1) {
-            $score = $data['score_ask_score'];
-            $count = $data['score_ask_count'];
+            $score = intval($data['score_ask_score']);
+            $count = intval($data['score_ask_count']);
             $info  = '问答提问';
         } elseif ($type == 2) {
-            $score = $data['score_reply_score'];
-            $count = $data['score_reply_count'];
+            $score = intval($data['score_reply_score']);
+            $count = intval($data['score_reply_count']);
             $info  = '问答回答';
         }
         if (empty($data['score_ask_status'])) {
@@ -990,6 +1134,12 @@ class Ask extends Model
             }
         }
 
+        // 悬赏金额扣减：带余额条件，防止并发扣成负数；扣减失败由调用方回滚问题
+        if ($money > 0) {
+            $deduct = Db::name('users')->where(['users_id' => intval($users_id)])->where('users_money', '>=', $money)->setDec('users_money', $money);
+            if (empty($deduct)) return false;
+        }
+
         $data = [
             'ask_id'      => $ask_id,
             'reply_id'    => $reply_id,
@@ -1003,16 +1153,13 @@ class Ask extends Model
             'update_time' => getTime(),
         ];
         Db::name('users_score')->insert($data);
-        //会员表更新
-        $update = [];
+        //会员表更新（积分相关，仅使用整型值）
         if (!empty($score)) {
-            $update['scores'] = Db::raw('scores+' . $score);
-            $update['devote'] = Db::raw('devote+' . $score);
+            Db::name('users')->where('users_id', intval($users_id))->update([
+                'scores' => Db::raw('scores+' . intval($score)),
+                'devote' => Db::raw('devote+' . intval($score)),
+            ]);
         }
-        if (!empty($money)) {
-            $update['users_money'] = Db::raw('users_money-' . $money);
-        }
-        Db::name('users')->where('users_id', $users_id)->update($update);
     }
 
     public function RebackDel($ask_id = 0,$ask = [])

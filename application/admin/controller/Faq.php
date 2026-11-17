@@ -19,6 +19,9 @@ use think\Cache;
 
 class Faq extends Base
 {
+    public $times;
+    public $faqGroupDb;
+    public $faqAsklistDb;
 
     public function _initialize() {
         parent::_initialize();

@@ -342,6 +342,8 @@ class OrderPreHandle extends Model
             'allow_service' => 1,
             'is_obtain_scores' => 0,
             'obtain_scores' => ['>', 0],
+            // 仅对已付款订单赠送积分，防止未付款订单被强制完成后白拿积分
+            'pay_time' => ['>', 0],
         ];
         // 查询条件-会员ID处理
         if (!empty($this->users_id)) $where['users_id'] = $this->users_id;
@@ -413,6 +415,8 @@ class OrderPreHandle extends Model
             'is_total_amount' => 0,
             'order_amount' => ['>', 0],
             'users_id' => intval($this->users_id),
+            // 仅对已付款订单累计消费额，防止未付款订单被强制完成后触发自动升级
+            'pay_time' => ['>', 0],
         ];
         $usersData = GetUsersLatestData($this->users_id);
         // 查询订单id数组用于添加订单操作记录

@@ -81,7 +81,6 @@ class AlipayMobilePublicMultiMediaClient
 
         $output = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         echo $output;
 
@@ -151,7 +150,6 @@ class AlipayMobilePublicMultiMediaClient
             openssl_sign($data, $signature, $private_id, OPENSSL_ALGO_SHA1);
         }
 
-        openssl_free_key($private_id);
 
         //加密后的内容通常含有特殊字符，需要编码转换下
         $signature = base64_encode($signature);

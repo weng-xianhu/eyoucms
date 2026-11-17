@@ -1,0 +1,359 @@
+@charset "utf-8";
+/**
+ * 优惠券插件 - 下单页选券样式（PC端/手机端通用）
+ */
+
+/* 下单页优惠券入口行 */
+.ey-coupon-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+.ey-coupon-row .ey-coupon-label {
+    flex: 0 0 auto;
+    font-size: 16px;
+    color: #333;
+}
+.ey-coupon-row .ey-coupon-summary {
+    flex: 1 1 auto;
+    text-align: right;
+    color: #999;
+    font-size: 13px;
+    padding-right: 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.ey-coupon-row .ey-coupon-summary.actived {
+    color: #fd8a27;
+    font-weight: bold;
+}
+.ey-coupon-row .ey-coupon-arrow {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-top: 1px solid #bbb;
+    border-right: 1px solid #bbb;
+    transform: rotate(45deg);
+}
+.ey-coupon-row .ey-coupon-more {
+    flex: 0 0 auto;
+    margin-left: 14px;
+    font-size: 12px;
+    color: #fd8a27;
+}
+.ey-coupon-row.disabled {
+    cursor: default;
+}
+
+/* 弹层 */
+.ey-coupon-mask {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, .5);
+    z-index: 19891014;
+}
+.ey-coupon-mask.show {
+    display: block;
+}
+.ey-coupon-layer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 480px;
+    max-width: 94%;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, .18);
+}
+.ey-coupon-layer .ey-coupon-hd {
+    position: relative;
+    height: 48px;
+    line-height: 48px;
+    padding: 0 46px 0 18px;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+.ey-coupon-layer .ey-coupon-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+}
+.ey-coupon-layer .ey-coupon-close:hover {
+    color: #333;
+}
+.ey-coupon-tabs {
+    display: flex;
+    border-bottom: 1px solid #f0f0f0;
+}
+.ey-coupon-tabs span {
+    flex: 1 1 0;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+}
+.ey-coupon-tabs span.actived {
+    color: #fd8a27;
+    font-weight: bold;
+    box-shadow: inset 0 -2px 0 #fd8a27;
+}
+.ey-coupon-bd {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 12px 18px 4px;
+    background: #f7f7f7;
+}
+.ey-coupon-empty {
+    padding: 40px 0;
+    text-align: center;
+    color: #bbb;
+    font-size: 13px;
+}
+.ey-coupon-ft {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    border-top: 1px solid #f0f0f0;
+}
+.ey-coupon-ft .ey-coupon-ft-tip {
+    flex: 1 1 auto;
+    font-size: 13px;
+    color: #666;
+}
+.ey-coupon-ft .ey-coupon-ft-tip em {
+    color: #fd8a27;
+    font-style: normal;
+    font-weight: bold;
+}
+.ey-coupon-btn {
+    flex: 0 0 auto;
+    display: inline-block;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 22px;
+    border-radius: 17px;
+    background: #fd8a27;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+}
+.ey-coupon-btn.plain {
+    background: #fff;
+    color: #666;
+    border: 1px solid #ddd;
+    margin-right: 10px;
+}
+
+/* 券卡片 */
+.ey-cp-card {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 12px;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color .15s;
+}
+.ey-cp-card:hover {
+    border-color: #fdc59a;
+}
+.ey-cp-card.actived {
+    border-color: #fd8a27;
+}
+.ey-cp-card .ey-cp-left {
+    flex: 0 0 108px;
+    width: 108px;
+    padding: 14px 6px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(135deg, #ff9a4d, #fd6b27);
+}
+.ey-cp-card .ey-cp-amount {
+    font-size: 14px;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.ey-cp-card .ey-cp-amount em {
+    font-size: 28px;
+    font-style: normal;
+    font-weight: bold;
+    margin: 0 1px;
+}
+.ey-cp-card .ey-cp-cond {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .92;
+}
+.ey-cp-card .ey-cp-body {
+    flex: 1 1 auto;
+    padding: 12px 12px 12px 16px;
+    min-width: 0;
+    border-left: 1px dashed #eee;
+}
+.ey-cp-card .ey-cp-name {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+    line-height: 20px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.ey-cp-card .ey-cp-tag {
+    display: inline-block;
+    height: 16px;
+    line-height: 16px;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 3px;
+    background: #fff1e6;
+    color: #fd6b27;
+    font-size: 11px;
+    font-weight: normal;
+    vertical-align: 1px;
+}
+.ey-cp-card .ey-cp-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999;
+    line-height: 18px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.ey-cp-card .ey-cp-check {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 18px;
+    height: 18px;
+    margin-right: 14px;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+.ey-cp-card.actived .ey-cp-check {
+    border-color: #fd8a27;
+    background: #fd8a27;
+    position: relative;
+}
+.ey-cp-card.actived .ey-cp-check:after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 8px;
+    height: 4px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg);
+}
+/* 不可用 */
+.ey-cp-card.disabled {
+    cursor: default;
+}
+.ey-cp-card.disabled:hover {
+    border-color: transparent;
+}
+.ey-cp-card.disabled .ey-cp-left {
+    background: linear-gradient(135deg, #d0d0d0, #b8b8b8);
+}
+.ey-cp-card.disabled .ey-cp-name {
+    color: #999;
+}
+.ey-cp-card.disabled .ey-cp-reason {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #fd8a27;
+    line-height: 18px;
+}
+/* 不使用优惠券 */
+.ey-cp-none {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+.ey-cp-none.actived {
+    border-color: #fd8a27;
+}
+.ey-cp-none .ey-cp-none-name {
+    flex: 1 1 auto;
+}
+.ey-cp-none .ey-cp-check {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+.ey-cp-none.actived .ey-cp-check {
+    border-color: #fd8a27;
+    background: #fd8a27;
+    position: relative;
+}
+.ey-cp-none.actived .ey-cp-check:after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 8px;
+    height: 4px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg);
+}
+
+/* 手机端：底部弹出面板 */
+.ey-coupon-mask.mobile .ey-coupon-layer {
+    left: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    transform: none;
+    border-radius: 12px 12px 0 0;
+}
+.ey-coupon-mask.mobile .ey-coupon-bd {
+    max-height: 56vh;
+    padding: 12px 12px 4px;
+}
+.ey-coupon-mask.mobile .ey-cp-card .ey-cp-left {
+    flex: 0 0 96px;
+    width: 96px;
+}
+.ey-coupon-mask.mobile .ey-coupon-ft {
+    padding: 10px 12px;
+}

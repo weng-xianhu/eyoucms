@@ -21,6 +21,9 @@ use think\Cache;
  */
 class ForeignLogic
 {
+    // 外贸链接中单词之间、以及冲突时追加文档ID所使用的分隔符
+    const URL_SEPARATOR = '-';
+
     public function __construct() 
     {
 
@@ -44,7 +47,7 @@ class ForeignLogic
                 if (!empty($foreign_is_status) && !empty($seo_titleurl_format)) {
                     $htmlfilename = $post['htmlfilename'];
                     if ($this->exists_htmlfilename($htmlfilename, $aid)) {
-                        $htmlfilename .= $seo_config['seo_title_symbol'] . $aid;
+                        $htmlfilename .= self::URL_SEPARATOR . $aid;
                         Db::name('archives')->where(['aid'=>$aid])->update(['htmlfilename'=>$htmlfilename]);
                     }
                 }
@@ -71,7 +74,7 @@ class ForeignLogic
                 $htmlfilename = $this->get_title_htmlfilename(trim($post['title']));
                 if ('edit' == $opt) {
                     if ($this->exists_htmlfilename($htmlfilename, intval($post['aid']))) {
-                        $htmlfilename .= $globalConfig['seo_title_symbol'] . $post['aid'];
+                        $htmlfilename .= self::URL_SEPARATOR . $post['aid'];
                     }
                 }
             }
@@ -109,7 +112,8 @@ class ForeignLogic
      */
     public function get_title_htmlfilename($str, $ishead = 0, $isclose = 1)
     {
-        $seo_title_symbol = tpCache('seo.seo_title_symbol');
+        // URL 中的单词分隔符固定为短横杠，不能使用 SEO 的“标题间连接符”（如 | 等在 URL 中属于非法字符）
+        $seo_title_symbol = self::URL_SEPARATOR;
         $str = str_replace(['—'], ' ', $str);
         $str = preg_replace('/(\s+)/i', ' ', $str);
         try{
@@ -159,11 +163,10 @@ class ForeignLogic
                 unset($pinyins);
             }
             $restr = strtolower($restr);
-            $restr = preg_replace('/([\-\_]+)$/i', '', $restr); // 去掉结尾的符号
+            $restr = preg_replace('/[^\w\-]+/', '-', $restr); // 兜底：只保留字母数字下划线和短横杠
             $restr = preg_replace('/([\-]+)/i', '-', $restr);
             $restr = preg_replace('/([\_]+)/i', '_', $restr);
-            $restr = trim($restr, '-');
-            $restr = trim($restr, $seo_title_symbol);
+            $restr = trim($restr, '-_');
             return $restr;
         }catch (\Exception $e){
             return "";
@@ -258,7 +261,7 @@ class ForeignLogic
             if (in_array('up_htmlfilename', $handle_type)) {
                 $htmlfilename = $this->get_new_htmlfilename($val['htmlfilename'], $val, 'edit', $globalConfig);
                 if ('' != $htmlfilename && in_array($htmlfilename, $used_htmlfilenames)) {
-                    $htmlfilename .= $globalConfig['seo_title_symbol'] . $val['aid'];
+                    $htmlfilename .= self::URL_SEPARATOR . $val['aid'];
                 }
                 $used_htmlfilenames[] = $htmlfilename;
                 $update[$key]['htmlfilename'] = $htmlfilename;

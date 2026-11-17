@@ -49,6 +49,7 @@ if (!defined('CALCULATION_REGEXP_CELLREF')) {
  * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
  * @version    ##VERSION##, ##DATE##
  */
+#[\AllowDynamicProperties]
 class PHPExcel_Calculation
 {
     /** Constants                */
@@ -2068,7 +2069,7 @@ class PHPExcel_Calculation
     );
 
 
-    public function __construct(PHPExcel $workbook = null)
+    public function __construct($workbook = null)
     {
         $this->delta = 1 * pow(10, 0 - ini_get('precision'));
 
@@ -2097,7 +2098,7 @@ class PHPExcel_Calculation
      *                                    or NULL to create a standalone claculation engine
      * @return PHPExcel_Calculation
      */
-    public static function getInstance(PHPExcel $workbook = null)
+    public static function getInstance($workbook = null)
     {
         if ($workbook !== null) {
             $instance = $workbook->getCalculationEngine();
@@ -2281,6 +2282,8 @@ class PHPExcel_Calculation
      */
     public function renameCalculationCacheForWorksheet($fromWorksheetName, $toWorksheetName)
     {
+        $fromWorksheetName = (string) $fromWorksheetName;
+        $toWorksheetName   = (string) $toWorksheetName;
         if (isset($this->calculationCache[$fromWorksheetName])) {
             $this->calculationCache[$toWorksheetName] = &$this->calculationCache[$fromWorksheetName];
             unset($this->calculationCache[$fromWorksheetName]);
@@ -2570,7 +2573,7 @@ class PHPExcel_Calculation
      * @return    mixed
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function calculate(PHPExcel_Cell $pCell = null)
+    public function calculate($pCell = null)
     {
         try {
             return $this->calculateCellValue($pCell);
@@ -2589,7 +2592,7 @@ class PHPExcel_Calculation
      * @return    mixed
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function calculateCellValue(PHPExcel_Cell $pCell = null, $resetLog = true)
+    public function calculateCellValue($pCell = null, $resetLog = true)
     {
         if ($pCell === null) {
             return null;
@@ -2691,7 +2694,7 @@ class PHPExcel_Calculation
      * @return    mixed
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function calculateFormula($formula, $cellID = null, PHPExcel_Cell $pCell = null)
+    public function calculateFormula($formula, $cellID = null, $pCell = null)
     {
         //    Initialise the logging settings
         $this->formulaError = null;
@@ -2754,7 +2757,7 @@ class PHPExcel_Calculation
      * @return    mixed
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function _calculateFormulaValue($formula, $cellID = null, PHPExcel_Cell $pCell = null)
+    public function _calculateFormulaValue($formula, $cellID = null, $pCell = null)
     {
         $cellValue = null;
 
@@ -3132,7 +3135,7 @@ class PHPExcel_Calculation
     );
 
     // Convert infix to postfix notation
-    private function _parseFormula($formula, PHPExcel_Cell $pCell = null)
+    private function _parseFormula($formula, $pCell = null)
     {
         if (($formula = $this->convertMatrixReferences(trim($formula))) === false) {
             return false;
@@ -3410,7 +3413,7 @@ class PHPExcel_Calculation
                             $val = (float) $val;
                         } else {
 //                            echo 'Casting '.$val.' to integer<br />';
-                            $val = (integer) $val;
+                            $val = (int) $val;
                         }
                     } elseif (isset(self::$excelConstants[trim(strtoupper($val))])) {
                         $excelConstant = trim(strtoupper($val));
@@ -3505,7 +3508,7 @@ class PHPExcel_Calculation
     }
 
     // evaluate postfix notation
-    private function processTokenStack($tokens, $cellID = null, PHPExcel_Cell $pCell = null)
+    private function processTokenStack($tokens, $cellID = null, $pCell = null)
     {
         if ($tokens == false) {
             return false;
@@ -4173,7 +4176,7 @@ class PHPExcel_Calculation
         if (!$this->suppressFormulaErrors) {
             throw new PHPExcel_Calculation_Exception($errorMessage);
         }
-        trigger_error($errorMessage, E_USER_ERROR);
+        throw new \RuntimeException($errorMessage);
     }
 
 
@@ -4186,7 +4189,7 @@ class PHPExcel_Calculation
      * @return  mixed                Array of values in range if range contains more than one element. Otherwise, a single value is returned.
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function extractCellRange(&$pRange = 'A1', PHPExcel_Worksheet $pSheet = null, $resetLog = true)
+    public function extractCellRange(&$pRange = 'A1', $pSheet = null, $resetLog = true)
     {
         // Return value
         $returnValue = array ();
@@ -4244,7 +4247,7 @@ class PHPExcel_Calculation
      * @param    boolean                $resetLog    Flag indicating whether calculation log should be reset or not
      * @throws    PHPExcel_Calculation_Exception
      */
-    public function extractNamedRange(&$pRange = 'A1', PHPExcel_Worksheet $pSheet = null, $resetLog = true)
+    public function extractNamedRange(&$pRange = 'A1', $pSheet = null, $resetLog = true)
     {
         // Return value
         $returnValue = array ();

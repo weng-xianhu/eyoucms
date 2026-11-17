@@ -148,6 +148,18 @@
                             <span>收货地址</span>
                         </a>
                         {/if}
+                        <!-- 优惠券插件 start -->
+                        {eyou:if condition="is_dir('./weapp/Coupons/')"}
+                        <a href="{eyou:url link='plugins/Coupons/my'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/coupon_my.svg' /}"></span>
+                            <span>我的优惠券</span>
+                        </a>
+                        <a href="{eyou:url link='plugins/Coupons/index'/}" class="nav-item">
+                            <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/coupon_center.svg' /}"></span>
+                            <span>领券中心</span>
+                        </a>
+                        {/eyou:if}
+                        <!-- 优惠券插件 end -->
                         {if isset($usersConfig['users_open_release']) && $usersConfig['users_open_release'] == 1}
                         <a href="{:url('user/UsersRelease/release_centre', ['list'=>1])}" class="nav-item">
                             <span class="nav-item-icon3"><img src="{eyou:static file='users/skin/images/tool14.png' /}"></span>

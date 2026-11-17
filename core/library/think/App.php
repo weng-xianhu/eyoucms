@@ -74,7 +74,7 @@ class App
      * @return Response
      * @throws Exception
      */
-    public static function run(Request $request = null)
+    public static function run($request = null)
     {
         $request = is_null($request) ? Request::instance() : $request;
 
@@ -214,11 +214,6 @@ class App
             $config       = self::init();
             self::$suffix = $config['class_suffix'];
 
-            /*URL传参进入调试模式 by 小虎哥*/
-            if (isset($_GET['app_debug'])) {
-                Config::set('app_debug', $_GET['app_debug']);
-            }
-            /*--end*/
             // 应用调试模式
             self::$debug = Env::get('app_debug', Config::get('app_debug'));
             $show_error_msg = Config::get('show_error_msg'); // by 小虎哥
@@ -335,6 +330,9 @@ class App
                 ])->cache(true, null, "weapp")->order('sort_order asc, id asc')->select();
                 if (!empty($weappRow)) {
                     foreach ($weappRow as $key => $val) {
+                        if (function_exists('is_weapp_invalid') && is_weapp_invalid($val['code'])) {
+                            continue;
+                        }
                         $file = WEAPP_DIR_NAME.DS.$val['code'].DS.'behavior'.DS.$module.'tags' . EXT;
                         if (is_file($file) && 1 == $val['is_valid']) {
                             try {

@@ -26,6 +26,9 @@ class User extends UserBase
     use \traits\controller\Jump;
     private $token;
 
+    // 用户登录令牌有效期（秒），默认180天
+    const TOKEN_EXPIRE = 15552000;
+
     //初始化
     protected function initialize()
     {
@@ -413,12 +416,12 @@ private function h5_login($post)
         if (isset($params['error_response'])) {
             // 返回错误信息
             return [
-                'errcode' => $params['error_response']['code'] ?? "-1",
-                'errmsg' => $params['error_response']['msg'] ?? "未知错误",
+                'errcode' => isset($params['error_response']['code']) ? $params['error_response']['code'] : "-1",
+                'errmsg' => isset($params['error_response']['msg']) ? $params['error_response']['msg'] : "未知错误",
             ];
         } else {
             // 成功返回数据
-            return $params['alipay_system_oauth_token_response'] ?? [];
+            return isset($params['alipay_system_oauth_token_response']) ? $params['alipay_system_oauth_token_response'] : [];
         }
     }
 
@@ -606,19 +609,44 @@ private function h5_login($post)
      */
     private function token($unionid = '', $session_key = '', $users_id = '', $openid = 'openid')
     {
+        // 随机串（加密安全随机数，保持原有的“8位字母数字 + 8位小写字母”格式）
+        $randstr1 = $this->secure_rand_str(8, 'abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQEST123456789');
         // 随机串
-        $randstr1 = get_rand_str(8, 0, 1);
-        // 随机串
-        $randstr2 = get_rand_str(8, 0, 0);
+        $randstr2 = $this->secure_rand_str(8, 'abcdefghijklmnopqrstuvwxyz');
         // 自定义一个盐
         $salt = '_token_salt';
         $openid = !empty($openid) ? $openid : 'openid';//为手机号注册登录写的
         $session_key = !empty($session_key) ? $session_key : 'session_key';//为手机号注册登录写的
-        // 用户认证的token
-        $token = "{$randstr1}eyoucms{$users_id}eyoucms{$openid}eyoucms{$randstr2}eyoucms{$session_key}eyoucms{$salt}";
+        // 用户认证的token，末尾附带过期时间（旧格式无此段，服务端继续兼容放行）
+        $expire_time = getTime() + self::TOKEN_EXPIRE;
+        $token = "{$randstr1}eyoucms{$users_id}eyoucms{$openid}eyoucms{$randstr2}eyoucms{$session_key}eyoucms{$expire_time}eyoucms{$salt}";
 
         // 安全修复：令牌密钥改为“固定串 + 每站唯一密钥(get_auth_code)”，避免跨站点硬编码密钥被伪造
         return mchStrCode($token, 'ENCODE', '#!@diyminipro#!$' . get_auth_code());
+    }
+
+    /**
+     * 生成指定字符集、指定长度的安全随机串（低版本 PHP 自动降级）
+     * @param int $length 长度
+     * @param string $chars 字符集
+     * @return string
+     */
+    private function secure_rand_str($length, $chars)
+    {
+        $max = strlen($chars) - 1;
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            if (function_exists('random_int')) {
+                $index = random_int(0, $max);
+            } elseif (function_exists('openssl_random_pseudo_bytes')) {
+                $bytes = openssl_random_pseudo_bytes(1);
+                $index = (is_string($bytes) && strlen($bytes) > 0) ? (ord($bytes) % ($max + 1)) : mt_rand(0, $max);
+            } else {
+                $index = mt_rand(0, $max);
+            }
+            $str .= $chars[$index];
+        }
+        return $str;
     }
 
     /**
@@ -909,7 +937,6 @@ private function h5_login($post)
     public function fromXml($xml)
     {
         // 禁止引用外部xml实体
-        @libxml_disable_entity_loader(true);
         return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
@@ -923,7 +950,11 @@ private function h5_login($post)
         if (empty($apikey)) {
             $minicode = Db::name('weapp')->where('code', self::$weapp_code)->value('data');
             $Setting = json_decode($minicode, true);
-            $apikey         = $Setting['apikey'];
+            $apikey = !empty($Setting['apikey']) ? trim($Setting['apikey']) : '';
+        }
+        // 密钥为空时返回空串，调用方比对必然失败，避免空密钥伪造签名
+        if (empty($apikey)) {
+            return '';
         }
 
         //签名步骤一：按字典序排序参数
@@ -1326,7 +1357,12 @@ private function h5_login($post)
         if (empty($post['mobile_code'])) {
             $this->error('验证码不能为空！');
         }
-        // 验证验证码
+        // 验证码失败次数限制
+        $failKey = 'api_mobile_reg|' . $post['mobile'];
+        if (verify_code_fail_times($failKey, 'check')) {
+            $this->error('验证码错误次数过多，请10分钟后再试！');
+        }
+        // 验证验证码（必须未使用且在有效期内）
         $RecordWhere = [
             'source' => 0,
             'mobile' => $post['mobile'],
@@ -1334,15 +1370,31 @@ private function h5_login($post)
             'is_use' => 0,
             'lang'   => self::$lang
         ];
-        $is_verify = Db::name('sms_log')->where($RecordWhere)->find();
+        $is_verify = Db::name('sms_log')->where($RecordWhere)->field('id, add_time')->order('id desc')->find();
         if (!empty($is_verify)){
+            // 验证码有效期校验
+            if ($is_verify['add_time'] + config('global.mobile_default_time_out') <= getTime()) {
+                Db::name('sms_log')->where(['id' => $is_verify['id']])->update(['is_use' => 1, 'update_time' => getTime()]);
+                $this->error('验证码已过期，请重新获取！');
+            }
             $RecordData  = [
                 'is_use' => 1,
                 'update_time' => getTime()
             ];
-            // 更新数据
-            Db::name('sms_log')->where($RecordWhere)->update($RecordData);
+            // 更新数据（用后即焚）
+            Db::name('sms_log')->where(['id' => $is_verify['id']])->update($RecordData);
+            verify_code_fail_times($failKey, 'clear');
         }else{
+            $failNum = verify_code_fail_times($failKey, 'inc');
+            if ($failNum >= 5) {
+                // 失败次数达到上限，作废该手机号未使用的注册验证码
+                Db::name('sms_log')->where([
+                    'source' => 0,
+                    'mobile' => $post['mobile'],
+                    'is_use' => 0,
+                    'lang'   => self::$lang,
+                ])->update(['is_use' => 1, 'update_time' => getTime()]);
+            }
             $this->error('验证码错误！');
         }
 
@@ -1559,7 +1611,12 @@ private function h5_login($post)
             if (empty($post['mobile_code'])) {
                 $this->error('验证码不能为空！');
             }
-            // 验证验证码
+            // 验证码失败次数限制
+            $failKey = 'api_mobile_login|' . $post['mobile'];
+            if (verify_code_fail_times($failKey, 'check')) {
+                $this->error('验证码错误次数过多，请10分钟后再试！');
+            }
+            // 验证验证码（必须未使用且在有效期内）
             $RecordWhere = [
                 'source' => 2,
                 'mobile' => $post['mobile'],
@@ -1567,15 +1624,31 @@ private function h5_login($post)
                 'is_use' => 0,
                 'lang'   => self::$lang
             ];
-            $is_verify = Db::name('sms_log')->where($RecordWhere)->find();
+            $is_verify = Db::name('sms_log')->where($RecordWhere)->field('id, add_time')->order('id desc')->find();
             if (!empty($is_verify)){
+                // 验证码有效期校验
+                if ($is_verify['add_time'] + config('global.mobile_default_time_out') <= getTime()) {
+                    Db::name('sms_log')->where(['id' => $is_verify['id']])->update(['is_use' => 1, 'update_time' => getTime()]);
+                    $this->error('验证码已过期，请重新获取！');
+                }
                 $RecordData  = [
                     'is_use' => 1,
                     'update_time' => getTime()
                 ];
-                // 更新数据
-                Db::name('sms_log')->where($RecordWhere)->update($RecordData);
+                // 更新数据（用后即焚）
+                Db::name('sms_log')->where(['id' => $is_verify['id']])->update($RecordData);
+                verify_code_fail_times($failKey, 'clear');
             }else{
+                $failNum = verify_code_fail_times($failKey, 'inc');
+                if ($failNum >= 5) {
+                    // 失败次数达到上限，作废该手机号未使用的登录验证码
+                    Db::name('sms_log')->where([
+                        'source' => 2,
+                        'mobile' => $post['mobile'],
+                        'is_use' => 0,
+                        'lang'   => self::$lang,
+                    ])->update(['is_use' => 1, 'update_time' => getTime()]);
+                }
                 $this->error('验证码错误！');
             }
             $users_id = $users['users_id'];

@@ -226,14 +226,12 @@ class Poster extends Base
             // 图片保存到文件处理
             $ch = curl_init($ProductLitpic);
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-            curl_setopt($ch,CURLOPT_BINARYTRANSFER,true);
             // https请求 不验证证书和hosts
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);   //重要,源文件链接带https的话就必须使用
             curl_setopt($ch,CURLOPT_TIMEOUT,60);
 
             $img = curl_exec($ch);
-            curl_close($ch);
             $fp = fopen($LitpicSavePath, 'w');
             fwrite($fp, $img);
             fclose($fp);
@@ -495,8 +493,6 @@ class Poster extends Base
         imagepng($newImg, $SaveName);
 
         // 释放空间
-        imagedestroy($srcImg);
-        imagedestroy($newImg);
     }
 
     // 处理商品图边框形状 $r 圆角长度
@@ -552,7 +548,5 @@ class Poster extends Base
         imagepng($newImg, $SaveName);
 
         // 释放空间
-        imagedestroy($srcImg);
-        imagedestroy($newImg);
     }
 }

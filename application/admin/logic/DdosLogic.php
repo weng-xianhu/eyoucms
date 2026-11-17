@@ -1212,6 +1212,12 @@ EOF;
         $whitelist = $this->ddos_whitelist_data();
         // 拼接成字符串
         $ddos_feature_other_10010 = implode('|', self::$ddosData['ddos_feature_other'][10010]['value']);
+        // 不做木马特征扫描的数据文件（精确路径）：内容为安全规则库（危险函数名/特征正则的纯数据，不可执行），
+        // 逐行特征匹配必然命中；仍保留多余文件/官方指纹篡改检测
+        $feature_scan_skip_files = [
+            'application/api/data/eyoumcp/eyoumcp_secrules.json',
+            'data/conf/template_disable_funcs.json',
+        ];
 
         foreach ($result as $key => $val) {
             $return_data['achievepage'] += 1;
@@ -1340,7 +1346,7 @@ EOF;
                             $file_grade = empty($redata['file_grade']) ? self::FEATURE_MSG_CODE_600 : $redata['file_grade'];
                         }
                     }
-                    else if (!in_array($filetype, self::$ddosData['ddos_feature_other'][10090]['value'])) { // 文件
+                    else if (!in_array($filetype, self::$ddosData['ddos_feature_other'][10090]['value']) && !in_array($filepath, $feature_scan_skip_files)) { // 文件
                         $fd = realpath($filepath);
                         $fp = fopen($fd, "r");
                         $i = 0;
@@ -1597,7 +1603,7 @@ EOF;
                         $url = 'ht'.'tp'.':/'.'/'.'e'.'yo'.'u-up'.'da'.'te'.'.5'.'f'.'a.'.'c'.'n/other/repair/'.$version.'/'.$filename;
                         $arr_tmp = explode('/', $filename);
                         $file_alias_name = end($arr_tmp);
-                        if ('.htaccess' == $file_alias_name) {
+                        if (in_array($file_alias_name, ['.htaccess','web.config'])) {
                             $url .= '.bak';
                         }
                     }

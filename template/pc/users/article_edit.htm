@@ -31,10 +31,14 @@
     var default_servername20210507 = '';//下载模型的default_servername
     var attr_field20210507 = '';//下载模型的attr_field
     var servername_use20210507 = '';//下载模型的servername_use
-</script> 
+</script>
+{eq name="$editor.editor_select" value="1"}
 {eyou:static file="/public/plugins/Ueditor/ueditor.config.js"/}
 {eyou:static file="/public/plugins/Ueditor/ueditor.all.min.js"/}
 {eyou:static file="/public/plugins/Ueditor/lang/zh-cn/zh-cn.js"/}
+{else /}
+{eyou:static file="/public/plugins/ckeditor/ckeditor.js"/}
+{/eq}
 
 {eyou:static file="/public/plugins/laydate/laydate.js"/}
 
@@ -354,10 +358,21 @@
                                                     if (res.code == 0) {
                                                         showErrorAlert(res.msg);
                                                     } else {
+                                                        // 切换栏目时，先销毁所有 CKEditor 实例
+                                                        if (1 == init && typeof CKEDITOR !== 'undefined') {
+                                                            for (var name in CKEDITOR.instances) {
+                                                                try {
+                                                                    CKEDITOR.instances[name].destroy(true);
+                                                                } catch(e) {}
+                                                            }
+                                                        }
                                                         $('#FieldAddonextitem').empty().html(res.data.html);
                                                         if (1 == init) {
+                                                            // UEditor 需要手动重新渲染
                                                             $.each(res.data.htmltextField, function (index, value) {
-                                                                showEditor_1597892187('addonFieldExt_'+value);
+                                                                if (res.data.editor_select == 1 || res.data.editor_select == '1') {
+                                                                    showEditor_1597892187('addonFieldExt_'+value);
+                                                                }
                                                             });
                                                         }
                                                          if (4 == channel) {

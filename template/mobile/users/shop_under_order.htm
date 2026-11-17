@@ -182,6 +182,15 @@
                             </div>
                         </div>
 
+                        <!-- 优惠券插件 start -->
+                        {eyou:if condition="is_dir('./weapp/Coupons/')"}
+                        <div class="el-row p10 bgfff mt10">
+                            <div id="couponWrap"></div>
+                            <input type="hidden" name="use_id" id="couponUseId" value="">
+                        </div>
+                        {/eyou:if}
+                        <!-- 优惠券插件 end -->
+
                         {notempty name="$field.TotalAmount"}
                         <div class="el-row p10 bgfff mt10">
                             <div class="column-title">
@@ -237,6 +246,7 @@
                             </div>
                         </div>
 
+
                         <div class="el-row p10 bgfff mt10">
                             <div class="order-cell pt10">
                                 <div class="tit">商品金额</div>
@@ -246,6 +256,12 @@
                                 <div class="tit">快递费用</div>
                                 <div class="box"><span class="money">{$field.Shipping}</span></div>
                             </div>
+                            {eyou:if condition="is_dir('./weapp/Coupons/')"}
+                            <div class="order-cell">
+                                <div class="tit">优惠券</div>
+                                <div class="box"><span class="money" id="couponPrice">￥0.00</span></div>
+                            </div>
+                            {/eyou:if}
                         </div>
 
                         <div class="h50"></div>
@@ -272,5 +288,20 @@
             <input type="hidden" id="transaction_type">
         </div>
         {eyou:static file="users/skin/js/shop_under_order.js"/}
+        <!-- 优惠券插件 start -->
+        {eyou:if condition="is_dir('./weapp/Coupons/')"}
+        {eyou:static file="users/skin/css/coupons_order.css"/}
+        <style type="text/css">
+            #couponWrap .ey-coupon-row { padding: 4px 0; border-bottom: none; }
+            #couponWrap .ey-coupon-row .ey-coupon-label { font-size: 14px; }
+        </style>
+        <script type="text/javascript">
+            var EyouCouponOrderUrl = "{:url('plugins/Coupons/order_coupon')}";
+            var EyouCouponCenterUrl = "{:url('plugins/Coupons/index')}";
+            var EyouCouponMobile = 1;
+        </script>
+        {eyou:static file="users/skin/js/coupons_order.js"/}
+        {/eyou:if}
+        <!-- 优惠券插件 end -->
     </body>
 </html>

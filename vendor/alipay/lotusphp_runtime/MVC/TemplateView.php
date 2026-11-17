@@ -109,7 +109,7 @@ class LtTemplateView
 			$str = file_get_contents($tplfile);
 			if (!$str)
 			{
-				trigger_error('Template file Not found or have no access!', E_USER_ERROR);
+				throw new \RuntimeException('Template file Not found or have no access!');
 			}
 			$str = $this->parse($str);
 			if ($this->autoCompile)

@@ -439,9 +439,7 @@ class MemberLogic extends Model
         if (!stristr($fileUrl, 'https://service')) {
             $ch = curl_init($fileUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
             $file = curl_exec ($ch);
-            curl_close ($ch);
         } else {
             $file = httpRequest($fileUrl);
         }

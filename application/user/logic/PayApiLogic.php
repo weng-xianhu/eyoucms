@@ -169,6 +169,7 @@ class PayApiLogic extends Model
             $where = [
                 'users_id'     => $this->users_id,
                 'lang'         => $this->home_lang,
+                'cause_type'   => 1,
                 'order_number' => $post['unified_number']
             ];
             if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['moneyid'] = $post['unified_id'];
@@ -321,6 +322,7 @@ class PayApiLogic extends Model
             $where = [
                 'users_id'     => $this->users_id,
                 'lang'         => $this->home_lang,
+                'cause_type'   => 0,
                 'order_number' => $post['unified_number']
             ];
             if (empty($this->fromAsync) && !empty($post['unified_id'])) $where['moneyid'] = $post['unified_id'];
@@ -726,20 +728,46 @@ class PayApiLogic extends Model
             $ApiConfig['gatewayUrl'] = 'https://openapi.alipay.com/gateway.do';
             $ApiConfig['alipay_public_key'] = $PayInfo['alipay_public_key'];
 
-            // 实例化支付宝配置
-            $AlipayTradeService = new \AlipayTradeService($ApiConfig);
-            $AliPayOrder = $AlipayTradeService->Query($RequestBuilder);
+            // 实例化支付宝配置并查询（SDK 出错时会 echo 通讯日志或抛异常，统一捕获转中文）
+            $obLevel = ob_get_level();
+            ob_start();
+            $AliPayOrder = null;
+            $exceptionMsg = '';
+            try {
+                $AlipayTradeService = new \AlipayTradeService($ApiConfig);
+                $AliPayOrder = $AlipayTradeService->Query($RequestBuilder);
+            } catch (\Exception $e) {
+                $exceptionMsg = $e->getMessage();
+            }
+            $output = '';
+            while (ob_get_level() > $obLevel) {
+                $output = ob_get_clean() . $output;
+            }
+            $output = trim($output);
             
             // 解析数据
             $AliPayOrder = json_decode(json_encode($AliPayOrder), true);
+            if (!is_array($AliPayOrder) || empty($AliPayOrder)) {
+                $raw = '' !== $output ? $output : $exceptionMsg;
+                $this->error(alipayErrorMsg($raw, '支付宝订单查询'));
+            }
+            !isset($AliPayOrder['code']) && $AliPayOrder['code'] = '';
+            !isset($AliPayOrder['msg']) && $AliPayOrder['msg'] = '';
+            !isset($AliPayOrder['trade_status']) && $AliPayOrder['trade_status'] = '';
 
             if ('40004' == $AliPayOrder['code'] && 'Business Failed' === $AliPayOrder['msg']) {
                 $this->success('订单已提交，尚未支付');
             } else if ('10000' == $AliPayOrder['code'] && 'WAIT_BUYER_PAY' === $AliPayOrder['trade_status']) {
                 $this->success('订单已建立，尚未支付');
-            } else if ('10000' == $AliPayOrder['code'] && 'TRADE_SUCCESS' === $AliPayOrder['trade_status']) {
+            } else if ('10000' == $AliPayOrder['code'] && in_array($AliPayOrder['trade_status'], ['TRADE_SUCCESS', 'TRADE_FINISHED'])) {
                 // 已经支付，处理订单
                 $this->OrderProcessing($Post, $Order, $AliPayOrder, $Config);
+            } else if ('10000' == $AliPayOrder['code'] && 'TRADE_CLOSED' === $AliPayOrder['trade_status']) {
+                $this->error('该订单的支付宝交易已关闭（未付款超时或已退款），请重新下单');
+            } else if ('10000' == $AliPayOrder['code']) {
+                $this->error('订单当前交易状态：' . $AliPayOrder['trade_status'] . '，请稍后刷新');
+            } else {
+                $this->error(alipayErrorMsg($AliPayOrder, '支付宝订单查询'));
             }
         } else {
             $this->success('订单支付中');
@@ -783,11 +811,12 @@ class PayApiLogic extends Model
                 $result_0['email'] = false;
                 $result_0['mobile'] = false;
                 $url = url('user/Pay/pay_consumer_details');
-                // 订单更新条件
+                // 订单更新条件（status=1 保证并发/重放下只有一次能更新成功）
                 $where = [
                     'moneyid' => $Order['moneyid'],
                     'users_id' => $this->users_id,
                     'order_number' => strval($Order['order_number']),
+                    'status' => 1,
                 ];
                 // 订单更新数据，更新为已付款
                 $update = [
@@ -808,7 +837,7 @@ class PayApiLogic extends Model
                             'status'      => 3,
                             'update_time' => getTime()
                         ];
-                        $this->users_money_db->where($where)->update($update);
+                        $this->users_money_db->where(['moneyid' => $Order['moneyid'], 'status' => 2])->update($update);
 
                         // 推送微信发货推送表记录
                         if ('wechat' === trim($Order['pay_method'])) {
@@ -905,14 +934,31 @@ class PayApiLogic extends Model
             $url = url('user/Level/level_centre');
             // 更新升级订单
             if (1 === intval($Order['status'])) {
-                // 更新条件
+                // 更新条件（status=1 保证并发/重放下只有一次能更新成功）
                 $where = [
                     'moneyid' => $Order['moneyid'],
                     'users_id' => $this->users_id,
                     'order_number' => strval($Order['order_number']),
+                    'status' => 1,
                 ];
                 // 更新数据
                 $usersTypeData = !empty($Order['cause']) ? safe_unserialize($Order['cause']) : session('UsersTypeData');
+                if (!is_array($usersTypeData)) $usersTypeData = [];
+                // 套餐数据以数据库为准，避免使用订单中被篡改的内容
+                $typeId = !empty($usersTypeData['type_id']) ? intval($usersTypeData['type_id']) : 0;
+                $usersTypeDataDb = $typeId > 0 ? Db::name('users_type_manage')->where('type_id', $typeId)->find() : [];
+                if (!empty($usersTypeDataDb)) $usersTypeData = $usersTypeDataDb;
+                // 校验套餐与订单金额，防止篡改订单金额后低价升级
+                if (empty($usersTypeData['level_id']) || !isset($usersTypeData['price']) || unifyPriceHandle($usersTypeData['price']) != unifyPriceHandle($Order['money'])) {
+                    // 同步处理
+                    if (empty($this->fromAsync)) {
+                        $this->error('订单金额与会员套餐价格不相符，请重新下单');
+                    }
+                    // 异步处理
+                    else {
+                        echo 'FAIL'; exit;
+                    }
+                }
                 $update = $this->GetUpMoneyData($usersTypeData, $Order['pay_method']);
                 // 执行更新
                 $resultID = $this->users_money_db->where($where)->update($update);
@@ -1058,6 +1104,7 @@ class PayApiLogic extends Model
                 'order_id' => $Order['order_id'],
                 'order_code' => $Order['order_code'],
                 'order_pay_code' => $Order['order_pay_code'],
+                'order_status' => 1,
             ];
             $update = [
                 'order_status' => 2,
@@ -1075,7 +1122,7 @@ class PayApiLogic extends Model
                         'order_status' => 3,
                         'update_time' => $this->times,
                     ];
-                    Db::name('users_recharge_pack_order')->where($where)->update($update);
+                    Db::name('users_recharge_pack_order')->where(['order_id' => $Order['order_id'], 'order_status' => 2])->update($update);
                     // 增加充值套餐的销售量
                     $where = [
                         'pack_id' => $Order['pack_id'],
@@ -1197,47 +1244,71 @@ class PayApiLogic extends Model
         $UsersTypeData = !empty($UsersTypeData) ? $UsersTypeData : session('UsersTypeData');
 
         if (!empty($UsersTypeData)) {
+            $balancePrice = floatval($UsersTypeData['price']);
+            // 快检余额，减少无谓的明细操作
             $UsersMoney = $this->users_db->where('users_id', $this->users_id)->getField('users_money');
-            if ($UsersMoney < $UsersTypeData['price']) {
+            if ($UsersMoney < $balancePrice) {
                 // 若会员余额不足支付则返回
                 $ReturnData = $this->GetReturnData();
                 $this->success($ReturnData);
-            } else {
-                if (!empty($order_number)) {
-                    // 获取更新金额明细表数据数组
-                    $UpMoneyData = $this->GetUpMoneyData($UsersTypeData);
-                    // 更新数据
-                    $ReturnID = $this->users_money_db->where('order_number', $order_number)->update($UpMoneyData);
-                } else {
-                    // 获取生成的订单信息
-                    $AddMoneyData = $this->GetAddMoneyData($UsersTypeData);
-                    // 存入会员金额明细表
-                    $ReturnID = $this->users_money_db->add($AddMoneyData);
-                }
+            }
 
-                if (!empty($ReturnID)) {
-                    $Where = [
-                        'users_id' => $this->users_id,
-                        'lang'     => $this->home_lang
-                    ];
-                    // 获取更新会员数据数组
-                    $UpUsersData = $this->GetUpUsersData($UsersTypeData, true);
-                    $ReturnID = $this->users_db->where($Where)->update($UpUsersData);
-                    if (!empty($ReturnID)) {
-                        // 跳转链接
-                        $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
-                        if (empty($referurl)) {
-                            $referurl = cookie('referurl');
-                            if (empty($referurl)) {
-                                $referurl = url('user/Level/level_centre');
-                            }
-                        }
-                        cookie('referurl', null);
-                        // 支付完成返回
-                        $ReturnData = $this->GetReturnData(0, 1, '余额支付完成！', $referurl);
-                        $this->success($ReturnData);
+            if (!empty($order_number)) {
+                // 获取更新金额明细表数据数组
+                $UpMoneyData = $this->GetUpMoneyData($UsersTypeData);
+                // 更新数据
+                $ReturnID = $this->users_money_db->where('order_number', $order_number)->update($UpMoneyData);
+            } else {
+                // 获取生成的订单信息
+                $AddMoneyData = $this->GetAddMoneyData($UsersTypeData);
+                // 存入会员金额明细表
+                $ReturnID = $this->users_money_db->add($AddMoneyData);
+            }
+
+            if (empty($ReturnID)) {
+                $this->error('支付失败，请稍后重试');
+            }
+
+            $Where = [
+                'users_id' => $this->users_id,
+                'lang'     => $this->home_lang
+            ];
+            // 获取更新会员数据数组（含余额扣减）
+            $UpUsersData = $this->GetUpUsersData($UsersTypeData, true);
+            if ($balancePrice > 0) {
+                // 条件扣款：余额充足才更新成功，防止并发扣成负数
+                $deduct = $this->users_db->where($Where)
+                    ->where('users_money', '>=', $balancePrice)
+                    ->update($UpUsersData);
+                $deductSuccess = !empty($deduct);
+            } else {
+                // 0 元升级不涉及余额变化，不强制要求影响行数
+                $this->users_db->where($Where)->update($UpUsersData);
+                $deductSuccess = true;
+            }
+
+            if ($deductSuccess) {
+                // 跳转链接
+                $referurl = input('param.referurl/s', null, 'htmlspecialchars_decode,urldecode');
+                if (empty($referurl)) {
+                    $referurl = cookie('referurl');
+                    if (empty($referurl)) {
+                        $referurl = url('user/Level/level_centre');
                     }
                 }
+                cookie('referurl', null);
+                // 支付完成返回
+                $ReturnData = $this->GetReturnData(0, 1, '余额支付完成！', $referurl);
+                $this->success($ReturnData);
+            } else {
+                // 余额不足：回滚金额明细，避免出现"订单已支付但未扣款"
+                if (!empty($order_number)) {
+                    $this->users_money_db->where('order_number', $order_number)->update(['status' => 1, 'update_time' => getTime()]);
+                } else {
+                    $this->users_money_db->where('moneyid', $ReturnID)->delete(true);
+                }
+                $ReturnData = $this->GetReturnData();
+                $this->success($ReturnData);
             }
         } else {
             $this->error('升级失败，刷新重试');
@@ -1306,15 +1377,30 @@ class PayApiLogic extends Model
                 $AddMoneyData['moneyid'] = $ReturnID;
                 if (!empty($ReturnID)) $this->AliPayProcessing($AddMoneyData, $PayInfo, $Post);
             } else {
-                // 获取生成的订单信息
-                $UpMoneyData = $this->GetUpMoneyData($UsersTypeData, 'alipay');
-                $UpMoneyData['status'] = 1;
-                // 更新会员金额明细表
-                $ReturnID = $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->update($UpMoneyData);
-                if (!empty($ReturnID)) {
-                    // 支付宝处理返回信息
-                    $MoneyData = $this->GetMoneyData('*', $Post['order_number']);
+                // 同一套餐直接复用原订单，避免重复生成订单号
+                $MoneyDataCause = safe_unserialize($MoneyData['cause']);
+                if (is_array($MoneyDataCause) && !empty($MoneyDataCause['level_id']) && is_array($UsersTypeData) && !empty($UsersTypeData['level_id']) && isset($UsersTypeData['price']) && $MoneyDataCause['level_id'] == $UsersTypeData['level_id'] && unifyPriceHandle($MoneyData['money']) == unifyPriceHandle($UsersTypeData['price'])) {
+                    // 仅更新支付方式，金额与订单号保持不变
+                    $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->update([
+                        'pay_method'      => 'alipay',
+                        'wechat_pay_type' => '',
+                        'update_time'     => getTime(),
+                    ]);
+                    $MoneyData['pay_method'] = 'alipay';
+                    $MoneyData['wechat_pay_type'] = '';
                     $this->AliPayProcessing($MoneyData, $PayInfo, $Post);
+                } else {
+                    // 切换套餐时重新生成订单号，禁止在同一订单号下改写金额
+                    $UpMoneyData = $this->GetUpMoneyData($UsersTypeData, 'alipay');
+                    $UpMoneyData['status'] = 1;
+                    $UpMoneyData['order_number'] = date('Ymd').getTime().rand(10,100);
+                    // 更新会员金额明细表
+                    $ReturnID = $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->update($UpMoneyData);
+                    if (!empty($ReturnID)) {
+                        // 支付宝处理返回信息
+                        $NewMoneyData = $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->find();
+                        if (!empty($NewMoneyData)) $this->AliPayProcessing($NewMoneyData, $PayInfo, $Post);
+                    }
                 }
             }
         } else {
@@ -1336,15 +1422,28 @@ class PayApiLogic extends Model
             $AddMoneyData['moneyid'] = $ReturnID;
             return $AddMoneyData;
         } else {
-            // 获取生成的订单信息
+            // 同一套餐直接复用原订单，避免重复生成订单号
+            $MoneyDataCause = safe_unserialize($MoneyData['cause']);
+            if (is_array($MoneyDataCause) && !empty($MoneyDataCause['level_id']) && is_array($UsersTypeData) && !empty($UsersTypeData['level_id']) && isset($UsersTypeData['price']) && $MoneyDataCause['level_id'] == $UsersTypeData['level_id'] && unifyPriceHandle($MoneyData['money']) == unifyPriceHandle($UsersTypeData['price'])) {
+                // 仅更新支付方式，金额与订单号保持不变
+                $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->update([
+                    'pay_method'      => $pay_mark,
+                    'wechat_pay_type' => '',
+                    'update_time'     => getTime(),
+                ]);
+                $MoneyData['pay_method'] = $pay_mark;
+                $MoneyData['wechat_pay_type'] = '';
+                return $MoneyData;
+            }
+            // 切换套餐时重新生成订单号，禁止在同一订单号下改写金额
             $UpMoneyData = $this->GetUpMoneyData($UsersTypeData, $pay_mark);
             $UpMoneyData['status'] = 1;
+            $UpMoneyData['order_number'] = date('Ymd').getTime().rand(10,100);
             // 更新会员金额明细表
             $ReturnID = $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->update($UpMoneyData);
             if (!empty($ReturnID)) {
-                // 支付宝处理返回信息
-                $MoneyData = $this->GetMoneyData('*', $Post['order_number']);
-                return $MoneyData;
+                // 返回更新后的订单信息
+                return $this->users_money_db->where('moneyid', $MoneyData['moneyid'])->find();
             }
         }
     }

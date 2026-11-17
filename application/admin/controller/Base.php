@@ -18,7 +18,7 @@ use think\Db;
 use think\response\Json;
 use think\Session;
 class Base extends Controller {
-
+    public $neverAgainPrompt;
     public $session_id;
     public $php_servicemeal = 0;
     public $globalConfig = [];
@@ -252,9 +252,10 @@ class Base extends Controller {
             }
             /*--end*/
 
-            /*在列表中的操作不需要验证权限*/
-            // 安全修复：移除由 X-Requested-With 头(IS_AJAX)控制的笼统放行，防止子管理员仅加该头即绕过菜单权限校验
-            if (strpos($act,'ajax') !== false || in_array($ctl_act, $uneed_check_action) || in_array($ctl_all, $uneed_check_action)) {
+            /*白名单内的只读操作不需要验证权限*/
+            // 安全修复：移除按 X-Requested-With(IS_AJAX) 与“动作名含 ajax”的笼统放行，
+            // 防止低权限管理员借 ajax 动作绕过菜单权限校验执行模板写入等敏感操作
+            if (in_array($ctl_act, $uneed_check_action) || in_array($ctl_all, $uneed_check_action)) {
                 $bool = true;
             }
             /*--end*/

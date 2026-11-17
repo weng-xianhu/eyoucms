@@ -23,13 +23,13 @@ class Collection extends \think\Collection
     /** @var Paginator */
     protected $paginator;
 
-    public function __construct($items = [], Paginator $paginator = null)
+    public function __construct($items = [], $paginator = null)
     {
         $this->paginator = $paginator;
         parent::__construct($items);
     }
 
-    public static function make($items = [], Paginator $paginator = null)
+    public static function make($items = [], $paginator = null)
     {
         return new static($items, $paginator);
     }

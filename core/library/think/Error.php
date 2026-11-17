@@ -25,7 +25,8 @@ class Error
      */
     public static function register()
     {
-        error_reporting(E_ALL);
+        // 兼容 PHP 8.4/8.5：弃用提示只作提示，不能参与异常转换，否则会导致请求中断
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
         set_error_handler([__CLASS__, 'appError']);
         set_exception_handler([__CLASS__, 'appException']);
         register_shutdown_function([__CLASS__, 'appShutdown']);
@@ -65,6 +66,11 @@ class Error
      */
     public static function appError($errno, $errstr, $errfile = '', $errline = 0)
     {
+        // PHP 8.4/8.5 新增的弃用提示不抛异常，避免框架自身触发 Deprecated 时页面 500
+        if (E_DEPRECATED === $errno || E_USER_DEPRECATED === $errno) {
+            return;
+        }
+
         $exception = new ErrorException($errno, $errstr, $errfile, $errline);
 
         // 符合异常处理的则将错误信息托管至 think\exception\ErrorException

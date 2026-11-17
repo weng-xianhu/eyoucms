@@ -1323,7 +1323,7 @@ class Field extends Base
         $fieldtype_list = [];
         $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         foreach ($fieldtype_list_tmp as $key => $val) {
-            if (!in_array($val['name'], ['file','media','region'])) {
+            if (!in_array($val['name'], ['region'])) {
                 $fieldtype_list[] = $val;
             }
         }
@@ -1633,7 +1633,7 @@ class Field extends Base
         $fieldtype_list = [];
         $fieldtype_list_tmp = model('Field')->getFieldTypeAll('name,title,ifoption', '', $channel_id);
         foreach ($fieldtype_list_tmp as $key => $val) {
-            if (!in_array($val['name'], ['file','media','region'])) {
+            if (!in_array($val['name'], ['region'])) {
                 $fieldtype_list[] = $val;
             }
         }

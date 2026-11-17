@@ -57,7 +57,7 @@ class PHPExcel_Worksheet_AutoFilter
      *    @param    string        $pRange        Cell range (i.e. A1:E10)
      * @param PHPExcel_Worksheet $pSheet
      */
-    public function __construct($pRange = '', PHPExcel_Worksheet $pSheet = null)
+    public function __construct($pRange = '', $pSheet = null)
     {
         $this->range = $pRange;
         $this->workSheet = $pSheet;
@@ -79,7 +79,7 @@ class PHPExcel_Worksheet_AutoFilter
      * @param PHPExcel_Worksheet $pSheet
      * @return PHPExcel_Worksheet_AutoFilter
      */
-    public function setParent(PHPExcel_Worksheet $pSheet = null)
+    public function setParent($pSheet = null)
     {
         $this->workSheet = $pSheet;
 

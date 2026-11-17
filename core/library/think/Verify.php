@@ -173,7 +173,6 @@ class Verify {
 
         // 输出图像
         imagepng($this->_image);
-        imagedestroy($this->_image);
     }
 
     /** 
@@ -271,7 +270,6 @@ class Verify {
         // Resample
         $bgImage = @imagecreatefromjpeg($gb);
         @imagecopyresampled($this->_image, $bgImage, 0, 0, 0, 0, $this->imageW, $this->imageH, $width, $height);
-        @imagedestroy($bgImage);
     }
 
     /* 加密验证码 */

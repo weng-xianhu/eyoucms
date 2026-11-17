@@ -21,6 +21,7 @@ use think\Db;
  */
 class TagSpaddress extends Base
 {
+    public $usersTpl2xVersion;
     public $usersTplVersion    = '';
     
     //初始化

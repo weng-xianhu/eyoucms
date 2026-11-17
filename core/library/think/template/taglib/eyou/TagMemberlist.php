@@ -116,15 +116,19 @@ EOF;
             'hidden'    => $hidden,
         ];
 
-        // 会员表内置字段
+        // 会员表内置字段（只输出允许公开的字段，敏感字段不生成占位符）
+        $publicConfig = get_memberlist_public_config();
         $usersFields = Db::name("users")->getTableFields();
-        foreach ($usersFields as $key => $value) {
-            $data[$value] = $value . '_eyoucms_fields';
+        foreach ($publicConfig['fields'] as $value) {
+            if (in_array($value, $usersFields)) {
+                $data[$value] = $value . '_eyoucms_fields';
+            }
         }
 
-        // 会员表自定义字段
+        // 会员表自定义字段（只允许结构化字段，自由文本与上传类字段不生成占位符）
         $where = [
             'is_hidden' => 0,
+            'dtype' => ['IN', $publicConfig['allow_dtype']],
         ];
         $usersParams = Db::name("users_parameter")->field('para_id, name')->where($where)->order('para_id asc')->select();
         foreach ($usersParams as $key => $value) {

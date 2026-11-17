@@ -27,6 +27,7 @@
 * @category PHPExcel
 * @package  PHPExcel_Shared_OLE
 */
+#[\AllowDynamicProperties]
 class PHPExcel_Shared_OLE_PPS_Root extends PHPExcel_Shared_OLE_PPS
 {
 

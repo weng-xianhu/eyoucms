@@ -142,7 +142,7 @@ class PHPExcel_NamedRange
      * @param PHPExcel_Worksheet $value
      * @return PHPExcel_NamedRange
      */
-    public function setWorksheet(PHPExcel_Worksheet $value = null)
+    public function setWorksheet($value = null)
     {
         if ($value !== null) {
             $this->worksheet = $value;
@@ -213,7 +213,7 @@ class PHPExcel_NamedRange
      * @param PHPExcel_Worksheet|null $value
      * @return PHPExcel_NamedRange
      */
-    public function setScope(PHPExcel_Worksheet $value = null)
+    public function setScope($value = null)
     {
         $this->scope = $value;
         $this->localOnly = ($value == null) ? false : true;

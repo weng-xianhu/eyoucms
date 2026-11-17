@@ -31,10 +31,10 @@
     </section>
     <script type="text/javascript">
       var n=-1;
-      var data = <?php echo json_encode($_POST);?>;
+      var data = <?php echo json_encode($_POST, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);?>;
       $.ajaxSetup ({ cache: false });
       function reloads(n) {
-          var url =  "<?php echo $_SERVER['PHP_SELF']; ?>?step=4&install=1&n="+n;
+          var url =  "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=4&install=1&n="+n;
           $.ajax({
               type: "POST",   
               url: url,
@@ -67,7 +67,7 @@
           });
       }
       function gonext(){
-          window.location.href='<?php echo $_SERVER['PHP_SELF']; ?>?step=5';
+          window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=5';
       }
       $(document).ready(function(){
           reloads(n);

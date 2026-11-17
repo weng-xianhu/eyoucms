@@ -1,0 +1,798 @@
+{include file="public/layout" /}
+<body class="bodystyle" style="overflow-y: scroll;min-width:auto;">
+<div id="append_parent"></div>
+<div id="ajaxwaitid"></div>
+<style>
+:root{--ai-theme:{$global.web_theme_color|default='#5c89ff'};--ai-assist:{$global.web_assist_color|default='#4a76e8'};}
+.ai-stat{display:flex;gap:10px;flex-wrap:wrap;padding:15px;}
+.ai-stat .item{flex:1;min-width:150px;background:#f9fafc;border:1px solid #eef1f5;border-radius:4px;padding:12px 15px;}
+.ai-stat .item b{display:block;font-size:22px;font-weight:600;line-height:1.4;color:var(--ai-theme);}
+.ai-stat .item .lb{color:#8b8b8b;font-size:12px;}
+.ai-usage{margin:5px 15px 15px;border:1px solid #eef1f5;border-radius:4px;overflow:hidden;}
+.ai-usage table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;}
+.ai-usage th{background:#f9fafc;color:#8b8b8b;font-weight:normal;padding:8px 15px;border-bottom:1px solid #eef1f5;}
+.ai-usage td{color:#666;padding:8px 15px;border-bottom:1px solid #f5f6f8;}
+.ai-usage tr:last-child td{border-bottom:none;}
+.ai-usage .tl{text-align:left;}
+.ai-mtit{margin:12px 15px 0;font-size:14px;color:#333;font-weight:600;border-left:3px solid var(--ai-theme);padding-left:8px;line-height:1.3;}
+.ai-mtit .notic{font-weight:normal;font-size:12px;color:#a2a2a2;margin-left:8px;}
+.ai-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px 10px;}
+.ai-head .tit{font-size:14px;color:#333;font-weight:600;border-left:3px solid var(--ai-theme);padding-left:8px;line-height:1.3;}
+.ai-head .tit .notic{font-weight:normal;font-size:12px;color:#a2a2a2;margin-left:8px;}
+.ai-btn{display:inline-block;background:var(--ai-theme);color:#fff!important;border:1px solid var(--ai-theme);border-radius:2px;padding:5px 15px;font-size:12px;line-height:1.6;cursor:pointer;text-decoration:none!important;}
+.ai-btn:hover{background:var(--ai-assist);border-color:var(--ai-assist);}
+.ai-btn.ghost{background:#fff;color:#666!important;border-color:#e4e4e4;}
+.ai-btn.ghost:hover{color:var(--ai-theme)!important;border-color:var(--ai-theme);background:#fff;}
+.ai-codebox{background:#f9fafc;border:1px solid #eef1f5;color:#666;border-radius:4px;padding:10px 15px;margin:0 15px 15px;font:12px/1.8 Consolas,monospace;overflow:auto;white-space:pre;}
+.ai-gap{height:10px;background:transparent;}
+.flexigrid .bDiv tr.ai-prow td{background:#f9fafc;}
+.flexigrid .bDiv td.operation div.aiops{justify-content:flex-end !important;padding-right:10px;white-space:nowrap;}
+.flexigrid .bDiv td .w80.tc,.flexigrid .bDiv td .w60.tc{margin:0 auto;}
+.flexigrid .bDiv td.operation div.aiops a.btn{flex:none;width:44px;margin:0;padding:0;text-align:center;box-sizing:border-box;}
+.ai-untested{color:#c2c2c2;font-size:12px;}
+.ai-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d9d9d9;margin-right:6px;vertical-align:middle;}
+.ai-dot.ok{background:#52c41a;}
+.ai-dot.bad{background:#ff4d4f;}
+
+.ai-chip{display:inline-block;margin:6px 6px 0 0;padding:1px 10px;border:1px solid var(--ai-theme);border-radius:12px;font-size:12px;color:var(--ai-theme);background:#fff;text-decoration:none;cursor:pointer;}
+.ai-chip:hover{background:var(--ai-theme);color:#fff;}
+.ai-settingbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 15px 15px;font-size:12px;color:#666;}
+.ai-settingbar input{width:100px;border:1px solid #e4e4e4;border-radius:2px;padding:5px 8px;outline:none;}
+.ai-settingbar input:focus{border-color:var(--ai-theme);}
+.flexigrid .bDiv td .btn{margin-right:4px;}
+.ai-form{padding:20px 25px 5px;}
+.ai-form .frow{display:flex;align-items:center;margin-bottom:15px;}
+.ai-form .frow.top{align-items:flex-start;}
+.ai-form .flb{width:90px;flex:none;text-align:right;padding-right:12px;color:#666;font-size:12px;line-height:30px;}
+.ai-form .fct{flex:1;min-width:0;font-size:12px;color:#666;}
+.ai-form .fct input[type=text],.ai-form .fct input[type=password],.ai-form .fct select,.ai-form .fct textarea{width:100%;box-sizing:border-box;border:1px solid #e4e4e4;border-radius:2px;padding:6px 10px;font-size:12px;color:#333;background:#fff;outline:none;height:30px;}
+.ai-form .fct textarea{height:auto;}
+.ai-form .fct input:focus,.ai-form .fct select:focus,.ai-form .fct textarea:focus{border-color:var(--ai-theme);}
+.ai-form .fct .notic{color:#a2a2a2;font-size:12px;margin:4px 0 0;}
+.ai-form .fbot{text-align:right;padding:5px 0 15px;}
+.ai-form .fbot .ai-btn{margin-left:8px;}
+.ai-devtoggle{cursor:pointer;color:#a2a2a2;font-size:12px;padding:8px 0;user-select:none;}
+.ai-devtoggle:hover{color:#5a8def;}
+.ai-devtoggle .notic{color:#c2c2c2;font-size:12px;font-weight:normal;margin-left:8px;}
+.ai-devtoggle i{margin-right:4px;width:8px;display:inline-block;}
+.pk-wrap{padding:15px 20px;}
+.pk-tip{color:#8b8b8b;font-size:12px;margin-bottom:12px;line-height:1.6;}
+.pk-box{border:1px solid #eef1f5;border-radius:4px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#d5d9e0 transparent;}
+.pk-box::-webkit-scrollbar{height:6px;}
+.pk-box::-webkit-scrollbar-thumb{background:#d5d9e0;border-radius:3px;}
+.pk-box::-webkit-scrollbar-thumb:hover{background:#bfc5cf;}
+.pk-box::-webkit-scrollbar-track{background:transparent;}
+.pk-table{width:100%;border-collapse:collapse;font-size:12px;}
+.pk-table th{background:#f9fafc;color:#8b8b8b;font-weight:normal;text-align:left;padding:9px 12px;border-bottom:1px solid #eef1f5;white-space:nowrap;}
+.pk-table td{color:#333;padding:9px 12px;border-bottom:1px solid #f5f6f8;white-space:nowrap;}
+.pk-table tr:last-child td{border-bottom:none;}
+.pk-table tbody tr:hover td{background:#f9fafc;}
+.pk-table .pk-key{font-family:Consolas,monospace;color:#8b8b8b;}
+.pk-badge{display:inline-block;padding:1px 10px;border-radius:12px;font-size:12px;line-height:1.8;}
+.pk-badge.ok{color:#52c41a;background:#f0fbe8;border:1px solid #d3efbf;}
+.pk-badge.warn{color:#faad14;background:#fffbe6;border:1px solid #f5e3ac;}
+</style>
+<div class="page min-hg-c-10">
+    <div class="fixed-bar">
+        <div class="item-title">
+            <a class="back_xin" href="{:url('Index/switch_map')}" title="返回"><i class="iconfont e-fanhui"></i></a>
+            <div class="subject">
+                <h3>AI模型配置</h3>
+                <h5>统一模型接入层 v{$sdk_version}，服务商与模型集中配置、Key 只填一次，所有 AI 插件共享调用</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日用量 -->
+    <div class="flexigrid">
+        <div class="ai-mtit">今日用量</div>
+        <div class="ai-stat">
+            <div class="item"><b>{$usage.calls}</b><div class="lb">今日调用次数</div></div>
+            <div class="item"><b>{$usage.chat_tokens}</b><div class="lb">生文 tokens（估算）</div></div>
+            <div class="item"><b>{$usage.image_count}</b><div class="lb">生图张数</div></div>
+            <div class="item"><b>{eq name="chat_ready" value="1"}<span style="color:#52c41a">可用</span>{else/}<span style="color:#ff4d4f">未配置</span>{/eq}</b><div class="lb">生文能力状态</div></div>
+            <div class="item" title="需在「服务商与模型」中添加能力为“生图”的模型（如豆包 seedream、智谱 cogview），与第三方素材图库无关"><b>{eq name="image_ready" value="1"}<span style="color:#52c41a">可用</span>{else/}<span style="color:#a2a2a2">未配置</span>{/eq}</b><div class="lb">AI 生图能力状态</div></div>
+            {eq name="is_ai_ver" value="1"}
+            <div class="item" title="第三方素材服务（Pexels 等）是否已添加并启用"><b>{eq name="stock_ready" value="1"}<span style="color:#52c41a">可用</span>{else/}<span style="color:#a2a2a2">未配置</span>{/eq}</b><div class="lb">素材图库状态</div></div>
+            {/eq}
+        </div>
+        {notempty name="usage.scenes"}
+        <div class="ai-usage">
+            <table>
+                <colgroup><col style="width:40%"><col style="width:30%"><col style="width:15%"><col style="width:15%"></colgroup>
+                <thead>
+                <tr>
+                    <th class="tl">调用场景</th>
+                    <th class="tl">能力</th>
+                    <th class="tc">次数</th>
+                    <th class="tc">用量</th>
+                </tr>
+                </thead>
+                <tbody>
+                {volist name="usage.scenes" id="s"}
+                <tr>
+                    <td class="tl">{$s.scene}</td>
+                    <td class="tl">{switch name="s.capability"}{case value="chat"}生文{/case}{case value="image"}生图{/case}{case value="video"}生视频{/case}{case value="stock"}素材搜图{/case}{default /}{$s.capability}{/switch}</td>
+                    <td class="tc">{$s.calls}</td>
+                    <td class="tc">{$s.usage}</td>
+                </tr>
+                {/volist}
+                </tbody>
+            </table>
+        </div>
+        {/notempty}
+    </div>
+
+    <div class="ai-gap"></div>
+
+    <!-- 服务商与模型 -->
+    <div class="flexigrid">
+        <div class="ai-head">
+            <div class="tit">服务商与模型<span class="notic">Key 加密保存、只显示首尾几位；AI 插件会自动使用各能力的默认模型</span></div>
+            <div>
+                <a href="javascript:void(0);" class="ai-btn ghost" style="margin-right:8px;" onclick="scanPluginKeys(this);">从插件收集 Key</a>
+                <a href="javascript:void(0);" class="ai-btn" onclick="openProvider(0);">＋ 添加服务商</a>
+            </div>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th class="w40"><div class="tc">ID</div></th>
+                        <th class="w250"><div class="text-l10">名称 / 模型</div></th>
+                        <th class="w80"><div class="tc">类型 / 能力</div></th>
+                        <th><div class="text-l10">接口地址 / 参数</div></th>
+                        <th class="w180"><div class="text-l10">API Key</div></th>
+                        <th class="w80"><div class="tc">连通 / 默认</div></th>
+                        <th class="w250"><div class="tc">操作</div></th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height:auto;">
+            <div id="flexigrid-main" cellpadding="0" cellspacing="0" border="0">
+                <table style="width:100%">
+                    <tbody>
+                    {empty name="providers"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                <p style="color:#a2a2a2;">暂无服务商，点击「添加服务商」，选择预设模板只需填一个 Key</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {/empty}
+                    {volist name="providers" id="p"}
+                    <tr class="ai-prow">
+                        <td class="sort"><div class="w40 tc">{$p.id}</div></td>
+                        <td><div class="w250 text-l10" style="font-weight:600;">{$p.name}{eq name="p.status" value="0"}<span class="no" style="margin-left:6px;font-weight:400;"><i class="fa fa-ban"></i>停用</span>{/eq}</div></td>
+                        <td><div class="w80 tc">{$p.type}</div></td>
+                        <td style="width:100%"><div class="text-l10" style="color:#a2a2a2;">{$p.base_url}</div></td>
+                        <td><div class="w180 text-l10" style="color:#a2a2a2;">{$p.key_mask}</div></td>
+                        <td>
+                            <div class="w80 tc">
+                                {eq name="p.last_test_status" value="1"}
+                                <span class="yes" title="最近测试：{$p.last_test_time|date='Y-m-d H:i',###}，{$p.last_test_latency}ms"><i class="fa fa-check-circle"></i>连通</span>
+                                {else/}
+                                {eq name="p.last_test_status" value="2"}
+                                <span class="no" title="最近测试：{$p.last_test_time|date='Y-m-d H:i',###}"><i class="fa fa-ban"></i>失败</span>
+                                {else/}
+                                <span class="ai-untested">未测试</span>
+                                {/eq}
+                                {/eq}
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w250 aiops">
+                                <a href="javascript:void(0);" class="btn blue" onclick="openModel(0,{$p.id})">模型+</a>
+                                <a href="javascript:void(0);" class="btn" onclick="testProvider({$p.id},this)">测试</a>
+                                <a href="javascript:void(0);" class="btn blue" onclick='openProvider({$p.id},{$p.name|json_encode},"{$p.type}","{$p.base_url}",{$p.status})'>编辑</a>
+                                <a href="javascript:void(0);" class="btn red" onclick="del('provider_del',{$p.id},this)">删除</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {volist name="models" id="m"}
+                    {if condition="$m.provider_id eq $p.id"}
+                    <tr>
+                        <td class="sort"><div class="w40 tc" style="color:#a2a2a2;">{$m.id}</div></td>
+                        <td><div class="w250 text-l10"><span style="color:#c2c2c2;margin:0 6px 0 14px;">└</span>{eq name="m.last_test_status" value="1"}<i class="ai-dot ok" title="测试通过：{$m.last_test_time|date='Y-m-d H:i',###}，{$m.last_test_latency}ms"></i>{else/}{eq name="m.last_test_status" value="2"}<i class="ai-dot bad" title="测试失败：{$m.last_test_time|date='Y-m-d H:i',###}"></i>{else/}<i class="ai-dot" title="未测试"></i>{/eq}{/eq}{$m.model}{eq name="m.status" value="0"}<span class="no" style="margin-left:6px;"><i class="fa fa-ban"></i>停用</span>{/eq}</div></td>
+                        <td><div class="w80 tc">{switch name="m.capability"}{case value="chat"}生文{/case}{case value="image"}生图{/case}{case value="video"}生视频{/case}{default /}{$m.capability}{/switch}</div></td>
+                        <td style="width:100%"><div class="text-l10" style="color:#a2a2a2;">{notempty name="m.params"}{$m.params}{else/}默认参数{/notempty}</div></td>
+                        <td><div class="w180 text-l10"></div></td>
+                        <td>
+                            <div class="w80 tc">
+                                {eq name="m.is_default" value="1"}
+                                <span class="yes"><i class="fa fa-check-circle"></i>默认</span>
+                                {else/}
+                                <a href="javascript:void(0);" onclick="setDefault({$m.id},this)" style="font-size:12px;">设为默认</a>
+                                {/eq}
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w250 aiops">
+                                <a href="javascript:void(0);" class="btn" onclick="testModel({$m.id},this)">测试</a>
+                                <a href="javascript:void(0);" class="btn blue" onclick='openModel({$m.id},{$m.provider_id},"{$m.model}",{$m.params|json_encode},{$m.is_default},{$m.status},"{$m.capability}")'>编辑</a>
+                                <a href="javascript:void(0);" class="btn red" onclick="del('model_del',{$m.id},this)">删除</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {/if}
+                    {/volist}
+                    {eq name="p.model_count" value="0"}
+                    <tr>
+                        <td class="sort"><div class="w40 tc"></div></td>
+                        <td colspan="49"><div class="text-l10" style="color:#c2c2c2;"><span style="margin:0 6px 0 14px;">└</span>暂无模型，点击右侧「模型+」为该服务商添加</div></td>
+                    </tr>
+                    {/eq}
+                    {/volist}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+
+    {eq name="is_ai_ver" value="1"}
+    <div class="ai-gap"></div>
+
+    <!-- 第三方素材服务（AI 版专属） -->
+    <div class="flexigrid">
+        <div class="ai-head">
+            <div class="tit">第三方素材服务<span class="notic">AI 版专属；图库 Key 只填一次，所有 AI 插件都能搜图用图</span></div>
+            <a href="javascript:void(0);" class="ai-btn" onclick="openStock(0);">＋ 添加素材服务</a>
+        </div>
+        <div class="hDiv">
+            <div class="hDivBox">
+                <table cellspacing="0" cellpadding="0" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th class="w40"><div class="tc">ID</div></th>
+                        <th class="w250"><div class="text-l10">名称</div></th>
+                        <th><div class="text-l10">接口地址</div></th>
+                        <th class="w180"><div class="text-l10">API Key</div></th>
+                        <th class="w80"><div class="tc">连通</div></th>
+                        <th class="w250"><div class="tc">操作</div></th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="bDiv" style="height:auto;">
+            <div cellpadding="0" cellspacing="0" border="0">
+                <table style="width:100%">
+                    <tbody>
+                    {empty name="stocks"}
+                    <tr>
+                        <td class="no-data" align="center" axis="col0" colspan="50">
+                            <div class="no_row">
+                                <div class="no_pic"><img src="__SKIN__/images/null-data.png"></div>
+                                <p style="color:#a2a2a2;">暂无素材服务，点击「添加素材服务」，选 Pexels 只需填一个 Key</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {/empty}
+                    {volist name="stocks" id="s"}
+                    <tr class="ai-prow">
+                        <td class="sort"><div class="w40 tc">{$s.id}</div></td>
+                        <td><div class="w250 text-l10" style="font-weight:600;">{eq name="s.last_test_status" value="1"}<i class="ai-dot ok" title="测试通过：{$s.last_test_time|date='Y-m-d H:i',###}，{$s.last_test_latency}ms"></i>{else/}{eq name="s.last_test_status" value="2"}<i class="ai-dot bad" title="测试失败：{$s.last_test_time|date='Y-m-d H:i',###}"></i>{else/}<i class="ai-dot" title="未测试"></i>{/eq}{/eq}{$s.name}{eq name="s.status" value="0"}<span class="no" style="margin-left:6px;font-weight:400;"><i class="fa fa-ban"></i>停用</span>{/eq}</div></td>
+                        <td style="width:100%"><div class="text-l10" style="color:#a2a2a2;">{$s.base_url}</div></td>
+                        <td><div class="w180 text-l10" style="color:#a2a2a2;">{$s.key_mask}</div></td>
+                        <td>
+                            <div class="w80 tc">
+                                {eq name="s.last_test_status" value="1"}
+                                <span class="yes" title="最近测试：{$s.last_test_time|date='Y-m-d H:i',###}，{$s.last_test_latency}ms"><i class="fa fa-check-circle"></i>连通</span>
+                                {else/}
+                                {eq name="s.last_test_status" value="2"}
+                                <span class="no" title="最近测试：{$s.last_test_time|date='Y-m-d H:i',###}"><i class="fa fa-ban"></i>失败</span>
+                                {else/}
+                                <span class="ai-untested">未测试</span>
+                                {/eq}
+                                {/eq}
+                            </div>
+                        </td>
+                        <td class="operation">
+                            <div class="w250 aiops">
+                                <a href="javascript:void(0);" class="btn" onclick="testStock({$s.id},this)">测试</a>
+                                <a href="javascript:void(0);" class="btn blue" onclick='openStock({$s.id},"{$s.type}",{$s.status})'>编辑</a>
+                                <a href="javascript:void(0);" class="btn red" onclick="del('stock_del',{$s.id},this)">删除</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+            </div>
+            <div class="iDiv" style="display: none;"></div>
+        </div>
+    </div>
+    {/eq}
+
+    <div class="ai-gap"></div>
+
+    <!-- 调用保护 -->
+    <div class="flexigrid">
+        <div class="ai-mtit">调用保护</div>
+        <div class="ai-settingbar">
+            <span>IP 限流</span><input type="number" id="set-rate" min="0" value="{$settings.aiservice_rate_limit}"><span>次/分钟（0=不限）</span>
+            <span style="margin-left:15px;">生文每日预算</span><input type="number" id="set-budget" min="0" value="{$settings.aiservice_budget_chat}"><span>tokens（0=不限，超额熔断）</span>
+            <span style="margin-left:15px;">生图每日预算</span><input type="number" id="set-budget-image" min="0" value="{$settings.aiservice_budget_image}"><span>张（0=不限）</span>
+            <span style="margin-left:15px;">明细保留</span><input type="number" id="set-logdays" min="0" value="{$settings.aiservice_log_days}"><span>天（0=永久，日汇总不受影响）</span>
+            <a href="javascript:void(0);" class="ai-btn" style="margin-left:10px;" onclick="saveSettings(this)">保存</a>
+        </div>
+    </div>
+
+    <div class="ai-gap"></div>
+
+    <!-- 插件开发者 -->
+    <div class="flexigrid" style="background:none;box-shadow:none;">
+        <div class="ai-devtoggle" onclick="var b=document.getElementById('ai-devbox');var on=b.style.display==='none';b.style.display=on?'':'none';this.querySelector('i').className=on?'fa fa-angle-down':'fa fa-angle-right';">
+            <i class="fa fa-angle-right"></i> 插件开发者接入说明<span class="notic">面向开发者，普通用户可忽略</span>
+        </div>
+        <div id="ai-devbox" style="display:none;">
+        <div style="height:10px;"></div>
+        <div class="ai-codebox">if (class_exists('AiService') &amp;&amp; AiService::hasCapability('chat')) {
+    try {
+        $answer = AiService::chat($messages, ['scene' =&gt; 'myplugin']);
+    } catch (AiServiceException $e) {
+        // NOT_CONFIGURED / RATE_LIMITED / BUDGET_EXCEEDED / PROVIDER_ERROR / TIMEOUT
+    }
+}
+// 生图：返回站内图片 URL 数组（已同步落地 uploads/aiimg/，无需担心远程 URL 过期）
+if (AiService::hasCapability('image')) {
+    $urls = AiService::image('一只橘猫在打篮球', ['scene' =&gt; 'myplugin', 'size' =&gt; '1024x1024']);
+}</div>
+        </div>
+    </div>
+</div>
+
+<!-- 服务商弹窗内容 -->
+<div id="m-provider" style="display:none;">
+    <div class="ai-form">
+        <input type="hidden" id="p-id" value="0">
+        <div class="frow top"><div class="flb">预设模板</div><div class="fct"><select id="p-type" onchange="applyPreset()"></select><p class="notic">💬 支持生文　🖼️ 支持生图</p></div></div>
+        <div class="frow"><div class="flb">名称</div><div class="fct"><input type="text" id="p-name" placeholder="如：DeepSeek 官方"></div></div>
+        <div class="frow"><div class="flb">接口地址</div><div class="fct"><input type="text" id="p-baseurl" placeholder="https://..."></div></div>
+        <div class="frow"><div class="flb">API Key</div><div class="fct"><input type="password" id="p-key" placeholder="编辑时留空表示不修改" autocomplete="new-password"></div></div>
+        <div class="frow"><div class="flb">测试模型</div><div class="fct"><input type="text" id="p-testmodel" placeholder="留空用预设推荐模型"></div></div>
+        <div class="frow"><div class="flb">状态</div><div class="fct"><label class="curpoin"><input type="checkbox" id="p-status" checked> 启用</label></div></div>
+        <div class="fbot">
+            <a href="javascript:void(0);" class="ai-btn ghost" onclick="testProviderForm(this)">保存前测试</a>
+            <a href="javascript:void(0);" class="ai-btn" onclick="saveProvider(this)">保存</a>
+        </div>
+    </div>
+</div>
+
+<!-- 素材服务弹窗内容 -->
+<div id="m-stock" style="display:none;">
+    <div class="ai-form">
+        <input type="hidden" id="st-id" value="0">
+        <div class="frow top"><div class="flb">素材服务</div><div class="fct"><select id="st-type" onchange="applyStockPreset()"></select><p class="notic" id="st-desc"></p></div></div>
+        <div class="frow"><div class="flb">API Key</div><div class="fct"><input type="password" id="st-key" placeholder="请粘贴 API Key" autocomplete="new-password"></div></div>
+        <div class="frow"><div class="flb">状态</div><div class="fct"><label class="curpoin"><input type="checkbox" id="st-status" checked> 启用</label></div></div>
+        <div class="fbot">
+            <a href="javascript:void(0);" class="ai-btn ghost" onclick="testStockForm(this)">保存前测试</a>
+            <a href="javascript:void(0);" class="ai-btn" onclick="saveStock(this)">保存</a>
+        </div>
+    </div>
+</div>
+
+<!-- 模型弹窗内容 -->
+<div id="m-model" style="display:none;">
+    <div class="ai-form">
+        <input type="hidden" id="mm-id" value="0">
+        <div class="frow"><div class="flb">服务商</div><div class="fct">
+            <select id="mm-provider" onchange="onModelProviderChange()">
+                {volist name="providers" id="p"}<option value="{$p.id}" data-type="{$p.type}">{$p.name}</option>{/volist}
+            </select>
+        </div></div>
+        <div class="frow"><div class="flb">能力</div><div class="fct">
+            <select id="mm-capability" onchange="fillModelSuggest()">
+                <option value="chat" data-label="生文（对话/写作）">生文（对话/写作）</option>
+                <option value="image" data-label="生图（文生图）">生图（文生图）</option>
+            </select>
+        </div></div>
+        <div class="frow top"><div class="flb">模型名称</div><div class="fct">
+            <input type="text" id="mm-model" list="model-suggest" placeholder="可直接点下方常用模型填入"><datalist id="model-suggest"></datalist>
+            <div id="mm-chips"></div>
+        </div></div>
+        <div class="frow"><div class="flb"></div><div class="fct"><a href="javascript:void(0);" onclick="toggleAdv()" id="mm-adv-toggle" style="color:#a2a2a2;font-size:12px;">高级选项（选填）▾</a></div></div>
+        <div class="frow top" id="mm-adv" style="display:none;"><div class="flb">参数(JSON)</div><div class="fct">
+            <textarea id="mm-params" rows="2" placeholder='选填，不懂可留空。如 {"temperature":0.7,"max_tokens":2000}'></textarea>
+        </div></div>
+        <div class="frow top"><div class="flb">默认模型</div><div class="fct">
+            <label class="curpoin" style="line-height:30px;"><input type="checkbox" id="mm-default"> 设为该能力默认（插件不指定模型时用它）</label>
+            <p class="notic">首个模型会自动设为默认，无需勾选</p>
+        </div></div>
+        <div class="frow"><div class="flb">状态</div><div class="fct"><label class="curpoin"><input type="checkbox" id="mm-status" checked> 启用</label></div></div>
+        <div class="fbot">
+            <a href="javascript:void(0);" class="ai-btn" onclick="saveModel(this)">保存</a>
+        </div>
+    </div>
+</div>
+
+<script>
+var PRESETS = {$presets_json};
+var STOCK_PRESETS = {eq name="is_ai_ver" value="1"}{$stock_presets_json}{else/}{}{/eq};
+var URLS = {
+  provider_save: "{:url('AiConfig/provider_save')}",
+  provider_del: "{:url('AiConfig/provider_del')}",
+  provider_test: "{:url('AiConfig/provider_test')}",
+  model_save: "{:url('AiConfig/model_save')}",
+  model_del: "{:url('AiConfig/model_del')}",
+  model_default: "{:url('AiConfig/model_default')}",
+  model_test: "{:url('AiConfig/model_test')}",
+  settings_save: "{:url('AiConfig/settings_save')}",
+  stock_save: "{:url('AiConfig/stock_save')}",
+  stock_del: "{:url('AiConfig/stock_del')}",
+  stock_test: "{:url('AiConfig/stock_test')}",
+  key_scan: "{:url('AiConfig/key_scan')}",
+  key_import: "{:url('AiConfig/key_import')}"
+};
+var layerProvider = 0, layerModel = 0;
+
+function post(url, data, cb, btn) {
+  var loading = layer.msg('请稍候…', {icon: 16, shade: 0.1, time: 0});
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data: data,
+    dataType: 'json',
+    success: function (res) {
+      layer.close(loading);
+      cb(res);
+    },
+    error: function () {
+      layer.close(loading);
+      layer.msg('响应解析失败', {icon: 2});
+    }
+  });
+}
+function errHtml(msg) {
+  return String(msg == null ? '' : msg).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+function ok(res, reload) {
+  if (res.code == 1) {
+    layer.msg(res.msg || '操作成功', {icon: 1, time: 1500}, function () {
+      if (reload) location.reload();
+    });
+  } else {
+    layer.alert(errHtml(res.msg || '操作失败'), {icon: 2, title: '提示', area: ['420px', 'auto']});
+  }
+}
+
+/* ---- 服务商 ---- */
+function presetCapLabel(p) {
+  var caps = [];
+  if (p.models) {
+    if ((p.models.chat || []).length) caps.push('💬');
+    if ((p.models.image || []).length) caps.push('🖼️');
+  }
+  return caps.length ? '  ' + caps.join(' ') : '';
+}
+function initPresetSelect() {
+  var sel = document.getElementById('p-type');
+  sel.innerHTML = '';
+  for (var k in PRESETS) {
+    var op = document.createElement('option');
+    op.value = k; op.textContent = PRESETS[k].name + presetCapLabel(PRESETS[k]);
+    sel.appendChild(op);
+  }
+}
+var nameDirty = false, urlDirty = false;
+function applyPreset() {
+  var t = document.getElementById('p-type').value;
+  var p = PRESETS[t] || {};
+  if (document.getElementById('p-id').value == '0') {
+    if (!urlDirty) document.getElementById('p-baseurl').value = p.base_url || '';
+    if (!nameDirty) document.getElementById('p-name').value = p.name || '';
+  }
+  var m = (p.models && p.models.chat && p.models.chat[0]) || '';
+  document.getElementById('p-testmodel').placeholder = m ? '留空使用 ' + m : '请填写模型名称';
+}
+function openProvider(id, name, type, baseUrl, status) {
+  nameDirty = !!id; urlDirty = !!id;
+  document.getElementById('p-id').value = id || 0;
+  document.getElementById('p-name').value = name || '';
+  document.getElementById('p-type').value = type || 'deepseek';
+  document.getElementById('p-baseurl').value = baseUrl || '';
+  document.getElementById('p-key').value = '';
+  document.getElementById('p-key').placeholder = id ? '留空表示不修改已存 Key' : '请粘贴 API Key';
+  document.getElementById('p-status').checked = (status === undefined || status == 1);
+  if (!id) applyPreset();
+  layerProvider = layer.open({
+    type: 1,
+    title: id ? '编辑服务商' : '添加服务商',
+    area: ['640px', 'auto'],
+    maxHeight: $(window).height() - 60,
+    content: $('#m-provider')
+  });
+}
+function providerForm() {
+  return {
+    id: document.getElementById('p-id').value,
+    name: document.getElementById('p-name').value,
+    type: document.getElementById('p-type').value,
+    base_url: document.getElementById('p-baseurl').value,
+    api_key: document.getElementById('p-key').value,
+    status: document.getElementById('p-status').checked ? 1 : 0
+  };
+}
+function saveProvider(btn) {
+  var isNew = document.getElementById('p-id').value == '0';
+  post(URLS.provider_save, providerForm(), function (res) {
+    if (res.code == 1 && isNew && res.data && res.data.id) {
+      try { sessionStorage.setItem('ai_addmodel_pid', res.data.id); } catch (e) {}
+      layer.msg('服务商已保存，接下来为它添加一个模型即可使用', {icon: 1, time: 1800}, function () {
+        location.reload();
+      });
+      return;
+    }
+    ok(res, true);
+  }, btn);
+}
+function testProviderForm(btn) {
+  var d = providerForm();
+  d.model = document.getElementById('p-testmodel').value;
+  post(URLS.provider_test, d, function (res) { ok(res, false); }, btn);
+}
+function testProvider(id, btn) {
+  post(URLS.provider_test, { id: id }, function (res) { okTest(res); }, btn);
+}
+
+/* ---- 模型 ---- */
+/* 预设服务商是否支持某能力：有预设模型即支持；自定义无法预知，视为可能支持 */
+function presetSupports(type, cap) {
+  var p = PRESETS[type];
+  if (!p) return true;
+  if (type === 'openai_compat') return true;
+  return !!(p.models && p.models[cap] && p.models[cap].length);
+}
+/* 按当前服务商置灰不支持的能力选项；若当前选中项被置灰则自动切回可用项 */
+function syncCapabilityOptions() {
+  var psel = document.getElementById('mm-provider');
+  var popt = psel.options[psel.selectedIndex];
+  var csel = document.getElementById('mm-capability');
+  if (!popt) return;
+  var type = popt.getAttribute('data-type');
+  var firstOk = null;
+  for (var i = 0; i < csel.options.length; i++) {
+    var o = csel.options[i];
+    var okCap = presetSupports(type, o.value);
+    o.disabled = !okCap;
+    o.textContent = o.getAttribute('data-label') + (okCap ? '' : '（该服务商不支持）');
+    if (okCap && firstOk === null) firstOk = o.value;
+  }
+  if (csel.options[csel.selectedIndex] && csel.options[csel.selectedIndex].disabled && firstOk !== null && !csel.disabled) {
+    csel.value = firstOk;
+  }
+}
+function onModelProviderChange() {
+  syncCapabilityOptions();
+  fillModelSuggest();
+}
+function fillModelSuggest() {
+  var sel = document.getElementById('mm-provider');
+  var opt = sel.options[sel.selectedIndex];
+  var list = document.getElementById('model-suggest');
+  var chips = document.getElementById('mm-chips');
+  list.innerHTML = '';
+  chips.innerHTML = '';
+  if (!opt) return;
+  var p = PRESETS[opt.getAttribute('data-type')];
+  var cap = document.getElementById('mm-capability').value;
+  var ms = (p && p.models && p.models[cap]) || [];
+  for (var i = 0; i < ms.length; i++) {
+    var o = document.createElement('option');
+    o.value = ms[i];
+    list.appendChild(o);
+    var chip = document.createElement('a');
+    chip.href = 'javascript:;';
+    chip.textContent = ms[i];
+    chip.className = 'ai-chip';
+    chip.onclick = (function (name) { return function () { document.getElementById('mm-model').value = name; }; })(ms[i]);
+    chips.appendChild(chip);
+  }
+  if (!ms.length) {
+    var capName = cap === 'image' ? '生图' : '生文';
+    var note = (p && p.notes && p.notes[cap]) || '';
+    var html = note
+      ? '<span style="color:#e6a23c;font-size:12px;">' + note + '</span>'
+      : '<span style="color:#a2a2a2;font-size:12px;">该服务商暂无「' + capName + '」预设模型，请按其文档填写模型名（需兼容 OpenAI 接口格式）</span>';
+    if (p && p.docs_url) {
+      html += ' <a href="' + p.docs_url + '" target="_blank" style="font-size:12px;">查看官方模型列表 ↗</a>';
+    }
+    chips.innerHTML = html;
+  }
+}
+function toggleAdv() {
+  $('#mm-adv').toggle();
+}
+function openModel(id, providerId, model, params, isDefault, status, capability) {
+  if (!document.getElementById('mm-provider').options.length) { layer.msg('请先添加服务商', {icon: 0}); return; }
+  document.getElementById('mm-id').value = id || 0;
+  if (providerId) document.getElementById('mm-provider').value = providerId;
+  document.getElementById('mm-capability').value = capability || 'chat';
+  document.getElementById('mm-capability').disabled = !!id;
+  document.getElementById('mm-model').value = model || '';
+  document.getElementById('mm-params').value = params || '';
+  document.getElementById('mm-adv').style.display = params ? '' : 'none';
+  document.getElementById('mm-default').checked = !!isDefault;
+  document.getElementById('mm-status').checked = (status === undefined || status == 1);
+  syncCapabilityOptions();
+  fillModelSuggest();
+  layerModel = layer.open({
+    type: 1,
+    title: id ? '编辑模型' : '添加模型',
+    area: ['640px', 'auto'],
+    maxHeight: $(window).height() - 60,
+    content: $('#m-model')
+  });
+}
+function saveModel(btn) {
+  post(URLS.model_save, {
+    id: document.getElementById('mm-id').value,
+    provider_id: document.getElementById('mm-provider').value,
+    capability: document.getElementById('mm-capability').value,
+    model: document.getElementById('mm-model').value,
+    params: document.getElementById('mm-params').value,
+    is_default: document.getElementById('mm-default').checked ? 1 : 0,
+    status: document.getElementById('mm-status').checked ? 1 : 0
+  }, function (res) { ok(res, true); }, btn);
+}
+function setDefault(id, el) {
+  post(URLS.model_default, { id: id }, function (res) { ok(res, true); });
+}
+function testModel(id, btn) {
+  post(URLS.model_test, { id: id }, function (res) { okTest(res); }, btn);
+}
+/* 测试后刷新以更新连通状态列 */
+function okTest(res) {
+  if (res.code == 1) {
+    layer.msg(res.msg, {icon: 1, time: 1800}, function () { location.reload(); });
+  } else {
+    layer.alert(errHtml(res.msg || '测试失败'), {icon: 2, title: '测试失败', area: ['420px', 'auto']}, function (idx) { layer.close(idx); location.reload(); });
+  }
+}
+
+/* ---- 第三方素材服务（AI 版专属） ---- */
+var layerStock = 0;
+function initStockSelect() {
+  var sel = document.getElementById('st-type');
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (var k in STOCK_PRESETS) {
+    var op = document.createElement('option');
+    op.value = k; op.textContent = STOCK_PRESETS[k].name;
+    sel.appendChild(op);
+  }
+}
+function applyStockPreset() {
+  var t = document.getElementById('st-type').value;
+  var p = STOCK_PRESETS[t] || {};
+  var html = p.desc ? p.desc : '';
+  if (p.docs_url) html += ' <a href="' + p.docs_url + '" target="_blank">获取 Key ↗</a>';
+  document.getElementById('st-desc').innerHTML = html;
+}
+function openStock(id, type, status) {
+  document.getElementById('st-id').value = id || 0;
+  if (type) document.getElementById('st-type').value = type;
+  document.getElementById('st-type').disabled = !!id;
+  document.getElementById('st-key').value = '';
+  document.getElementById('st-key').placeholder = id ? '留空表示不修改已存 Key' : '请粘贴 API Key';
+  document.getElementById('st-status').checked = (status === undefined || status == 1);
+  applyStockPreset();
+  layerStock = layer.open({
+    type: 1,
+    title: id ? '编辑素材服务' : '添加素材服务',
+    area: ['640px', 'auto'],
+    maxHeight: $(window).height() - 60,
+    content: $('#m-stock')
+  });
+}
+function stockForm() {
+  return {
+    id: document.getElementById('st-id').value,
+    type: document.getElementById('st-type').value,
+    api_key: document.getElementById('st-key').value,
+    status: document.getElementById('st-status').checked ? 1 : 0
+  };
+}
+function saveStock(btn) {
+  post(URLS.stock_save, stockForm(), function (res) { ok(res, true); }, btn);
+}
+function testStockForm(btn) {
+  var d = stockForm();
+  if (d.id > 0 || d.api_key) {
+    post(URLS.stock_test, d, function (res) { ok(res, false); }, btn);
+  } else {
+    layer.msg('请先填写 API Key', {icon: 0});
+  }
+}
+function testStock(id, btn) {
+  post(URLS.stock_test, { id: id }, function (res) { okTest(res); }, btn);
+}
+
+/* ---- 从插件收集 Key ---- */
+function scanPluginKeys(btn) {
+  post(URLS.key_scan, {}, function (res) {
+    var list = (res.data && res.data.list) || [];
+    var supported = 'AI智能创作平台（Ai）、Ai二次创作（Airewrite）、AI智能客服（AiHelper）、AI趣味运势（Suanming）、文章采集（Sitecollect）、AI城市获客（BrandPage）';
+    if (!list.length) {
+      var emptyHtml = '<div class="pk-wrap">'
+        + '<div class="pk-tip">每次点击「从插件收集 Key」都会实时扫描已安装插件里的模型/服务商 Key，勾选后可一键导入配置中心（加密保存），原插件配置不会被修改。</div>'
+        + '<div class="pk-box" style="padding:24px;text-align:center;color:#8b8b8b;font-size:12px;line-height:2;">'
+        + '本次未在已支持的插件里发现可采集的 Key<br>'
+        + '目前支持采集：' + supported + '<br>'
+        + '在插件里填好 Key 后，再点一次本按钮即可扫描到'
+        + '</div></div>';
+      layer.open({ type: 1, title: '从插件收集 Key', area: ['640px', 'auto'], content: emptyHtml, btn: ['知道了'] });
+      return;
+    }
+    var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var rows = '';
+    for (var i = 0; i < list.length; i++) {
+      var it = list[i];
+      var disabled = it.dup == 1 || (it.blocked && it.blocked !== '');
+      var note = it.dup == 1 ? '已在配置中心，无需导入' : (it.blocked || '');
+      rows += '<tr>'
+        + '<td style="text-align:center;"><input type="checkbox" class="pk-item" value="' + esc(it.key) + '"' + (disabled ? ' disabled' : ' checked') + '></td>'
+        + '<td>' + esc(it.source) + '</td>'
+        + '<td>' + esc(it.name) + (it.kind === 'stock' ? '（素材服务）' : '') + '</td>'
+        + '<td class="pk-key">' + esc(it.key_mask) + '</td>'
+        + '<td><span class="pk-badge ' + (disabled ? 'warn' : 'ok') + '">' + (disabled ? esc(note) : '可导入') + '</span></td>'
+        + '</tr>';
+    }
+    var html = '<div class="pk-wrap">'
+      + '<div class="pk-tip">以下是在已安装插件里发现的 Key，勾选后导入到配置中心（加密保存）；原插件里的配置不会被修改</div>'
+      + '<div class="pk-box"><table class="pk-table">'
+      + '<thead><tr><th style="width:36px;text-align:center;"></th><th>来源插件</th><th>服务商</th><th>Key</th><th>状态</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div></div>';
+    layer.open({
+      type: 1,
+      title: '从插件收集 Key',
+      area: ['920px', 'auto'],
+      content: html,
+      btn: ['导入勾选项', '取消'],
+      yes: function (index) {
+        var keys = [];
+        var boxes = document.querySelectorAll('.pk-item:checked');
+        for (var i = 0; i < boxes.length; i++) keys.push(boxes[i].value);
+        if (!keys.length) { layer.msg('请勾选要导入的配置', {icon: 0}); return; }
+        post(URLS.key_import, { keys: keys }, function (r) {
+          layer.close(index);
+          ok(r, true);
+        });
+      }
+    });
+  }, btn);
+}
+
+/* ---- 通用 ---- */
+function del(action, id, btn) {
+  layer.confirm('确定删除？', {icon: 3, title: '提示'}, function (index) {
+    layer.close(index);
+    post(URLS[action], { id: id }, function (res) { ok(res, true); }, btn);
+  });
+}
+function saveSettings(btn) {
+  post(URLS.settings_save, {
+    aiservice_rate_limit: document.getElementById('set-rate').value || 0,
+    aiservice_budget_chat: document.getElementById('set-budget').value || 0,
+    aiservice_budget_image: document.getElementById('set-budget-image').value || 0,
+    aiservice_log_days: document.getElementById('set-logdays').value || 0
+  }, function (res) { ok(res, false); }, btn);
+}
+initPresetSelect();
+initStockSelect();
+document.getElementById('p-name').addEventListener('input', function () { nameDirty = true; });
+document.getElementById('p-baseurl').addEventListener('input', function () { urlDirty = true; });
+(function () {
+  var pid = null;
+  try { pid = sessionStorage.getItem('ai_addmodel_pid'); sessionStorage.removeItem('ai_addmodel_pid'); } catch (e) {}
+  if (pid) openModel(0, pid);
+})();
+</script>
+{include file="public/footer" /}

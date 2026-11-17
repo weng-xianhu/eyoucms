@@ -114,18 +114,23 @@ class AuthRole extends Model{
     public function syn_auth_role($typeid = 0)
     {
         if (0 < intval($typeid)) {
+            $typeid = intval($typeid);
             $roleRow = $this->getRoleAll();
             if (!empty($roleRow)) {
                 $saveData = [];
                 foreach ($roleRow as $key => $val) {
-                    $permission = $val['permission'];
+                    $permission = !empty($val['permission']) ? $val['permission'] : [];
                     $rules = !empty($permission['rules']) ? $permission['rules'] : [];
                     if (!in_array(1, $rules)) {
                         continue;
                     }
                     $arctype = !empty($permission['arctype']) ? $permission['arctype'] : [];
                     if (!empty($arctype)) {
-                        array_push($arctype, $typeid);
+                        // 去重并统一为整型，避免同一栏目被重复追加导致权限数组无限膨胀
+                        $arctype = array_values(array_unique(array_map('intval', $arctype)));
+                        if (!in_array($typeid, $arctype, true)) {
+                            array_push($arctype, $typeid);
+                        }
                         $permission['arctype'] = $arctype;
                     }
                     $saveData[] = array(
@@ -133,12 +138,14 @@ class AuthRole extends Model{
                         'permission'    => $permission,
                     );
                 }
-                $r = $this->saveAll($saveData);
-                if (false != $r && 0 < intval(session('admin_info.role_id'))) {
-                    /*及时更新当前管理员权限*/
-                    $auth_role_info = $this->getRole(array('id' => session('admin_info.role_id')));
-                    session('admin_info.auth_role_info', $auth_role_info);
-                    /*--end*/
+                if (!empty($saveData)) {
+                    $r = $this->saveAll($saveData);
+                    if (false != $r && 0 < intval(session('admin_info.role_id'))) {
+                        /*及时更新当前管理员权限*/
+                        $auth_role_info = $this->getRole(array('id' => session('admin_info.role_id')));
+                        session('admin_info.auth_role_info', $auth_role_info);
+                        /*--end*/
+                    }
                 }
             }
         }

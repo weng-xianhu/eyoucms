@@ -41,7 +41,15 @@ class ThrowableError extends \ErrorException
     protected function setTrace($trace)
     {
         $traceReflector = new \ReflectionProperty('Exception', 'trace');
+        // PHP 8.1 之前反射默认只能访问 public 属性，必须先 setAccessible(true)；
+        // 否则写入 Exception 的私有 trace 会抛 ReflectionException，
+        // 把真正的 PHP 错误（TypeError/Error/ParseError）掩盖成
+        // "Cannot access non-public property Exception::$trace"，导致无从排查。
         $traceReflector->setAccessible(true);
-        $traceReflector->setValue($this, $trace);
+        try {
+            $traceReflector->setValue($this, $trace);
+        } catch (\Throwable $e) {
+            // 写入 trace 失败不能影响原始错误的展示
+        }
     }
 }

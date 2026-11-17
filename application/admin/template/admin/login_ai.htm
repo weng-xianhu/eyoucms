@@ -243,7 +243,7 @@
                     dataType: "JSON",
                     success: function(res){
                         if (1 == res.code){
-                            $('.ercodepic').html("<img src='https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket="+res.data.ticket+"'>");
+                            $('.ercodepic').html('<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket='+res.data.ticket+'">');
                             getNotify(res.data.uniqid_scene);
                         }else{
                             clearQrcode();

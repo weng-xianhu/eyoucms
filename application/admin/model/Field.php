@@ -158,6 +158,7 @@ class Field extends Model
      */
     public function showViewFormData($list, $formFieldStr, $addonRow = array(), $archivesInfo = [])
     {
+        $addonRow = is_array($addonRow) ? $addonRow : [];
         if (!empty($list)) {
             if (is_dir('./weapp/CompressContent/')) {                                            
                 $compressLogic = new \weapp\CompressContent\logic\CompressContentLogic;                
@@ -563,6 +564,13 @@ class Field extends Model
 
                 $key = preg_replace('/^(.*)(_eyou_local)$/', '$1', $key);
                 $dtype = !empty($fieldTypeList[$key]) ? $fieldTypeList[$key]['dtype'] : '';
+
+                /* 视频模型课件字段：仅允许远程地址或上传目录内的本地路径，避免任意文件读取 */
+                if (5 == intval($channel_id) && 'courseware' == $key) {
+                    $nowDataExt[$key] = get_safe_local_upload_path($val);
+                    continue;
+                }
+
                 switch ($dtype) {
 
                     case 'checkbox':

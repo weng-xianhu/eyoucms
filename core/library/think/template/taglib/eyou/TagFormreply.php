@@ -35,6 +35,14 @@ class TagFormreply extends Base
      */
     public function getFormreply($typeid = 0, $page = 1,$pagesize = 10, $ordermode = 'desc')
     {
+        // 加固：ordermode 白名单，防止 SQL 注入
+        $ordermode = is_string($ordermode) ? strtolower(trim($ordermode)) : 'desc';
+        if (!in_array($ordermode, ['asc', 'desc'], true)) {
+            $ordermode = 'desc';
+        }
+        $typeid = intval($typeid);
+        $page = max(1, intval($page));
+        $pagesize = max(1, intval($pagesize));
         // 给排序字段加上表别名
         $orderby = "aid {$ordermode}";
         $where['typeid'] = $typeid;

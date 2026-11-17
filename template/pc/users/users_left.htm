@@ -33,6 +33,16 @@
             <li {if $Think.const.MODULE_NAME == 'user' && $Think.const.CONTROLLER_NAME == 'Shop' && in_array($Think.const.ACTION_NAME, ['after_service', 'after_service_details', 'after_service_apply','service_list'])} class="active" {/if}>
                 <a href="{eyou:url link='user/Shop/after_service' /}">售后服务</a>
             </li>
+            <!-- 优惠券插件 start -->
+            {eyou:if condition="is_dir('./weapp/Coupons/')"}
+            <li {if $Think.const.MODULE_NAME == 'plugins' && $Think.const.CONTROLLER_NAME == 'Coupons' && $Think.const.ACTION_NAME == 'my'} class="active" {/if}>
+                <a href="{eyou:url link='plugins/Coupons/my' /}">我的优惠券</a>
+            </li>
+            <li {if $Think.const.MODULE_NAME == 'plugins' && $Think.const.CONTROLLER_NAME == 'Coupons' && $Think.const.ACTION_NAME == 'index'} class="active" {/if}>
+                <a href="{eyou:url link='plugins/Coupons/index' /}">领券中心</a>
+            </li>
+            {/eyou:if}
+            <!-- 优惠券插件 end -->
         </ul>
         {/if}
 

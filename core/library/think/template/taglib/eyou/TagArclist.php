@@ -364,9 +364,11 @@ class TagArclist extends Base
                         $_v = trim($_v);
                         if (empty($_v)) {
                             unset($keywordArr[$_k]);
-                            break;
+                            continue;
                         } else {
-                            $keywordArr[$_k] = addslashes($_v);
+                            // 安全修复：移除 SQL 字符串边界字符（单引号/双引号/反斜杠/NUL），
+                            // 防止通过 REGEXP 关键词逃逸单引号造成 SQL 注入（不依赖连接字符集，兼容 GBK 宽字节场景）
+                            $keywordArr[$_k] = str_replace(array('\\', "'", '"', "\0"), '', $_v);
                         }
                     }
                     $keyword = implode('|', $keywordArr);

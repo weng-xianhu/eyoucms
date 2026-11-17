@@ -18,6 +18,7 @@ use think\Db;
 
 class Media extends Base
 {
+    public $callback_url;
     public $nid = 'media';
     public $channeltype = '';
 

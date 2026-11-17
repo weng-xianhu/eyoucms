@@ -3,60 +3,69 @@ return array (
   'id' => 
   array (
     'name' => 'id',
-    'type' => 'int(10)',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => NULL,
     'primary' => true,
     'autoinc' => true,
   ),
-  'name' => 
+  'model_id' => 
   array (
-    'name' => 'name',
-    'type' => 'varchar(60)',
+    'name' => 'model_id',
+    'type' => 'int(10) unsigned',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'capability' => 
+  array (
+    'name' => 'capability',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => 'chat',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'scene' => 
+  array (
+    'name' => 'scene',
+    'type' => 'varchar(50)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
-  'value' => 
+  'usage_num' => 
   array (
-    'name' => 'value',
-    'type' => 'text',
-    'notnull' => false,
-    'default' => NULL,
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'mini_id' => 
-  array (
-    'name' => 'mini_id',
-    'type' => 'int(11)',
+    'name' => 'usage_num',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
     'autoinc' => false,
   ),
-  'lang' => 
+  'cost_est' => 
   array (
-    'name' => 'lang',
-    'type' => 'varchar(10)',
+    'name' => 'cost_est',
+    'type' => 'decimal(10,4)',
     'notnull' => false,
-    'default' => 'cn',
+    'default' => '0.0000',
     'primary' => false,
     'autoinc' => false,
   ),
-  'add_time' => 
+  'ip' => 
   array (
-    'name' => 'add_time',
-    'type' => 'int(11)',
+    'name' => 'ip',
+    'type' => 'varchar(46)',
     'notnull' => false,
-    'default' => '0',
+    'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
-  'update_time' => 
+  'create_time' => 
   array (
-    'name' => 'update_time',
+    'name' => 'create_time',
     'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',

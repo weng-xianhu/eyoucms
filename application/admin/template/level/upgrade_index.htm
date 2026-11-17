@@ -112,6 +112,9 @@
                         <th class="w100">
                             <div class="tc">状态</div>
                         </th>
+                        <th class="w160">
+                            <div class="tc">操作</div>
+                        </th>
                     </tr>
                     </thead>
                     <tbody class="no-border">
@@ -165,6 +168,12 @@
                             </td>
                             
 							<td> <div class="tc"> {$pay_status_arr[$vo['status']]} </div> </td>
+
+                            <td>
+                                <div class="tc">
+                                    <a class="btn red" href="javascript:void(0);" data-url="{:url('Level/upgrade_del')}" data-id="{$vo.moneyid}" data-msg="删除后不可恢复，且不会自动回退会员等级，确认删除？" onclick="delfun(this);">删除</a>
+                                </div>
+                            </td>
 						</tr>
 						{/foreach}
 					{/empty}

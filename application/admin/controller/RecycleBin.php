@@ -23,6 +23,14 @@ use app\common\logic\ArctypeLogic;
  */
 class RecycleBin extends Base
 {
+    public $arctype;
+    public $archives;
+    public $config;
+    public $config_attribute;
+    public $product_attribute;
+    public $product_attr;
+    public $guestbook_attribute;
+    public $guestbook_attr;
     public $recyclebinLogic;
     public $arctype_channel_id;
     public $arctypeLogic;
@@ -547,7 +555,7 @@ class RecycleBin extends Base
                     // 多语言处理逻辑
                     if (is_language() && empty($this->globalConfig['language_split'])) {
                         $id_arr_tmp = Db::name('language_attr')->where([
-                            'attr_name'  => $attr_name_arr,
+                            'attr_name'  => ['IN', $attr_name_arr],
                             'attr_group' => 'arctype',
                         ])->column('attr_value');
                         if (!empty($id_arr_tmp)) {

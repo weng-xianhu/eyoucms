@@ -34,7 +34,7 @@ class PHPExcel_Writer_OpenDocument_Meta extends PHPExcel_Writer_OpenDocument_Wri
      * @return  string                     XML Output
      * @throws  PHPExcel_Writer_Exception
      */
-    public function write(PHPExcel $pPHPExcel = null)
+    public function write($pPHPExcel = null)
     {
         if (!$pPHPExcel) {
             $pPHPExcel = $this->getParentWriter()->getPHPExcel();

@@ -422,7 +422,7 @@ abstract class Connection
      * @throws PDOException
      * @throws \Exception
      */
-    public function execute($sql, $bind = [], Query $query = null)
+    public function execute($sql, $bind = [], $query = null)
     {
         $sql = str_replace('__PREFIX__', $this->config['prefix'], $sql); // 替换前缀 by 小虎哥
         $this->initConnect(true);
@@ -837,7 +837,7 @@ abstract class Connection
      * @param array $sqlArray SQL批处理指令
      * @return boolean
      */
-    public function batchQuery($sqlArray = [], $bind = [], Query $query = null)
+    public function batchQuery($sqlArray = [], $bind = [], $query = null)
     {
         if (!is_array($sqlArray)) {
             return false;

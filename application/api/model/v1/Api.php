@@ -520,18 +520,23 @@ class Api extends Base
             }
         }
 
-        /*表单令牌*/
+        /*表单令牌：令牌值使用加密安全随机数，避免按时间推测*/
         $token_name = md5('guestbookform_token_'.$typeid.secure_random_string(16, true));
-        $token_value = md5($_SERVER['REQUEST_TIME_FLOAT']);
+        $token_value = secure_random_string(16, true);
         $session_path = \think\Config::get('session.path');
-        $session_file = ROOT_PATH . $session_path . "/sess_".$token_name;
-        $fp = fopen($session_file, "w+");
+        $session_dir = ROOT_PATH . $session_path;
+        if (!is_dir($session_dir)) {
+            tp_mkdir($session_dir);
+        }
+        $session_file = $session_dir . "/sess_".$token_name;
+        $writeOk = false;
+        $fp = @fopen($session_file, "w+");
         if (!empty($fp)) {
-            if (fwrite($fp, $token_value)) {
-                fclose($fp);
-            }
-        } else {
-            file_put_contents ( $session_file,  $token_value);
+            $writeOk = (fwrite($fp, $token_value) !== false);
+            fclose($fp);
+        }
+        if (false === $writeOk) {
+            $writeOk = (@file_put_contents($session_file, $token_value) !== false);
         }
         /*end*/
 
@@ -747,10 +752,10 @@ class Api extends Base
                         $v['end_date'] = date('Y/m/d', $v['end_date']);
                         $v['use_type_name'] = $v['start_date'] . '-' . $v['end_date'];
                         break;
-                    case '2'; // 领取当天开始有效
+                    case '2': // 领取当天开始有效
                         $v['use_type_name'] = '领取' . $v['valid_days'] . '天内有效';
                         break;
-                    case '3'; // 领取次日开始有效
+                    case '3': // 领取次日开始有效
                         $v['use_type_name'] = '领取次日开始' . $v['valid_days'] . '天内有效';
                         break;
                 }
@@ -758,10 +763,10 @@ class Api extends Base
                     case '1':
                         $v['coupon_type_name'] = '全部商品';
                         break;
-                    case '2';
+                    case '2':
                         $v['coupon_type_name'] = '指定商品';
                         break;
-                    case '3';
+                    case '3':
                         $v['coupon_type_name'] = '指定分类';
                         break;
                 }
@@ -1450,7 +1455,6 @@ class Api extends Base
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         $output = curl_exec($ch);
-        curl_close($ch);
         return $output;
     }
     public function addArticleReply($param = [], $users = [])

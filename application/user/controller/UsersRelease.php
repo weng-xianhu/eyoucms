@@ -23,6 +23,13 @@ use think\Request;
  */
 class UsersRelease extends Base
 {
+    public $archives_db;
+    public $users_menu_db;
+    public $users_level_db;
+    public $channeltype_db;
+    public $MenuTitle;
+    public $channelID;
+    public $channelData;
     public $editor;
 
     public function _initialize() {

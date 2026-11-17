@@ -86,16 +86,10 @@ $admin_config = array(
         'Admin@get_admin_wechat_users', // 后台管理插件（手机版）--获取微信登录用户信息
     ),
     
-    // 无需验证权限的操作
-    // 安全修复：移除 Ajax@* 通配符，只允许安全的Ajax操作跳过权限检查
-    'uneed_check_action' => array(
-        'Base@*',
-        'Index@*',
-        'Ajax@*',
-        'Ueditor@*',
-        'Uploadify@*',
-        'Uploadimgnew@*',
-    ),
+    // 无需验证权限的操作（只保留真正只读、无业务写操作的公共动作）
+    // 安全修复：移除 Ajax@*、Index@*、Ueditor@*、Uploadify@*、Uploadimgnew@* 通配放行，
+    // 防止低权限管理员借通配符访问模板写入、字段修改等敏感操作；需要放行的动作按“控制器@动作名”逐条添加
+    'uneed_check_action' => array(),
 );
 
 $html_config = include_once 'html.php';

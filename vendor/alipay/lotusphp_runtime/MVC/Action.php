@@ -2,6 +2,7 @@
 /**
  * The Action class
  */
+#[\AllowDynamicProperties]
 abstract class LtAction
 {
 	/**

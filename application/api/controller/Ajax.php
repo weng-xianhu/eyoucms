@@ -46,7 +46,7 @@ class Ajax extends Base
     {
         // 增加令牌验证
         $token = input('param.token/s');
-        if (empty($token) || !preg_match('/^[A-Za-z0-9\+\/\=]{100,}$/', $token)) {
+        if (empty($token) || !is_string($token) || strlen($token) < 100 || strlen($token) > 2048 || !preg_match('/^[A-Za-z0-9\+\/\=]{100,}$/', $token)) {
             $this->error('无效的令牌');
         }
 
@@ -55,7 +55,7 @@ class Ajax extends Base
         $querystr = msubstr($token, 48, strlen($token));
     
         // 时间戳验证，防止重放攻击
-        if (abs(time() - intval($request_time)) > 1800) { // 30分钟内有效
+        if (abs(time() - intval($request_time)) > 1800) {
             $this->error('令牌已过期');
         }
 
@@ -74,7 +74,7 @@ class Ajax extends Base
         $file = ROOT_PATH . "EY_{$verify_content}.txt";
         $_ajax = input('param._ajax/d');
 
-        if (!file_exists($file)) {
+        if (!is_file($file)) {
             if (empty($_ajax)) {
                 $this->error('验证文件不存在，请重新操作');
             }
@@ -85,11 +85,23 @@ class Ajax extends Base
             respose($data);
         }
 
+        $file_size = filesize($file);
+        if (empty($file_size) || $file_size > 1024) {
+            if (empty($_ajax)) {
+                $this->error('验证文件失败，请重新按照教程操作');
+            }
+            $data = [
+                'code' => 0,
+                'msg'  => '验证文件失败，请重新按照教程操作',
+            ];
+            respose($data);
+        }
         $fp = fopen($file, 'r');
-        $file_content = fread($fp, filesize($file));
+        $file_content = fread($fp, $file_size);
         fclose($fp);
+        $file_content = is_string($file_content) ? trim($file_content) : '';
 
-        if (empty($file_content) || $file_content != $verify_content) {
+        if (empty($file_content) || !hash_equals(strval($file_content), strval($verify_content))) {
             if (empty($_ajax)) {
                 $this->error('验证文件失败，请重新按照教程操作');
             }
@@ -103,15 +115,45 @@ class Ajax extends Base
         $arr = explode("-#eyou#{$verify_content}#cms#-", $querystr);
         $user_name = empty($arr[0]) ? '' : mchStrCode($arr[0], 'DECODE', $auth_code);
         $password = empty($arr[1]) ? '' : mchStrCode($arr[1], 'DECODE', $auth_code);
+        $user_name = is_string($user_name) ? $user_name : '';
+        $password = is_string($password) ? $password : '';
+
+        // 安全修复：站群快捷登录纳入后台登录失败锁定，避免该接口被当作无验证码、无限频的密码爆破入口
+        $clientIP = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+        $loginLimitConf = $this->multistation_login_limit_conf();
+        $login_errnum_key = 'adminlogin_'.md5('login_errnum_'.$user_name.$clientIP);
+        $login_errtime_key = 'adminlogin_'.md5('login_errtime_'.$user_name.$clientIP);
+        $login_lock_key = 'adminlogin_'.md5('login_lock_'.$user_name.$clientIP);
+        if (!empty($loginLimitConf['open'])) {
+            $loginErrnum = (int)tpSetting('adminlogin.'.$login_errnum_key);
+            $loginErrtime = (int)tpSetting('adminlogin.'.$login_errtime_key);
+            if ($loginErrnum >= $loginLimitConf['total'] && getTime() < $loginErrtime + $loginLimitConf['expire']) {
+                $surplus_time = ($loginErrtime + $loginLimitConf['expire']) - getTime();
+                $surplus_time = $surplus_time > 0 ? $surplus_time : 1;
+                $this->error('多次登录失败，距离解锁还有'.ceil($surplus_time/60).'分钟！');
+            }
+        }
+
         $admin_info = Db::name('admin')->where(['user_name'=>$user_name])->find();
         if (empty($admin_info)) {
+            $this->multistation_login_fail($login_errnum_key, $login_errtime_key, $login_lock_key, $loginLimitConf);
             $this->error('登录失败(账号/密码错误)');
         }
         $password = func_encrypt($password, true, pwd_encry_type($admin_info['password']));
         if ($password != $admin_info['password']) {
+            $this->multistation_login_fail($login_errnum_key, $login_errtime_key, $login_lock_key, $loginLimitConf);
             $this->error('登录失败(账号/密码错误)');
         } else if (empty($admin_info['status'])) {
             $this->error('登录失败(账号已禁用)');
+        }
+
+        // 登录成功，清空失败计数
+        if (!empty($loginLimitConf['open'])) {
+            tpSetting('adminlogin', [
+                $login_errnum_key => 0,
+                $login_errtime_key => 0,
+                $login_lock_key => 0,
+            ]);
         }
 
         $opt = input('param.opt/s', '', 'trim,strip_tags');
@@ -164,6 +206,49 @@ class Ajax extends Base
         abort(404);
     }
 
+    /**
+     * 站群快捷登录：后台登录失败锁定配置
+     * @return array
+     */
+    private function multistation_login_limit_conf()
+    {
+        $globalConfig = tpCache('global');
+        // 与后台登录页保持一致：仅明确设置为0才关闭锁定
+        $open = !(isset($globalConfig['web_login_lockopen']) && empty($globalConfig['web_login_lockopen']));
+        $total = !empty($globalConfig['web_login_errtotal']) ? intval($globalConfig['web_login_errtotal']) : 3;
+        $expire = !empty($globalConfig['web_login_errexpire']) ? intval($globalConfig['web_login_errexpire']) : 1800;
+        return [
+            'open'   => $open ? 1 : 0,
+            'total'  => $total > 0 ? $total : 3,
+            'expire' => $expire > 0 ? $expire : 1800,
+        ];
+    }
+
+    /**
+     * 站群快捷登录：记录一次登录失败
+     * @param string $errnumKey 错误次数键
+     * @param string $errtimeKey 最后错误时间键
+     * @param string $lockKey 锁定标记键
+     * @param array  $conf 限流配置
+     */
+    private function multistation_login_fail($errnumKey, $errtimeKey, $lockKey, $conf = [])
+    {
+        if (empty($conf['open'])) {
+            return;
+        }
+        $errnum = (int)tpSetting('adminlogin.' . $errnumKey) + 1;
+        $data = [
+            $errnumKey  => $errnum,
+            $errtimeKey => getTime(),
+        ];
+        if ($errnum >= $conf['total']) {
+            $data[$lockKey] = 1;
+            $clientIP = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+            adminLog("站群快捷登录错误次数过多，账号被锁定: IP({$clientIP})");
+        }
+        tpSetting('adminlogin', $data);
+    }
+
     private function multistation_push_archives($opt = 'add')
     {
         $data = [
@@ -190,10 +275,16 @@ class Ajax extends Base
         $channeltypeInfo = Db::name('channeltype')->where(['id'=>$archivesInfo['channel']])->find();
         $arctypeInfo['typeurl'] = typeurl("home/{$channeltypeInfo['ctl_name']}/lists", $arctypeInfo, true, true);
         if ('add' == $opt) {
+            // 新增时不允许由请求方指定主键
+            unset($archivesInfo['aid']);
             $archivesInfo['add_time'] = getTime();
             $r = $aid = Db::name('archives')->insertGetId($archivesInfo);
         } else {
-            $aid = $archivesInfo['aid'];
+            $aid = (isset($archivesInfo['aid']) && is_scalar($archivesInfo['aid'])) ? intval($archivesInfo['aid']) : 0;
+            if (empty($aid)) {
+                respose($data);
+            }
+            $archivesInfo['aid'] = $aid;
             $r = Db::name('archives')->where(['aid' => $aid])->update($archivesInfo);
         }
         if ($r !== false) {
@@ -286,7 +377,7 @@ class Ajax extends Base
             'push_msg'  => '删除失败',
         ];
         $post = input('post.');
-        $aid = empty($post['aid']) ? 0 : $post['aid'];
+        $aid = (isset($post['aid']) && is_scalar($post['aid'])) ? intval($post['aid']) : 0;
         if (!empty($aid)) {
             try {
                 $archivesInfo = Db::name('archives')->where(['aid'=>$aid])->find();
@@ -320,6 +411,13 @@ class Ajax extends Base
      */
     public function clear_cache()
     {
+        // 安全修复：该接口仅用于服务器定时任务，必须携带由站点安装序列号生成的签名 token，
+        // 防止匿名请求反复清理缓存导致站点性能下降
+        $token = input('param.token/s', '');
+        $token = is_string($token) ? $token : '';
+        if (empty($token) || !hash_equals(get_clear_cache_token(), $token)) {
+            abort(404);
+        }
         \think\Cache::clear();
         delFile(RUNTIME_PATH);
         exit('success');
@@ -338,8 +436,18 @@ class Ajax extends Base
     }
 
     /**
-     * 内容页浏览量的自增接口
+     * 浏览计数限频：同一 IP 对同一文档 60 秒内只计一次
      */
+    private function arcclickAllow($aid)
+    {
+        $aid = intval($aid);
+        if ($aid <= 0) return false;
+        $cacheKey = 'arcclick_' . md5(clientIP() . '_' . $aid);
+        if (cache($cacheKey)) return false;
+        cache($cacheKey, 1, 60);
+        return true;
+    }
+
     public function arcclick()
     {
         if (!IS_AJAX) {
@@ -348,7 +456,7 @@ class Ajax extends Base
             if (!empty($aids)) {
                 $type = input('param.type/s', '');
                 $archives_db = Db::name('archives');
-                if ('view' == $type) {
+                if ('view' == $type && $this->arcclickAllow($aids)) {
                     $archives_db->where(['aid'=>['IN', $aids]])->setInc('click');
                     eyou_statistics_data(1); // 统计浏览数
                 }
@@ -363,16 +471,21 @@ class Ajax extends Base
                 $aids = $param['aids'];
                 if (!empty($aids)) {
                     $aid_arr = explode(',', $aids);
-                    foreach ($aid_arr as $key => $val) {
-                        $aid_arr[$key] = intval($val);
-                    }
+                    $aid_arr = array_slice(array_unique(array_filter(array_map('intval', $aid_arr))), 0, 50); // 去重并限制单次最多 50 个
                     $type = input('param.type/s', '');
                     $archives_db = Db::name('archives');
-                    if ('view' == $type) {
-                        $archives_db->where(['aid' => ['IN', $aid_arr]])->update([
-                            'click' => Db::raw('click + 1'),
-                        ]);
-                        eyou_statistics_data(1, count($aid_arr)); // 统计浏览数
+                    if ('view' == $type && !empty($aid_arr)) {
+                        // 仅对未在限频窗口内的文档计数，防止刷浏览量
+                        $allow_arr = [];
+                        foreach ($aid_arr as $aid_item) {
+                            if ($this->arcclickAllow($aid_item)) $allow_arr[] = $aid_item;
+                        }
+                        if (!empty($allow_arr)) {
+                            $archives_db->where(['aid' => ['IN', $allow_arr]])->update([
+                                'click' => Db::raw('click + 1'),
+                            ]);
+                            eyou_statistics_data(1, count($allow_arr)); // 统计浏览数
+                        }
                     }
                     $data = $archives_db->field('aid,click')->where(['aid' => ['IN', $aid_arr]])->getAllWithIndex('aid');
                     respose($data);
@@ -383,7 +496,7 @@ class Ajax extends Base
                 $type = input('param.type/s', '');
                 if ($aid > 0) {
                     $archives_db = Db::name('archives');
-                    if ('view' == $type) {
+                    if ('view' == $type && $this->arcclickAllow($aid)) {
                         $archives_db->where(['aid' => $aid])->setInc('click');
                         eyou_statistics_data(1); // 统计浏览数
                     }
@@ -544,11 +657,19 @@ class Ajax extends Base
                     if (in_array($key, ['tagid', 'offset', 'row'])) {
                         continue;
                     }
+                    // 属性名白名单，防止数据库中的异常属性名破坏标签语法
+                    if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_\-]*$/', $key)) {
+                        continue;
+                    }
                     if ($key == 'keyword') {
                         if (empty($val)) {
                             continue;
                         } else if (preg_match('/^\$eyou(\.|\[)(.*)$/i', $val)) {
                             $val = input('param.keywords/s');
+                            // 白名单：剔除会闭合属性或注入标签语法的字符，防止模板注入
+                            $val = is_string($val) ? $val : '';
+                            $val = str_replace(array("'", '"', '{', '}', '\\', '<', '>', "\r", "\n", "\t"), '', $val);
+                            $val = msubstr($val, 0, 100, false);
                         }
                     }
                     $innertext .= " {$key}='{$val}'";
@@ -1065,6 +1186,33 @@ HTML;
                     $this->error("邮箱尚未配置，发送失败");
                 }
 
+                /* 只允许已通过账号密码校验、等待二次验证的会话触发，且验证码只发给该管理员绑定的邮箱 */
+                $pending = session('admin_login_twofactor_check');
+                $pending = !empty($pending) ? mchStrCode($pending, 'DECODE', '', false) : '';
+                if (empty($pending)) {
+                    $this->error('登录状态已失效，请重新登录');
+                }
+                $email = Db::name('admin')->where('user_name', $pending)->value('email');
+                if (empty($email) || !check_email($email)) {
+                    $smtp_from_eamil = str_replace('，', ',', tpCache('smtp.smtp_from_eamil'));
+                    $eamil_arr = explode(',', $smtp_from_eamil);
+                    $email = trim(current($eamil_arr));
+                }
+                if (empty($email) || !check_email($email)) {
+                    $this->error('当前管理员没有绑定Email邮箱！');
+                }
+                // 同一邮箱 120 秒内只能发送一次
+                $sendCount = Db::name('smtp_record')->where([
+                    'source' => 30,
+                    'email' => $email,
+                    'status' => 0,
+                    'lang' => $this->home_lang,
+                    'add_time' => ['>', getTime() - 120],
+                ])->count();
+                if (!empty($sendCount)) {
+                    $this->error('120秒内只能发送一次！');
+                }
+
                 // 生成验证码
                 $web_name = tpCache('web.web_name');
                 $code = get_rand_str(10, 0, 1);
@@ -1092,7 +1240,7 @@ HTML;
                             <div style="text-align:center;margin:30px 0;">
                                 <div style="display:inline-block;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:28px;font-weight:bold;letter-spacing:6px;padding:15px 35px;border-radius:8px;">{$code}</div>
                             </div>
-                            <p style="color:#999;font-size:12px;">验证码30分钟内有效，请勿泄露于他人。</p>
+                            <p style="color:#999;font-size:12px;">验证码10分钟内有效，请勿泄露于他人。</p>
                             <p style="color:#999;font-size:12px;">如非本人操作，请检查账号安全。</p>
                         </td>
                     </tr>
@@ -1112,8 +1260,6 @@ HTML;
                 // 发送邮件
                 $send_email_scene = config('send_email_scene');
                 $scene = $send_email_scene[1]['scene'];
-                $email = input('param.email/s');
-                $email = preg_replace('/([\,]*)/i', '', $email);
                 $res = send_email($email, $tplInfo['tpl_title'], $html, $scene);
                 if (intval($res['code']) == 1) {
                     // 数据添加
@@ -1180,7 +1326,7 @@ HTML;
                             <div style="text-align:center;margin:30px 0;">
                                 <div style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;font-size:32px;font-weight:bold;letter-spacing:8px;padding:15px 40px;border-radius:8px;">{$code}</div>
                             </div>
-                            <p style="color:#999;font-size:12px;">验证码30分钟内有效，请勿泄露于他人。</p>
+                            <p style="color:#999;font-size:12px;">验证码10分钟内有效，请勿泄露于他人。</p>
                             <p style="color:#999;font-size:12px;">如非本人操作，请忽略此邮件。</p>
                         </td>
                     </tr>
@@ -1253,25 +1399,28 @@ HTML;
         // 发送手机验证码
         if (IS_AJAX_POST) {
             $post = input('post.');
-            $source = !empty($post['source']) ? $post['source'] : 0;
+            $source = (!empty($post['source']) && is_scalar($post['source'])) ? intval($post['source']) : 0;
+            $scene = (isset($post['scene']) && is_scalar($post['scene'])) ? intval($post['scene']) : 0;
             // !empty($post['phone']) && $post['phone'] = preg_replace('/([^0-9]+)/i', '', $post['phone']);
             // !empty($post['mobile']) && $post['mobile'] = preg_replace('/([^0-9]+)/i', '', $post['mobile']);
             $openMobileFormat = \think\Cache::get("foreign_open_mobile_format");
             if (empty($openMobileFormat)) {
-                if (!empty($post['phone']) && !check_mobile($post['phone'])) {
+                if (!empty($post['phone']) && is_string($post['phone']) && !check_mobile($post['phone'])) {
                     $this->error(foreign_lang('users29', $this->home_lang));
                 }
-                else if (!empty($post['mobile']) && !check_mobile($post['mobile'])) {
+                else if (!empty($post['mobile']) && is_string($post['mobile']) && !check_mobile($post['mobile'])) {
                     $this->error(foreign_lang('users29', $this->home_lang));
                 }
             }
 
             // 留言验证类型发送短信处理
-            if (isset($post['scene']) && in_array($post['scene'], [7])) {
+            if (7 == $scene) {
+                $phone = (isset($post['phone']) && is_string($post['phone'])) ? trim($post['phone']) : '';
+                if (empty($phone)) $this->error(foreign_lang('users29', $this->home_lang));
                 // 是否允许再次发送
                 $where = [
-                    'source' => $post['scene'],
-                    'mobile' => $post['phone'],
+                    'source' => 7,
+                    'mobile' => $phone,
                     'status' => 1,
                     'is_use' => 0,
                     'add_time' => ['>', getTime() - 120]
@@ -1280,64 +1429,87 @@ HTML;
                 if (!empty($Result)) $this->error('120秒内只能发送一次');
 
                 // 图形验证码判断
-                if (empty($post['code'])) $this->error(foreign_lang('users19', $this->home_lang));
+                if (empty($post['code']) || !is_string($post['code'])) $this->error(foreign_lang('users19', $this->home_lang));
+                $code_token = (isset($post['code_token']) && is_string($post['code_token'])) ? $post['code_token'] : '';
                 $verify = new \think\Verify();
-                if (!$verify->check($post['code'], $post['code_token'])) $this->error('图片验证码错误');
+                if (!$verify->check($post['code'], $code_token)) $this->error('图片验证码错误');
+
+                // 多维频控：IP / 会话 / 手机号
+                if (!sms_send_limit_check($phone, 7)) $this->error('发送过于频繁，请稍后再试');
 
                 // 发送并返回结果
-                $Result = sendSms(7, $post['phone'], array('content' => mt_rand(1000, 9999)));
+                $Result = sendSms(7, $phone, array('content' => mt_rand(1000, 9999)));
                 if (1 === intval($Result['status'])) {
                     $this->success('发送成功');
                 } else {
                     $this->error($Result['msg']);
                 }
             }
-            // 订单付款和订单发货类型发送短信处理
-            else if (isset($post['scene']) && in_array($post['scene'], [5, 6, 20])) {
-                // 如果没有手机号则返回结束
-                if (empty($post['mobile'])) return false;
+            // 订单付款、发货、投稿提醒：仅允许已登录用户触发，接收号码由服务端决定
+            else if (in_array($scene, [5, 6, 20], true)) {
+                $is_admin = !empty(session('admin_id')) || !empty(session('admin_info.admin_id'));
+                $users_id = intval(session('users_id'));
+                if (!$is_admin && $users_id <= 0) $this->error('请先登录');
+
                 // 处理发送的内容
                 $data = !empty($post['data']) ? $post['data'] : [];
-                $data = !empty($data) && !is_array($data) ? json_decode(htmlspecialchars_decode(htmlspecialchars_decode($data)), true) : $data;
+                if (!is_array($data)) {
+                    $data = json_decode(htmlspecialchars_decode(htmlspecialchars_decode($data)), true);
+                }
+                if (!is_array($data)) $data = [];
+                $type = (isset($data['type']) && is_scalar($data['type'])) ? intval($data['type']) : 0;
+
+                // 场景与通知类型必须匹配，防止拼接任意模板内容
+                $scene_type_map = [5 => 1, 6 => 2, 20 => 3];
+                if (!isset($scene_type_map[$scene]) || $scene_type_map[$scene] !== $type) $this->error('参数错误');
+
                 // 查询消息通知模板的内容
                 $sms_config = tpCache('sms');
                 $sms_type = !empty($sms_config['sms_type']) ? intval($sms_config['sms_type']) : 1;
-                $tpl_content = Db::name('sms_template')->where(["send_scene" => $post['scene'], "sms_type" => $sms_type, 'is_open' => 1])->value('tpl_content');
-                if (empty($tpl_content)) return false;
-                // 发送短信提醒
-                if (in_array($data['type'], [1, 2])) {
-                    // $preg_res = preg_match('/订单/', $tpl_content);
-                    // 查询订单信息
-                    $field = 'a.order_code, a.express_time, b.product_name';
-                    $shopOrder = Db::name('shop_order')->alias('a')->field($field)->join('__SHOP_ORDER_DETAILS__ b', 'a.order_id = b.order_id', 'LEFT')->where('a.order_code', $data['order_code'])->find();
-                    switch ($data['type']) {
-                        case '1':
-                            // if (empty($sms_config['sms_shop_order_pay'])) {
-                            //     $this->error("配置不接收订单付款短信提醒");
-                            // }
-                            $sendData = [
-                                'content' => $shopOrder['order_code'],
-                            ];
-                            // $content =  $preg_res ? '待发货' : '您有新的待发货订单';
-                            break;
-                        case '2':
-                            $sendData = [
-                                'content' => $shopOrder['order_code'],
-                                'express_time' => $shopOrder['express_time'],
-                                'product_name' => $shopOrder['product_name'],
-                            ];
-                            // $content = $preg_res ? $data['order_code'] : $data['order_code'];
-                            break;
-                        default:
-                            $content = '';
-                            break;
+                $tpl_content = Db::name('sms_template')->where(["send_scene" => $scene, "sms_type" => $sms_type, 'is_open' => 1])->value('tpl_content');
+                if (empty($tpl_content)) $this->error('短信模板未配置或已关闭');
+
+                $order_code = (isset($data['order_code']) && is_scalar($data['order_code'])) ? trim((string)$data['order_code']) : '';
+                if (20 == $scene) {
+                    // 会员投稿提醒：只发给后台配置的管理员手机号
+                    $mobile = !empty($sms_config['sms_test_mobile']) ? trim($sms_config['sms_test_mobile']) : '';
+                    if (empty($mobile)) $this->error('未配置接收短信的管理员手机号');
+                    $sendData = ['content' => $tpl_content];
+                    $onceKey = 'notice|20|' . $users_id . '|' . intval(session('admin_id'));
+                } else {
+                    if (empty($order_code) || !preg_match('/^[A-Za-z0-9_\-]{6,64}$/', $order_code)) $this->error('订单号格式错误');
+                    $shopOrder = Db::name('shop_order')->where('order_code', $order_code)->field('order_id,order_code,users_id,mobile,express_time')->find();
+                    if (empty($shopOrder)) $this->error('订单不存在');
+                    // 会员只能触发自己订单的短信，后台不受此限制
+                    if (!$is_admin && $users_id !== intval($shopOrder['users_id'])) $this->error('无权操作该订单');
+                    if (5 == $scene) {
+                        // 订单付款提醒：只发给后台配置的管理员手机号
+                        $mobile = !empty($sms_config['sms_test_mobile']) ? trim($sms_config['sms_test_mobile']) : '';
+                        if (empty($mobile)) $this->error('未配置接收短信的管理员手机号');
+                        $sendData = ['content' => $shopOrder['order_code']];
+                    } else {
+                        // 订单发货提醒：只发给该订单买家，忽略请求方指定的号码
+                        $mobile = !empty($shopOrder['mobile']) ? trim($shopOrder['mobile']) : '';
+                        if (empty($mobile)) {
+                            $mobile = Db::name('users')->where('users_id', intval($shopOrder['users_id']))->value('mobile');
+                        }
+                        if (empty($mobile)) $this->error('订单未填写手机号');
+                        $sendData = [
+                            'content' => $shopOrder['order_code'],
+                            'express_time' => $shopOrder['express_time'],
+                            'product_name' => Db::name('shop_order_details')->where('order_id', intval($shopOrder['order_id']))->value('product_name'),
+                        ];
                     }
-                } else if (in_array($data['type'], [3])) {
-                    $sendData = [
-                        'content' => $tpl_content
-                    ];
+                    $onceKey = 'notice|' . $scene . '|' . $order_code;
                 }
-                $Result = !empty($sendData) ? sendSms($post['scene'], $post['mobile'], $sendData) : ['status' => 0, 'msg' => '没有发送内容'];
+
+                // 同一订单/场景 60 秒内只发一次，叠加 IP / 会话 / 号码多维频控
+                $onceCacheKey = 'sms_send_once_' . md5($onceKey);
+                if (\think\Cache::get($onceCacheKey)) $this->error('发送过于频繁，请稍后再试');
+                if (!sms_send_limit_check($mobile, $scene, 200, 100, 60)) $this->error('发送过于频繁，请稍后再试');
+                \think\Cache::set($onceCacheKey, 1, 60);
+
+                $Result = sendSms($scene, $mobile, $sendData);
                 if (intval($Result['status']) == 1) {
                     $this->success('发送成功！');
                 } else {
@@ -1345,17 +1517,19 @@ HTML;
                 }
             }
             //发送表单提醒
-            else if (isset($post['scene']) && $post['scene'] == 11) {
+            else if (11 == $scene) {
                 //查询消息通知模板的内容
                 $sms_config = tpCache('sms');
-                // if (empty($sms_config['sms_guestbook_send'])) {
-                //     $this->error("配置不接收留言短信提醒");
-                // }
-                $sms_type = $sms_config['sms_type'] ? intval($sms_config['sms_type']) : 1;
-                $tpl_content = Db::name('sms_template')->where(["send_scene" => $post['scene'], "sms_type" => $sms_type, 'is_open' => 1])->value('tpl_content');
-                if (!$tpl_content) return false;
+                $sms_type = !empty($sms_config['sms_type']) ? intval($sms_config['sms_type']) : 1;
+                $tpl_content = Db::name('sms_template')->where(["send_scene" => 11, "sms_type" => $sms_type, 'is_open' => 1])->value('tpl_content');
+                if (!$tpl_content) $this->error('短信模板未配置或已关闭');
 
-                $Result = sendSms($post['scene'], $sms_config['sms_test_mobile'], []);
+                // 只发给后台配置的管理员手机号，忽略请求方参数
+                $mobile = !empty($sms_config['sms_test_mobile']) ? trim($sms_config['sms_test_mobile']) : '';
+                if (empty($mobile)) $this->error('未配置接收短信的管理员手机号');
+                if (!sms_send_limit_check($mobile, 11, 100, 20, 60)) $this->error('发送过于频繁，请稍后再试');
+
+                $Result = sendSms(11, $mobile, []);
                 if (intval($Result['status']) == 1) {
                     $this->success('发送成功！');
                 } else {
@@ -1365,18 +1539,59 @@ HTML;
             }
             // 其他类型发送短信处理
             else {
+                // 仅允许注册、绑定、登录、找回密码、后台二次验证等业务场景
+                if (!in_array($source, [0, 1, 2, 4, 30], true)) $this->error('参数错误');
+
                 $sms_config = tpCache('sms');
                 $sms_type = isset($sms_config['sms_type']) ? $sms_config['sms_type'] : 1;
-                $smsTemp = Db::name('sms_template')->where(["send_scene"=>$post['source'],"sms_type"=>$sms_type,'lang'=>get_admin_lang()])->find();
+                $smsTemp = Db::name('sms_template')->where(["send_scene"=>$source,"sms_type"=>$sms_type,'lang'=>get_admin_lang()])->find();
                 if (empty($smsTemp) || empty($smsTemp['sms_sign']) || empty($smsTemp['sms_tpl_code']) || empty($smsTemp['tpl_content'])){
                     $this->error('尚未正确配置短信模板，请联系管理员！');
                 }
-                
+
+                $users_id = intval(session('users_id'));
+
+                // 后台二次验证：验证码只发给当前待验证的管理员，禁止请求方指定手机号
+                if (30 == $source) {
+                    $pending = session('admin_login_twofactor_check');
+                    $pending = !empty($pending) ? mchStrCode($pending, 'DECODE', '', false) : '';
+                    if (empty($pending)) $this->error('登录状态已失效，请重新登录');
+                    $mobile = Db::name('admin')->where('user_name', $pending)->value('mobile');
+                    if (empty($mobile) || !check_mobile($mobile)) {
+                        $mobile = !empty($sms_config['sms_test_mobile']) ? trim($sms_config['sms_test_mobile']) : '';
+                    }
+                    if (empty($mobile)) $this->error('管理员未绑定手机号');
+
+                    // 是否允许再次发送
+                    $where = [
+                        'mobile' => $mobile,
+                        'source' => 30,
+                        'status' => 1,
+                        'is_use' => 0,
+                        'add_time' => ['>', getTime() - 120]
+                    ];
+                    $Result = Db::name('sms_log')->where($where)->order('id desc')->count();
+                    if (!empty($Result) && false == config('sms_debug')) $this->error('120秒内只能发送一次！');
+
+                    if (!sms_send_limit_check($mobile, 30)) $this->error('发送过于频繁，请稍后再试');
+
+                    /*发送并返回结果：统一使用6位验证码，降低被爆破风险*/
+                    $content = mt_rand(100000, 999999);
+                    $Result = sendSms($source, $mobile, array('content' => $content));
+                    if (intval($Result['status']) == 1) {
+                        $this->success('发送成功！');
+                    } else {
+                        $this->error($Result['msg']);
+                    }
+                }
+
                 if (isset($post['type']) && in_array($post['type'], ['users_mobile_reg', 'users_mobile_login', 'reg'])) {
                     $post['is_mobile'] = true;
                 }
-                $mobile = !empty($post['mobile']) ? $post['mobile'] : session('mobile');
-                if (empty($mobile)) $this->error('请先绑定手机号码');
+                $post_mobile = (isset($post['mobile']) && is_string($post['mobile'])) ? trim($post['mobile']) : '';
+                $mobile = !empty($post_mobile) ? $post_mobile : session('mobile');
+                if (empty($mobile) || !is_string($mobile)) $this->error('请先绑定手机号码');
+                if (!check_mobile($mobile)) $this->error(foreign_lang('users29', $this->home_lang));
                 // 手机可用性验证
                 $is_mobile = !empty($post['is_mobile']) ? $post['is_mobile'] : false;
                 if (!empty($is_mobile)) {
@@ -1384,13 +1599,12 @@ HTML;
                     $where = [
                         'mobile' => $mobile
                     ];
-                    $users_id = session('users_id');
                     if (!empty($users_id)) $where['users_id'] = ['NEQ', $users_id];
                     $Result = Db::name('users')->where($where)->count();
                     /* END */
-                    if (0 == $post['source']) {
+                    if (0 == $source) {
                         if (!empty($Result)) $this->error('手机号码已注册');
-                    } else if (2 == $post['source']) {
+                    } else if (2 == $source) {
                         // 手机登录：根据后台开关判断是否允许未注册手机号发送验证码
                         if (empty($Result)) {
                             $users_mobile_login_auto_reg = getUsersConfigData('users.users_mobile_login_auto_reg');
@@ -1398,7 +1612,7 @@ HTML;
                                 $this->error('手机号码未注册');
                             }
                         }
-                    } else if (4 == $post['source']) {
+                    } else if (4 == $source) {
                         if (empty($Result)) $this->error('手机号码不存在');
                     } else {
                         if (!empty($Result)) $this->error('手机号码已存在');
@@ -1418,15 +1632,37 @@ HTML;
                 if (!empty($Result) && false == config('sms_debug')) $this->error('120秒内只能发送一次！');
                 /* END */
 
-                /*图形验证码判断*/
-                if (!empty($post['IsVertify']) || (isset($post['type']) && in_array($post['type'], ['users_mobile_reg', 'users_mobile_login', 'bind', 'other']))) {
-                    if (empty($post['vertify'])) $this->error('请输入图形验证码！');
+                /*图形验证码判断：除“已登录会员绑定手机”“注册页自定义手机字段（携带服务端表单令牌）”外，一律强制校验*/
+                $captchaPassed = false;
+                $captchaAvailable = function_exists('imagettftext');
+                $vertify = (isset($post['vertify']) && is_string($post['vertify'])) ? trim($post['vertify']) : '';
+                if ($captchaAvailable && !empty($vertify)) {
+                    $captcha_type_map = [0 => 'users_mobile_reg', 1 => 'bind', 2 => 'users_mobile_login', 4 => 'users_retrieve_password'];
+                    $captcha_type = isset($captcha_type_map[$source]) ? $captcha_type_map[$source] : '';
                     $verify = new \think\Verify();
-                    if (!$verify->check($post['vertify'], $post['type'])) $this->error('图形验证码错误！', null, ['code' => 'vertify']);
+                    if (!$verify->check($vertify, $captcha_type)) $this->error('图形验证码错误！', null, ['code' => 'vertify']);
+                    $captchaPassed = true;
                 }
+                if (false === $captchaPassed && 1 == $source && $users_id > 0) {
+                    // 已登录会员绑定/更换手机：验证码只下发到本人填写的号码，叠加多维频控
+                    $captchaPassed = true;
+                }
+                if (false === $captchaPassed && 0 == $source && isset($post['type']) && 'reg' == $post['type'] && !empty($post['__mobile_1_token__'])) {
+                    // 注册页自定义手机字段未展示图形码，以服务端表单令牌作为凭据（下方统一校验）
+                    $captchaPassed = true;
+                }
+                if (false === $captchaPassed && 4 == $source) {
+                    // 找回密码：未开启图形验证码或GD库不可用时，只能依赖多维频控兜底
+                    $captchaConf = config('captcha.users_retrieve_password');
+                    $captchaOn = !empty($captchaConf) && !empty($captchaConf['is_on']);
+                    if (!$captchaAvailable || !$captchaOn) {
+                        $captchaPassed = true;
+                    }
+                }
+                if (false === $captchaPassed) $this->error('请输入图形验证码！');
                 /* END */
                 
-                if (true === $post['is_mobile']) {
+                if (isset($post['is_mobile']) && true === $post['is_mobile']) {
                     // 数据验证
                     $rule = [
                         'mobile' => 'require|token:__mobile_1_token__',
@@ -1440,12 +1676,11 @@ HTML;
                     }
                 }
 
-                /*发送并返回结果*/
-                if (30 == $source) {
-                    $content = mt_rand(100000, 999999);
-                } else {
-                    $content = mt_rand(1000, 9999);
-                }
+                // 多维频控：IP / 会话 / 手机号
+                if (!sms_send_limit_check($mobile, $source)) $this->error('发送过于频繁，请稍后再试');
+
+                /*发送并返回结果：统一使用6位验证码，降低被爆破风险*/
+                $content = mt_rand(100000, 999999);
                 $Result = sendSms($source, $mobile, array('content' => $content));
                 if (intval($Result['status']) == 1) {
                     $this->success('发送成功！');
@@ -1629,6 +1864,8 @@ HTML;
     public function get_tag_memberlist()
     {
         if (IS_AJAX_POST) {
+            $publicConfig = get_memberlist_public_config();
+
             // 接收html实体代码
             $htmlcode = input('post.htmlcode/s', '');
             $htmlcode = htmlspecialchars_decode($htmlcode);
@@ -1638,28 +1875,36 @@ HTML;
             $attarray = input('post.attarray/s', '');
             $attarray = htmlspecialchars_decode($attarray);
             $attarray = json_decode(base64_decode($attarray), true);
+            $attarray = is_array($attarray) ? $attarray : [];
 
             // 查询会员表字段
-            $field = [];
             $usersField = Db::name("users")->getTableFields();
-            foreach ($usersField as $key => $value) {
-                $field[$key] = $value . '_eyoucms_fields';
+
+            // 只允许公开字段参与输出替换，手机、邮箱、余额、openid 等敏感字段一律不替换
+            $search = [];
+            $searchField = [];
+            foreach ($publicConfig['fields'] as $value) {
+                if (in_array($value, $usersField)) {
+                    $search[] = $value . '_eyoucms_fields';
+                    $searchField[] = $value;
+                }
             }
 
-            // 会员表自定义字段
+            // 会员表自定义字段（只允许结构化字段，手机、邮箱、附件、图片、自由文本等一律不输出）
             $where = [
                 'is_hidden' => 0,
                 'lang' => $this->home_lang,
-                // 'dtype' => ['NOT IN', ['imgs']],
+                'dtype' => ['IN', $publicConfig['allow_dtype']],
             ];
             $usersParams = Db::name("users_parameter")->field('para_id, name')->where($where)->order('para_id asc')->select();
-            foreach ($usersParams as $key => $value) {
-                $field[count($field)] = $value['name'] . '_eyoucms_params';
+            $searchParam = [];
+            foreach ($usersParams as $value) {
+                $search[] = $value['name'] . '_eyoucms_params';
+                $searchParam[] = $value['para_id'];
             }
-            // dump($field);exit;
 
-            // 查询排序
-            $orderby = !empty($attarray['orderby']) ? $attarray['orderby'] : '';
+            // 查询排序（只允许内置公开字段，禁止按 mobile/users_money 等敏感列排序）
+            $orderby = (!empty($attarray['orderby']) && is_string($attarray['orderby'])) ? $attarray['orderby'] : '';
             switch ($orderby) {
                 case 'logintime': // 兼容写法
                 case 'last_login':
@@ -1677,7 +1922,7 @@ HTML;
 
                 default:
                     {
-                        if (in_array($orderby, $usersField)) {
+                        if (in_array($orderby, $publicConfig['fields'], true)) {
                             $orderby = "{$orderby} desc";
                         } else {
                             $orderby = "users_id desc";
@@ -1686,21 +1931,28 @@ HTML;
                     }
             }
 
-            // 查询会员表数据
+            // 查询会员表数据（排除已注销、被锁定的会员）
             $where = [
                 'admin_id' => 0,
+                'is_del' => 0,
+                'is_lock' => 0,
                 'lang' => $this->home_lang,
             ];
             $limit = !empty($attarray['row']) ? intval($attarray['row']) : 10;
+            $limit = max(1, min(50, $limit)); // 单次最多返回 50 条，防止被批量导出
             $list = Db::name("users")->where($where)->order($orderby)->limit($limit)->select();
 
-            // 查询会员自定义数据
-            $where = [
-                'lang' => $this->home_lang,
-                // 'para_id' => ['NOT IN', [11]],
-            ];
-            $usersList = Db::name("users_list")->field('para_id, users_id, info')->where($where)->order('para_id asc')->select();
-            $usersList = group_same_key($usersList, 'users_id');
+            // 查询会员自定义数据（只查询当前列表涉及到的会员，避免全表扫描）
+            $usersList = [];
+            if (!empty($list)) {
+                $users_ids = get_arr_column($list, 'users_id');
+                $where = [
+                    'lang' => $this->home_lang,
+                    'users_id' => ['IN', $users_ids],
+                ];
+                $usersList = Db::name("users_list")->field('para_id, users_id, info')->where($where)->select();
+                $usersList = group_same_key($usersList, 'users_id');
+            }
 
             // 查询会员等级数据
             $where = [
@@ -1712,21 +1964,27 @@ HTML;
             $html = '';
             foreach ($list as $key => $value) {
                 // 内置数据处理
-                $value['paypwd'] = '<font style="color: red;">不支持显示支付密码</font>';
-                $value['password'] = '<font style="color: red;">不支持显示登录密码</font>';
                 $value['head_pic'] = get_head_pic($value['head_pic'], false, $value['sex']);
                 $value['level'] = !empty($usersLevel[$value['level']]) ? $usersLevel[$value['level']] : '';
-                // 会员自定义数据与内置数据合并
-                $infoValue = [];
+                // 会员自定义数据按 para_id 对齐
+                $paramValues = [];
                 if (!empty($usersList[$value['users_id']])) {
-                    $infoValue = get_arr_column($usersList[$value['users_id']], 'info');
-                    $infoValue[10] = '" alt="不支持显示自定义多图';
-                } else {
-                    $infoValue = [0 => '', 1 => '', 2 => '', 3 => '', 4 => '', 5 => '', 6 => '', 7 => '', 8 => '', 9 => '', 10 => '" alt="不支持显示自定义多图'];
+                    foreach ($usersList[$value['users_id']] as $item) {
+                        $paramValues[$item['para_id']] = $item['info'];
+                    }
                 }
-                $value = array_merge($value, $infoValue);
+                // 组装与占位符一一对应的替换值
+                $replace = [];
+                foreach ($searchField as $name) {
+                    $replace[] = isset($value[$name]) ? $value[$name] : '';
+                }
+                foreach ($searchParam as $para_id) {
+                    $replace[] = isset($paramValues[$para_id]) ? $paramValues[$para_id] : '';
+                }
                 // 替换指定字段数据
-                $html .= str_replace($field, $value, $htmlcode);
+                if (!empty($search)) {
+                    $html .= str_replace($search, $replace, $htmlcode);
+                }
             }
 
             // dump($html);exit;
@@ -2024,19 +2282,23 @@ HTML;
         $users_id = session('users.users_id');
         $users_id = intval($users_id);
         if (!empty($id) && !empty($users_id)) {
-            $count = Db::name('users_notice_read')
-                ->where(['id' => $id])
-                ->value("id");
-            if (empty($count)) $this->error('未知错误！');
+            $notice = Db::name('users_notice_read')
+                ->where(['id' => $id, 'users_id' => $users_id])
+                ->field('id,is_read')
+                ->find();
+            if (empty($notice)) $this->error('未知错误！');
 
-            //未读消息数-1
             $unread_num = Db::name('users')->where(['users_id' => $users_id])->value("unread_notice_num");
-            if ($unread_num > 0) {
-                $unread_num = $unread_num - 1;
-                Db::name('users')->where(['users_id' => $users_id])->update(['unread_notice_num' => $unread_num]);
+            if (empty($notice['is_read'])) {
+                // 只更新属于当前用户的记录，且已读后不再重复扣减未读数
+                $update = Db::name('users_notice_read')->where(['id' => $id, 'users_id' => $users_id, 'is_read' => 0])->update(['is_read' => 1]);
+                if (!empty($update) && $unread_num > 0) {
+                    //未读消息数-1
+                    $unread_num = $unread_num - 1;
+                    Db::name('users')->where(['users_id' => $users_id])->update(['unread_notice_num' => $unread_num]);
+                }
             }
-            Db::name('users_notice_read')->where(['id' => $id])->update(['is_read' => 1]);
-            $this->success('保存成功', null, ['unread_num' => $unread_num]);
+            $this->success('保存成功', null, ['unread_num' => intval($unread_num)]);
         }
     }
 
@@ -2231,8 +2493,16 @@ HTML;
             ->alias('a')
             ->field('a.channel,a.title,a.restric_type,a.arc_level_id,a.users_price,a.users_score,a.no_vip_pay,a.add_time,a.editor_ai_create,b.content,b.content_ey_m')
             ->join('article_content b', 'a.aid = b.aid')
-            ->where('a.aid', $aid)
+            ->where([
+                'a.aid'     => intval($aid),
+                'a.is_del'  => 0,
+                'a.status'  => 1,
+                'a.arcrank' => ['egt', 0],
+            ])
             ->find();
+        if (empty($artData)) {
+            $this->error('文档不存在或无权访问');
+        }
         if (is_dir('./weapp/CompressContent/')) {                            
             try {                    
                 $compressLogic = new \weapp\CompressContent\logic\CompressContentLogic;                
@@ -2251,6 +2521,16 @@ HTML;
 
         if (empty($artData['restric_type'])) { // 免费
             $result['display'] = 0; // 1-显示购买 0-不显示
+            // 兼容旧版会员等级限制：未达到等级不返回正文
+            if (intval($artData['arc_level_id']) > 0) {
+                $users_id  = session('users_id');
+                $UsersData = empty($users_id) ? [] : GetUsersLatestData();
+                if (empty($UsersData) || floatval($UsersData['level_value']) < floatval($artData['arc_level_value'])) {
+                    $result['vipDisplay'] = 1;
+                    $result['content']    = '';
+                    $this->success('请先登录或升级会员', null, $result);
+                }
+            }
             $result['content'] = $artData['content'];
         } else {
             /*预览内容*/
@@ -2612,8 +2892,16 @@ HTML;
         $artData = Db::name('archives')->alias('a')
             ->field('a.*, b.content')
             ->join('download_content b', 'a.aid = b.aid', 'left')
-            ->where('a.aid', $aid)
+            ->where([
+                'a.aid'     => intval($aid),
+                'a.is_del'  => 0,
+                'a.status'  => 1,
+                'a.arcrank' => ['egt', 0],
+            ])
             ->find();
+        if (empty($artData)) {
+            $this->error('文档不存在或无权访问');
+        }
 
         $artData['arc_level_value'] = 0;
         if (0 < $artData['arc_level_id']) {
@@ -2628,7 +2916,18 @@ HTML;
         $msg = '';
         $download_tips = '';
         if (empty($artData['restric_type'])) { // 免费
-            $canDownload = 1;
+            // 兼容旧版按会员等级限制下载
+            if (0 < intval($artData['arc_level_id'])) {
+                if (!empty($UsersData) && floatval($UsersData['level_value']) >= floatval($artData['arc_level_value'])) {
+                    $canDownload   = 1;
+                    $download_tips = "您已是{$UsersData['level_name']}，可直接下载";
+                } else {
+                    $buyVip        = 1;
+                    $download_tips = '请升级会员后下载';
+                }
+            } else {
+                $canDownload = 1;
+            }
         } else if (1 == $artData['restric_type']) { // 付费
             // 查询是否已购买
             $where = [
@@ -2714,22 +3013,30 @@ HTML;
 
     public function defaultAuthorize()
     {
-        // 管理员ID
-        $admin_id = input('param.admin_id');
-        $users_id = input('param.users_id');
-        if (empty($admin_id) && empty($users_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        // 扫码绑定必须携带服务端签发的短时 token，禁止直接传 admin_id/users_id 绑定任意账号
+        $token = input('param.token/s', '');
+        $bind = wechat_bind_token_check($token);
+        if (empty($bind)) {
+            // 兼容旧链接：仅允许已登录用户为自己的账号重新签发（微信内无会话时请使用后台生成的二维码）
+            $admin_id = input('param.admin_id/d', 0);
+            $users_id = input('param.users_id/d', 0);
+            $admin_info = session('?admin_info') ? session('admin_info') : [];
+            $login_admin_id = session('?admin_id') ? intval(session('admin_id')) : (!empty($admin_info['admin_id']) ? intval($admin_info['admin_id']) : 0);
+            if (!empty($admin_id) && !empty($login_admin_id) && $login_admin_id === intval($admin_id)) {
+                $token = wechat_bind_token_create('admin', $admin_id, 600);
+            } else if (!empty($users_id) && !empty(session('users_id')) && intval(session('users_id')) === intval($users_id)) {
+                $token = wechat_bind_token_create('users', $users_id, 600);
+            } else {
+                $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+            }
+        }
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
         $conf_wechat = !empty($conf_wechat) ? json_decode($conf_wechat, true) : [];
 
         // 回调链接
-        if (!empty($admin_id)) {
-            $data = ['admin_id' => $admin_id];
-        } else if (!empty($users_id)) {
-            $data = ['users_id' => $users_id];
-        }
-        $url = urlencode(url('api/Ajax/defaultGetWechatUserinfo', $data, true, true));
+        $url = urlencode(url('api/Ajax/defaultGetWechatUserinfo', ['token' => $token], true, true));
         // 静默授权链接
         $redirect = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" . strval($conf_wechat['appid']) . "&redirect_uri=" . $url . "&response_type=code&scope=snsapi_base&state=eyoucms&#wechat_redirect";
 
@@ -2739,11 +3046,16 @@ HTML;
 
     public function defaultGetWechatUserinfo()
     {
+        // 校验签名 token，admin_id/users_id 只能从 token 中解析，客户端不可指定
+        $token = input('param.token/s', '');
+        $bind = wechat_bind_token_check($token);
+        if (empty($bind)) $this->error('二维码已过期，请重新生成二维码并扫码！');
+        $admin_id = ('admin' == $bind['scope']) ? intval($bind['id']) : 0;
+        $users_id = ('users' == $bind['scope']) ? intval($bind['id']) : 0;
+
         // 通过微信code获取用户access_token
         $code = input('param.code/s', '');
-        $admin_id = input('param.admin_id/d', 0);
-        $users_id = input('param.users_id/d', 0);
-        if (empty($code) || (empty($admin_id) && empty($users_id))) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        if (empty($code)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
@@ -2761,6 +3073,11 @@ HTML;
             if (!empty($row)) {
                 $this->error('当前微信已被绑定', null, '', 10);
             }
+            // 已绑定其他微信的账号不允许被覆盖，需先解绑
+            $currentOpenid = Db::name('admin')->where('admin_id', $admin_id)->getField('wechat_open_id');
+            if (!empty($currentOpenid) && $currentOpenid !== $userInfo['openid']) {
+                $this->error('当前账号已绑定其他微信，请先解绑', null, '', 10);
+            }
             $update = [
                 'wechat_open_id' => $userInfo['openid'],
                 'update_time' => getTime(),
@@ -2770,8 +3087,17 @@ HTML;
             model('AdminWxlogin')->save_data($admin_id, 3, $userInfo);
         }
         else if (!empty($userInfo['openid']) && !empty($users_id)) {
+            // 该微信已绑定其他会员时不允许抢占
+            $boundUsersId = Db::name('weapp_ask_users_join')->where(['join_open_id' => $userInfo['openid']])->where('users_id', 'neq', $users_id)->value('users_id');
+            if (!empty($boundUsersId)) {
+                $this->error('当前微信已被绑定', null, '', 10);
+            }
             $usersJoin = Db::name('weapp_ask_users_join')->where(['users_id' => $users_id])->find();
             if (!empty($usersJoin)) {
+                // 已绑定其他微信的会员不允许被覆盖，需先解绑
+                if (!empty($usersJoin['join_open_id']) && $usersJoin['join_open_id'] !== $userInfo['openid']) {
+                    $this->error('当前账号已绑定其他微信，请先解绑', null, '', 10);
+                }
                 $update = [
                     'join_open_id' => $userInfo['openid'],
                     'update_time' => getTime(),
@@ -2828,7 +3154,7 @@ HTML;
         }
 
         // 用户尚未关注公众号，显示公众号二维码
-        $this->redirect(url('api/Ajax/showWechatQrCode', ['admin_id' => $admin_id, 'users_id' => $users_id], true, true));
+        $this->redirect(url('api/Ajax/showWechatQrCode', ['token' => $token], true, true));
     }
 
     public function showSuccessInfo()
@@ -2871,9 +3197,12 @@ EOF;
 
     public function showWechatQrCode()
     {
-        $admin_id = input('param.admin_id/d', 0);
-        $users_id = input('param.users_id/d', 0);
-        if (empty($admin_id) && empty($users_id)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        // admin_id/users_id 只能从签名 token 中解析，禁止直接传参
+        $token = input('param.token/s', '');
+        $bind = wechat_bind_token_check($token);
+        if (empty($bind)) $this->error('获取用户信息错误，请重新生成二维码并扫码！');
+        $admin_id = ('admin' == $bind['scope']) ? intval($bind['id']) : 0;
+        $users_id = ('users' == $bind['scope']) ? intval($bind['id']) : 0;
 
         // 公众号配置
         $conf_wechat = tpSetting("OpenMinicode.conf_wechat");
@@ -2943,6 +3272,11 @@ EOF;
         $typeid = input('typeid/d', 0);
         $totalpage = input('totalpage/d', 1);
         $ordermode = input('ordermode/s', 'desc');
+        // 白名单：排序方式只允许 asc/desc，防止拼接进模板标签造成模板注入
+        $ordermode = is_string($ordermode) ? strtolower(trim($ordermode)) : 'desc';
+        if (!in_array($ordermode, ['asc', 'desc'], true)) {
+            $ordermode = 'desc';
+        }
         $tagid = 'block001';
         if (empty($typeid) || empty($page)) {
             $this->error('参数有误');

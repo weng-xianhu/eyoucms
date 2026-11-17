@@ -168,9 +168,9 @@ class DdosApiLogic extends Model
                 $dir = rtrim($dir, '/').'/';
             }
 
-            // 递归读取文件夹
+            // 递归读取文件夹（data/eyoumcp_* 为 AI 连接器运行时数据目录，不纳入系统文件查杀，避免基线与隔离记录被误判为多余文件）
             $list[] = '/';
-            $this->ddosLogic->ddos_getDir($dir, '', $list, ['uploads', 'public/upload', 'upload', 'runtime/cache']);
+            $this->ddosLogic->ddos_getDir($dir, '', $list, ['uploads', 'public/upload', 'upload', 'runtime/cache', 'data/eyoumcp_backup', 'data/eyoumcp_quarantine', 'data/eyoumcp_security', 'data/eyoumcp_tpl_bak']);
             // 获取要扫描目录的文件
             $filesData = $this->ddosLogic->getScanFilesData(0, 0, 'auto_scan', $list);
             $list = $filesData['info'];

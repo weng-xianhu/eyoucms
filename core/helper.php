@@ -867,7 +867,7 @@ if (!function_exists('hookexec')) {
             if (!empty($exist)) {
                 $row = M('weapp')->field('id,code,is_valid')->where(array('code'=>$m,'status'=>1))->find();
                 $value = -1;
-                if (!empty($row) && 1 == $row['is_valid']) {
+                if (!empty($row) && 1 == $row['is_valid'] && !(function_exists('is_weapp_invalid') && is_weapp_invalid($row['code']))) {
                     $configValue = include WEAPP_DIR_NAME.DS.$row['code'].DS.'config.php';
                     $scene = intval($configValue['scene']);
                     if (0 == $scene) { // 场景：手机端+PC端

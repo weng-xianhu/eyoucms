@@ -34,7 +34,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @return     string         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeRelationships(PHPExcel $pPHPExcel = null)
+    public function writeRelationships($pPHPExcel = null)
     {
         // Create XML writer
         $objWriter = null;
@@ -108,7 +108,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @return     string         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeWorkbookRelationships(PHPExcel $pPHPExcel = null)
+    public function writeWorkbookRelationships($pPHPExcel = null)
     {
         // Create XML writer
         $objWriter = null;
@@ -189,7 +189,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @return     string                 XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeWorksheetRelationships(PHPExcel_Worksheet $pWorksheet = null, $pWorksheetId = 1, $includeCharts = false)
+    public function writeWorksheetRelationships($pWorksheet = null, $pWorksheetId = 1, $includeCharts = false)
     {
         // Create XML writer
         $objWriter = null;
@@ -297,7 +297,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @return     string                 XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeDrawingRelationships(PHPExcel_Worksheet $pWorksheet = null, &$chartRef, $includeCharts = false)
+    public function writeDrawingRelationships($pWorksheet, &$chartRef, $includeCharts = false)
     {
         // Create XML writer
         $objWriter = null;
@@ -360,7 +360,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @return     string                         XML Output
      * @throws     PHPExcel_Writer_Exception
      */
-    public function writeHeaderFooterDrawingRelationships(PHPExcel_Worksheet $pWorksheet = null)
+    public function writeHeaderFooterDrawingRelationships($pWorksheet = null)
     {
         // Create XML writer
         $objWriter = null;
@@ -403,7 +403,7 @@ class PHPExcel_Writer_Excel2007_Rels extends PHPExcel_Writer_Excel2007_WriterPar
      * @param     string                         $pTargetMode    Relationship target mode
      * @throws     PHPExcel_Writer_Exception
      */
-    private function writeRelationship(PHPExcel_Shared_XMLWriter $objWriter = null, $pId = 1, $pType = '', $pTarget = '', $pTargetMode = '')
+    private function writeRelationship($objWriter = null, $pId = 1, $pType = '', $pTarget = '', $pTargetMode = '')
     {
         if ($pType != '' && $pTarget != '') {
             // Write relationship

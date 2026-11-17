@@ -28,6 +28,7 @@ require_once PHPEXCEL_ROOT . 'PHPExcel/Shared/JAMA/Matrix.php';
  * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
  * @version    ##VERSION##, ##DATE##
  */
+#[\AllowDynamicProperties]
 class PHPExcel_Polynomial_Best_Fit extends PHPExcel_Best_Fit
 {
     /**

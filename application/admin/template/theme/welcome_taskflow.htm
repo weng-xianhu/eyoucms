@@ -592,7 +592,7 @@
                 shade: 0.0,
                 closeBtn: 0,
                 shadeClose: true,
-                content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html',
+                content: '//{$website_host}__ROOT_DIR__/api/Rewrite/setInlet.html?token={:get_rewrite_setinlet_token()}',
                 success: function(layero, index){
                     layer.close(index);
                     var body = layer.getChildFrame('body', index);
@@ -601,7 +601,7 @@
                     {
                         $.ajax({
                             type : "POST",
-                            url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1",
+                            url  : "__ROOT_DIR__/index.php?m=api&c=Rewrite&a=setInlet&_ajax=1&token={:get_rewrite_setinlet_token()}",
                             data : {seo_inlet:0},
                             dataType : "JSON",
                             success: function(res) {

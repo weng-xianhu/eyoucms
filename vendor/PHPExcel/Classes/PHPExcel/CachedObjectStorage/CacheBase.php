@@ -237,7 +237,7 @@ abstract class PHPExcel_CachedObjectStorage_CacheBase
     public function getCurrentRow()
     {
         sscanf($this->currentObjectID, '%[A-Z]%d', $column, $row);
-        return (integer) $row;
+        return (int) $row;
     }
 
     /**

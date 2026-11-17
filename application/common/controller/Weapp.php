@@ -15,6 +15,7 @@ namespace app\common\controller;
 use think\Session;
 use think\WeappController;
 class Weapp extends WeappController {
+    public $session_id;
 
     /**
      * 析构函数

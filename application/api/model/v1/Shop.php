@@ -649,7 +649,7 @@ class Shop extends UserBase
     /**
      * 获取该订单不可用优惠券
      */
-    public function getUnuseOrderCoupon($coupon_ids = [],$users_id)
+    public function getUnuseOrderCoupon($coupon_ids, $users_id)
     {
         $coupon_table = 'shop_coupon';
         $coupon_use_table = 'shop_coupon_use';
@@ -685,10 +685,10 @@ class Shop extends UserBase
                     case '1':
                         $v['coupon_type_name'] = '全部商品';
                         break;
-                    case '2';
+                    case '2':
                         $v['coupon_type_name'] = '指定商品';
                         break;
-                    case '3';
+                    case '3':
                         $v['coupon_type_name'] = '指定分类';
                         break;
                 }
@@ -1248,9 +1248,19 @@ class Shop extends UserBase
                         $resultID = Db::name('shop_order')->where('order_id', $OrderId)->update($update);
                     }
                     if (!empty($resultID)) {
-                        // 扣除会员余额
-                        $resultID = Db::name('users')->where('users_id', $post['users_id'])->setDec('users_money', $OrderData['order_amount']);
-                        if (!empty($resultID)) {
+                        // 余额支付：条件扣款（原子），防止并发扣成负数
+                        $deductAmount = floatval($OrderData['order_amount']);
+                        $deductID     = 0;
+                        if ($deductAmount > 0) {
+                            $deductID = Db::name('users')->where([
+                                'users_id'    => $post['users_id'],
+                                'users_money' => ['egt', $deductAmount],
+                            ])->update([
+                                'users_money' => Db::raw('users_money-'.$deductAmount),
+                                'update_time' => getTime(),
+                            ]);
+                        }
+                        if ($deductAmount <= 0 || !empty($deductID)) {
                             // 添加会员余额记录
                             $getParam = [
                                 'users_money' => $usersMoney,
@@ -1347,6 +1357,17 @@ class Shop extends UserBase
                             // 返回数据
                             $result['OrderData'] = $OrderData;
                             $this->success('支付完成', '/pages/order/index', $result);
+                        } else {
+                            // 余额不足：回滚订单状态为未付款，避免"已付款但未扣款"
+                            $rollbackOrderIds = is_array($OrderId) ? $OrderId : [$OrderId];
+                            Db::name('shop_order')->where('order_id', 'IN', $rollbackOrderIds)->where('order_status', 1)->update([
+                                'order_status' => 0,
+                                'pay_name'     => '',
+                                'pay_details'  => '',
+                                'pay_time'     => 0,
+                                'update_time'  => getTime(),
+                            ]);
+                            $this->error('余额不足，支付失败！');
                         }
                     }
                 }
@@ -1537,6 +1558,25 @@ class Shop extends UserBase
             else {
                 // 如果是多商家订单，需要特殊处理
                 if ($isMultiMerchantOrder) {
+                    // 安全修复：用户端同步请求必须向微信查单并核对金额；
+                    // 只有微信异步通知（已验签，$notify=true）才允许直接处理支付成功逻辑
+                    if (empty($notify)) {
+                        $openid = Db::name('wx_users')->where('users_id', $this->users_id)->getField('openid');
+                        $payApiModel = new \app\user\model\PayApi();
+                        $payResult = $payApiModel->getWeChatPayResult($openid, $order['unified_number']);
+                        if (empty($payResult['return_code']) || 'SUCCESS' != $payResult['return_code']
+                            || 'SUCCESS' != $payResult['result_code'] || 'SUCCESS' != $payResult['trade_state']
+                            || empty($payResult['transaction_id'])) {
+                            $this->error('订单尚未完成支付或支付结果查询失败');
+                        }
+                        // 核对支付金额（微信返回单位为分）
+                        $paidFee = intval($payResult['total_fee']);
+                        $needFee = intval(round(floatval($order['total_amount']) * 100));
+                        if ($paidFee !== $needFee) {
+                            $this->error('支付金额与订单金额不一致，请联系客服处理');
+                        }
+                    }
+
                     // 构造支付详情数据
                     $payDetails = [
                         'transaction_type' => 99,
@@ -1739,7 +1779,6 @@ class Shop extends UserBase
     private function ResultXml($xml)
     {
         // 禁止引用外部xml实体
-        @libxml_disable_entity_loader(true);
         return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
@@ -1775,7 +1814,6 @@ class Shop extends UserBase
         if (curl_errno($ch)) {
             return 'Errno: ' . curl_error($ch);
         }
-        curl_close($ch);
         return $result;
     }
 
@@ -2552,16 +2590,16 @@ class Shop extends UserBase
         switch ($type) {
             case 'all': // 全部订单
                 break;
-            case 'payment'; // 待付款订单
+            case 'payment': // 待付款订单
                 $filter['order_status'] = 0;
                 break;
-            case 'delivery'; // 待发货
+            case 'delivery': // 待发货
                 $filter['order_status'] = 1;
                 break;
-            case 'received'; // 待收货订单
+            case 'received': // 待收货订单
                 $filter['order_status'] = 2;
                 break;
-            case 'complete'; // 已完成
+            case 'complete': // 已完成
                 $filter['order_status'] = 3;
                 break;
         }
@@ -2603,16 +2641,16 @@ class Shop extends UserBase
         switch ($type) {
             case 'all': // 全部
                 break;
-            case 'payment'; // 待付款
+            case 'payment': // 待付款
                 $where['order_status'] = 0;
                 break;
-            case 'delivery'; // 待发货
+            case 'delivery': // 待发货
                 $where['order_status'] = 1;
                 break;
-            case 'received'; // 待收货
+            case 'received': // 待收货
                 $where['order_status'] = 2;
                 break;
-            case 'grouping'; // 拼团中
+            case 'grouping': // 拼团中
                 if ($hasGroupBuyPlugin) {
                     $where['groups_shop_order'] = 1;
                     $where['order_status'] = 1; // 拼团中的订单状态为已支付
@@ -2621,11 +2659,11 @@ class Shop extends UserBase
                     $where['order_id'] = 0; // 不存在的订单ID，确保返回空结果
                 }
                 break;
-            case 'complete'; // 待评价
+            case 'complete': // 待评价
                 $where['order_status'] = 3;
                 // $where['is_comment'] = 0;
                 break;
-            case 'close'; // 订单关闭
+            case 'close': // 订单关闭
                 $where['order_status'] = -1;
                 break; 
         }
@@ -2764,10 +2802,11 @@ class Shop extends UserBase
     // 取消订单
     public function orderCancel($order_id, $users_id)
     {
-        // 更新条件
+        // 更新条件：仅允许取消「未付款」订单，防止已付款/已发货订单被取消后库存与优惠券被无退款回补
         $Where = [
             'order_id' => $order_id,
             'users_id' => $users_id,
+            'order_status' => 0,
         ];
         // 更新数据
         $Data = [
@@ -2828,7 +2867,11 @@ class Shop extends UserBase
     // 订单提醒发货
     public function orderRemind($order_id = 0, $users_id = 0)
     {
-         $post = input('post.');
+        // 安全修复：校验订单归属，防止越权给他人订单添加操作记录
+        $orderExists = Db::name('shop_order')->where(['order_id' => $order_id, 'users_id' => $users_id])->find();
+        if (empty($orderExists)) {
+            $this->error('订单不存在');
+        }
         // 添加订单操作记录
         AddOrderAction($order_id, $users_id, 0, 1, 0, 1, '提醒成功！', '会员提醒管理员及时发货！');
         $this->success('提醒成功');
@@ -3071,6 +3114,10 @@ class Shop extends UserBase
             $this->error('该订单已经评价！');
         }
         $order_data = $this->getOrderDetail($order_id, $users_id);
+        // 仅已完成订单可评价
+        if (3 !== intval($order_data['order_status'])) {
+            $this->error('订单暂不可评价！');
+        }
 
         return $order_data['goods'];
     }
@@ -3078,19 +3125,48 @@ class Shop extends UserBase
     public function getSaveComment($post, $users_id)
     {
         $order_id = intval($post['order_id']);
+
+        // 校验订单归属与状态：只能评价本人已完成且未评价的订单
+        $orderInfo = Db::name('shop_order')->where([
+            'order_id' => $order_id,
+            'users_id' => $users_id,
+        ])->field('order_id, order_code, order_status')->find();
+        if (empty($orderInfo)) $this->error('订单不存在！');
+        if (3 !== intval($orderInfo['order_status'])) $this->error('订单暂不可评价！');
+
         //判断该订单是否已经评价
         $comment_count = Db::name('shop_order_comment')->where(['order_id' => $order_id, 'users_id' => $users_id])->count();
-        if (!empty($comment_count)) {
-            $this->error('该订单已经评价！');
+        if (!empty($comment_count)) $this->error('该订单已经评价！');
+
+        // 查询订单内待评价商品明细，用于校验提交的详情/商品是否属于本订单
+        $detailsList = Db::name('shop_order_details')->where([
+            'order_id'   => $order_id,
+            'users_id'   => $users_id,
+            'is_comment' => 0,
+        ])->field('details_id, product_id')->select();
+        $detailsMap = [];
+        foreach ($detailsList as $detailsItem) {
+            $detailsMap[intval($detailsItem['details_id'])] = intval($detailsItem['product_id']);
         }
+        if (empty($detailsMap)) $this->error('订单商品不存在或已评价！');
 
         if (!empty($post['formData'])) {
             $post['formData'] = json_decode(htmlspecialchars_decode($post['formData']), true);
+            if (!is_array($post['formData'])) $this->error('评价数据有误！');
             $insert = [];
             $detail_ids = [];
-            $order_code = Db::name('shop_order')->where(['order_id'=>$order_id])->value('order_code');
+            $order_code = $orderInfo['order_code'];
             foreach ($post['formData'] as $k => $v) {
-                $detail_ids[] = $v['order_details_id'];
+                $details_id = !empty($v['order_details_id']) ? intval($v['order_details_id']) : 0;
+                $product_id = !empty($v['goods_id']) ? intval($v['goods_id']) : 0;
+                // 商品明细必须属于本订单，且商品ID一致，防止伪造评价
+                if (empty($details_id) || empty($product_id) || !isset($detailsMap[$details_id]) || $detailsMap[$details_id] !== $product_id) {
+                    $this->error('评价商品信息有误！');
+                }
+                // 评价分合法范围 1-5
+                $score = intval($v['score']);
+                if ($score < 1 || $score > 5) $this->error('评价分不合法！');
+                $detail_ids[] = $details_id;
                 $uploadImg = '';
                 if (!empty($v['uploaded'])) {
                     $uploadImg = implode(',', $v['uploaded']);
@@ -3099,17 +3175,18 @@ class Shop extends UserBase
                 }
                 $insert[] = [
                     'upload_img'  => serialize($uploadImg),
-                    'total_score' => $v['score'],
+                    'total_score' => $score,
                     'content'     => serialize($v['content']),
                     'users_id'    => $users_id,
                     'order_id'    => $order_id,
                     'order_code'  => $order_code,
-                    'product_id'  => $v['goods_id'],
-                    'details_id'  => $v['order_details_id'],
+                    'product_id'  => $product_id,
+                    'details_id'  => $details_id,
                     'add_time'    => getTime(),
                     'update_time' => getTime(),
                 ];
             }
+            if (empty($insert)) $this->error('请选择需要评价的商品！');
             $insert_data = Db::name('shop_order_comment')->insertAll($insert);
             if ($insert_data) {
                 Db::name('shop_order')
@@ -3124,6 +3201,7 @@ class Shop extends UserBase
                     Db::name('shop_order_details')
                         ->where('details_id', 'in', $detail_ids)
                         ->where('users_id', $users_id)
+                        ->where('order_id', $order_id)
                         ->update(['is_comment' => 1, 'update_time' => getTime()]);
                 }
                 \think\Cache::clear('archives');
@@ -3601,9 +3679,9 @@ class Shop extends UserBase
             case '0': // 未使用
                 $filter['a.end_time'] = ['>=',getTime()];
                 break;
-            case '1'; // 已使用
+            case '1': // 已使用
                 break;
-            case '2'; // 已过期
+            case '2': // 已过期
                 unset($filter['a.use_status']);
                 $filter['a.end_time'] = ['<',getTime()];
                 break;
@@ -3635,10 +3713,10 @@ class Shop extends UserBase
                 case '1': // 未使用
                     $v['coupon_type_name'] = '全部商品';
                     break;
-                case '2'; // 已使用
+                case '2': // 已使用
                     $v['coupon_type_name'] = '指定商品';
                     break;
-                case '3'; // 已过期
+                case '3': // 已过期
                     $v['coupon_type_name'] = '指定分类';
                     break;
             }
@@ -3695,10 +3773,10 @@ class Shop extends UserBase
                         $v['use_end_time'] = date('Y/m/d',$v['use_end_time']);
                         $v['use_type_name'] = $v['use_start_time'].'-'.$v['use_end_time'];
                         break;
-                    case '2'; // 领取当天开始有效
+                    case '2': // 领取当天开始有效
                         $v['use_type_name'] = '领取'.$v['valid_days'].'天内有效';
                         break;
-                    case '3'; // 领取次日开始有效
+                    case '3': // 领取次日开始有效
                         $v['use_type_name'] =  '领取次日开始'.$v['valid_days'].'天内有效';
                         break;
                 }
@@ -4521,16 +4599,28 @@ class Shop extends UserBase
             }
             // 余额支付
             else if ('balance' == $param['pay_type']) {
-                // 扣除会员余额
-                $resultID = Db::name('users')->where(['users_id' => $this->users_id])->setDec('users_money', $usersTypeManage['price']);
-                // 后续处理
-                if (!empty($resultID)) {
-                    $insert['unified_id'] = $insertID;
-                    $insert['unified_number'] = $insert['order_number'];
-                    $insert['transaction_type'] = 3;
-                    $payApiLogic = new \app\user\logic\PayApiLogic($this->users_id, true);
-                    $payApiLogic->OrderProcessing($insert, $insert);
+                // 条件扣款（原子），防止并发扣成负数
+                $deductPrice = floatval($usersTypeManage['price']);
+                if ($deductPrice > 0) {
+                    $deductID = Db::name('users')->where([
+                        'users_id'    => $this->users_id,
+                        'users_money' => ['egt', $deductPrice],
+                    ])->update([
+                        'users_money' => Db::raw('users_money-'.$deductPrice),
+                        'update_time' => getTime(),
+                    ]);
+                    if (empty($deductID)) {
+                        // 余额不足：删除本次生成的未支付升级订单
+                        Db::name('users_money')->where('moneyid', $insertID)->delete(true);
+                        $this->error('余额不足');
+                    }
                 }
+                // 后续处理
+                $insert['unified_id'] = $insertID;
+                $insert['unified_number'] = $insert['order_number'];
+                $insert['transaction_type'] = 3;
+                $payApiLogic = new \app\user\logic\PayApiLogic($this->users_id, true);
+                $payApiLogic->OrderProcessing($insert, $insert);
             }
         }
         $this->error('会员升级失败');
@@ -4749,7 +4839,8 @@ class Shop extends UserBase
                 // $this->success('正在支付', null, $ResultData);
             } else if ('balance' == $param['pay_type']) {
                 //先判断余额够不够
-                if ($users['users_money'] < $price){
+                $deductAmount = floatval($price);
+                if ($users['users_money'] < $deductAmount){
                     $this->error('余额不足!');
                 }
 
@@ -4767,20 +4858,38 @@ class Shop extends UserBase
                     'pay_details' => serialize($pay_details),
                     'update_time' => getTime()
                 ];
-                $ReturnID    = Db::name('media_order')->where('order_code',  $OrderData['order_code'])->update($UpOrderData);
-                if (!empty($ReturnID)) {
-                    $Where = [
-                        'users_id' => $this->users_id
-                    ];
-                    $UsersData = [
-                        'users_money' => Db::raw('users_money-'.$OrderData['order_amount']),
-                        'update_time' => getTime()
-                    ];
-                    Db::name('users')->where($Where)->update($UsersData);
-                    UsersMoneyRecording($OrderData['order_code'], $users, $OrderData['order_amount'], '视频购买', 3);
-                    $url = '/pages/user/index';
-                    $this->success('支付完成', $url);
+
+                // 条件扣款（原子），防止并发扣成负数
+                $deductID = 0;
+                if ($deductAmount > 0) {
+                    $deductID = Db::name('users')->where([
+                        'users_id'    => $this->users_id,
+                        'users_money' => ['egt', $deductAmount],
+                    ])->update([
+                        'users_money' => Db::raw('users_money-'.$deductAmount),
+                        'update_time' => getTime(),
+                    ]);
+                    if (empty($deductID)) {
+                        $this->error('余额不足!');
+                    }
                 }
+
+                // 按订单状态条件更新，避免重复提交重复扣款
+                $ReturnID = Db::name('media_order')->where([
+                    'order_code'   => $OrderData['order_code'],
+                    'order_status' => 0,
+                ])->update($UpOrderData);
+                if (empty($ReturnID)) {
+                    // 订单状态已变更：回滚已扣余额
+                    if ($deductAmount > 0 && !empty($deductID)) {
+                        Db::name('users')->where(['users_id' => $this->users_id])->setInc('users_money', $deductAmount);
+                    }
+                    $this->success('订单已支付，正在跳转...', '/pages/user/index');
+                }
+
+                UsersMoneyRecording($OrderData['order_code'], $users, $deductAmount, '视频购买', 3);
+                $url = '/pages/user/index';
+                $this->success('支付完成', $url);
             }
         } else {
             $this->error('会员升级失败');

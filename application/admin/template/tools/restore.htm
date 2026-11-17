@@ -205,6 +205,7 @@
     });
 
     var restore_layer_index = null;
+    var restore_retry = 0;
 
     $(".db-import").click(function(){
         var url = $(this).attr('data-url');
@@ -232,6 +233,7 @@
     // 分卷断点续传方式还原，避免大文件单次请求超时
     function restore_start(url)
     {
+        restore_retry = 0;
         var html = '<div style="padding:20px 25px;">'
                  + '<div id="restore_msg">正在初始化...</div>'
                  + '<div style="margin-top:12px;height:16px;background:#eee;border-radius:8px;overflow:hidden;">'
@@ -246,7 +248,8 @@
             move: false,
             content: html
         });
-        restore_step(url, {});
+        // resume：服务端有未完成的续传位置时，从上次提交点继续，不会从头重导
+        restore_step(url, {resume: 1});
     }
 
     function restore_step(url, data)
@@ -263,6 +266,7 @@
                     showErrorMsg((res && res.msg) ? res.msg : '还原失败，请重试！');
                     return false;
                 }
+                restore_retry = 0;
                 $('#restore_msg').text(res.msg);
                 if (res.rate) {
                     $('#restore_bar').css('width', res.rate);
@@ -276,9 +280,17 @@
                 }
                 restore_step(url, {part: res.data.part, offset: res.data.offset});
             },
-            error: function(){
+            error: function(xhr){
+                // 网关超时 / 500 / 连接被断开：按服务端记录的进度自动续传，避免误报中断
+                restore_retry++;
+                if (restore_retry <= 3 && $('#restore_msg').length) {
+                    $('#restore_msg').text('请求中断，正在自动续传（第 ' + restore_retry + ' 次）...');
+                    setTimeout(function(){ restore_step(url, {resume: 1}); }, 1500);
+                    return false;
+                }
                 layer.close(restore_layer_index);
-                showErrorMsg('请求中断，还原已暂停，可重新点击恢复继续。');
+                var status = (xhr && xhr.status) ? ('HTTP ' + xhr.status) : '无响应';
+                showErrorMsg('请求中断（' + status + '），还原进度已保存，可重新点击恢复继续。');
             }
         });
     }

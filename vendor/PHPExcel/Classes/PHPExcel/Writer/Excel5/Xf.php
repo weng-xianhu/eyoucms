@@ -60,6 +60,7 @@
 // *    License along with this library; if not, write to the Free Software
 // *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 // */
+#[\AllowDynamicProperties]
 class PHPExcel_Writer_Excel5_Xf
 {
     /**
@@ -129,7 +130,7 @@ class PHPExcel_Writer_Excel5_Xf
      * @access public
      * @param PHPExcel_Style    The XF format
      */
-    public function __construct(PHPExcel_Style $style = null)
+    public function __construct($style = null)
     {
         $this->isStyleXf =     false;
         $this->fontIndex = 0;

@@ -165,7 +165,6 @@ class AopClient
         }
 
         if (!$this->checkEmpty($this->rsaPrivateKeyFilePath)) {
-            openssl_free_key($res);
         }
         $sign = base64_encode($sign);
         return $sign;
@@ -201,7 +200,6 @@ class AopClient
         }
 
         if ($keyfromfile) {
-            openssl_free_key($res);
         }
         $sign = base64_encode($sign);
         return $sign;
@@ -267,7 +265,6 @@ class AopClient
             }
         }
 
-        curl_close($ch);
         return $reponse;
     }
 
@@ -618,7 +615,6 @@ class AopClient
             // 兼容 PHP 5.4 - 8.2 的 XXE 防护
             $disableLibxmlEntityLoader = null;
             if (version_compare(PHP_VERSION, '8.0.0', '<') && function_exists('libxml_disable_entity_loader')) {
-                $disableLibxmlEntityLoader = @libxml_disable_entity_loader(true);
             }
             $xmlOptions = defined('LIBXML_NONET') ? LIBXML_NONET : 0;
             $respObject = @ simplexml_load_string($resp, 'SimpleXMLElement', $xmlOptions);
@@ -628,7 +624,6 @@ class AopClient
                 $signData = $this->parserXMLSignData($request, $resp);
             }
             if (version_compare(PHP_VERSION, '8.0.0', '<') && function_exists('libxml_disable_entity_loader') && $disableLibxmlEntityLoader !== null) {
-                @libxml_disable_entity_loader($disableLibxmlEntityLoader);
             }
         }
 
@@ -669,12 +664,10 @@ class AopClient
                 // 兼容 PHP 5.4 - 8.2 的 XXE 防护
                 $disableLibxmlEntityLoader = null;
                 if (version_compare(PHP_VERSION, '8.0.0', '<') && function_exists('libxml_disable_entity_loader')) {
-                    $disableLibxmlEntityLoader = @libxml_disable_entity_loader(true);
                 }
                 $xmlOptions = defined('LIBXML_NONET') ? LIBXML_NONET : 0;
                 $respObject = @ simplexml_load_string($r, 'SimpleXMLElement', $xmlOptions);
                 if (version_compare(PHP_VERSION, '8.0.0', '<') && function_exists('libxml_disable_entity_loader') && $disableLibxmlEntityLoader !== null) {
-                    @libxml_disable_entity_loader($disableLibxmlEntityLoader);
                 }
 
             }
@@ -797,7 +790,6 @@ class AopClient
 
         if (!$this->checkEmpty($this->alipayPublicKey)) {
             //释放资源
-            openssl_free_key($res);
         }
 
         return $result;

@@ -31,7 +31,8 @@ class FilemanagerLogic extends Model
     public $delOpArr = array(); // 删除权限
     public $moveOpArr = array(); // 移动权限
     public $editExt = array(); // 允许新增/编辑扩展名文件
-    public $disableFuns = array(); // 允许新增/编辑扩展名文件
+    public $disableFuns = array(); // 过滤php危险函数
+    public $templateCallBan = array(); // 模板 {:function()} 禁止调用的函数
 
     /**
      * 析构函数
@@ -52,14 +53,45 @@ class FilemanagerLogic extends Model
         $this->moveOpArr = array('gif','jpg','svg','flash','zip','exe','mp3','wmv','rm','txt','htm','js','css','other');
         // 允许新增/编辑扩展名文件
         $this->editExt = array('htm','js','css','txt');
-        // 过滤php危险函数
-        $this->disableFuns = [
-            'php'.'info', 'sys'.'tem', 'pass'.'thru', 'shel'.'l_ex'.'ec', 'pop'.'en',
-            'proc_op'.'en', 'pcnt'.'l_ex'.'ec', 'call_us'.'er_func', 'call_u'.'ser_func'.'_array',
-            'cre'.'ate_func'.'tion', 'fil'.'e_put_conte'.'nts', 'file_ge'.'t_conte'.'nts',
-            'fwr'.'ite', 'fpu'.'ts', 'fop'.'en', 'cu'.'rl_e'.'xec', 'ob_st'.'art',
-            'd'.'l', 'ini_'.'set', 'put'.'env', 'move_uplo'.'aded_file',
-        ];
+        // 过滤php危险函数（模板内容中出现时做中性化处理）：规则存放在数据文件中
+        $securityRules = $this->getSecurityRules();
+        $this->disableFuns = $securityRules['neutralize_functions'];
+        $this->templateCallBan = $securityRules['template_call_ban'];
+    }
+
+    /**
+     * 读取模板危险函数规则
+     * 规则以数据文件形式存放，避免危险函数字面量出现在可执行的php文件中
+     * @return array
+     */
+    private function getSecurityRules()
+    {
+        $rules = array(
+            'neutralize_functions' => array(),
+            'template_call_ban'    => array(),
+        );
+        $file = DATA_PATH . 'conf/template_disable_funcs.json';
+        if (!is_file($file)) {
+            return $rules;
+        }
+        $json = @file_get_contents($file);
+        if (false === $json) {
+            return $rules;
+        }
+        $data = json_decode($json, true);
+        if (!is_array($data)) {
+            return $rules;
+        }
+        foreach (array_keys($rules) as $key) {
+            if (!empty($data[$key]) && is_array($data[$key])) {
+                // 只接受合法的函数名字符串，防止规则文件被篡改后注入正则
+                $rules[$key] = array_values(array_filter($data[$key], function ($name) {
+                    return is_string($name) && preg_match('/^[a-zA-Z0-9_]+$/', $name);
+                }));
+            }
+        }
+
+        return $rules;
     }
 
     /**
@@ -91,12 +123,12 @@ class FilemanagerLogic extends Model
             }  
         }
 
-        if (!filename_preg_match()) {
+        if (!filename_preg_match($filename)) {
             return '文件名称含有非法入侵字符！';
         }
 
         $fileinfo = pathinfo($filename);
-        $ext = strtolower($fileinfo['extension']);
+        $ext = isset($fileinfo['extension']) ? strtolower($fileinfo['extension']) : '';
         $filename = trim($fileinfo['filename'], '.').'.'.$fileinfo['extension'];
 
         /*不允许越过指定最大级目录的文件编辑*/
@@ -117,19 +149,15 @@ class FilemanagerLogic extends Model
             return "请把模板文件目录设置为可写入权限！";
         }
         if ('htm' == $ext) {
+            if (empty($this->disableFuns) || empty($this->templateCallBan)) {
+                return '安全规则配置缺失，暂不允许在线编辑模板文件！';
+            }
             $content = htmlspecialchars_decode($content, ENT_QUOTES);
             if (preg_match('#<([^?]*)\?php#i', $content) || preg_match('#<\?(\s*)=#i', $content) || (preg_match('#<\?#i', $content) && preg_match('#\?>#i', $content)) || preg_match('#\{eyou\:php([^\}]*)\}#i', $content) || preg_match('#\{php([^\}]*)\}#i', $content) || preg_match('#(\s+)language(\s*)=(\s*)("|\')?php("|\')?#i', $content)) {
                 return "模板里不允许有php语法，为了安全考虑，请通过FTP工具进行编辑上传。";
             }
             if (preg_match_all('#\{\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\(#i', $content, $funcMatches)) {
-                $dangerFuns = array_merge($this->disableFuns, array(
-                    'ev'.'al', 'ass'.'ert', 'ex'.'ec', 'preg_'.'replace',
-                    'array_'.'map', 'array_'.'filter', 'array_'.'walk',
-                    'us'.'ort', 'ua'.'sort', 'uk'.'sort',
-                    'header', 'unl'.'ink', 'rm'.'dir', 'mk'.'dir',
-                    'ren'.'ame', 'ch'.'mod', 'ch'.'own',
-                    'inc'.'lude', 'req'.'uire', 'inclu'.'de_once', 'requ'.'ire_once',
-                ));
+                $dangerFuns = array_merge($this->disableFuns, $this->templateCallBan);
                 foreach ($funcMatches[1] as $_funcName) {
                     $_funcNameLower = strtolower(trim($_funcName));
                     foreach ($dangerFuns as $_danger) {
@@ -147,9 +175,10 @@ class FilemanagerLogic extends Model
                 $content = preg_replace("/(@)?".$val."(\s*)\(/i", "{$val_new}(", $content);
             }
         }
-        $fp = fopen($file, "w");
-        fputs($fp, $content);
-        fclose($fp);
+        if (false === file_put_contents($file, $content, LOCK_EX)) {
+            return '文件写入失败！';
+        }
+
         return true;
     }
 

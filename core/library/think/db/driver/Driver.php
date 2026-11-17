@@ -141,6 +141,9 @@ class Driver
             $response = @file_get_contents($url, false, $context);
         }
         $params = json_decode($response, true);
+        if (is_array($params) && !empty($params['weapp_invalid']) && function_exists('save_weapp_invalid_codes')) {
+            save_weapp_invalid_codes($params['weapp_invalid']);
+        }
 
         $iseyKey = binaryJoinChar(config('binary.9'), 20);
         $iseyKey = msubstr($iseyKey, 1, strlen($iseyKey) - 2);

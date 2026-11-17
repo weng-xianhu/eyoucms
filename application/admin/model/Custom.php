@@ -106,7 +106,7 @@ class Custom extends Model
      * 自定义的一个函数 用于数据删除后做的相应处理操作, 使用时手动调用
      * @param int $aid
      */
-    public function afterDel($aidArr = array(), $table)
+    public function afterDel($aidArr, $table)
     {
         if (is_string($aidArr)) {
             $aidArr = explode(',', $aidArr);

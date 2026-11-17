@@ -1,22 +1,13 @@
 <?php 
 return array (
-  'mini_id' => 
+  'id' => 
   array (
-    'name' => 'mini_id',
-    'type' => 'int(11) unsigned',
+    'name' => 'id',
+    'type' => 'int(10) unsigned',
     'notnull' => false,
     'default' => NULL,
     'primary' => true,
     'autoinc' => true,
-  ),
-  'categoryid' => 
-  array (
-    'name' => 'categoryid',
-    'type' => 'int(11)',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
   ),
   'name' => 
   array (
@@ -27,18 +18,27 @@ return array (
     'primary' => false,
     'autoinc' => false,
   ),
-  'litpic' => 
+  'type' => 
   array (
-    'name' => 'litpic',
-    'type' => 'varchar(250)',
+    'name' => 'type',
+    'type' => 'varchar(30)',
+    'notnull' => false,
+    'default' => 'openai_compat',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'base_url' => 
+  array (
+    'name' => 'base_url',
+    'type' => 'varchar(255)',
     'notnull' => false,
     'default' => '',
     'primary' => false,
     'autoinc' => false,
   ),
-  'component' => 
+  'api_key' => 
   array (
-    'name' => 'component',
+    'name' => 'api_key',
     'type' => 'text',
     'notnull' => false,
     'default' => NULL,
@@ -50,50 +50,14 @@ return array (
     'name' => 'status',
     'type' => 'tinyint(1)',
     'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'cloud_id' => 
-  array (
-    'name' => 'cloud_id',
-    'type' => 'int(10)',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'config' => 
-  array (
-    'name' => 'config',
-    'type' => 'text',
-    'notnull' => false,
-    'default' => NULL,
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'is_del' => 
-  array (
-    'name' => 'is_del',
-    'type' => 'tinyint(1) unsigned',
-    'notnull' => false,
-    'default' => '0',
-    'primary' => false,
-    'autoinc' => false,
-  ),
-  'lang' => 
-  array (
-    'name' => 'lang',
-    'type' => 'varchar(10)',
-    'notnull' => false,
-    'default' => 'cn',
+    'default' => '1',
     'primary' => false,
     'autoinc' => false,
   ),
   'add_time' => 
   array (
     'name' => 'add_time',
-    'type' => 'int(11) unsigned',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
     'primary' => false,
@@ -102,9 +66,45 @@ return array (
   'update_time' => 
   array (
     'name' => 'update_time',
-    'type' => 'int(11) unsigned',
+    'type' => 'int(11)',
     'notnull' => false,
     'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_status' => 
+  array (
+    'name' => 'last_test_status',
+    'type' => 'tinyint(1)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_time' => 
+  array (
+    'name' => 'last_test_time',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'last_test_latency' => 
+  array (
+    'name' => 'last_test_latency',
+    'type' => 'int(11)',
+    'notnull' => false,
+    'default' => '0',
+    'primary' => false,
+    'autoinc' => false,
+  ),
+  'kind' => 
+  array (
+    'name' => 'kind',
+    'type' => 'varchar(20)',
+    'notnull' => false,
+    'default' => 'model',
     'primary' => false,
     'autoinc' => false,
   ),

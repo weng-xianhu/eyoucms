@@ -775,6 +775,12 @@ EOF;
     public function changeTableVal()
     {
         if (IS_AJAX_POST) {
+            // 权限校验：拥有“审核信息(changetableval)”或“修改信息(edit)”操作权限的后台账号可调用本接口
+            // 内置角色默认只有 add/edit/del，未勾选“审核信息”时仍可用 edit 保持原有业务，只读角色则拒绝
+            if (1 != is_check_cud('changetableval') && 1 != is_check_cud('edit')) {
+                $this->error('您没有操作权限，请联系超级管理员分配权限');
+            }
+
             $url = null;
             $data = [
                 'refresh'   => 0,
@@ -783,9 +789,14 @@ EOF;
             $param    = input('param.');
             $table    = input('param.table/s'); // 表名
             $id_name  = input('param.id_name/s'); // 表主键id名
-            $id_value = input('param.id_value/d'); // 表主键id值
+            $id_value = intval(input('param.id_value/d', 0)); // 表主键id值
             $field    = input('param.field/s'); // 修改哪个字段
             $value    = input('param.value/s', '', null); // 修改字段值
+            // 参数类型兜底，避免数组参数进入后续字符串处理
+            $table    = is_string($table) ? $table : '';
+            $id_name  = is_string($id_name) ? $id_name : '';
+            $field    = is_string($field) ? $field : '';
+            $value    = is_string($value) ? $value : '';
             $value    = eyPreventShell($value) ? $value : strip_sql($value);
 
             /* 安全校验：本接口仅用于后台列表的状态/排序等字段切换，
@@ -811,7 +822,7 @@ EOF;
 
             // 敏感字段：任何数据表都禁止通过本通用接口更新
             $denyFields = [
-                'password', 'salt', 'level', 'money', 'score', 'is_admin', 'role_id', 'group_id',
+                'password', 'salt', 'level', 'money', 'score', 'price', 'is_admin', 'role_id', 'group_id',
                 'purview', 'username', 'admin_name', 'users_name', 'mobile', 'email',
                 'token', 'openid', 'unionid', 'session_id',
             ];
@@ -866,7 +877,7 @@ EOF;
                 'users_notice_tpl'       => ['is_open', 'tpl_title'],
                 'users_parameter'        => ['is_hidden', 'is_required', 'sort_order'],
                 'users_recharge_pack'    => ['sort_order', 'status'],
-                'users_type_manage'      => ['activity', 'price', 'sort_order', 'type_name'],
+                'users_type_manage'      => ['activity', 'sort_order'],
                 'weapp'                  => ['status'],
                 'wechat_template'        => ['is_open'],
             ];
@@ -876,9 +887,14 @@ EOF;
                     $this->error('非法操作：该数据表不允许修改此字段！');
                 }
             } else if (0 !== strpos($checkTable, 'weapp_')) {
-                // 非插件自建表（weapp_ 前缀）一律不允许通过本通用接口更新；
-                // 插件表的字段由插件自行定义，此处仅由上面的敏感字段黑名单兜底
+                // 非插件自建表（weapp_ 前缀）一律不允许通过本通用接口更新
                 $this->error('非法操作：禁止通过该接口更新此数据表！');
+            } else {
+                // 插件自建表：只允许切换通用展示/排序字段，价格、配置等业务字段由插件自行校验权限后处理
+                $weappAllowFields = ['status', 'sort_order', 'is_show', 'is_open', 'is_recom', 'is_choose', 'display', 'target'];
+                if (!in_array($checkField, $weappAllowFields)) {
+                    $this->error('非法操作：该插件表不允许修改此字段！');
+                }
             }
             /* end */
 

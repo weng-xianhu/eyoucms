@@ -517,6 +517,25 @@ class ShopOrderService extends Model
     // 售后服务处理(维权订单处理)
     public function afterServiceHandle($post = [])
     {
+        // 退款金额服务端校验：实际退款金额必须大于 0，且不超过该明细实付金额与订单实付金额的较小值
+        if (7 === intval($post['status']) && !empty($post['actual_price'])) {
+            $serviceInfo = $this->shop_order_service_db->where([
+                'service_id' => intval($post['service_id']),
+                'users_id'   => intval($post['users_id']),
+            ])->field('details_id, order_id')->find();
+            if (empty($serviceInfo)) $this->error('维权订单不存在');
+            $detailsInfo = $this->shop_order_details_db->where(['details_id' => intval($serviceInfo['details_id'])])->field('product_price, num')->find();
+            $orderInfo   = $this->shop_order_db->where(['order_id' => intval($serviceInfo['order_id'])])->field('order_amount')->find();
+            $detailSubtotal = empty($detailsInfo) ? 0 : floatval($detailsInfo['product_price']) * intval($detailsInfo['num']);
+            $orderAmount    = empty($orderInfo) ? 0 : floatval($orderInfo['order_amount']);
+            $maxRefund      = min($detailSubtotal, $orderAmount);
+            $actualPrice    = sprintf('%.2f', floatval($post['actual_price']));
+            if (floatval($actualPrice) <= 0 || floatval($actualPrice) > $maxRefund) {
+                $this->error('实际退款金额必须大于 0 且不能超过该商品实付金额');
+            }
+            $post['actual_price'] = $actualPrice;
+        }
+
         // 更新指定的维权订单
         $times = getTime();
         $where = [

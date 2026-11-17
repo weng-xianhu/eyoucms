@@ -15,6 +15,7 @@ namespace app\home\controller;
 
 use think\Db;
 use think\Config;
+use think\Cache;
 
 class View extends Base
 {
@@ -376,6 +377,8 @@ EOF;
         $map    = array(
             'a.file_id' => $file_id,
             'a.uhash'   => $uhash,
+            'b.arcrank' => array('egt', 0),
+            'b.is_del'  => 0,
         );
         $result = Db::name('download_file')
             ->alias('a')
@@ -383,10 +386,14 @@ EOF;
             ->join('__ARCHIVES__ b', 'a.aid = b.aid', 'LEFT')
             ->where($map)
             ->find();
+        if (empty($result)) {
+            $this->error('下载文件不存在！');
+            exit;
+        }
         $result['file_url'] = trim($result['file_url']);
         $file_url_gbk = iconv("utf-8", "gb2312//IGNORE", $result['file_url']);
         $file_url_gbk = preg_replace('#^(/[/\w\-]+)?(/public/upload/soft/|/uploads/soft/)#i', '$2', $file_url_gbk);
-        if (empty($result) || (!is_http_url($result['file_url']) && !file_exists('.' . $file_url_gbk))) {
+        if (!is_http_url($result['file_url']) && !file_exists('.' . $file_url_gbk)) {
             $this->error('下载文件不存在！');
             exit;
         }
@@ -502,18 +509,22 @@ EOF;
         // 下载次数限制
         !empty($result['arc_level_id']) && $this->down_num_access($result['aid']);
         
-        //判断外部链接的拓展名是否是图片或者txt
+        //判断外部链接的拓展名是否是图片或者txt（扩展名只用于决定是否本地化，不作为安全边界）
         if (is_http_url($result['file_url'])){
-            $url_arr = explode('.',$result['file_url']);
-            $count = count($url_arr);
-            $ext = $url_arr[$count - 1];
+            // 只取 path 部分判断扩展名，避免用 ?x=.txt 之类伪造扩展名
+            $url_path = parse_url($result['file_url'], PHP_URL_PATH);
+            $url_path = is_string($url_path) ? $url_path : '';
+            $ext = strtolower(pathinfo($url_path, PATHINFO_EXTENSION));
             $image_ext_arr = explode(',', config('global.image_ext'));
             $image_ext_arr = array_merge($image_ext_arr, ['txt']);
             if (in_array($ext, $image_ext_arr)){
                 //保存到本地
-                $result['file_url'] = remote_file_to_local($result['file_url']);
-                $result['is_remote'] = 0;
-                $result['remote_to_local'] = 1;
+                $local_url = remote_file_to_local($result['file_url']);
+                if (!empty($local_url) && $local_url != $result['file_url']) {
+                    $result['file_url'] = $local_url;
+                    $result['is_remote'] = 0;
+                    $result['remote_to_local'] = 1;
+                }
             }
         }
 
@@ -552,9 +563,19 @@ EOF;
             // }
             // 记录下载次数
             $this->download_log($result['file_id'], $result['aid']);
-            $uhash_mch = mchStrCode($uhash);
-            $url       = $this->root_dir . "/index.php?m=home&c=View&a=download_file&file_id={$file_id}&uhash={$uhash_mch}";
-            cookie($file_id.$uhash_mch, 1);
+            // 生成一次性短时下载令牌：绑定会员与文件，避免下载链接被分享后绕过付费/等级/次数限制
+            if (function_exists('random_bytes')) {
+                $downloadToken = bin2hex(random_bytes(32));
+            } else {
+                $downloadToken = md5(uniqid(getTime() . mt_rand(), true));
+            }
+            $tokenData = [
+                'file_id'  => intval($file_id),
+                'users_id' => intval(session('users_id')),
+                'used'     => 0,
+            ];
+            Cache::set('download_token_' . $downloadToken, $tokenData, 300);
+            $url = $this->root_dir . "/index.php?m=home&c=View&a=download_file&file_id={$file_id}&token={$downloadToken}";
             if (IS_AJAX) {
                 $this->success('开始下载中……', $url);
             } else {
@@ -571,38 +592,42 @@ EOF;
     public function download_file()
     {
         $file_id = input('param.file_id/d');
-        $uhash_mch   = input('param.uhash/s', '');
-        $uhash   = mchStrCode($uhash_mch, 'DECODE');
-        $map     = array(
-            'file_id' => $file_id,
-        );
-        $result  = Db::name('download_file')->field('aid,file_url,file_mime,file_name,uhash')->where($map)->find();
-        if (!empty($result['uhash']) && $uhash != $result['uhash']) {
+        $token   = input('param.token/s', '');
+        if (empty($file_id) || empty($token) || !preg_match('/^[A-Fa-f0-9]{32,64}$/', $token)) {
             $this->error('下载地址出错！');
         }
 
-        $value = cookie($file_id.$uhash_mch);
-        if (empty($value)) {
-            $result = Db::name('archives')
-                ->field("b.*, a.*")
-                ->alias('a')
-                ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
-                ->where(['a.aid'=>$result['aid']])
-                ->find();
-            $arcurl = arcurl('home/Download/view', $result);
-            $this->error('下载地址已失效，请在下载详情页进行下载！', $arcurl);
-        } else {
-            if (isMobile()) {
-                $first = cookie($file_id.$uhash_mch.'first');
-                if (!empty($first)) {
-                    cookie($file_id.$uhash_mch, null);
-                    cookie($file_id.$uhash_mch.'first', null);
-                } else {
-                    cookie($file_id.$uhash_mch.'first', 1);
-                }
-            } else {
-                cookie($file_id.$uhash_mch, null);
+        // 校验一次性下载令牌：绑定文件ID与会员ID，并限制有效期
+        $tokenKey  = 'download_token_' . $token;
+        $tokenData = Cache::get($tokenKey);
+        $users_id  = intval(session('users_id'));
+        if (empty($tokenData) || intval($tokenData['file_id']) !== intval($file_id) || intval($tokenData['users_id']) !== $users_id) {
+            $result = Db::name('download_file')->field('aid')->where(['file_id' => $file_id])->find();
+            $arcurl = '';
+            if (!empty($result['aid'])) {
+                $archives = Db::name('archives')
+                    ->field("b.*, a.*")
+                    ->alias('a')
+                    ->join('__ARCTYPE__ b', 'b.id = a.typeid', 'LEFT')
+                    ->where(['a.aid'=>$result['aid']])
+                    ->find();
+                if (!empty($archives)) $arcurl = arcurl('home/Download/view', $archives);
             }
+            $this->error('下载地址已失效，请在下载详情页进行下载！', $arcurl);
+        }
+
+        // 令牌使用次数限制：PC 端一次，移动端兼容微信浏览器的二次请求
+        $used = intval($tokenData['used']) + 1;
+        if ($used >= (isMobile() ? 2 : 1)) {
+            Cache::rm($tokenKey);
+        } else {
+            $tokenData['used'] = $used;
+            Cache::set($tokenKey, $tokenData, 300);
+        }
+
+        $result = Db::name('download_file')->field('aid,file_url,file_mime,file_name')->where(['file_id' => $file_id])->find();
+        if (empty($result)) {
+            $this->error('下载文件不存在！');
         }
 
         download_file($result['file_url'], $result['file_mime'], $result['file_name']);
@@ -715,7 +740,12 @@ EOF;
         $aid = input('param.aid/d');
         $field_name = input('param.field/s');
         $field_name = mchStrCode($field_name, 'DECODE', $aid.get_auth_code());
-        $archivesInfo = Db::name('archives')->field('aid,channel')->where(['aid'=>$aid])->find();
+        $archivesInfo = Db::name('archives')->field('aid,channel')->where([
+            'aid'     => intval($aid),
+            'is_del'  => 0,
+            'status'  => 1,
+            'arcrank' => ['egt', 0],
+        ])->find();
         if (empty($archivesInfo) || empty($field_name)) {
             $this->error('下载地址出错！');
         } else {
@@ -922,13 +952,31 @@ EOF;
 
         $result = Db::name('archives')->alias('a')
             ->join('media_content b','a.aid = b.aid')
-            ->where('a.aid',$aid)->field('b.courseware,a.*')
+            ->where([
+                'a.aid'     => intval($aid),
+                'a.is_del'  => 0,
+                'a.status'  => 1,
+                'a.arcrank' => ['egt', 0],
+            ])->field('b.courseware,a.*')
             ->find();
-        if (!empty($result['courseware'])) {
-            $file_url = preg_replace('#^(' . $this->root_dir . ')?(/)#i', '$2', $result['courseware']);
-            if (!is_http_url($file_url) && !file_exists('.' . $file_url)) {
-                $this->error('附件文件不存在！');
+        if (empty($result)) {
+            $this->error('附件文件不存在！');
+        }
+
+        $file_url = isset($result['courseware']) ? $result['courseware'] : '';
+        if (!empty($file_url)) {
+            $file_url = preg_replace('#^(' . $this->root_dir . ')?(/)#i', '$2', $file_url);
+            if (!is_http_url($file_url)) {
+                // 安全校验：禁止目录穿越，本地文件必须位于上传目录内
+                $safe_file_url = get_safe_local_file_path($file_url);
+                if (false === $safe_file_url) {
+                    $this->error('附件文件不存在！');
+                }
+                $file_url = $safe_file_url;
             }
+        }
+        if (empty($file_url)) {
+            $this->error('附件文件不存在！');
         }
 
         $users = GetUsersLatestData();
@@ -1019,8 +1067,16 @@ EOF;
             ->field('a.*,b.*,c.typename,c.dirname')
             ->join('media_content b', 'a.aid=b.aid')
             ->join('arctype c', 'a.typeid=c.id')
-            ->where('a.aid', $aid)
+            ->where([
+                'a.aid'     => $aid,
+                'a.is_del'  => 0,
+                'a.status'  => 1,
+                'a.arcrank' => ['egt', 0],
+            ])
             ->find();
+        if (empty($res)) {
+            $this->error('视频不存在或无法播放！');
+        }
         if(!empty($res['courseware'])){
             $res['courseware'] = get_default_pic($res['courseware'],true);
         }
@@ -1054,8 +1110,23 @@ EOF;
     {
         if (IS_AJAX || $_ajax == 1){
             $is_mobile = isMobile() ? 1 : 0;
+            // 校验视频文件是否属于该文档，防止越权播放/下载其他文档的课件
+            if (!empty($fid) && !empty($aid)) {
+                $fileCount = Db::name('media_file')->where(['file_id' => intval($fid), 'aid' => intval($aid)])->count();
+                if (empty($fileCount)) {
+                    return ['status'=>0,'msg'=>'视频不存在！','is_mobile'=>$is_mobile];
+                }
+            }
             if (empty($res)) {
-                $res  = Db::name('archives')->where('aid', $aid)->find();
+                $res  = Db::name('archives')->where([
+                    'aid'     => intval($aid),
+                    'is_del'  => 0,
+                    'status'  => 1,
+                    'arcrank' => ['egt', 0],
+                ])->find();
+                if (empty($res)) {
+                    return ['status'=>0,'msg'=>'视频不存在或无法播放！','is_mobile'=>$is_mobile];
+                }
             }
             $arc_level_id = !empty($res['arc_level_id']) ? intval($res['arc_level_id']) : 0;
             if (0 < $res['users_price'] || 0 < $arc_level_id) {

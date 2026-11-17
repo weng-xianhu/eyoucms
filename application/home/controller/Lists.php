@@ -329,18 +329,52 @@ class Lists extends Base
     {
         $typeid = input('post.typeid/d');
         if (IS_POST && !empty($typeid)) {
+            // form_type 以服务端数据交叉校验，避免客户端随意切换
             $form_type = input('post.form_type/d', 0);
+            $form_type = 1 === $form_type ? 1 : 0;
+            $hasArctype = Db::name('arctype')->where(['id' => intval($typeid), 'is_del' => 0])->count();
+            $hasForm    = Db::name('form')->where('form_id', intval($typeid))->count();
+            if (empty($hasArctype) && empty($hasForm)) {
+                $this->error(foreign_lang('gbook11', $this->home_lang));
+            }
+            if (1 === $form_type && empty($hasForm) && !empty($hasArctype)) {
+                $form_type = 0;
+            } elseif (0 === $form_type && empty($hasArctype) && !empty($hasForm)) {
+                $form_type = 1;
+            }
             $channel_guestbook_gourl = tpSetting('channel_guestbook.channel_guestbook_gourl');
             if (!empty($channel_guestbook_gourl)) {
                 $gourl = trim($channel_guestbook_gourl);
             } else {
                 $gourl = input('post.gourl/s');
-                $gourl = urldecode(trim($gourl));
+                $gourl = is_string($gourl) ? urldecode(trim($gourl)) : '';
                 $gourl = str_replace(['"',"'",';'], '', $gourl);
+                /*只允许跳转本站地址，防止开放重定向*/
+                if (!empty($gourl)) {
+                    $is_self_url = false;
+                    if (false === strpos($gourl, '\\') && preg_match('#^/(?!/)#', $gourl)) {
+                        // 站内相对地址
+                        $is_self_url = true;
+                    } else {
+                        $url_parse = parse_url($gourl);
+                        if (!empty($url_parse['scheme']) && !empty($url_parse['host'])
+                            && in_array(strtolower($url_parse['scheme']), ['http', 'https'], true)
+                            && strcasecmp($url_parse['host'], request()->host(true)) === 0) {
+                            // 本站绝对地址
+                            $is_self_url = true;
+                        }
+                    }
+                    if (!$is_self_url) {
+                        $gourl = '';
+                    }
+                }
+                /*--end*/
             }
 
             $post = input('post.');
             unset($post['gourl']);
+            // 与主表使用同一个 form_type，避免属性表按客户端原始值写入
+            $post['form_type'] = $form_type;
 
             $token = '__token__';
             foreach ($post as $key => $val) {
@@ -363,7 +397,6 @@ class Lists extends Base
             if (0 < $channel_guestbook_interval) {
                 $map   = array(
                     'typeid'   => $typeid,
-                    'form_type'=> $form_type,
                     'ip'       => $ip,
                     'add_time' => array('gt', getTime() - $channel_guestbook_interval),
                 );
@@ -392,49 +425,89 @@ class Lists extends Base
                     $attrArr = model('LanguageAttr')->getBindValue($attrArr, 'guestbook_attribute'); // 多语言
                 }
             }
-            //判断必填项            
-            $ContentArr = []; // 添加站内信所需参数
+            /* 服务端读取当前表单的属性配置，作为必填/真实验证/属性归属的唯一依据 */
+            $attrConfigList = Db::name('guestbook_attribute')->where([
+                'typeid'    => intval($typeid),
+                'form_type' => intval($form_type),
+                'is_del'    => 0,
+            ])->order('sort_order asc, attr_id asc')->select();
+            $attrConfigMap = [];
+            foreach ($attrConfigList as $attrCfg) {
+                $attrConfigMap[intval($attrCfg['attr_id'])] = $attrCfg;
+            }
+            // 提交的 attr_* 键 => 绑定后的属性ID（兼容多语言）
+            $postedAttrKeyMap = [];
             foreach ($post as $key => $value) {
-                if (stripos($key, "attr_") !== false) {
-                    //处理得到自定义属性id
-                    $attr_id = substr($key, 5);
-                    $attr_id = intval($attr_id);
-                    if (!empty($attrArr)) {
-                        $attr_id = $attrArr[$attr_id]['attr_id'];
+                if (preg_match('/^attr_(\d+)$/i', $key, $matches)) {
+                    $postedId = intval($matches[1]);
+                    $boundId  = (!empty($attrArr) && isset($attrArr[$postedId])) ? intval($attrArr[$postedId]['attr_id']) : $postedId;
+                    $postedAttrKeyMap[$boundId] = $key;
+                }
+            }
+
+            //判断必填项（以表单配置为准，未提交的必填项同样会被拦截）
+            $ContentArr = []; // 添加站内信所需参数
+            $realValidateAttr = $realValidateEmailAttr = [];
+            foreach ($attrConfigMap as $boundId => $ga_data) {
+                $postKey = isset($postedAttrKeyMap[$boundId]) ? $postedAttrKeyMap[$boundId] : '';
+                $value   = '' !== $postKey ? $post[$postKey] : '';
+                if (!empty($ga_data['required'])) {
+                    $isEmpty = is_array($value) ? empty($value) : ('' === trim(strval($value)));
+                    if ($isEmpty) {
+                        $msg = sprintf(foreign_lang('gbook3', $this->home_lang), $ga_data['attr_name']);
+                        $this->error($msg);
                     }
-                    $ga_data = Db::name('guestbook_attribute')->where([
-                        'attr_id'   => $attr_id,
-                    ])->find();
-                    if ($ga_data['required'] == 1) {
-                        if (empty($value)) {
-                            $msg = sprintf(foreign_lang('gbook3', $this->home_lang), $ga_data['attr_name']);
-                            $this->error($msg);
-                        } else {
-                            if ($ga_data['validate_type'] == 6) {
-                                $form_field_grep_list = config('global.form_field_grep_list');
-                                $pattern  = $form_field_grep_list['mobile']['value'];
-                                if (!preg_match($pattern, $value)) {
-                                    $msg = sprintf(foreign_lang('gbook4', $this->home_lang), $ga_data['attr_name']);
-                                    $this->error($msg);
-                                }
-                            } elseif ($ga_data['validate_type'] == 7) {
-                                if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                                    $msg = sprintf(foreign_lang('gbook4', $this->home_lang), $ga_data['attr_name']);
-                                    $this->error($msg);
-                                }
+                    if (!empty($value)) {
+                        if ($ga_data['validate_type'] == 6) {
+                            $form_field_grep_list = config('global.form_field_grep_list');
+                            $pattern  = $form_field_grep_list['mobile']['value'];
+                            if (!preg_match($pattern, $value)) {
+                                $msg = sprintf(foreign_lang('gbook4', $this->home_lang), $ga_data['attr_name']);
+                                $this->error($msg);
+                            }
+                        } elseif ($ga_data['validate_type'] == 7) {
+                            if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                                $msg = sprintf(foreign_lang('gbook4', $this->home_lang), $ga_data['attr_name']);
+                                $this->error($msg);
                             }
                         }
                     }
+                }
+                // 配置了真实验证的手机/邮箱字段：必填或已填写时强制校验验证码
+                if (!empty($ga_data['real_validate']) && in_array(intval($ga_data['attr_input_type']), [6, 7], true)) {
+                    $needValidate = !empty($ga_data['required']) || (!is_array($value) && '' !== trim(strval($value)));
+                    if ($needValidate) {
+                        $attrPostKey = '' !== $postKey ? $postKey : 'attr_' . $boundId;
+                        if (6 === intval($ga_data['attr_input_type'])) {
+                            $realValidateAttr = ['post_key' => $attrPostKey];
+                        } else {
+                            $realValidateEmailAttr = ['post_key' => $attrPostKey];
+                        }
+                    }
+                }
+                // 站内信内容按表单配置顺序收集（仅收集已提交的属性）
+                if ('' !== $postKey) {
+                    $contentValue = $post[$postKey];
                     if (9 == $ga_data['attr_input_type']) {
-                        $value = get_region_name($value);
+                        $contentValue = get_region_name($contentValue);
                     }
-                    if (is_array($value)){
-                        $value = implode('，', $value);
+                    if (is_array($contentValue)) {
+                        $contentValue = implode('，', $contentValue);
                     }
-                    // 添加站内信所需参数
-                    array_push($ContentArr, $value);
+                    array_push($ContentArr, $contentValue);
                 }
             }
+
+            /* 真实验证以服务端配置为准，忽略客户端是否提交 real_validate 标记，防止漏传绕过 */
+            if (!empty($realValidateAttr)) {
+                $post['real_validate'] = 1;
+                $post['real_validate_attr_id'] = $realValidateAttr['post_key'];
+            }
+            if (!empty($realValidateEmailAttr)) {
+                $post['real_validate_email'] = 1;
+                $post['real_validate_email_attr_id'] = $realValidateEmailAttr['post_key'];
+            }
+            /*--end*/
 
             /* 处理判断验证码 */
             $is_vertify        = 1; // 默认开启验证码
@@ -473,7 +546,13 @@ class Lists extends Base
                 'add_time'    => getTime(),
                 'update_time' => getTime(),
             );
-            $data    = array_merge($post, $newData);
+            // 主表字段一律由服务端赋值，仅接收表单属性字段 attr_*，防止伪造 reply/admin_id/is_read/is_star 等字段
+            $data = $newData;
+            foreach ($post as $key => $val) {
+                if (preg_match('/^attr_(\d+)$/i', $key)) {
+                    $data[$key] = $val;
+                }
+            }
 
             // 查询手机验证码是否正确
             if (!empty($post['real_validate'])) {
@@ -556,7 +635,11 @@ class Lists extends Base
                 }
             }
 
-            // 数据验证
+            // 数据验证（令牌字段单独参与校验，主表数据不含令牌列）
+            $validateData = array(
+                'typeid' => $typeid,
+                $token   => isset($post[$token]) ? $post[$token] : '',
+            );
             $rule     = [
                 'typeid' => 'require|token:' . $token,
             ];
@@ -564,7 +647,7 @@ class Lists extends Base
                 'typeid.require' => foreign_lang('gbook11', $this->home_lang),
             ];
             $validate = new \think\Validate($rule, $message);
-            if (!$validate->batch()->check($data)) {
+            if (!$validate->batch()->check($validateData)) {
                 $error     = $validate->getError();
                 $error_msg = array_values($error);
                 $this->error($error_msg[0]);
@@ -589,8 +672,13 @@ class Lists extends Base
                 /*--end*/
                 $dataStr = '';
                 if (empty($guestbookRow)) { // 非重复表单的才能写入数据库
-                    $examine = Db::name('form')->where('form_id',$typeid)->value('open_examine');
-                    $data['examine'] = empty($examine) ? 1 : 0;
+                    // 留言审核开关仅自定义表单（form_type=1）存在；普通留言的 typeid 是栏目ID，不能当 form_id 查询
+                    $examine = 1;
+                    if (1 == $form_type) {
+                        $openExamine = Db::name('form')->where('form_id', intval($typeid))->value('open_examine');
+                        $examine = empty($openExamine) ? 1 : 0;
+                    }
+                    $data['examine'] = intval($examine);
                     $aid = Db::name('guestbook')->insertGetId($data);
                     if ($aid > 0) {
                         $res = $this->saveGuestbookAttr($aid, $typeid, $post);
@@ -649,6 +737,15 @@ class Lists extends Base
     {
         // post 提交的属性  以 attr_id _ 和值的 组合为键名    
         // $post = input("post.");
+        // 仅允许当前表单配置的属性，防止写入其他表单的属性值
+        $form_type = empty($post['form_type']) ? 0 : intval($post['form_type']);
+        $validAttrIds = Db::name('guestbook_attribute')->where([
+            'typeid'    => intval($typeid),
+            'form_type' => $form_type,
+            'is_del'    => 0,
+        ])->column('attr_id');
+        $validAttrIds  = array_map('intval', (array) $validAttrIds);
+        $formAttrGroup = (1 == $form_type) ? 'form_attribute' : 'guestbook_attribute';
         $image_type_list = explode('|', tpCache('global.image_type'));
         /*上传图片或附件*/
         $where = [
@@ -719,8 +816,15 @@ class Lists extends Base
         /*--end*/
 
         foreach ($post as $k => $v) {
-            if (!strstr($k, 'attr_')) continue;
-            $attr_id = str_replace('attr_', '', $k);
+            if (!preg_match('/^attr_(\d+)$/i', $k, $attrMatches)) continue;
+            $attr_id = intval($attrMatches[1]);
+            $isValidAttr = in_array($attr_id, $validAttrIds, true);
+            if (!$isValidAttr && is_language()) {
+                // 多语言：允许通过语言绑定映射到当前表单属性
+                $boundId = model('LanguageAttr')->getBindValue($attr_id, $formAttrGroup);
+                $isValidAttr = in_array(intval($boundId), $validAttrIds, true);
+            }
+            if (!$isValidAttr) continue;
             if (!empty($attr_id)) {
                 if (is_array($v)) {
                     $v = implode(PHP_EOL, $v);

@@ -19,6 +19,7 @@ use think\Config;
 
 class Special extends Base
 {
+    public $callback_url;
     public $nid = 'special';
     public $channeltype = '';
 

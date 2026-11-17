@@ -359,5 +359,210 @@
       });
   }
 </script>
+<!-- EyouMuse-Admin-Entry-Start -->
+{if condition="is_dir(ROOT_PATH.'weapp/EyouMcp')"}
+<!-- EyouMuse 智能助手 全局入口（由 AI连接器（MCP）插件启用时注入、停用/卸载时移除） -->
+<style>
+#eymuse-dock{position:fixed;right:26px;bottom:26px;z-index:999990;display:flex;align-items:center;gap:10px}
+#eymuse-fab{position:relative;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#1e9fff,#0b6fc2);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(11,111,194,.45);transition:transform .15s;user-select:none;flex:none}
+#eymuse-fab:hover{transform:scale(1.08)}
+#eymuse-fab svg{width:28px;height:28px;display:block}
+#eymuse-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#f5222d;color:#fff;font:bold 11px/18px Arial,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff;display:none;box-sizing:border-box}
+#eymuse-tip{display:none;position:relative;max-width:270px;background:#fff;color:#333;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.18);padding:9px 30px 9px 12px;font:13px/1.5 "Microsoft Yahei",sans-serif;cursor:pointer;animation:eymuse-pop .25s ease-out}
+#eymuse-tip:after{content:"";position:absolute;right:-6px;top:50%;margin-top:-6px;border:6px solid transparent;border-right:0;border-left-color:#fff}
+#eymuse-tip b{display:block;color:#0b6fc2;font-weight:600}
+#eymuse-tip i{display:block;font-style:normal;color:#888;font-size:12px;max-width:225px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#eymuse-tip .x{position:absolute;top:3px;right:8px;color:#aaa;font-size:16px;line-height:1}
+#eymuse-tip .x:hover{color:#333}
+#eymuse-dock.drag #eymuse-fab{transform:none;cursor:grabbing}
+#eymuse-dock.drag #eymuse-tip{display:none}
+@keyframes eymuse-pop{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+#eymuse-panel{position:fixed;right:0;top:0;bottom:0;width:min(480px,100vw);height:100vh;background:#1e1e1e;border-left:1px solid #3c3c3c;box-shadow:-8px 0 40px rgba(0,0,0,.45);z-index:999991;display:none;flex-direction:column;overflow:hidden;transition:width .15s}
+#eymuse-panel.on{display:flex}
+#eymuse-panel.wide{width:min(1180px,100vw)}
+#eymuse-panel-hd{height:38px;display:flex;align-items:center;gap:4px;padding:0 8px 0 14px;background:#252526;border-bottom:1px solid #3c3c3c;flex:none;color:#d4d4d4;font:13px/1 "Microsoft Yahei",sans-serif}
+#eymuse-panel-hd b{flex:1;font-weight:600;color:#d4d4d4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#eymuse-panel-hd b i{font-style:normal;color:#9d9d9d;font-weight:normal;margin-left:8px;font-size:12px}
+#eymuse-panel-hd a{cursor:pointer;color:#9d9d9d;font-size:12px;padding:6px 8px;border-radius:4px;text-decoration:none;white-space:nowrap}
+#eymuse-panel-hd a:hover{background:#333336;color:#4fc1ff}
+#eymuse-panel-hd a.eymuse-x{font-size:20px;line-height:1;padding:3px 10px}
+#eymuse-frame{flex:1;width:100%;border:0;background:#1e1e1e}
+#eymuse-panel.light{background:#fff;border-left-color:#e1e4e8;box-shadow:-8px 0 40px rgba(0,0,0,.18)}
+#eymuse-panel.light #eymuse-frame{background:#fff}
+@media (max-width:750px){#eymuse-panel,#eymuse-panel.wide{width:100vw}#eymuse-wide{display:none}}
+</style>
+<div id="eymuse-dock">
+  <div id="eymuse-tip"><span class="x" title="暂不处理">&times;</span><b></b><i></i></div>
+  <div id="eymuse-fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path><circle cx="8.5" cy="11.5" r="1" fill="currentColor" stroke="none"></circle><circle cx="12" cy="11.5" r="1" fill="currentColor" stroke="none"></circle><circle cx="15.5" cy="11.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+    <span id="eymuse-badge"></span>
+  </div>
+</div>
+<div id="eymuse-panel">
+  <div id="eymuse-panel-hd">
+    <b>站长 AI 助手</b>
+    <a id="eymuse-wide" title="切换抽屉宽度">⇔ 加宽</a>
+    <a id="eymuse-newwin" title="在新窗口打开完整页面">新窗口</a>
+    <a class="eymuse-x" id="eymuse-close" title="关闭 (Esc)">&times;</a>
+  </div>
+  <iframe id="eymuse-frame" src="about:blank"></iframe>
+</div>
+<script>
+(function(){
+  var base = eyou_basefile + '?m=admin&c=Weapp&a=execute&sm=EyouMcp&sc=EyouMcp&sa=';
+  var agentUrl = base + 'agent';
+  var dock = document.getElementById('eymuse-dock');
+  var fab = document.getElementById('eymuse-fab');
+  var badge = document.getElementById('eymuse-badge');
+  var tip = document.getElementById('eymuse-tip');
+  var panel = document.getElementById('eymuse-panel');
+  var frame = document.getElementById('eymuse-frame');
+  var hd = document.getElementById('eymuse-panel-hd');
+  var loaded = false;
+  /* 抽屉宽度：面板内页面（agent.htm）就绪后由它的 topbar 接管加宽 / 新窗口 / 关闭，这里的标题栏隐藏 */
+  function sendState(){ try { frame.contentWindow.postMessage({ type: 'eyoumuse-state', wide: panel.classList.contains('wide'), nowide: window.innerWidth <= 750 }, '*'); } catch(e){} }
+  function setWide(w){
+    if (w) panel.classList.add('wide'); else panel.classList.remove('wide');
+    document.getElementById('eymuse-wide').textContent = w ? '⇔ 收窄' : '⇔ 加宽';
+    try { localStorage.setItem('eyoumuse_wide', w ? '1' : '0'); } catch(e){}
+    sendState();
+  }
+  /* 后台当前工作区页面（#workspace iframe）的 c / a / typeid / id / aid，供助手切换「当前页面」场景卡 */
+  function ctx(){
+    try {
+      var ws = document.getElementById('workspace') || (window.frames['workspace'] && window.frames['workspace'].frameElement);
+      var href = ws && ws.contentWindow ? ws.contentWindow.location.href : '';
+      if (!href) return null;
+      var q = href.split('?')[1] || '', o = {}, parts = q.split('&');
+      for (var i = 0; i < parts.length; i++) { var kv = parts[i].split('='); if (kv[0]) o[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' ')); }
+      return { c: o.c || '', a: o.a || '', typeid: o.typeid || '', id: o.id || '', aid: o.aid || '' };
+    } catch(e) { return null; }
+  }
+  function sendCtx(){ try { frame.contentWindow.postMessage({ type: 'eyoumuse-ctx', ctx: ctx() }, '*'); } catch(e){} }
+  /* q：预填的任务描述；runId：直接打开某个任务（气泡点击） */
+  function openPanel(q, runId){
+    runId = parseInt(runId, 10) || 0;
+    if (!loaded) {
+      var c = ctx();
+      frame.src = agentUrl + '&embed=1' + (q ? '&q=' + encodeURIComponent(q) : '') + (c ? '&ctx=' + encodeURIComponent(JSON.stringify(c)) : '') + (runId ? '#run-' + runId : '');
+      loaded = true;
+    } else {
+      if (q) { try { frame.contentWindow.postMessage({ type: 'eyoumuse-prompt', q: q }, '*'); } catch(e){} }
+      if (runId) { try { frame.contentWindow.postMessage({ type: 'eyoumuse-open-run', id: runId }, '*'); } catch(e){} }
+      sendCtx();
+    }
+    panel.classList.add('on');
+    dock.style.display = 'none';
+  }
+  function closePanel(){
+    panel.classList.remove('on');
+    dock.style.display = 'flex';
+    refreshBadge();
+  }
+  window.eyoumuseOpen = openPanel;
+  window.eyoumuseClose = closePanel;
+  document.getElementById('eymuse-close').addEventListener('click', closePanel);
+  document.getElementById('eymuse-wide').addEventListener('click', function(){ setWide(!panel.classList.contains('wide')); });
+  try { if (localStorage.getItem('eyoumuse_wide') === '1') setWide(true); } catch(e){}
+  document.getElementById('eymuse-newwin').addEventListener('click', function(){
+    window.open(agentUrl, 'eyoumuse_agent');
+    closePanel();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && panel.classList.contains('on')) closePanel();
+  });
+
+  /* ---- 悬浮球：沿右边缘上下拖动，位置记在本浏览器；拖动后的那次 click 不打开抽屉 ---- */
+  var drag = { on: false, moved: false, y0: 0, b0: 0 };
+  function bottomOf(){ return parseInt(dock.style.bottom || '26', 10) || 26; }
+  function setBottom(b){ dock.style.bottom = Math.max(8, Math.min(window.innerHeight - 62, b)) + 'px'; }
+  try { var sb = parseInt(localStorage.getItem('eyoumuse_fab_bottom') || '', 10); if (sb > 0) setBottom(sb); } catch(e){}
+  function dragStart(y){ drag.on = true; drag.moved = false; drag.y0 = y; drag.b0 = bottomOf(); }
+  function dragMove(y){
+    if (!drag.on) return false;
+    var dy = drag.y0 - y;
+    if (!drag.moved && Math.abs(dy) < 5) return false;
+    drag.moved = true; dock.classList.add('drag'); setBottom(drag.b0 + dy);
+    return true;
+  }
+  function dragEnd(){
+    if (!drag.on) return;
+    drag.on = false;
+    if (!drag.moved) return;
+    dock.classList.remove('drag');
+    try { localStorage.setItem('eyoumuse_fab_bottom', String(bottomOf())); } catch(e){}
+    setTimeout(function(){ drag.moved = false; }, 0);
+  }
+  fab.addEventListener('mousedown', function(e){ if (e.button === 0) { dragStart(e.clientY); e.preventDefault(); } });
+  document.addEventListener('mousemove', function(e){ dragMove(e.clientY); });
+  document.addEventListener('mouseup', dragEnd);
+  fab.addEventListener('touchstart', function(e){ if (e.touches.length === 1) dragStart(e.touches[0].clientY); }, { passive: true });
+  fab.addEventListener('touchmove', function(e){ if (e.touches.length === 1 && dragMove(e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
+  fab.addEventListener('touchend', dragEnd);
+  fab.addEventListener('click', function(){ if (!drag.moved) openPanel(); });
+  window.addEventListener('resize', function(){ setBottom(bottomOf()); });
+
+  /* ---- 待办角标 + 气泡：等你确认 / 回答 / 追加额度的任务；抽屉关着时每分钟查一次，关抽屉、切回本页时立刻刷新 ---- */
+  var KIND = { approval: '等你确认', question: '等你回答', limit: '额度用完，等你决定' };
+  var waitFirst = null;
+  function tipKey(f){ return f ? f.id + ':' + f.update_time : ''; }
+  function renderBadge(d){
+    var n = parseInt(d.count, 10) || 0, first = d.list && d.list[0] ? d.list[0] : null;
+    waitFirst = first;
+    badge.style.display = n > 0 ? 'block' : 'none';
+    badge.textContent = n > 99 ? '99+' : String(n);
+    var dis = ''; try { dis = localStorage.getItem('eyoumuse_tip_dismiss') || ''; } catch(e){}
+    if (!first || dis === tipKey(first)) { tip.style.display = 'none'; return; }
+    tip.querySelector('b').textContent = n > 1 ? n + ' 个任务在等你处理' : '有个任务' + (KIND[first.kind] || '等你处理');
+    tip.querySelector('i').textContent = first.title || '';
+    tip.style.display = 'block';
+  }
+  function refreshBadge(){
+    if (panel.classList.contains('on') || document.hidden) return;
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', base + 'agent_badge&_t=' + Date.now(), true);
+      x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      x.onload = function(){
+        var r = null; try { r = JSON.parse(x.responseText); } catch(e){}
+        if (r && r.code === 1 && r.data) renderBadge(r.data);
+      };
+      x.send();
+    } catch(e){}
+  }
+  tip.addEventListener('click', function(e){
+    if (e.target && e.target.className === 'x') {
+      try { localStorage.setItem('eyoumuse_tip_dismiss', tipKey(waitFirst)); } catch(er){}
+      tip.style.display = 'none';
+      return;
+    }
+    openPanel('', waitFirst ? waitFirst.id : 0);
+  });
+  refreshBadge();
+  setInterval(refreshBadge, 60000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) refreshBadge(); });
+
+  /* 工作区切换页面后，同步上下文 */
+  var ws = document.getElementById('workspace');
+  if (ws) ws.addEventListener('load', function(){ if (loaded) sendCtx(); });
+  /* 面板内页面（agent.htm）消息：关闭 / 主题 / 就绪 / 名称 / 加宽 / 新窗口 / 导航（同源，仅信任本 iframe） */
+  window.addEventListener('message', function(e){
+    var d = e.data;
+    if (!d || e.source !== frame.contentWindow) return;
+    if (d.type === 'eyoumuse-close') closePanel();
+    else if (d.type === 'eyoumuse-theme') { if (d.theme === 'light') panel.classList.add('light'); else panel.classList.remove('light'); }
+    else if (d.type === 'eyoumuse-ready') { hd.style.display = 'none'; sendState(); }
+    else if (d.type === 'eyoumuse-name') { if (d.name) { var b = hd.querySelector('b'); if (b) b.textContent = String(d.name); } }
+    else if (d.type === 'eyoumuse-wide') setWide(!panel.classList.contains('wide'));
+    else if (d.type === 'eyoumuse-newwin') { window.open(agentUrl, 'eyoumuse_agent'); closePanel(); }
+    else if (d.type === 'eyoumuse-nav' && d.url) {
+      var w = document.getElementById('workspace');
+      if (w) { w.src = d.url; } else { window.open(d.url, '_blank'); }
+    }
+  });
+})();
+</script>
+{/if}
+<!-- EyouMuse-Admin-Entry-End -->
 </body>
 </html>

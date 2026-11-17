@@ -803,7 +803,7 @@ class PHPExcel
      * @param  PHPExcel_Worksheet|null $pSheet Scope. Use null for global scope
      * @return PHPExcel_NamedRange|null
      */
-    public function getNamedRange($namedRange, PHPExcel_Worksheet $pSheet = null)
+    public function getNamedRange($namedRange, $pSheet = null)
     {
         $returnValue = null;
 
@@ -829,7 +829,7 @@ class PHPExcel
      * @param  PHPExcel_Worksheet|null  $pSheet  Scope: use null for global scope.
      * @return PHPExcel
      */
-    public function removeNamedRange($namedRange, PHPExcel_Worksheet $pSheet = null)
+    public function removeNamedRange($namedRange, $pSheet = null)
     {
         if ($pSheet === null) {
             if (isset($this->namedRanges[$namedRange])) {

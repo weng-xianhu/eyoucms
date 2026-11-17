@@ -89,6 +89,12 @@ class BhvadminABegin {
         $url = $upgradeLogic->getServiceUrl(true, 'weapp').'/index.php?m=api&c=Weapp&a=get_authortoken';
         $response = @httpRequest($url, 'POST', $values, [], 5);
         $params = json_decode($response,true);
+        if (is_array($params) && !empty($params['weapp_invalid']) && function_exists('save_weapp_invalid_codes')) {
+            save_weapp_invalid_codes($params['weapp_invalid']);
+        }
+        if (function_exists('is_weapp_invalid') && is_weapp_invalid($code)) {
+            die('插件不存在！');
+        }
 
         if (is_array($params) && 0 != $params['errcode']) {
             die($params['errmsg']);

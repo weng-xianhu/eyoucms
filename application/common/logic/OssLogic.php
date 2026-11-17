@@ -183,7 +183,7 @@ class OssLogic
     }
     
     /**
-     * 链接加上文本水印参数（文字水印(方针黑体，黑色)）
+     * 链接加上文本水印参数（文字水印(方正黑体，黑色)）
      * @param string $url
      * @param type $text
      * @param type $size

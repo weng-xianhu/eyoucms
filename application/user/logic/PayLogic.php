@@ -489,14 +489,32 @@ class PayLogic extends Model
     // 参数3为订单实际付款金额
     private function MoneyUnifiedProcessing($param, $MoneyData, $PayMoney){
         $referurl = input('param.referurl/s', null, 'urldecode,base64_decode');
+        // 会员升级订单：以服务端套餐价格为准，避免篡改订单金额后低价升级
+        if (!empty($MoneyData) && 0 == intval($MoneyData['cause_type'])) {
+            $CauseData = safe_unserialize($MoneyData['cause']);
+            $TypeId = !empty($CauseData['type_id']) ? intval($CauseData['type_id']) : 0;
+            $TypeManage = $TypeId > 0 ? $this->users_type_manage_db->where('type_id', $TypeId)->find() : [];
+            if (!isset($TypeManage['price']) || unifyPriceHandle($TypeManage['price']) != unifyPriceHandle($PayMoney)) {
+                if (1 == $param['is_notify']) {
+                    return "fail";
+                } else {
+                    return [
+                        'code' => 0,
+                        'msg'  => '支付失败，支付金额与订单金额不相符',
+                        'url'  => '',
+                    ];
+                }
+            }
+        }
         // 支付宝付款成功后，订单并未修改状态时，修改订单状态并返回
         if ($MoneyData['status'] == 1) {
             // 当前时间
             $time = getTime();
-            // 更新条件
+            // 更新条件（status=1 保证并发/重放下只有一次能更新成功）
             $where = [
                 'moneyid'  => $MoneyData['moneyid'],
                 'users_id' => $MoneyData['users_id'],
+                'status'   => 1,
             ];
             // 更新数据
             $UpMoneyData = [
@@ -534,7 +552,7 @@ class PayLogic extends Model
                             'status'      => 3,
                             'update_time' => $time,
                         ];
-                        $this->users_money_db->where($where)->update($UpMoneyData_);
+                        $this->users_money_db->where(['moneyid' => $MoneyData['moneyid'], 'status' => 2])->update($UpMoneyData_);
                     }
                     if (1 == $param['is_notify']) {
                         return "success";
@@ -881,6 +899,9 @@ class PayLogic extends Model
     {
         $Return = false;
 
+        // 仅处理未付款订单，保证并发/重放时只入账一次
+        $Where['status'] = 1;
+
         // 充值订单更新为已付款
         $data = [
             'status' => 2,
@@ -906,7 +927,7 @@ class PayLogic extends Model
                     'status' => 3,
                     'update_time' => getTime()
                 ];
-                $this->users_money_db->where($Where)->update($data2);
+                $this->users_money_db->where(['moneyid' => $MoneyData['moneyid'], 'status' => 2])->update($data2);
                 $Return = true;
             }
         }
@@ -932,8 +953,12 @@ class PayLogic extends Model
 
         // 查询会员升级类型
         $CauseData = safe_unserialize($MoneyData['cause']);
-        $UsersTypeData = $this->users_type_manage_db->where('type_id', $CauseData['type_id'])->find();
-        if (!empty($UsersTypeData)) {
+        $TypeId = !empty($CauseData['type_id']) ? intval($CauseData['type_id']) : 0;
+        $UsersTypeData = $TypeId > 0 ? $this->users_type_manage_db->where('type_id', $TypeId)->find() : [];
+        // 校验订单金额与套餐价格，防止篡改订单金额后低价升级
+        if (!empty($UsersTypeData) && isset($UsersTypeData['price']) && unifyPriceHandle($UsersTypeData['price']) == unifyPriceHandle($MoneyData['money'])) {
+            // 仅处理未付款订单，保证并发/重放时只升级一次
+            $Where['status'] = 1;
             // 更新数据
             $UpMoneyData = [
                'status' => 2,
@@ -1019,9 +1044,21 @@ class PayLogic extends Model
         if (2 === intval($transaction_type)) {
             $OrderData = $this->shop_order_db->where(['order_code' => $unified_number,'order_amount' => $unified_amount])->find();
         }
-        // 会员充值或升级支付回调处理
-        else if (1 === intval($transaction_type) || 3 == intval($transaction_type)) {
-            $OrderData = $this->users_money_db->where(['money' => $unified_amount,'order_number' => $unified_number])->find();
+        // 会员充值支付回调处理
+        else if (1 === intval($transaction_type)) {
+            $OrderData = $this->users_money_db->where(['money' => $unified_amount,'order_number' => $unified_number,'cause_type' => 1])->find();
+        }
+        // 会员升级支付回调处理（以服务端套餐价格为准，避免篡改订单金额后低价升级）
+        else if (3 === intval($transaction_type)) {
+            $OrderData = $this->users_money_db->where(['order_number' => $unified_number,'cause_type' => 0])->find();
+            if (!empty($OrderData)) {
+                $CauseData = safe_unserialize($OrderData['cause']);
+                $TypeId = !empty($CauseData['type_id']) ? intval($CauseData['type_id']) : 0;
+                $TypeManage = $TypeId > 0 ? $this->users_type_manage_db->where('type_id', $TypeId)->find() : [];
+                if (!isset($TypeManage['price']) || unifyPriceHandle($TypeManage['price']) != unifyPriceHandle($unified_amount)) {
+                    $OrderData = [];
+                }
+            }
         }
         // 视频购买
         else if (8 === intval($transaction_type)) {

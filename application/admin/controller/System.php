@@ -1291,9 +1291,7 @@ class System extends Base
             ob_start();
             imagepng($canvas);
             $images[$size] = ob_get_clean();
-            imagedestroy($canvas);
         }
-        imagedestroy($im);
         $count = count($images);
         $ico = pack('vvv', 0, 1, $count);
         $offset = 6 + 16 * $count;
@@ -1512,6 +1510,9 @@ class System extends Base
         $sort_orders = get_arr_column($cacheDirList, 'sort_order');
         array_multisort($sort_orders, SORT_ASC, $cacheDirList);
         $this->assign('cacheDirList', $cacheDirList);
+
+        // 定时清理缓存接口的签名 token，展示在页面上供管理员配置定时任务
+        $this->assign('clear_cache_api_token', get_clear_cache_token());
 
         return $this->fetch();
     }

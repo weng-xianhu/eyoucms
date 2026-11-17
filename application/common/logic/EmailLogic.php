@@ -131,6 +131,13 @@ class EmailLogic
     private function send_swiftmailer($to='', $subject='', $data='', $scene=1){
         vendor('swiftmailer.lib.swift_required');
         // require_once 'vendor/swiftmailer/lib/swift_required.php';
+
+        // 服务器禁用了 socket 相关函数时直接返回明确提示，避免致命错误
+        $env_msg = $this->checkSmtpSocketEnv();
+        if ('' !== $env_msg) {
+            return array('code'=>0 , 'msg'=>$env_msg);
+        }
+
         try {
             //判断openssl是否开启
             $openssl_funcs = get_extension_funcs('openssl');
@@ -201,41 +208,244 @@ class EmailLogic
                 return array('code'=>1 , 'msg'=>'发送成功');
             }
         } catch (\Exception $e) {
-            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
-            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
+            return $this->buildMailFailResult($e);
+        } catch (\Throwable $e) {
+            // PHP 7+ 中被禁用函数抛出的 Error，统一转为中文提示
+            return $this->buildMailFailResult($e);
         }
     }
 
     /**
+     * 检查服务器是否具备建立 SMTP 连接的能力
+     * 部分空间商会在 php.ini 的 disable_functions 中禁用 fsockopen / stream_socket_client
+     * @return string 不可用时返回提示信息，可用时返回空字符串
+     */
+    private function checkSmtpSocketEnv()
+    {
+        if (function_exists('stream_socket_client') || function_exists('fsockopen')) {
+            return '';
+        }
+
+        return '服务器（PHP ' . PHP_VERSION . '）已禁用 fsockopen 与 stream_socket_client 函数，无法建立 SMTP 连接：请在 php.ini 的 disable_functions 中移除这两个函数，重启 PHP 后重试';
+    }
+
+    /**
+     * 统一构造邮件发送失败返回值
+     * 兼容 PHP 7+ 的 Error（如调用被禁用函数产生的致命错误），避免致命错误直接输出到页面
+     * @param \Exception|\Throwable $e
+     * @return array
+     */
+    private function buildMailFailResult($e)
+    {
+        $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
+        $port = isset($this->config['smtp_port']) ? intval($this->config['smtp_port']) : 0;
+
+        return array('code' => 0, 'msg' => '发送失败：' . $this->translateMailError($emsg, $port));
+    }
+
+    /**
      * 将邮件发送的英文错误信息转换为易懂的中文提示
-     * @param string $msg 原始错误信息
+     * @param string $msg 原始错误信息（PHPMailer/SwiftMailer 或 SMTP 服务器返回）
      * @param int $port SMTP端口
+     * @param bool $withRaw 是否在提示后附带原始错误信息，便于排查
      * @return string 中文提示
      */
-    private function translateMailError($msg, $port = 0)
+    private function translateMailError($msg, $port = 0, $withRaw = true)
     {
-        if (stristr($msg, 'smtp connect() failed') || stristr($msg, 'Could not connect to SMTP host')) {
-            if (465 == $port) {
-                return '无法连接邮件服务器：<br/>1.请检查SMTP服务器地址和端口是否正确<br/>2.空间是否开启函数fsockopen<br/>3.尝试切换PHP不同版本重试';
+        $msg = trim(strval($msg));
+        if ('' === $msg) {
+            return '邮件发送失败，服务器未返回错误信息，请检查SMTP配置是否正确';
+        }
+        // 已转换过的信息不再重复处理
+        if (false !== strpos($msg, '原始错误信息')) {
+            return $msg;
+        }
+        $port = intval($port);
+        $raw  = trim(strip_tags($msg));
+        // 去掉 PHPMailer 附带的帮助链接，避免干扰匹配
+        $raw  = trim(preg_replace('/\s*https?:\/\/\S+/i', '', $raw));
+        $raw  = preg_replace('/\s+/', ' ', $raw);
+
+        if (465 == $port) {
+            $connectTip = '无法连接邮件服务器：<br/>1.请检查SMTP服务器地址和端口是否正确<br/>2.服务器防火墙/安全组是否放行出站 465 端口<br/>3.空间是否开启函数 fsockopen / stream_socket_client<br/>4.部分机房屏蔽 465 端口，可改用 587 端口（TLS）后重试';
+        } else {
+            $connectTip = '无法连接邮件服务器：<br/>1.请检查SMTP服务器地址和端口是否正确，推荐使用 465 端口（SSL），其次 25 端口<br/>2.服务器防火墙是否放行该端口<br/>3.空间是否开启函数 fsockopen / stream_socket_client';
+        }
+
+        // 按优先级排列的匹配规则：[正则, 中文提示]
+        $rules = [
+            // 域名解析失败
+            ['/getaddrinfo|php_network_getaddresses|name or service not known|could not resolve|no such host|host not found|invalid host|无效的主机/i',
+                'SMTP服务器地址无法解析，请检查“SMTP服务器”填写是否正确（如：smtp.qq.com、smtp.163.com），不要带 http:// 前缀'],
+            // 端口要求加密连接
+            ['/need EHLO and AUTH first|must issue a STARTTLS|STARTTLS command first|secure connection is requi|encryption required|TLS required/i',
+                '该端口要求加密连接，请将SMTP端口改为 465（SSL）或 587（TLS）后重试'],
+            // SSL/TLS 握手失败
+            ['/\bssl\b|\btls\b|certificate|crypto|handshake|stream_socket_enable_crypto/i',
+                'SSL/TLS 加密连接失败：<br/>1.请确认端口与加密方式匹配（465=SSL、587=TLS、25=不加密）<br/>2.请确认PHP已开启 openssl 扩展<br/>3.请确认服务器时间准确（时间偏差过大会导致证书校验失败）<br/>4.若仍失败请联系空间商更新CA根证书'],
+            // 连接失败
+            ['/smtp connect\(\) failed|could not connect to smtp host|connection refused|connection timed out|timed out|failed to connect|network is unreachable|no route to host|unable to connect|connection reset|SMTP服务器连接失败|无法连接到 SMTP 主机/i',
+                $connectTip],
+            // 需要先登录
+            ['/authentication is required|authentication required|auth first|(?<!\d)530(?!\d)/i',
+                '邮件服务器要求先进行身份验证，请填写正确的发件邮箱账号和密码（授权码）'],
+            // 账号或密码错误
+            ['/could not authenticate|authentication fail|auth(entication)? (login|plain|error)|password not accepted|login fail|invalid login|bad credentials|credentials invalid|username and password not accepted|incorrect authentication|登录失败|(?<!\d)535(?!\d)/i',
+                '邮箱账号或密码验证失败：<br/>1.请检查发件邮箱账号是否填写正确<br/>2.QQ/163/126/企业邮箱等需填写“SMTP授权码”，不是邮箱登录密码<br/>3.请确认邮箱已开启 SMTP 服务'],
+            // 发件人与登录账号不一致
+            ['/mail from must equal authorized user|sender address rejected|sender not allowed|sender verify failed|from address failed|sender mismatch|发送地址错误|(?<!\d)553(?!\d)/i',
+                '发件人地址被拒绝：发件人邮箱必须与SMTP登录账号一致，请检查“发件人邮箱”与“SMTP账号”是否相同'],
+            // 收件人无效
+            ['/recipients failed|recipient address rejected|recipient rejected|user unknown|no such user|mailbox unavailable|mailbox not found|does not exist|unrouteable address|relay access denied|relaying denied|not permitted to relay|收件人地址错误|(?<!\d)55[01](?!\d)/i',
+                '收件人地址无效或被邮件服务器拒收，请检查“管理员邮箱”是否填写正确'],
+            // 地址格式错误
+            ['/invalid address|provide at least one recipient|invalid (email|mailbox)|address syntax|电子邮箱地址是无效的|必须提供至少一个收件人/i',
+                '邮箱地址格式错误，请检查发件人/收件人邮箱是否填写正确（多个收件人请用英文逗号分隔）'],
+            // 正文为空
+            ['/message body empty|邮件正文为空/i',
+                '邮件内容为空，请检查邮件模板内容是否已填写'],
+            // 邮件过大
+            ['/message size|too large|size exceeds|exceeds size/i',
+                '邮件内容过大，超出服务器允许的大小限制，请精简邮件内容'],
+            // 被判定为垃圾邮件 / 内容被拒
+            ['/data not accepted|DT:SPM|spam|junk|content rejected|rejected by content|blacklist|blocked|policy rejection|数据不被接受|(?<!\d)554(?!\d)/i',
+                '邮件被服务器判定为垃圾邮件或内容被拒收：<br/>1.请稍后再试，或修改邮件标题/内容<br/>2.发件邮箱刚开通SMTP时可能受限，建议先给自己发送几封邮件<br/>3.163/126 等邮箱请勿短时间内频繁发送'],
+            // 发送频率 / 配额
+            ['/quota|too many|rate limit|exceeded|frequency|too frequently|try again later|temporarily|(?<!\d)4(21|50|51|52)(?!\d)/i',
+                '发送过于频繁或已超出邮箱当日发送配额，请稍后再试或更换发件邮箱'],
+            // 服务器环境问题
+            ['/could not instantiate mail function|extension missing|fsockopen|stream_socket_client|disabled for security reasons|has been disabled|call to undefined function|缺少扩展名|未知函数调用/i',
+                '服务器环境不支持邮件发送：请确认PHP已开启 openssl 扩展，且 fsockopen / stream_socket_client 函数未被禁用，如无法处理请联系空间商'],
+        ];
+
+        $tip = '';
+        foreach ($rules as $rule) {
+            if (preg_match($rule[0], $raw)) {
+                $tip = $rule[1];
+                break;
             }
-            return '无法连接邮件服务器，请检查SMTP端口填写是否正确，一般默认是465端口，其次25端口，具体请参看各SMTP服务商的设置说明。';
         }
-        if (stristr($msg, 'Could not authenticate')) {
-            return '邮箱账号或密码验证失败：请检查发件邮箱和密码是否正确（QQ/163等邮箱需使用“SMTP授权码”，不是登录密码）';
+        // 连接类错误：补一次 TCP 连通性探测，给出更具体的排查方向
+        if ($connectTip === $tip) {
+            $probe = $this->probeSmtpConnect();
+            if ('' !== $probe) {
+                $tip .= '<br/>' . $probe;
+            }
         }
-        if (stristr($msg, 'Invalid address')) {
-            return '邮箱地址格式错误，请检查发件人/收件人邮箱是否填写正确';
+        if ('' === $tip) {
+            // 原始信息已是中文提示，直接返回
+            if (preg_match('/[\x{4e00}-\x{9fa5}]/u', $raw)) {
+                return $msg;
+            }
+            $tip = '邮件服务器返回了未知错误，请核对SMTP服务器、端口、账号、密码（授权码）是否正确';
         }
-        if (stristr($msg, 'recipients failed')) {
-            return '收件人地址无效或被邮件服务器拒收，请检查收件邮箱是否正确';
+
+        if ($withRaw && '' !== $raw) {
+            if (function_exists('mb_strlen') && mb_strlen($raw, 'UTF-8') > 200) {
+                $raw = mb_substr($raw, 0, 200, 'UTF-8') . '...';
+            }
+            $tip .= '<br/><span style="color:#999;font-size:12px;">原始错误信息：' . htmlspecialchars($raw, ENT_QUOTES, 'UTF-8') . '</span>';
         }
-        if (stristr($msg, 'Data not accepted')) {
-            return '邮件内容被服务器拒绝（可能被判定为垃圾邮件），请稍后重试或更换邮件内容';
+
+        return $tip;
+    }
+
+    /**
+     * 探测 SMTP 服务器的 TCP 连通性（仅用于连接失败时补充排查信息）
+     * @param int $timeout 超时秒数
+     * @return string 探测结论，配置缺失时返回空字符串
+     */
+    private function probeSmtpConnect($timeout = 5)
+    {
+        $host = isset($this->config['smtp_server']) ? trim(strval($this->config['smtp_server'])) : '';
+        $port = isset($this->config['smtp_port']) ? intval($this->config['smtp_port']) : 0;
+        if ('' === $host || $port <= 0) {
+            return '';
         }
-        if (stristr($msg, 'Could not instantiate mail function')) {
-            return '服务器未开启mail函数，请联系空间商处理';
+
+        $errno = 0;
+        $errstr = '';
+        if (function_exists('stream_socket_client')) {
+            $fp = @stream_socket_client('tcp://' . $host . ':' . $port, $errno, $errstr, $timeout);
+        } else if (function_exists('fsockopen')) {
+            $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        } else {
+            return '';
         }
+
+        if (!is_resource($fp)) {
+            return '连接探测：无法连通 ' . $host . ':' . $port . '（' . ('' !== $errstr ? $errstr : '无返回信息') . '，错误码 ' . intval($errno) . '），通常是防火墙/安全组拦截出站端口或DNS解析失败';
+        }
+        fclose($fp);
+
+        $msg = '连接探测：TCP 可达 ' . $host . ':' . $port . '，出站网络未被拦截';
+        $msg .= is_file($this->getCaFile()) ? '；内置CA证书包已找到' : '；未找到 extend/cacert.pem，证书校验将依赖系统CA';
+
+        // 465 为隐式SSL；stream_socket_client 被禁用时 fsockopen 无法加载内置CA，握手必然失败
+        if (465 == $port) {
+            if (!function_exists('stream_socket_client')) {
+                $msg .= '；服务器已禁用 stream_socket_client，465 端口在降级模式下无法加载内置CA证书包，请将SMTP端口改为 587（TLS）后重试';
+            } else {
+                $tls_errno = 0;
+                $tls_errstr = '';
+                $tls_warn = '';
+                set_error_handler(function ($no, $str) use (&$tls_warn) {
+                    $tls_warn .= $str;
+                    return true;
+                });
+                $tls = stream_socket_client(
+                    'ssl://' . $host . ':' . $port,
+                    $tls_errno,
+                    $tls_errstr,
+                    $timeout,
+                    STREAM_CLIENT_CONNECT,
+                    stream_context_create($this->getSmtpSslOptions())
+                );
+                restore_error_handler();
+
+                if (is_resource($tls)) {
+                    fclose($tls);
+                    $msg .= '；TLS握手成功，请检查SMTP账号密码（授权码）是否正确';
+                } else {
+                    $reason = '' !== $tls_errstr ? $tls_errstr : trim($tls_warn);
+                    $msg .= '；TLS握手失败：' . ('' !== $reason ? $reason : '未知原因（错误码 ' . intval($tls_errno) . '）');
+                }
+            }
+        }
+
         return $msg;
+    }
+
+    /**
+     * 内置 CA 证书包路径
+     * @return string
+     */
+    private function getCaFile()
+    {
+        return dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'extend' . DIRECTORY_SEPARATOR . 'cacert.pem';
+    }
+
+    /**
+     * 构造 SMTP 的 SSL 上下文选项
+     * 部分虚拟主机未配置 CA 根证书，会导致 stream_socket_enable_crypto 证书校验失败，
+     * 此时使用项目内置的 CA 证书包（extend/cacert.pem）完成校验
+     * @return array
+     */
+    private function getSmtpSslOptions()
+    {
+        $options = array(
+            'ssl' => array(
+                'verify_peer'      => true,
+                'verify_peer_name' => true,
+            ),
+        );
+
+        $cafile = $this->getCaFile();
+        if (is_file($cafile)) {
+            $options['ssl']['cafile'] = $cafile;
+        }
+
+        return $options;
     }
 
     /**
@@ -247,6 +457,12 @@ class EmailLogic
      * @throws Exception
      */
     private function send_phpmailer($to='', $subject='', $data='', $scene=1){
+        // 服务器禁用了 socket 相关函数时直接返回明确提示，避免致命错误
+        $env_msg = $this->checkSmtpSocketEnv();
+        if ('' !== $env_msg) {
+            return array('code'=>0 , 'msg'=>$env_msg);
+        }
+
         //判断openssl是否开启
         $openssl_funcs = get_extension_funcs('openssl');
         if(!$openssl_funcs){
@@ -278,7 +494,15 @@ class EmailLogic
             // 2 = client and server messages
             $mail->SMTPDebug = SMTP::DEBUG_OFF;                         //Enable verbose debug output
             $mail->CharSet  = PHPMailer::CHARSET_UTF8;                  //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
+            $mail->setLanguage('zh_cn');                                //错误提示使用中文
             $mail->isSMTP();                                            //Send using SMTP
+            $sslOptions = $this->getSmtpSslOptions();                   //SSL证书校验（缺CA根证书时用内置证书包）
+            $mail->SMTPOptions = $sslOptions;
+            // 服务器禁用 stream_socket_client 时 PHPMailer 会降级 fsockopen，
+            // 用自定义 SMTP 实例把 SSL 选项挂到连接流上，保证 587（STARTTLS）能完成证书校验
+            if (!function_exists('stream_socket_client')) {
+                $mail->setSMTPInstance(new PHPMailerSmtp(isset($sslOptions['ssl']) ? $sslOptions['ssl'] : array()));
+            }
             $mail->Host       = $this->config['smtp_server'];           //Set the SMTP server to send through
             $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
             $mail->Username   = $this->config['smtp_user'];             //SMTP username
@@ -334,13 +558,15 @@ class EmailLogic
             $result = $mail->send();
             if (!$result) {
                 $msg = $this->translateMailError($mail->ErrorInfo, $mail->Port);
-                return array('code'=>0 , 'msg'=>'发送失败:'.$msg);
+                return array('code'=>0 , 'msg'=>'发送失败：'.$msg);
             } else {
                 return array('code'=>1 , 'msg'=>'发送成功');
             }
         } catch (\Exception $e) {
-            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
-            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
+            return $this->buildMailFailResult($e);
+        } catch (\Throwable $e) {
+            // PHP 7+ 中被禁用函数抛出的 Error，统一转为中文提示
+            return $this->buildMailFailResult($e);
         }
     }
 
@@ -359,6 +585,7 @@ class EmailLogic
             // 2 = client and server messages
             $mail->SMTPDebug = 0;
             $mail->CharSet  = 'UTF-8'; //设定邮件编码，默认ISO-8859-1，如果发中文此项必须设置，否则乱码
+            $mail->setLanguage('zh_cn'); //错误提示使用中文
             $mail->isSMTP();
             $mail->Host = $this->config['smtp_server'];
             $mail->SMTPAuth = true;
@@ -411,13 +638,15 @@ class EmailLogic
             $result = $mail->send();
             if (!$result) {
                 $msg = $this->translateMailError($mail->ErrorInfo, $mail->Port);
-                return array('code'=>0 , 'msg'=>'发送失败:'.$msg);
+                return array('code'=>0 , 'msg'=>'发送失败：'.$msg);
             } else {
                 return array('code'=>1 , 'msg'=>'发送成功');
             }
         } catch (\Exception $e) {
-            $emsg = method_exists($e, 'errorMessage') ? $e->errorMessage() : $e->getMessage();
-            return array('code'=>0 , 'msg'=>'发送失败: '.$this->translateMailError($emsg, 0));
+            return $this->buildMailFailResult($e);
+        } catch (\Throwable $e) {
+            // PHP 7+ 中被禁用函数抛出的 Error，统一转为中文提示
+            return $this->buildMailFailResult($e);
         }
     }
 }

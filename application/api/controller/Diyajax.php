@@ -40,16 +40,20 @@ class Diyajax extends Base
                 $this->assign($assignData);
 
                 $viewfile = input('param.viewfile/s', '');
-                if (empty($viewfile)) {
+                $viewfile = is_string($viewfile) ? trim($viewfile) : '';
+                /* 只允许 system 目录下的模板文件名，防止路径穿越 */
+                if (empty($viewfile) || !preg_match('/^[A-Za-z0-9_\-]+(\.htm)?$/i', $viewfile)) {
                     $viewfile = 'users_info.htm';
                 } else if (!preg_match('/\.htm$/i', $viewfile)) {
                     $viewfile .= '.htm';
                 }
-                $filename = "./template/".THEME_STYLE_PATH."/system/{$viewfile}";
-                if (file_exists($filename)) {
+                $system_dir = realpath('./template/' . THEME_STYLE_PATH . '/system');
+                $filename   = "./template/" . THEME_STYLE_PATH . "/system/{$viewfile}";
+                $real_file  = realpath($filename);
+                if (!empty($system_dir) && !empty($real_file) && 0 === strpos($real_file, $system_dir . DIRECTORY_SEPARATOR) && is_file($real_file)) {
                     $html = $this->fetch($filename); // 渲染模板标签语法
                 } else {
-                    $html = '缺少模板文件：'.ltrim($filename, '.');
+                    $html = '缺少模板文件：' . ltrim($filename, '.');
                 }
                 $result['data']['html'] = $html;
             }

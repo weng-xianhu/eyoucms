@@ -22,6 +22,10 @@ use think\Cookie;
 
 class Pay extends Base
 {
+    public $users_db;
+    public $users_money_db;
+    public $shop_order_db;
+    public $shop_order_details_db;
     public $php_version = '';
 
     public function _initialize() {
@@ -221,6 +225,9 @@ class Pay extends Base
                 if (!empty($unified_number)) {
                     $where = [
                         'lang' => $this->home_lang,
+                        'users_id' => $this->users_id,
+                        // 仅允许修改账户充值订单，防止篡改会员升级等订单金额
+                        'cause_type' => 1,
                         'status' => 1,
                         'order_number' => $unified_number
                     ];
@@ -236,6 +243,7 @@ class Pay extends Base
                     $where = [
                         'moneyid'  => $moneyid,
                         'users_id' => $this->users_id,
+                        'cause_type' => 1,
                         'order_number' => $order_number_old,
                     ];
                     $data = [
@@ -343,9 +351,9 @@ class Pay extends Base
     // 充值详情
     public function pay_recharge_detail()
     {
-        // 接收数据读取解析
+        // 接收数据读取解析（严格解析 Cookie，防止数组注入查询条件）
         $Paystr = input('param.paystr/s');
-        $PayData = cookie($Paystr);
+        $PayData = eySafeOrderCookie(cookie($Paystr));
 
         if (!empty($PayData['moneyid']) && !empty($PayData['order_number'])) {
             // 充值信息
@@ -653,12 +661,32 @@ class Pay extends Base
             $config['gatewayUrl'] = 'https://openapi.alipay.com/gateway.do';
             $config['alipay_public_key'] = $pay_alipay_config['alipay_public_key'];
 
-            // 实例化支付宝配置
-            $aop = new \AlipayTradeService($config);
-            $result = $aop->Query($RequestBuilder);
+            // 实例化支付宝配置并查询（SDK 出错时会 echo 通讯日志或抛异常，统一捕获转中文）
+            $obLevel = ob_get_level();
+            ob_start();
+            $result = null;
+            $exceptionMsg = '';
+            try {
+                $aop = new \AlipayTradeService($config);
+                $result = $aop->Query($RequestBuilder);
+            } catch (\Exception $e) {
+                $exceptionMsg = $e->getMessage();
+            }
+            $output = '';
+            while (ob_get_level() > $obLevel) {
+                $output = ob_get_clean() . $output;
+            }
+            $output = trim($output);
             
             // 解析数据
             $result = json_decode(json_encode($result), true);
+            if (!is_array($result) || empty($result)) {
+                $raw = '' !== $output ? $output : $exceptionMsg;
+                $this->error(alipayErrorMsg($raw, '支付宝订单查询'));
+            }
+            !isset($result['code']) && $result['code'] = '';
+            !isset($result['msg']) && $result['msg'] = '';
+            !isset($result['trade_status']) && $result['trade_status'] = '';
 
             // 判断结果
             if ('40004' == $result['code'] && 'Business Failed' === $result['msg']) {
@@ -673,7 +701,7 @@ class Pay extends Base
                 } else {
                     $this->error('订单已建立，尚未支付');
                 }
-            } else if ('10000' == $result['code'] && 'TRADE_SUCCESS' === $result['trade_status']) {
+            } else if ('10000' == $result['code'] && in_array($result['trade_status'], ['TRADE_SUCCESS', 'TRADE_FINISHED'])) {
                 $ResultUrl = urldecode(url('user/Pay/pay_success', ['transaction_type'=>$transaction_type, 'order_code'=>$unified_number]));
                 $ResultData = [
                     'email' => false,
@@ -692,6 +720,12 @@ class Pay extends Base
                     /* END */
                 }
                 $this->success('支付完成', $ResultUrl, $ResultData);
+            } else if ('10000' == $result['code'] && 'TRADE_CLOSED' === $result['trade_status']) {
+                $this->error('该订单的支付宝交易已关闭（未付款超时或已退款），请重新下单');
+            } else if ('10000' == $result['code']) {
+                $this->error('订单当前交易状态：' . $result['trade_status'] . '，请稍后刷新');
+            } else {
+                $this->error(alipayErrorMsg($result, '支付宝订单查询'));
             }
         }
     }
@@ -859,7 +893,17 @@ class Pay extends Base
                 // 业务处理
                 if (isset($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS'){
                     if ($result['trade_state'] == 'SUCCESS' && !empty($result['transaction_id'])) {
+                        // 微信实付金额，单位：元
+                        $wechat_amount = isset($result['total_fee']) ? $result['total_fee'] / 100 : 0;
                         if (2 == $transaction_type) { // 产品购买订单
+                            $order_data = $this->shop_order_db->where([
+                                'order_code' => $result['out_trade_no'],
+                                'users_id'   => $this->users_id,
+                            ])->find();
+                            // 校验实付金额与订单金额是否一致
+                            if (empty($order_data) || unifyPriceHandle($order_data['order_amount']) != unifyPriceHandle($wechat_amount)) {
+                                $this->error('支付金额与订单金额不相符');
+                            }
                             if (empty($order_data['order_status'])) {
                                 $returnData = pay_success_logic($this->users_id, $result['out_trade_no'], $result, 'wechat');
                                 if (is_array($returnData)) {
@@ -903,11 +947,17 @@ class Pay extends Base
                             $moneydata = $this->users_money_db->where([
                                 'order_number' => $result['out_trade_no'],
                                 'users_id'     => $this->users_id,
+                                'cause_type'   => 1,
                                 'lang'         => $this->home_lang,
                             ])->find();
 
                             if (empty($moneydata)) {
                                 $this->error('支付异常，请刷新页面后重试');
+                            }
+
+                            // 校验实付金额与订单金额是否一致
+                            if (unifyPriceHandle($moneydata['money']) != unifyPriceHandle($wechat_amount)) {
+                                $this->error('支付金额与订单金额不相符');
                             }
 
                             // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
@@ -922,6 +972,7 @@ class Pay extends Base
                                 $ismoney = $this->users_money_db->where([
                                         'moneyid'  => $moneydata['moneyid'],
                                         'users_id'  => $this->users_id,
+                                        'status'    => 1,
                                     ])->update($data);
 
                                 if (!empty($ismoney)) {
@@ -1468,7 +1519,6 @@ class Pay extends Base
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($curl, CURLOPT_URL, $url);
         $res = curl_exec($curl);
-        curl_close($curl);
         
         echo json_encode($res);
     }
@@ -1514,13 +1564,21 @@ class Pay extends Base
             $result = $wxpayapi->orderQuery($config, $input);
             if (isset($result['return_code']) && $result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS'){
                 if ($result['trade_state'] == 'SUCCESS' && !empty($result['transaction_id'])) {
+                    // 微信实付金额，单位：元
+                    $wechat_amount = isset($result['total_fee']) ? $result['total_fee'] / 100 : 0;
                     if (1 == $transaction_type) {
                         // 充值处理
                         // 安全修复: 添加用户归属验证，防止水平越权
                         $moneydata = $this->users_money_db->where([
                             'order_number' => $result['out_trade_no'],
                             'users_id'     => $this->users_id,
+                            'cause_type'   => 1,
                         ])->find();
+                        if (empty($moneydata)) $this->error('支付异常，请刷新页面后重试');
+                        // 校验实付金额与订单金额是否一致
+                        if (unifyPriceHandle($moneydata['money']) != unifyPriceHandle($wechat_amount)) {
+                            $this->error('支付金额与订单金额不相符');
+                        }
 
                         // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
                         if ($moneydata['status'] == 1) {
@@ -1532,6 +1590,8 @@ class Pay extends Base
                             ];
                             $ismoney = $this->users_money_db->where([
                                     'moneyid'  => $moneydata['moneyid'],
+                                    'users_id' => $this->users_id,
+                                    'status'   => 1,
                                 ])->update($data);
                             if (!empty($ismoney)) {
                                 // 同步修改会员的金额
@@ -1565,7 +1625,13 @@ class Pay extends Base
                         // 支付处理
                         $order_data = $this->shop_order_db->where([
                             'order_code' => $result['out_trade_no'],
+                            'users_id'   => $this->users_id,
                         ])->find();
+                        if (empty($order_data)) $this->error('支付异常，请刷新页面后重试');
+                        // 校验实付金额与订单金额是否一致
+                        if (unifyPriceHandle($order_data['order_amount']) != unifyPriceHandle($wechat_amount)) {
+                            $this->error('支付金额与订单金额不相符');
+                        }
                         if (0 == $order_data['order_status']) {
                             $OrderWhere = [
                                 'order_id' => $order_data['order_id'],
@@ -1601,17 +1667,26 @@ class Pay extends Base
                         // 会员升级处理
                         $moneydata = $this->users_money_db->where([
                             'order_number' => $result['out_trade_no'],
+                            'users_id'     => $this->users_id,
+                            'cause_type'   => 0,
                         ])->find();
+                        if (empty($moneydata)) $this->error('支付异常，请刷新页面后重试');
 
                         // 微信付款成功后，订单并未修改状态时，修改订单状态并返回
                         if ($moneydata['status'] == 1) {
                             $cause = safe_unserialize($moneydata['cause']);
-                            $UsersTypeData = M('users_type_manage')->where('type_id',$cause['type_id'])->find();
+                            $type_id = is_array($cause) && !empty($cause['type_id']) ? intval($cause['type_id']) : 0;
+                            $UsersTypeData = $type_id > 0 ? M('users_type_manage')->where('type_id', $type_id)->find() : [];
+                            // 校验实付金额与套餐价格是否一致
+                            if (empty($UsersTypeData) || unifyPriceHandle($UsersTypeData['price']) != unifyPriceHandle($wechat_amount)) {
+                                $this->error('支付金额与订单金额不相符');
+                            }
 
-                            // 订单更新条件
+                            // 订单更新条件（status=1 保证并发/重放下只有一次能更新成功）
                             $where = [
                                 'moneyid' => $moneydata['moneyid'],
                                 'users_id' => $moneydata['users_id'],
+                                'status' => 1,
                             ];
 
                             // 订单更新数据，更新为已付款
@@ -1656,7 +1731,13 @@ class Pay extends Base
                         // 支付处理
                         $order_data = M('article_order')->where([
                             'order_code' => $result['out_trade_no'],
+                            'users_id'   => $this->users_id,
                         ])->find();
+                        if (empty($order_data)) $this->error('支付异常，请刷新页面后重试');
+                        // 校验实付金额与订单金额是否一致
+                        if (unifyPriceHandle($order_data['order_amount']) != unifyPriceHandle($wechat_amount)) {
+                            $this->error('支付金额与订单金额不相符');
+                        }
                         if (0 == $order_data['order_status']) {
                             $OrderWhere = [
                                 'order_id' => $order_data['order_id'],
@@ -1685,7 +1766,13 @@ class Pay extends Base
                         // 支付处理
                         $order_data = Db::name('download_order')->where([
                             'order_code' => $result['out_trade_no'],
+                            'users_id'   => $this->users_id,
                         ])->find();
+                        if (empty($order_data)) $this->error('支付异常，请刷新页面后重试');
+                        // 校验实付金额与订单金额是否一致
+                        if (unifyPriceHandle($order_data['order_amount']) != unifyPriceHandle($wechat_amount)) {
+                            $this->error('支付金额与订单金额不相符');
+                        }
                         if (0 == $order_data['order_status']) {
                             $OrderWhere = [
                                 'order_id' => $order_data['order_id'],

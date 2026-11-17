@@ -62,7 +62,7 @@ class Query
      * @param Connection $connection 数据库对象实例
      * @param Model      $model      模型对象
      */
-    public function __construct(Connection $connection = null, $model = null)
+    public function __construct($connection = null, $model = null)
     {
         $this->connection = $connection ?: Db::connect([], true);
         $this->prefix     = $this->connection->getConfig('prefix');
@@ -1653,10 +1653,13 @@ class Query
         /*设置sql_mode为宽松模式，避免分组查询遇到问题 ONLY_FULL_GROUP_BY by 小虎哥*/
         if ($this->connection->getConfig('type') != 'dm') { // 达梦优化
             $system_sql_mode = config('ey_config.system_sql_mode');
-            if (stristr($system_sql_mode, 'ONLY_FULL_GROUP_BY')) {
-                $system_sql_mode = str_replace('ONLY_FULL_GROUP_BY', '', $system_sql_mode);
+            /*MySQL 8 已移除 NO_AUTO_CREATE_USER，历史配置携带该值会报 1231，统一剔除后再设置*/
+            if (stristr($system_sql_mode, 'ONLY_FULL_GROUP_BY') || stristr($system_sql_mode, 'NO_AUTO_CREATE_USER')) {
+                $system_sql_mode = str_ireplace(['ONLY_FULL_GROUP_BY', 'NO_AUTO_CREATE_USER'], '', $system_sql_mode);
                 $system_sql_mode = str_replace(',,', ',', trim($system_sql_mode, ','));
-                Db::execute("SET sql_mode ='{$system_sql_mode}'");
+                if ('' !== $system_sql_mode) {
+                    Db::execute("SET sql_mode ='{$system_sql_mode}'");
+                }
             }
         }
         /*--end*/

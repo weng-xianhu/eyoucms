@@ -17,6 +17,8 @@ use think\Db;
 
 class Custom extends Base
 {
+    public $archives_db;
+    public $callback_url;
     // 模型标识
     public $nid = '';
     // 模型ID

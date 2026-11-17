@@ -113,7 +113,7 @@
                         <th abbr="article_time" axis="col6" class="w100">
                             <div class="tc">订单状态</div>
                         </th>
-                        <th axis="col1" class="w100">
+                        <th axis="col1" class="w160">
                             <div class="tc">操作</div>
                         </th>
                     </tr>
@@ -177,6 +177,10 @@
                             <td>
                                 <div class="tc">
                                     <a class="btn blue" href="JavaScript:void(0);" data-url="{:url('Member/download_order_details',array('order_id'=>$vo['order_id']))}" onclick="OpenOrderDetails(this);">详情</a>
+                                    {eq name="'Member@download_order_del'|is_check_access" value="1"}
+                                    <i></i>
+                                    <a class="btn red" href="javascript:void(0);" onclick="OrderDel({$vo.order_id});">删除</a>
+                                    {/eq}
                                 </div>
                             </td>
                         </tr>
@@ -285,8 +289,10 @@
     }
 
     // 订单操作
+    var orderDelLock = false;
     function OrderDel(order_id) {
-        layer.confirm('确认删除订单？', {
+        if (orderDelLock) return;
+        layer.confirm('确认删除该订单？删除后不可恢复，用户将无法继续下载该文件。', {
             shade: layer_shade,
             area: ['480px', '190px'],
             move: false,
@@ -297,13 +303,20 @@
             success: function () {
                   $(".layui-layer-content").css('text-align', 'left');
               }
-        },function(){
+        },function(index){
+            if (orderDelLock) {
+                layer.close(index);
+                return;
+            }
+            orderDelLock = true;
+            layer_loading('正在处理');
             $.ajax({
                 url: "{:url('Member/download_order_del')}",
                 data: {del_id: order_id, _ajax: 1},
                 type:'post',
                 dataType:'json',
                 success:function(res){
+                    orderDelLock = false;
                     layer.closeAll();
                     if (1 == res.code) {
                         layer.msg(res.msg, {time: 1500}, function(){
@@ -312,6 +325,11 @@
                     } else {
                         layer.msg(res.msg, {time: 1500});
                     }
+                },
+                error:function(e){
+                    orderDelLock = false;
+                    layer.closeAll();
+                    showErrorAlert(e.responseText);
                 }
             });
         },function(index){

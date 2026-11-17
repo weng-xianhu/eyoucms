@@ -247,8 +247,99 @@ class UsersNotice extends Base
            }
         }
 
+        /* 留言表单通知：通知内容带上字段名称展示 */
+        $contentArr = [];
+        if (1 === intval($Find['source']) && !empty($Find['aid'])) {
+            $gbookRow = Db::name('guestbook')->field('typeid,form_type')->where(['aid' => intval($Find['aid'])])->find();
+            if (!empty($gbookRow)) {
+                $attr_list = Db::name('guestbook_attribute')
+                    ->field('attr_id,attr_name,attr_input_type')
+                    ->where([
+                        'typeid'    => $gbookRow['typeid'],
+                        'form_type' => $gbookRow['form_type'],
+                        'is_del'    => 0,
+                    ])
+                    ->order('sort_order asc, attr_id asc')
+                    ->select();
+                if (!empty($attr_list)) {
+                    $attr_values = Db::name('guestbook_attr')
+                        ->field('attr_id,attr_value')
+                        ->where(['aid' => intval($Find['aid']), 'form_type' => $gbookRow['form_type']])
+                        ->getAllWithIndex('attr_id');
+                    foreach ($attr_list as $attr) {
+                        $attr_value = empty($attr_values[$attr['attr_id']]) ? '' : $attr_values[$attr['attr_id']]['attr_value'];
+                        if (9 == $attr['attr_input_type']) {
+                            $attr_value = implode('', Db::name('region')->where('id', 'in', $attr_value)->column('name'));
+                        } else if (10 == $attr['attr_input_type'] && !empty($attr_value)) {
+                            $attr_value = date('Y-m-d H:i:s', intval($attr_value));
+                        } else if (4 == $attr['attr_input_type']) {
+                            $attr_value = filter_line_return($attr_value, '、');
+                        }
+                        // 附件、单张图、多张图：按文件/图片形式展示，其余按文本转义展示
+                        if (in_array(intval($attr['attr_input_type']), [5, 8, 11])) {
+                            $attr_value = $this->noticeAttrFileHtml($attr_value, intval($attr['attr_input_type']));
+                        } else {
+                            $attr_value = htmlspecialchars((string)$attr_value, ENT_QUOTES, 'UTF-8');
+                        }
+                        $contentArr[] = htmlspecialchars((string)$attr['attr_name'], ENT_QUOTES, 'UTF-8') . '：' . $attr_value;
+                    }
+                }
+            }
+        }
+        if (empty($contentArr)) {
+            // 无留言明细时，按原内容逐行转义输出，避免内容中的HTML被执行
+            foreach (explode('<br/>', (string)$Find['content']) as $line) {
+                $contentArr[] = htmlspecialchars($line, ENT_QUOTES, 'UTF-8');
+            }
+        }
+        $Find['content'] = implode('<br/>', $contentArr);
+        /* end */
+
         $this->assign('find', $Find);
         return $this->fetch();
+    }
+
+    /**
+     * 站内通知 - 附件与图片字段的展示HTML
+     * @param string $value 字段值，多张图以逗号分隔
+     * @param int    $type  字段类型：5 单张图、8 附件、11 多张图
+     * @return string
+     */
+    private function noticeAttrFileHtml($value = '', $type = 8)
+    {
+        $value = trim((string)$value);
+        if (empty($value)) {
+            return '';
+        }
+
+        $image_ext_list = array_map('strtolower', explode('|', (string)tpCache('global.image_type')));
+        $html = [];
+        $url_list = (11 == $type) ? preg_split('/[\r\n,]+/', $value) : [$value];
+        foreach ($url_list as $url) {
+            $url = trim((string)$url);
+            if (empty($url)) {
+                continue;
+            }
+            // 仅允许站内上传目录或 http(s) 链接，防止 javascript: 等伪协议
+            if (!preg_match('#^(/uploads/|/public/(upload|static|plugins)/|/weapp/)#i', $url) && !preg_match('#^https?://#i', $url)) {
+                $html[] = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+                continue;
+            }
+            $path = (string)parse_url($url, PHP_URL_PATH);
+            $file_name = basename($path);
+            $file_name = empty($file_name) ? '点击下载' : htmlspecialchars($file_name, ENT_QUOTES, 'UTF-8');
+            $url = htmlspecialchars(handle_subdir_pic($url), ENT_QUOTES, 'UTF-8');
+            // 附件：a 标签下载；单张图、多张图：直接展示图片
+            if (8 == $type) {
+                $html[] = "<a href='{$url}' target='_blank' rel='noopener noreferrer'>{$file_name}</a>";
+            } else if (in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), $image_ext_list)) {
+                $html[] = "<a href='{$url}' target='_blank' rel='noopener noreferrer'><img src='{$url}' width='60' height='60' style='float: unset; cursor: pointer; margin: 0 3px;' /></a>";
+            } else {
+                $html[] = $url;
+            }
+        }
+
+        return implode('&nbsp;', $html);
     }
 
     /**

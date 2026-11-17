@@ -108,7 +108,7 @@
           var dbport = $.trim($('#dbport').val());
           var demo  =  $.trim($('#demo').val());
           data={'dbHost':dbHost,'dbUser':dbUser,'dbPwd':dbPwd,'dbName':dbName,'dbport':dbport,'demo':demo};
-          var url =  "<?php echo $_SERVER['PHP_SELF']; ?>?step=3&testdbpwd=1";
+          var url =  "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=3&testdbpwd=1";
           $.ajax({
               type: "POST",
               url: url,
@@ -182,7 +182,7 @@
           var dbName = $.trim($('#dbname').val());
           var dbport = $.trim($('#dbport').val());
           data={'dbHost':dbHost,'dbUser':dbUser,'dbPwd':dbPwd,'dbName':dbName,'dbport':dbport};
-          var url =  "<?php echo $_SERVER['PHP_SELF']; ?>?step=3&check=1";
+          var url =  "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=3&check=1";
           $.ajax({
               type: "POST",
               url: url,

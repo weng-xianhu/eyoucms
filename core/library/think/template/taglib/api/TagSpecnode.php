@@ -89,7 +89,7 @@ class TagSpecnode extends Base
                     $val = trim($val);
                     if (empty($val)) {
                         unset($keywordArr[$key]);
-                        break;
+                        continue;
                     } else {
                         $keywordArr[$key] = addslashes($val);
                     }

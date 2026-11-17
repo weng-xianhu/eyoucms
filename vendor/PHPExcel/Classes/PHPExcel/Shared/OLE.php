@@ -35,6 +35,7 @@ $GLOBALS['_OLE_INSTANCES'] = array();
 * @category   PHPExcel
 * @package    PHPExcel_Shared_OLE
 */
+#[\AllowDynamicProperties]
 class PHPExcel_Shared_OLE
 {
     const OLE_PPS_TYPE_ROOT   =      5;
@@ -285,7 +286,7 @@ class PHPExcel_Shared_OLE
                     $pps = new PHPExcel_Shared_OLE_PPS_File($name);
                     break;
                 default:
-                    continue;
+                    continue 2;
             }
             fseek($fh, 1, SEEK_CUR);
             $pps->Type    = $type;
@@ -443,7 +444,7 @@ class PHPExcel_Shared_OLE
     {
         $rawname = '';
         for ($i = 0; $i < strlen($ascii); ++$i) {
-            $rawname .= $ascii{$i} . "\x00";
+            $rawname .= $ascii[$i] . "\x00";
         }
         return $rawname;
     }

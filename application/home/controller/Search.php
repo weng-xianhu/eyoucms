@@ -113,20 +113,26 @@ class Search extends Base
         }
 
         $page = $this->request->param('page');
-        if(!empty($word) && 2 > $page)
-        {
-            $word_decode = strtolower(htmlspecialchars_decode($word));
 
-            $searchConf = tpCache('search');
+        /* 搜索配置与禁用词检查：所有分页统一校验，防止 page=2 绕过 */
+        $searchConf = tpCache('search');
             if (empty($searchConf) || !in_array('search_tabu_words', array_keys($searchConf))) {
                 $searchConf['search_tabu_words'] = ['<','>','"',';',',','@','&','#','\\','*','eval','call_user_func_array','file_put_contents','phpinfo','shell_exec'];
             } else {
-                $searchConf['search_tabu_words'] = explode(PHP_EOL, strtolower($searchConf['search_tabu_words']));
+                // 兼容库中 \r\n、\r、\n 三种换行并按行去空，避免 Linux 下残留 \r 导致禁用词失效
+                $tabuRaw = is_array($searchConf['search_tabu_words']) ? implode("\n", $searchConf['search_tabu_words']) : strval($searchConf['search_tabu_words']);
+                $tabuWords = preg_split('/\r\n|\r|\n/', strtolower($tabuRaw));
+                $tabuWords = array_map('trim', $tabuWords);
+                $tabuWords = array_filter($tabuWords, function ($val) {
+                    return '' !== $val;
+                });
+                $searchConf['search_tabu_words'] = array_values($tabuWords);
             }
             /*前台禁止搜索开始*/
-            if (!empty($searchConf['search_tabu_words'])) {
+            $word_decode = strtolower(htmlspecialchars_decode($word));
+            if (!empty($word) && !empty($searchConf['search_tabu_words'])) {
                 foreach ($searchConf['search_tabu_words'] as $key => $val) {
-                    if (strstr($word_decode, $val)) {
+                    if ('' !== $val && strstr($word_decode, $val)) {
                         $msg = sprintf(foreign_lang('system13', $this->home_lang), $val);
                         $this->error($msg);
                     }
@@ -145,6 +151,10 @@ class Search extends Base
                 }
             }*/
             /*前台禁止搜索结束*/
+        /*--end*/
+
+        /* 频率限制与搜索词记录：仅在实际搜索发起页执行（不再依赖 method 参数，避免漏传绕过） */
+        if (!empty($word) && 2 > $page) {
 
             // 如果tag标签有，默认跳到tag列表页
             /*$tagInfo = Db::name('tagindex')
@@ -167,9 +177,7 @@ class Search extends Base
 
             $word = addslashes($word);
 
-            $method = input('param.method/d');
-            if (!empty($method)) {
-                /*搜索频率限制 start*/
+            /*搜索频率限制 start*/
                 if (!isset($searchConf['search_second'])) {
                     $searchConf['search_second'] = 60;
                 }
@@ -260,7 +268,6 @@ class Search extends Base
                         }
                     } catch (\Exception $e) {}
                 }
-            }
         }
         /*--end*/
 

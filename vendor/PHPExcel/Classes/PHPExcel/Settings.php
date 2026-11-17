@@ -371,7 +371,6 @@ class PHPExcel_Settings
         // but external entities are disabled by default in PHP 8.0+
         if (version_compare(PHP_VERSION, '8.0.0', '<')) {
             if (function_exists('libxml_disable_entity_loader')) {
-                @libxml_disable_entity_loader(true);
             }
         }
     }

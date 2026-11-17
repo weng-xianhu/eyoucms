@@ -214,7 +214,6 @@ class Image
     {
         do {
             $img = imagerotate($this->im, -$degrees, imagecolorallocatealpha($this->im, 0, 0, 0, 127));
-            imagedestroy($this->im);
             $this->im = $img;
         } while (!empty($this->gif) && $this->gifNext());
 
@@ -254,7 +253,6 @@ class Image
                     throw new ImageException('不支持的翻转类型');
             }
 
-            imagedestroy($this->im);
             $this->im = $img;
 
         } while (!empty($this->gif) && $this->gifNext());
@@ -291,7 +289,6 @@ class Image
             imagefill($img, 0, 0, $color);
             //裁剪
             imagecopyresampled($img, $this->im, 0, 0, $x, $y, $width, $height, $w, $h);
-            imagedestroy($this->im); //销毁原图
             //设置新图像
             $this->im = $img;
         } while (!empty($this->gif) && $this->gifNext());
@@ -395,7 +392,6 @@ class Image
                     imagefill($img, 0, 0, $color);
                     //裁剪
                     imagecopyresampled($img, $this->im, $posx, $posy, $x, $y, $neww, $newh, $w, $h);
-                    imagedestroy($this->im); //销毁原图
                     $this->im = $img;
                 } while (!empty($this->gif) && $this->gifNext());
                 $this->info['width']  = (int) $width;
@@ -499,10 +495,8 @@ class Image
             imagecopy($src, $water, 0, 0, 0, 0, $info[0], $info[1]);
             imagecopymerge($this->im, $src, $x, $y, 0, 0, $info[0], $info[1], $alpha);
             //销毁零时图片资源
-            imagedestroy($src);
         } while (!empty($this->gif) && $this->gifNext());
         //销毁水印资源
-        imagedestroy($water);
         return $this;
     }
 
@@ -675,11 +669,9 @@ class Image
         $this->gif->image($img);
         $next = $this->gif->nextImage();
         if ($next) {
-            imagedestroy($this->im);
             $this->im = imagecreatefromstring($next);
             return $next;
         } else {
-            imagedestroy($this->im);
             $this->im = imagecreatefromstring($this->gif->image());
             return false;
         }
@@ -690,7 +682,6 @@ class Image
      */
     public function __destruct()
     {
-        empty($this->im) || imagedestroy($this->im);
     }
 
 }

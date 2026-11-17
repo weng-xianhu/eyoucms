@@ -51,7 +51,7 @@ class TagTag extends Base
                 ->join('tagindex b', 'a.tid = b.id', 'LEFT')
                 ->field('a.*, a.tid AS tagid, b.litpic')
                 ->where($condition)
-                ->order('a.tid asc')
+                ->order('a.update_time asc, a.tid asc') // update_time 记录标签在文档中的录入顺序，保证前台与后台编辑页展示顺序一致
                 ->limit($row)
                 ->select();
 

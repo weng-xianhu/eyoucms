@@ -28,7 +28,7 @@ class Stack
      * 构造方法
      * @param Style|null $emptyStyle
      */
-    public function __construct(Style $emptyStyle = null)
+    public function __construct($emptyStyle = null)
     {
         $this->emptyStyle = $emptyStyle ?: new Style();
         $this->reset();
@@ -57,7 +57,7 @@ class Stack
      * @return Style
      * @throws \InvalidArgumentException
      */
-    public function pop(Style $style = null)
+    public function pop($style = null)
     {
         if (empty($this->styles)) {
             return $this->emptyStyle;

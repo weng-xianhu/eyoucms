@@ -66,12 +66,12 @@ return array(
     'wwwroot_dir' => ['application','core','data','extend','install','public','template','uploads','vendor','weapp'],
     // 禁用栏目的目录名称
     'disable_dirname' => ['application','core','data','extend','install','public','plugins','uploads','template','vendor','weapp','tags','search','user','users','member','reg','centre','login','cart'],
-    // 发送邮箱默认有效时间，会员中心，邮箱验证时用到
-    'email_default_time_out' => 3600,
+    // 发送邮箱默认有效时间，会员中心，邮箱验证时用到（10分钟）
+    'email_default_time_out' => 600,
     // 邮箱发送倒计时 2分钟
     'email_send_time' => 120,
-    // 发送短信默认有效时间
-    'mobile_default_time_out' => 1800,
+    // 发送短信默认有效时间（10分钟）
+    'mobile_default_time_out' => 600,
     // 手机发送倒计时 2分钟 
     'mobile_send_time' => 120,
     // 充值订单默认有效时间，会员中心用到，2小时

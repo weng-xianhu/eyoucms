@@ -56,7 +56,6 @@ class Ask extends Base
         $param = input('param.');
         $limit = !empty($param['limit']) ? $param['limit'] : 15;
         $page = !empty($param['page']) ? $param['page'] : 1;
-        $field = !empty($param['field']) ? $param['field'] : "";
         // 查询条件
         $where = [
             'a.status' => ['IN', [0, 1]],// 0未解决，1已解决
@@ -73,9 +72,14 @@ class Ask extends Base
 
         // 返回参数
         $result = [];
-        // 没有传入则默认查询这些字段
-        if (empty($field)) {
-            $field = 'a.*, b.username, b.nickname, b.head_pic, b.sex, b.level, b.scores, c.type_name';
+        // 字段白名单，仅允许查询预定义字段，防止 field 参数注入
+        $field = 'a.*, b.username, b.nickname, b.head_pic, b.sex, b.level, b.scores, c.type_name';
+        if (!empty($param['field'])) {
+            $allow_field = array('a.*', 'b.username', 'b.nickname', 'b.head_pic', 'b.sex', 'b.level', 'b.scores', 'c.type_name');
+            $request_field = array_map('trim', explode(',', $param['field']));
+            if (!empty($request_field) && empty(array_diff($request_field, $allow_field))) {
+                $field = implode(',', $request_field);
+            }
         }
 
         $paginate = ['page' => $page];

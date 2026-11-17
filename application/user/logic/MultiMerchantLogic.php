@@ -468,28 +468,34 @@ class MultiMerchantLogic extends Model
         $unifiedPay = $this->createShopOrderUnifiedPay($merchantOrder, 'balance');
 
         // 判断余额是否足够支付
-        if (floatval($this->users['users_money']) < floatval($unifiedPay['unified_amount'])) {
+        $payAmount = floatval($unifiedPay['unified_amount']);
+        if (floatval($this->users['users_money']) < $payAmount) {
             $this->error('余额不足，支付失败', null, ['url' => $url]);
-        } else {
-            // 进行余额支付
-            $where = [
-                'users_id' => $this->users_id
-            ];
-            $update = [
-                'users_money' => Db::raw('users_money-' . $unifiedPay['unified_amount']),
-                'update_time' => getTime(),
-            ];
-            $updateID = Db::name('users')->where($where)->update($update);
-            if (!empty($updateID)) {
-                // 添加余额记录
-                $users = empty($this->users) ? Db::name('users')->find($this->users_id) : $this->users;
-                UsersMoneyRecording($unifiedPay['unified_number'], $users, $unifiedPay['unified_amount'], '商品购买', 3);
+        }
 
-                // 统一支付成功处理
-                $this->unifiedPaySuccessHandle($unifiedPay, 'balance');
-            } else {
-                $this->error('错误代码：403，余额支付异常，请在订单列表进行支付', null, ['url' => $url]);
-            }
+        // 条件扣款（原子），防止并发扣成负数
+        $updateID = 0;
+        if ($payAmount > 0) {
+            $updateID = Db::name('users')->where([
+                'users_id'    => $this->users_id,
+                'users_money' => ['egt', $payAmount],
+            ])->update([
+                'users_money' => Db::raw('users_money-' . $payAmount),
+                'update_time' => getTime(),
+            ]);
+        } else {
+            $updateID = 1;
+        }
+
+        if (!empty($updateID)) {
+            // 添加余额记录
+            $users = empty($this->users) ? Db::name('users')->find($this->users_id) : $this->users;
+            UsersMoneyRecording($unifiedPay['unified_number'], $users, $payAmount, '商品购买', 3);
+
+            // 统一支付成功处理
+            $this->unifiedPaySuccessHandle($unifiedPay, 'balance');
+        } else {
+            $this->error('余额不足，支付失败', null, ['url' => $url]);
         }
     }
 

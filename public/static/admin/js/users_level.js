@@ -12,8 +12,9 @@ function discountType(obj) {
 
 function handleDiscountValue(obj, bool) {
     var value = $(obj).val();
-    if (0 >= parseInt(value) && !bool) $(obj).val(0.1);
-    if ((10 <= parseInt(value) || '00' == value || '000' == value) && bool) $(obj).val(9.9);
+    var numericValue = parseFloat(value);
+    if ((!value || isNaN(numericValue) || numericValue <= 0) && !bool) $(obj).val(0.1);
+    if ((numericValue >= 10 || '00' == value || '000' == value) && bool) $(obj).val(9.9);
 }
 
 function levelStatus(obj) {

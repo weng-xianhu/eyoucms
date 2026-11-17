@@ -29,9 +29,14 @@
             var servername_use20210507 = '';//下载模型的servername_use
             var default_servername20210507 = '';//下载模型的default_servername
         </script>
+        
+        {eq name="$editor.editor_select" value="1"}
         {eyou:static file="/public/plugins/Ueditor/ueditor.config.js"/}
         {eyou:static file="/public/plugins/Ueditor/ueditor.all.min.js"/}
         {eyou:static file="/public/plugins/Ueditor/lang/zh-cn/zh-cn.js"/}
+        {else /}
+        {eyou:static file="/public/plugins/ckeditor/ckeditor.js"/}
+        {/eq}
         {eyou:static file="/public/plugins/laydate/laydate.js"/}
         {eyou:static file="/public/plugins/layui/layui.js" /}
         <div class="ey-header-status">
@@ -194,7 +199,7 @@
                             showLayerLoad();
                             $.ajax({
                                 url:  "{:url('user/UsersRelease/get_addonextitem')}",
-                                data: {aid: aid, typeid: typeid, channel: channel, _ajax: 1},
+                                data: {typeid: typeidNew, aid: aidNew, _ajax:1},
                                 type: 'post',
                                 success: function(res) {
                                     layer.closeAll();
@@ -204,14 +209,21 @@
                                         // 缩略图隐藏、显示处理
                                         $('#openLitpic').hide();
                                         if (res.data.is_litpic_users_release) $('#openLitpic').show();
-
-                                        // 模型自定义字段加载
+                                        // 切换栏目时，先销毁所有 CKEditor 实例
+                                        if (1 == init && typeof CKEDITOR !== 'undefined') {
+                                            for (var name in CKEDITOR.instances) {
+                                                try {
+                                                    CKEDITOR.instances[name].destroy(true);
+                                                } catch(e) {}
+                                            }
+                                        }
                                         $('#FieldAddonextitem').empty().html(res.data.html);
-
-                                        // 渲染编辑器
-                                        if (1 === parseInt(init)) {
+                                        if (1 == init) {
+                                            // UEditor 需要手动重新渲染
                                             $.each(res.data.htmltextField, function (index, value) {
-                                                showEditor_1597892187('addonFieldExt_'+value);
+                                                if (res.data.editor_select == 1 || res.data.editor_select == '1') {
+                                                    showEditor_1597892187('addonFieldExt_'+value);
+                                                }
                                             });
                                         }
 

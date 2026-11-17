@@ -276,8 +276,8 @@ class Ueditor extends Base
         $file_ext = pathinfo($original, PATHINFO_EXTENSION);
         $file_ext = strtolower($file_ext);
     
-        // 二次校验文件类型
-        if (in_array($file_ext, explode('|', $image_type))) {
+        // 二次校验文件类型（SVG为矢量文本格式，GD库不支持，单独在下方处理）
+        if (in_array($file_ext, explode('|', $image_type)) && 'svg' !== $file_ext) {
             // 使用getimagesize二次验证
             $imageInfo = @getimagesize($file->getInfo('tmp_name'));
             if (false === $imageInfo) {
@@ -309,7 +309,6 @@ class Ueditor extends Base
     
             $realImageType = $imageInfo[2];
             if (empty($allowImageTypes[$realImageType])) {
-                imagedestroy($img);
                 return json_encode(['state' => '不支持的图片格式']);
             }
     
@@ -333,12 +332,22 @@ class Ueditor extends Base
                 if (function_exists($fun) && in_array($fun, $allowedImageFunctions)) {
                     $fun($img, $file->getInfo('tmp_name'));
                 } else {
-                    imagedestroy($img);
                     return json_encode(['state' => '服务器不支持' . strtoupper($type) . '格式']);
                 }
             }
             
-            imagedestroy($img);
+        }
+
+        // SVG为矢量文本格式，GD库的getimagesize/imagecreatefromstring均不支持，改为校验合法性并过滤脚本等恶意代码
+        if ('svg' === $file_ext) {
+            $svg_tmp = $file->getInfo('tmp_name');
+            $svg_content = @file_get_contents($svg_tmp);
+            if (false === $svg_content || false === stripos($svg_content, '<svg')) {
+                return json_encode(['state' => '文件不是有效的图像']);
+            }
+            if (false === @file_put_contents($svg_tmp, $this->sanitizeSvg($svg_content))) {
+                return json_encode(['state' => '图像文件已损坏']);
+            }
         }
 
         if (in_array($file_ext, explode('|', $image_type))) {
@@ -525,6 +534,28 @@ class Ueditor extends Base
         exit($result);
     }
 
+    /**
+     * 过滤SVG内容中的脚本、事件等恶意代码（防止前台展示时触发XSS）
+     * @param string $content SVG原始内容
+     * @return string 过滤后的SVG内容
+     */
+    private function sanitizeSvg($content)
+    {
+        // 移除script标签（含其内容）
+        $content = preg_replace('/<script\b[^>]*>[\s\S]*?<\/script\s*>/i', '', $content);
+        $content = preg_replace('/<script\b[^>]*\/?>/i', '', $content);
+        // 移除可嵌入HTML的容器
+        $content = preg_replace('/<foreignObject\b[^>]*>[\s\S]*?<\/foreignObject\s*>/i', '', $content);
+        // 移除iframe/embed/object等外部引用
+        $content = preg_replace('/<(iframe|embed|object)\b[^>]*>[\s\S]*?<\/\1\s*>/i', '', $content);
+        $content = preg_replace('/<(iframe|embed)\b[^>]*\/?>/i', '', $content);
+        // 移除on*事件属性（支持单/双引号及无引号）
+        $content = preg_replace('/\son[a-z]+\s*=\s*(".*?"|\'.*?\'|[^\s>]+)/is', '', $content);
+        // 移除javascript:/vbscript:协议
+        $content = preg_replace('/(javascript|vbscript)\s*:/i', '', $content);
+        return $content;
+    }
+
     // 列出图片
     private function fileList($allowFiles, $listSize, $get) {
         $dirname = './'.UPLOAD_PATH;
@@ -613,19 +644,15 @@ class Ueditor extends Base
             return json_encode($data);
         }
 
-        //获取请求头并检测死链
-        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
-        if (empty($heads)) {
-            $data=array(
-                'state' => '链接不可用',
-            );
-            return json_encode($data);
-        } else if(!(stristr($heads[0],"200") && !stristr($heads[0],"304"))){
+        // 逐跳校验重定向，避免 public -> 302 -> 内网 绕过校验
+        $safeTarget = resolve_remote_redirect($imgUrl, 3);
+        if (empty($safeTarget)) {
             $data=array(
                 'state' => '链接不可用',
             );
             return json_encode($data);
         }
+        $heads = $safeTarget['headers'];
         //格式验证(扩展名验证和Content-Type验证)
         if(preg_match("/^http(s?):\/\/(mmbiz.qpic.cn|thirdwx.qlogo.cn)\/(.*)/", $imgUrl) != 1){
             $fileType = strtolower(strrchr($imgUrl,'.'));
@@ -642,12 +669,28 @@ class Ueditor extends Base
             return json_encode($data);
         }
 
-        //打开输出缓冲区并获取远程图片
+        //打开输出缓冲区并获取远程图片（按已校验IP直连，且禁止跟随跳转）
+        $pinnedUrl = pin_remote_url_ip($safeTarget['url'], $safeTarget['ip']);
+        if (false === $pinnedUrl) {
+            $data=array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
+        $hostHeader = $safeTarget['host_header'];
         ob_start();
-        $context = get_remote_stream_context($imgUrl);
-        readfile($imgUrl,false,$context);
-        $img = ob_get_contents();
+        $context = get_remote_stream_context($pinnedUrl, $hostHeader, false);
+        $img = '';
+        if (false !== @readfile($pinnedUrl, false, $context)) {
+            $img = ob_get_contents();
+        }
         ob_end_clean();
+        if (empty($img)) {
+            $data=array(
+                'state' => '链接不可用',
+            );
+            return json_encode($data);
+        }
         preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/",$imgUrl,$m);
 
         $dirname = './'.UPLOAD_PATH.'ueditor/'.getUploadSubDir();
@@ -893,7 +936,8 @@ class Ueditor extends Base
             if ($info) {
                 $state = "SUCCESS";
             } else {
-                $state = "ERROR" . $file->getError();
+                // 移动失败时 $info 为 false，需提前返回，避免对其调用 getSaveName() 触发致命错误
+                respose(['state' => "ERROR" . $file->getError()], 'json');
             }
             $return_url = '/' . $savePath . $info->getSaveName();
 
@@ -903,6 +947,17 @@ class Ueditor extends Base
             }
 
             $return_data['url'] = ROOT_DIR . $return_url; // 支持子目录
+
+            // SVG为矢量文本格式，GD库无法重新生成，做安全过滤去除脚本等恶意代码
+            if ('svg' === strtolower($file_ext)) {
+                $svg_file = '.'.$return_url;
+                if (is_file($svg_file)) {
+                    $svg_content = @file_get_contents($svg_file);
+                    if (false !== $svg_content) {
+                        @file_put_contents($svg_file, $this->sanitizeSvg($svg_content));
+                    }
+                }
+            }
 
             // 重新制作一张图片，抹去任何可能有危害的数据
             // $image       = \think\Image::open('.'.$return_url);
@@ -1169,12 +1224,14 @@ class Ueditor extends Base
                     'md5file'   => md5_file($file_path),
                 );
             }else{
+                $errMsg = '文件保存失败，请检查 uploads 目录写入权限，或服务器安全软件（防篡改/防火墙/WAF）是否拦截了上传';
                 $return_data = array(
                     'error' => array(
                         'code' => 1,
-                        'msg'  => $info->getError()
+                        'msg'  => $errMsg
                     ),
-                    'msg' => $info->getError()
+                    'code' => 0,
+                    'msg'  => $errMsg
                 );
             }
             echo json_encode($return_data);
@@ -1484,7 +1541,7 @@ class Ueditor extends Base
             $api_key = empty($aiData['doubao_api_key']) ? '' : $aiData['doubao_api_key'];
             $api_url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
         } else if ('DeepSeek' == $driver) {
-            $api_model = 'deepseek-chat';
+            $api_model = 'deepseek-v4-flash';
             $api_key = empty($aiData['deepseek_api_key']) ? '' : $aiData['deepseek_api_key'];
             $api_url = 'https://api.deepseek.com/chat/completions';
         } else if ('ModStart' == $driver) {

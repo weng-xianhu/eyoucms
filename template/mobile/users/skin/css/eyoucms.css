@@ -1124,26 +1124,251 @@ i.fa-power-off{ margin-right: 6px; margin-left: 2px; }
     position: relative;
     margin: 15px 0 15px 0;
     display: flex;
+    align-items: center;
+    gap: 0;
 }
 .login-reg .wrapper .cont-box .clause-box a{
     color: #999;
-}
-.login-reg .wrapper .cont-box .clause-box .checkbox-label .check-mark{
-    top: 0;
+    line-height: 20px;
 }
 .login-reg .wrapper .cont-box .clause-box .checkbox-label{
     padding-right: 2px;
+    padding-left: 20px;
+    margin: 0 4px 0 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
 }
 .login-reg .wrapper .cont-box .clause-box .checkbox-label .check-mark{
-    width: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* width: 18px; */
     height: 18px;
 }
 .login-reg .wrapper .cont-box .btn-lg{
     background: linear-gradient(57.72deg,#ff8a19 18.14%,#ff5e00 98.44%);
     border-radius:25px
 }
-.login-reg .wrapper .cont-box .account-login{
-    margin-top: 35px;
+.login-reg .wrapper .cont-box .wx-form-group[style*="display:block"]{
+    display: block !important;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox-label,
+.login-reg .wrapper .cont-box .wx-form-group .radio-label{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox,
+.login-reg .wrapper .cont-box .wx-form-group .radio{
+    display: none;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox-label .check-mark,
+.login-reg .wrapper .cont-box .wx-form-group .radio-label .check-mark{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+    border: 1px solid #e4eaec;
+    transition: .1s;
+    box-sizing: border-box;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox-label .check-mark{
+    border-radius: 3px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .radio-label .check-mark{
+    border-radius: 50%;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox-label .checkbox:checked + .check-mark,
+.login-reg .wrapper .cont-box .wx-form-group .radio-label .radio:checked + .check-mark{
+    background-color: #ff7600;
+    border-color: #ff7600;
+}
+.login-reg .wrapper .cont-box .wx-form-group .checkbox-label .checkbox:checked + .check-mark:after,
+.login-reg .wrapper .cont-box .wx-form-group .radio-label .radio:checked + .check-mark:after{
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 5px;
+    top: 45%;
+    left: 50%;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+.login-reg .wrapper .cont-box .wx-form-group select.wx-form-control{
+    appearance: none;
+    -webkit-appearance: none;
+    background: url("../images/select_down.png") no-repeat right center;
+    background-size: 12px auto;
+    padding-right: 20px !important;
+}
+.login-reg .wrapper .cont-box .wx-form-group button.wx-form-control{
+    padding: 0;
+    text-align: left;
+    background: none;
+    cursor: pointer;
+}
+.login-reg .wrapper .cont-box .wx-form-group button.wx-form-control:focus{
+    outline: none;
+}
+.login-reg .wrapper .cont-box .images_upload_main #upload_imgs_reg_field{
+    margin-top: 10px;
+}
+.login-reg .wrapper .cont-box .images_upload_main .fieldext_upload{
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+.login-reg .wrapper .cont-box .images_upload_main .images_upload_item{
+    position: relative;
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+.login-reg .wrapper .cont-box .images_upload_main .images_upload_item img{
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.login-reg .wrapper .cont-box .images_upload_main .images_upload_item .delete{
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    border-top: 30px solid rgba(0,0,0,0.5);
+    border-left: 30px solid transparent;
+}
+.login-reg .wrapper .cont-box .images_upload_main .images_upload_item .delete::after{
+    position: relative;
+    content: "×";
+    font-size: 20px;
+    color: #fff;
+    top: -33px;
+    right: 14px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-title,
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options{
+    color: #6E6E6E;
+}
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-title{
+    font-size: 15px;
+    line-height: 20px;
+    margin-bottom: 12px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 2px;
+}
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options .checkbox-label,
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options .radio-label{
+    margin: 0;
+    padding-left: 28px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #333;
+}
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options .checkbox-label span:last-child,
+.login-reg .wrapper .cont-box .wx-form-group .fieldext-options .radio-label span:last-child{
+    display: inline-block;
+    color: #333;
+}
+.login-reg .wrapper .cont-box .btn-lg{
+    background: linear-gradient(57.72deg,#ff8a19 18.14%,#ff5e00 98.44%);
+    border-radius:25px
+}
+.login-reg .layui-layer{
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+.login-reg .layui-layer-title{
+    height: 46px !important;
+    line-height: 46px !important;
+    padding: 0 16px !important;
+    border-bottom: 1px solid #f1f1f1 !important;
+    font-size: 16px !important;
+    color: #333 !important;
+    background: #fff !important;
+}
+.login-reg .layui-layer-setwin{
+    top: 15px !important;
+    right: 14px !important;
+}
+.login-reg .layui-layer-setwin a{
+    width: 16px !important;
+    height: 16px !important;
+}
+.login-reg .upload-body{
+    border-radius: 0 0 16px 16px;
+    background: #fff;
+}
+.login-reg .upload-body .upload-con .image-header{
+    padding: 12px 14px 0 !important;
+}
+.login-reg .upload-body .upload-con .image-header .image-header-l .layui-btn,
+.login-reg .upload-body .layui-btn-yes,
+.login-reg .upload-body .layui-btn-normal,
+.login-reg .layui-layer-btn .layui-layer-btn0{
+    background: linear-gradient(57.72deg,#ff8a19 18.14%,#ff5e00 98.44%) !important;
+    border-color: #ff7a00 !important;
+    border-radius: 10px !important;
+}
+.login-reg .upload-body .upload-con .image-header .image-header-l .layui-btn{
+    height: 38px !important;
+    line-height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+}
+.login-reg .upload-body .layui-tab-brief>.layui-tab-title .layui-this,
+.login-reg .upload-nav .item.active,
+.login-reg .upload-body .upload-con .group-item.active a,
+.login-reg .upload-body .upload-con .image-list li.up-over .image-select-layer i,
+.login-reg .upload-body .upload-con .image-list li .layer .close{
+    color: #ff7a00 !important;
+}
+.login-reg .upload-body .layui-tab-brief>.layui-tab-title .layui-this:after{
+    border-bottom-color: #ff7a00 !important;
+}
+.login-reg .upload-body .upload-con .group-item.active{
+    color: #ff7a00 !important;
+    background-color: rgba(255,122,0,0.08) !important;
+}
+.login-reg .upload-body .upload-con .layui-upload-drag{
+    border-radius: 14px !important;
+    border-color: #ffd3b0 !important;
+    background: #fffaf6 !important;
+}
+.login-reg .upload-body .upload-con .layui-upload-drag .layui-icon{
+    color: #ffb36b !important;
+}
+.login-reg .upload-body .upload-con .layui-upload-drag p{
+    color: #999 !important;
+    line-height: 1.7 !important;
+}
+@media screen and (max-width: 768px){
+    .login-reg .layui-layer{
+        width: 88vw !important;
+        left: 6vw !important;
+    }
+    .login-reg .upload-body .upload-con{
+        padding: 0 12px 14px !important;
+    }
+}
+.login-reg .wrapper .cont-box .btn-lg{
+    background: linear-gradient(57.72deg,#ff8a19 18.14%,#ff5e00 98.44%);
+    border-radius:25px
 }
 .account-login { text-align: center; }
 

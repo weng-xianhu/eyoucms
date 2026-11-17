@@ -21,6 +21,17 @@ use app\admin\logic\ProductSpecLogic; // 用于产品规格逻辑功能处理
 use app\user\model\Pay as PayModel;  //用于虚拟网盘商品付款后自动走流程处理
 
 class Shop extends Base {
+    public $users_db;
+    public $shop_order_db;
+    public $shop_order_details_db;
+    public $shop_address_db;
+    public $shop_express_db;
+    public $shop_order_log_db;
+    public $shipping_template_db;
+    public $product_spec_preset_db;
+    public $ProductSpecLogic;
+    public $ShopLogic;
+    public $weappInfo;
 
     /**
      * 构造方法
@@ -2327,7 +2338,7 @@ class Shop extends Base {
         foreach ($list as $key => $val) {
             if (!isset($val['is_buy'])) $val['is_buy'] = 0;
             $config = [];
-            if ($val['is_buy'] == 0) {
+            if ($val['is_buy'] == 0 && !is_weapp_invalid($val['code'])) {
                 if (file_exists(WEAPP_PATH . $val['code'] . DS . 'config.php')) {
                     $config                = include WEAPP_PATH . $val['code'] . DS . 'config.php';
                     $config['description'] = filter_line_return($config['description'], '<br/>');
@@ -2435,7 +2446,7 @@ class Shop extends Base {
         $list = $params['list'];
         foreach ($list as $key =>$val){
             $config = [];
-            if (file_exists(WEAPP_PATH . $val['weapp_code'] . DS . 'config.php')) {
+            if (!is_weapp_invalid($val['weapp_code']) && file_exists(WEAPP_PATH . $val['weapp_code'] . DS . 'config.php')) {
                 $config                = include WEAPP_PATH . $val['weapp_code'] . DS . 'config.php';
                 $config['description'] = filter_line_return($config['description'], '<br/>');
                 $val['version']        = getWeappVersion($val['weapp_code']);
@@ -2490,6 +2501,7 @@ class Shop extends Base {
                 'code'   => $codeStr,
                 'v'      => $versionStr,
                 'pid'   => $this->php_servicemeal,
+                'weapp_invalid_support' => 1,
                 // 'dev'   => 1,
             );
             tpCache('system', ['system_usecodelist'=>'']);
@@ -2498,6 +2510,10 @@ class Shop extends Base {
             $response = @httpRequest($url, 'POST', $values, [], 5);
             $batch_upgrade = json_decode($response, true);
             if (is_array($batch_upgrade)) {
+                if (!empty($batch_upgrade['WeappInvalid']) && function_exists('save_weapp_invalid_codes')) {
+                    save_weapp_invalid_codes($batch_upgrade['WeappInvalid']);
+                    unset($batch_upgrade['WeappInvalid']);
+                }
                 if (!empty($batch_upgrade)) {
                     tpSetting('system', ['system_codelogic_1638857408'=>$batch_upgrade['Sample']]);
                     $weappLogic = new \app\admin\logic\WeappLogic;

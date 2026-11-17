@@ -114,7 +114,6 @@ class Dither implements FilterInterface{
             }
         }
 
-        imagedestroy($old); // Free resource
         // Create new image with updated core
         return new Image(
             $new,
@@ -177,7 +176,6 @@ class Dither implements FilterInterface{
             }
         }
 
-        imagedestroy( $old ); // Free resource
         // Create new image with updated core
         return new Image(
             $new,

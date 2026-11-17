@@ -21,6 +21,7 @@ use app\home\logic\FieldLogic;
  */
 class TagSpecnode extends Base
 {
+    public $fieldLogic;
     //初始化
     protected function _initialize()
     {
@@ -94,7 +95,7 @@ class TagSpecnode extends Base
                 $val = trim($val);
                 if (empty($val)) {
                     unset($keywordArr[$key]);
-                    break;
+                    continue;
                 } else {
                     $keywordArr[$key] = addslashes($val);
                 }

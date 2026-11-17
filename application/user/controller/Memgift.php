@@ -24,6 +24,8 @@ use think\Request;
  */
 class Memgift extends Base
 {
+    public $score_name;
+
     public function _initialize()
     {
         parent::_initialize();
@@ -117,7 +119,7 @@ class Memgift extends Base
                 $this->error('商品不存在！');
             }
             $giftname = $row['giftname'];
-            $score = $row['score'];
+            $score = intval($row['score']);
             if (empty($row['status'])) {
                 $this->error('该商品目前处于非兑换状态！');
             }
@@ -127,6 +129,44 @@ class Memgift extends Base
             if ($score > $scores) {
                 $this->error("您的{$this->score_name}还不够兑换该商品！");
             }
+
+            // 1. 条件扣减库存（原子），防止并发超卖、库存扣成负数
+            $stockUpdate = Db::name("memgift")->where([
+                'gift_id' => $gift_id,
+                'status'  => 1,
+                'stock'   => ['egt', 1],
+            ])->update([
+                'num'         => Db::raw('num+1'),
+                'stock'       => Db::raw('stock-1'),
+                'update_time' => $time,
+            ]);
+            if (empty($stockUpdate)) {
+                $this->error('该商品库存不足！');
+            }
+
+            // 2. 条件扣减积分（原子），防止并发扣成负数
+            if ($score > 0) {
+                $scoreUpdate = Db::name("users")->where([
+                    'users_id' => $this->users_id,
+                    'scores'   => ['egt', $score],
+                ])->update([
+                    'scores'      => Db::raw("scores-" . $score),
+                    'update_time' => $time,
+                ]);
+            } else {
+                Db::name("users")->where(['users_id' => $this->users_id])->update(['update_time' => $time]);
+                $scoreUpdate = 1;
+            }
+            if (empty($scoreUpdate)) {
+                // 积分不足，回滚库存与兑换次数
+                Db::name("memgift")->where(['gift_id' => $gift_id])->update([
+                    'num'         => Db::raw('num-1'),
+                    'stock'       => Db::raw('stock+1'),
+                    'update_time' => getTime(),
+                ]);
+                $this->error("您的{$this->score_name}还不够兑换该商品！");
+            }
+
             $insert_data = [
                 'giftname' => $giftname,
                 'gift_id' => $gift_id,
@@ -152,18 +192,19 @@ class Memgift extends Base
                     'current_devote' => $this->users['devote'],
                 ];
                 Db::name('users_score')->insert($data);
-
-                $update_users = Db::name("users")->where(['users_id' => $this->users_id])->update(['scores' => Db::Raw("scores-" . $score), 'update_time' => getTime()]);
-                if ($update_users) {
-                    $memgift_data = [
-                        'num' => Db::raw('num+1'),
-                        'stock' => Db::raw('stock-1'),
-                        'update_time' => getTime(),
-                    ];
-                    Db::name("memgift")->where(['gift_id' => $gift_id])->update($memgift_data);
-                    $this->success("成功兑换商品，请等待发货！");
-                }
+                $this->success("成功兑换商品，请等待发货！");
             }
+
+            // 兑换记录写入失败：回滚积分与库存
+            Db::name("users")->where(['users_id' => $this->users_id])->update([
+                'scores'      => Db::raw("scores+" . $score),
+                'update_time' => getTime(),
+            ]);
+            Db::name("memgift")->where(['gift_id' => $gift_id])->update([
+                'num'         => Db::raw('num-1'),
+                'stock'       => Db::raw('stock+1'),
+                'update_time' => getTime(),
+            ]);
             $this->error('兑换失败！');
         }
         $this->assign('post', $post);
@@ -185,14 +226,13 @@ class Memgift extends Base
             $long = !empty($post['long']) ? intval($post['long']) : 0;
             $scores = $this->users['scores'];
             $row = Db::name('memgift')->where(['gift_id' => $gift_id])->find();
-            $type_id = $row['type_id'];
-
             if (empty($row)) {
                 $this->error('商品不存在！');
             }
+            $type_id = $row['type_id'];
 
             $giftname = $row['giftname'];
-            $score = $row['score'];
+            $score = intval($row['score']);
             if (empty($row['status'])) {
                 $this->error('该商品目前处于非兑换状态！');
             }
@@ -252,6 +292,20 @@ class Memgift extends Base
                 $result['open_level_time'] = getTime();
             }
 
+            // 1. 条件扣减库存（原子），防止并发超卖、库存扣成负数
+            $stockUpdate = Db::name('memgift')->where([
+                'gift_id' => $gift_id,
+                'status'  => 1,
+                'stock'   => ['egt', 1],
+            ])->update([
+                'num'         => Db::raw('num+1'),
+                'stock'       => Db::raw('stock-1'),
+                'update_time' => getTime(),
+            ]);
+            if (empty($stockUpdate)) {
+                $this->error('该商品库存不足！');
+            }
+
             $insert_data = [
                 'giftname' => $giftname,
                 'gift_id' => $gift_id,
@@ -262,33 +316,52 @@ class Memgift extends Base
                 'status' => 1
             ];
             $gid = Db::name('memgiftget')->insertGetId($insert_data);
-            if ($gid) {
-                //-库存  + 兑换次数
-                $memgift_update = [
-                    'num' => Db::Raw('num+1'),
-                    'stock' => Db::Raw('stock-1'),
-                    'update_time' => getTime()
-                ];
-                Db::name('memgift')->where(['gift_id' => $gift_id])->update($memgift_update);
-                //日志记录
-                $data = [
-                    'users_id' => $this->users_id,
-                    'info' => "积分兑换,gid={$gift_id}",
-                    'score' => '-' . $score,
-                    'type' => 9,
-                    'add_time' => getTime(),
+            if (empty($gid)) {
+                // 兑换记录写入失败：回滚库存
+                Db::name('memgift')->where(['gift_id' => $gift_id])->update([
+                    'num'         => Db::raw('num-1'),
+                    'stock'       => Db::raw('stock+1'),
                     'update_time' => getTime(),
-                    'current_score' => $this->users['scores'],
-                    'current_devote' => $this->users['devote'],
-                ];
-                Db::name('users_score')->insert($data);
-                $result['scores'] = Db::Raw("scores-" . $score);
-                Db::name('users')->where('users_id', $this->users_id)->update($result);
-
-                $this->success('兑换成功!');
-            } else {
+                ]);
                 $this->error('兑换失败!');
             }
+
+            // 2. 条件扣减积分并升级会员（原子），防止并发扣成负数
+            $result['scores'] = Db::raw("scores-" . $score);
+            if ($score > 0) {
+                $scoreUpdate = Db::name('users')->where([
+                    'users_id' => $this->users_id,
+                    'scores'   => ['egt', $score],
+                ])->update($result);
+            } else {
+                Db::name('users')->where('users_id', $this->users_id)->update($result);
+                $scoreUpdate = 1;
+            }
+            if (empty($scoreUpdate)) {
+                // 积分不足：回滚兑换记录与库存
+                Db::name('memgiftget')->where('gid', $gid)->delete(true);
+                Db::name('memgift')->where(['gift_id' => $gift_id])->update([
+                    'num'         => Db::raw('num-1'),
+                    'stock'       => Db::raw('stock+1'),
+                    'update_time' => getTime(),
+                ]);
+                $this->error("您的{$this->score_name}还不够兑换该商品！");
+            }
+
+            //日志记录
+            $data = [
+                'users_id' => $this->users_id,
+                'info' => "积分兑换,gid={$gid}",
+                'score' => '-' . $score,
+                'type' => 9,
+                'add_time' => getTime(),
+                'update_time' => getTime(),
+                'current_score' => $this->users['scores'],
+                'current_devote' => $this->users['devote'],
+            ];
+            Db::name('users_score')->insert($data);
+
+            $this->success('兑换成功!');
         }
     }
 }

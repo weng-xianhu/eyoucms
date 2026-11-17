@@ -21,6 +21,7 @@ use app\admin\logic\ProductSpecLogic; // 用于产品规格逻辑功能处理
 
 class Product extends Base
 {
+    public $callback_url;
     // 模型标识
     public $nid = 'product';
     // 模型ID
@@ -224,6 +225,9 @@ class Product extends Base
      */
     public function add()
     {
+        // 手机端后台管理插件标识
+        $isMobile = input('param.isMobile/d', 0);
+
         $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
@@ -242,6 +246,15 @@ class Product extends Base
             /* END */
 
             $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
+
+            // 如果安装后台手机端管理插件则执行，取手机端暂存的正文内容
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                $contentData = $mbackendLogic->fileCacheHandle('get');
+                $content = !empty($contentData['content']) ? $contentData['content'] : '';
+                $post['addonFieldExt']['content'] = $post['addonFieldExt']['content_ey_m'] = $content;
+                $content = !empty($content) ? htmlspecialchars_decode($content) : '';
+            }
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -462,6 +475,12 @@ class Product extends Base
 
                 adminLog('新增产品：' . $data['title']);
 
+                // 如果安装后台手机端管理插件则执行，删除手机端暂存的正文内容
+                if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                    $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                    $mbackendLogic->fileCacheHandle('del');
+                }
+
                 // 虚拟商品保存
                 if (!empty($post['prom_type']) && in_array($post['prom_type'], [2, 3])) {
                     model('ProductNetdisk')->saveProductNetdisk($aid, $data);
@@ -591,7 +610,12 @@ class Product extends Base
 
         $this->assign($assign_data);
 
-        return $this->fetch();
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            return $this->display('product/add');
+        } else {
+            return $this->fetch();
+        }
     }
     
     /**
@@ -599,6 +623,9 @@ class Product extends Base
      */
     public function edit()
     {
+        // 手机端后台管理插件标识
+        $isMobile = input('param.isMobile/d', 0);
+
         $admin_info = session('admin_info');
         $auth_role_info = $admin_info['auth_role_info'];
         $this->assign('auth_role_info', $auth_role_info);
@@ -621,6 +648,15 @@ class Product extends Base
 
             $typeid = input('post.typeid/d', 0);
             $content = empty($post['addonFieldExt']['content']) ? '' : htmlspecialchars_decode($post['addonFieldExt']['content']);
+
+            // 如果安装后台手机端管理插件则执行，取手机端暂存的正文内容
+            if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                $contentData = $mbackendLogic->fileCacheHandle('get');
+                $content = !empty($contentData['content']) ? $contentData['content'] : '';
+                $post['addonFieldExt']['content'] = $post['addonFieldExt']['content_ey_m'] = $content;
+                $content = !empty($content) ? htmlspecialchars_decode($content) : '';
+            }
 
             // 根据标题自动提取相关的关键字
             $seo_keywords = $post['seo_keywords'];
@@ -881,6 +917,12 @@ class Product extends Base
 
                 adminLog('编辑产品：' . $data['title']);
 
+                // 如果安装后台手机端管理插件则执行，删除手机端暂存的正文内容
+                if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+                    $mbackendLogic = new \weapp\Mbackend\logic\MbackendLogic;
+                    $mbackendLogic->fileCacheHandle('del');
+                }
+
                 // 系统商品操作时，积分商品的被动处理
                 model('ShopPublicHandle')->pointsGoodsPassiveHandle([$data['aid']]);
 
@@ -1040,7 +1082,12 @@ class Product extends Base
 
         $this->assign($assign_data);
 
-        return $this->fetch();
+        // 如果安装手机端后台管理插件并且在手机端访问时执行
+        if (is_dir('./weapp/Mbackend/') && !empty($isMobile)) {
+            return $this->display('product/edit');
+        } else {
+            return $this->fetch();
+        }
     }
     
     /**

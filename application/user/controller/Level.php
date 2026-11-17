@@ -19,6 +19,12 @@ use think\Page;
 
 class Level extends Base
 {
+    public $users_money_db;
+    public $users_type_manage_db;
+    public $pay_wechat_config;
+    public $pay_alipay_config;
+    public $php_version;
+
     // 初始化
     public function _initialize() {
         parent::_initialize();

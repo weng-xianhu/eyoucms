@@ -489,69 +489,144 @@ class Tools extends Base {
      * @param null $part   当前卷号，为空表示初始化
      * @param null $offset 当前卷内字节偏移
      */
-    public function new_import($time = 0, $part = null, $offset = null)
+    public function new_import($time = 0, $part = null, $offset = null, $resume = 0)
     {
         function_exists('set_time_limit') && set_time_limit(0);
         @ini_set('memory_limit','-1');
         function_exists('ignore_user_abort') && ignore_user_abort(true);
 
+        // 致命错误兜底：以 JSON 返回错误，避免网关只给出 500/空白页，前端误判为“请求中断”
+        register_shutdown_function(function () {
+            if (!empty($GLOBALS['__backup_restore_responded'])) {
+                return;
+            }
+            $err = error_get_last();
+            if (empty($err) || !in_array($err['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR), true)) {
+                return;
+            }
+            while (ob_get_level() > 0) {
+                @ob_end_clean();
+            }
+            @header('Content-Type: application/json; charset=utf-8');
+            exit(json_encode(array('code' => 0, 'msg' => '还原进程异常终止：' . $err['message']), JSON_UNESCAPED_UNICODE));
+        });
+
+        try {
+            $this->importVolumes($time, $part, $offset, $resume);
+        } catch (\Exception $e) {
+            $this->restoreOutput(array('code' => 0, 'msg' => '还原异常：' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * 分卷导入主流程
+     * @param int  $time   备份时间戳
+     * @param null $part   当前卷号，为空表示初始化
+     * @param null $offset 当前卷内字节偏移
+     * @param int  $resume 是否按服务端记录的上次提交位置续传
+     */
+    private function importVolumes($time, $part, $offset, $resume)
+    {
         if (!is_numeric($time) || intval($time) <= 0) {
-            respose(array('code'=>0, 'msg'=>'参数有误'));
+            $this->restoreOutput(array('code'=>0, 'msg'=>'参数有误'));
+        }
+        $time   = intval($time);
+        $resume = intval($resume);
+
+        // 先释放后台主连接上可能残留的结果集，避免后续查询触发 MySQL 2014
+        try {
+            Db::connect()->free();
+        } catch (\Exception $e) {
         }
 
-        // 初始化：校验分卷完整性与版本，缓存卷列表
+        // 初始化：校验分卷完整性与版本，缓存卷列表；续传时优先使用服务端记录的上次提交位置
         if (is_null($part) || is_null($offset)) {
             $list = $this->getBackupVolumes($time);
             if (empty($list)) {
-                respose(array('code'=>0, 'msg'=>'备份文件不存在，请检查！'));
+                $this->restoreOutput(array('code'=>0, 'msg'=>'备份文件不存在，请检查！'));
             }
             $last = end($list);
             if (count($list) !== intval($last[0])) {
-                respose(array('code'=>0, 'msg'=>'备份文件可能已经损坏（分卷不完整），请检查！'));
+                $this->restoreOutput(array('code'=>0, 'msg'=>'备份文件可能已经损坏（分卷不完整），请检查！'));
             }
             /*校验sql文件是否属于当前CMS版本*/
             preg_match('/(\d{8,8})-(\d{6,6})-(\d+)-(v\d+\.\d+\.\d+(.*))\.sql/i', $last[1], $matches);
             $version = getCmsVersion();
             if (empty($matches[4]) || $matches[4] != $version) {
-                respose(array('code'=>0, 'msg'=>'sql不兼容当前版本：'.$version));
+                $this->restoreOutput(array('code'=>0, 'msg'=>'sql不兼容当前版本：'.$version));
             }
             /*--end*/
             session('backup_list', $list);
             session('backup_total_size', array_sum(array_column($list, 3)));
             session('backup_sqldatapath', tpCache('web.web_sqldatapath'));
-            respose(array('code'=>1, 'msg'=>'初始化完成，准备还原第1卷...', 'rate'=>'0%', 'data'=>array('part'=>1, 'offset'=>0)));
+
+            if ($resume > 0) { // 断点续传：中断后再次点击恢复，不再从第 1 卷重来
+                $progress = $this->restoreProgressRead($time);
+                if (!empty($progress)) {
+                    if ('cleanup' === $progress['phase']) { // 数据已导完，只差收尾
+                        $this->restoreFinish($time);
+                    }
+                    if (isset($list[$progress['part']]) && $progress['offset'] <= $list[$progress['part']][3]) {
+                        $part   = $progress['part'];
+                        $offset = $progress['offset'];
+                    }
+                }
+            }
+
+            if (is_null($part) || is_null($offset)) {
+                $this->restoreProgressWrite($time, 1, 0, 'import');
+                $this->restoreOutput(array('code'=>1, 'msg'=>'初始化完成，准备还原第1卷...', 'rate'=>'0%', 'data'=>array('part'=>1, 'offset'=>0)));
+            }
         }
 
         $part   = intval($part);
         $offset = intval($offset);
         $list   = session('backup_list');
         if (empty($list) || !isset($list[$part])) {
-            respose(array('code'=>0, 'msg'=>'还原进度已失效，请重新点击恢复！'));
+            // 会话过期时重建卷列表，避免长任务中途被判定为“进度失效”而从头重来
+            $list = $this->getBackupVolumes($time);
+            if (empty($list) || !isset($list[$part])) {
+                $this->restoreOutput(array('code'=>0, 'msg'=>'还原进度已失效，请重新点击恢复！'));
+            }
+            session('backup_list', $list);
+            session('backup_total_size', array_sum(array_column($list, 3)));
+            session('backup_sqldatapath', tpCache('web.web_sqldatapath'));
         }
         $item = $list[$part];
         if (empty($item[1]) || !file_exists($item[1])) {
-            respose(array('code'=>0, 'msg'=>"第{$part}卷文件不存在，请检查！"));
+            $this->restoreOutput(array('code'=>0, 'msg'=>"第{$part}卷文件不存在，请检查！"));
         }
 
         $gz = !empty($item[2]);
         $fp = $gz ? @gzopen($item[1], 'r') : @fopen($item[1], 'rb');
         if (false === $fp || null === $fp) {
-            respose(array('code'=>0, 'msg'=>"第{$part}卷文件无法读取，请检查目录权限！"));
+            $this->restoreOutput(array('code'=>0, 'msg'=>"第{$part}卷文件无法读取，请检查目录权限！"));
         }
         if ($offset > 0) {
             $gz ? gzseek($fp, $offset) : fseek($fp, $offset);
         }
 
-        Db::execute("SET SESSION sql_mode = ''"); // 兼容备份数据中枚举字段的空值等宽松数据
-        Db::execute("SET FOREIGN_KEY_CHECKS = 0");
+        // 导入统一走独立 PDO 连接：强制缓冲查询 + exec 执行，执行完即释放结果集，
+        // 避免共用后台连接时残留游标引发 MySQL 2014（unbuffered queries are active）
+        $pdo = $this->restorePdoConnect();
+        if (null === $pdo) {
+            $gz ? @gzclose($fp) : @fclose($fp);
+            $this->restoreOutput(array('code'=>0, 'msg'=>'数据库连接失败，请检查数据库配置！'));
+        }
+
+        $pdo->exec("SET SESSION sql_mode = ''"); // 兼容备份数据中枚举字段的空值等宽松数据
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
 
         $prefix   = config('database.prefix');
-        $deadline = time() + 20; // 每次请求只执行约20秒，避免PHP与网关超时
+        // 单次请求的时间片：小分卷用短时间片，前端进度条刷新及时；大分卷用长时间片，减少反复 gzseek 解压的开销
+        $slice    = intval(filesize($item[1])) > 20 * 1024 * 1024 ? 15 : 3;
+        $deadline = time() + $slice; // 时间片过长时前端进度条会长时间不动，看起来像卡死
         $sql      = '';
         $eof      = false;
         $inTrans  = false;
         $batch    = 0;
-        Db::execute("START TRANSACTION"); // 批量提交，避免逐条提交导致的极慢写入
+        $committed = false; // 本次循环是否发生过提交，用于同步落盘续传位置
+        $this->restoreExec($pdo, "START TRANSACTION"); // 批量提交，避免逐条提交导致的极慢写入
         $inTrans = true;
         while (true) {
             $line = $gz ? gzgets($fp) : fgets($fp);
@@ -574,35 +649,47 @@ class Tools extends Base {
                 $isDdl = preg_match('/^\s*(DROP|CREATE|ALTER|TRUNCATE|RENAME)\s/i', $query);
                 try {
                     if ($isDdl && $inTrans) { // DDL会隐式提交，先显式收尾保持状态一致
-                        Db::execute("COMMIT");
+                        $this->restoreExec($pdo, "COMMIT");
                         $inTrans = false;
                         $batch = 0;
+                        $committed = true;
                     }
-                    Db::execute($query);
+                    $this->restoreExec($pdo, $query);
                     if (!$inTrans) {
-                        Db::execute("START TRANSACTION");
+                        $this->restoreExec($pdo, "START TRANSACTION");
                         $inTrans = true;
                         $batch = 0;
                     } elseif (++$batch >= 1000) {
-                        Db::execute("COMMIT");
-                        Db::execute("START TRANSACTION");
+                        $this->restoreExec($pdo, "COMMIT");
+                        $this->restoreExec($pdo, "START TRANSACTION");
                         $batch = 0;
+                        $committed = true;
                     }
                 } catch (\Exception $e) {
-                    if ($inTrans) {
-                        Db::execute("ROLLBACK");
+                    try {
+                        if ($inTrans) {
+                            $pdo->exec("ROLLBACK");
+                        }
+                    } catch (\Exception $e) {
+                        // 连接已断开时回滚会再次抛错，忽略即可
                     }
-                    $gz ? gzclose($fp) : fclose($fp);
-                    respose(array('code'=>0, 'msg'=>"第{$part}卷还原出错：".$e->getMessage()));
+                    $gz ? @gzclose($fp) : @fclose($fp);
+                    @unlink($this->restoreProgressFile($time)); // 数据出错时清空续传位置，避免下次从半途续跑
+                    $this->restoreOutput(array('code'=>0, 'msg'=>"第{$part}卷还原出错（已处理到偏移{$offset}）：".$e->getMessage()));
                 }
             }
             $offset = $gz ? gztell($fp) : ftell($fp);
+            if ($committed) { // 只在提交点记录续传位置，续跑时不会重复执行已提交的语句
+                $this->restoreProgressWrite($time, $part, $offset, 'import');
+                $committed = false;
+            }
             if (time() >= $deadline) {
                 break;
             }
         }
         if ($inTrans) { // 本次请求的数据全部提交后才回报进度，中断可从上次进度安全续跑
-            Db::execute("COMMIT");
+            $this->restoreExec($pdo, "COMMIT");
+            $this->restoreProgressWrite($time, $part, $offset, 'import');
         }
         $gz ? gzclose($fp) : fclose($fp);
 
@@ -618,32 +705,247 @@ class Tools extends Base {
         /*--end*/
 
         if (!$eof) { // 当前卷未读完，继续
-            respose(array('code'=>1, 'msg'=>"正在还原第{$part}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$part, 'offset'=>$offset)));
+            $this->restoreOutput(array('code'=>1, 'msg'=>"正在还原第{$part}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$part, 'offset'=>$offset)));
         }
         if (isset($list[$part + 1])) { // 进入下一卷
             $next = $part + 1;
-            respose(array('code'=>1, 'msg'=>"正在还原第{$next}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$next, 'offset'=>0)));
+            $this->restoreProgressWrite($time, $next, 0, 'import'); // 先记录下一卷起点，避免中断后续传要重新解压整卷
+            $this->restoreOutput(array('code'=>1, 'msg'=>"正在还原第{$next}卷...", 'rate'=>$rate.'%', 'data'=>array('part'=>$next, 'offset'=>0)));
         }
 
         // 全部分卷还原完毕
-        //修改数据库备份目录为原来的目录
-        $tpCacheData = ['web_sqldatapath'=>session('backup_sqldatapath'), 'php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0];
-        if (is_language()) {
-            $langRow = Db::name('language')->order('id asc')->select();
-            foreach ($langRow as $key => $val) {
-                tpCache('web', $tpCacheData, $val['mark']);
-            }
-        } else { // 单语言
-            tpCache('web', $tpCacheData);
+        $this->restoreFinish($time);
+    }
+
+    /**
+     * 还原收尾：先把结果回给前端，再做耗时的缓存清理
+     * @param int $time 备份时间戳
+     */
+    private function restoreFinish($time)
+    {
+        $sqldatapath = session('backup_sqldatapath');
+        if (is_null($sqldatapath)) { // 会话已过期，从续传记录里取回原始备份目录
+            $progress = $this->restoreProgressRead($time);
+            $sqldatapath = !empty($progress['sqldatapath']) ? $progress['sqldatapath'] : null;
         }
+        $tpCacheData = array('php_atqueryrequest_time'=>0, 'php_atqueryrequest_time2'=>0);
+        if (!is_null($sqldatapath)) { // 不要写入空值，避免把备份目录配置清空
+            $tpCacheData['web_sqldatapath'] = $sqldatapath;
+        }
+        $progressFile = $this->restoreProgressFile($time);
+
         session('backup_list', null);
         session('backup_total_size', null);
         session('backup_sqldatapath', null);
-        delFile(RUNTIME_PATH); // 清除缓存
-        \think\Cache::clear();
-        adminLog('还原数据库');
-        verify_authortoken();
-        respose(array('code'=>1, 'msg'=>'还原完成！', 'rate'=>'100%', 'data'=>array('done'=>1)));
+        $this->restoreProgressWrite($time, 0, 0, 'cleanup', $sqldatapath); // 标记数据已导完，续传时只做收尾
+
+        $this->restoreResponseAndContinue(
+            array('code'=>1, 'msg'=>'还原完成！', 'rate'=>'100%', 'data'=>array('done'=>1)),
+            function () use ($tpCacheData, $progressFile) {
+                // 收尾步骤逐一容错，任何一步失败都不能影响已发出的“还原完成”结果
+                try {
+                    if (is_language()) {
+                        $langRow = Db::name('language')->order('id asc')->select();
+                        foreach ($langRow as $key => $val) {
+                            tpCache('web', $tpCacheData, $val['mark']);
+                        }
+                    } else { // 单语言
+                        tpCache('web', $tpCacheData);
+                    }
+                } catch (\Exception $e) {
+                }
+                try {
+                    adminLog('还原数据库');
+                } catch (\Exception $e) {
+                }
+                // 释放会话锁，避免前端刷新页面被后续的缓存清理长时间阻塞
+                if (function_exists('session_status') && PHP_SESSION_ACTIVE === session_status()) {
+                    @session_write_close();
+                }
+                try {
+                    delFile(RUNTIME_PATH); // 清除缓存
+                } catch (\Exception $e) {
+                }
+                try {
+                    \think\Cache::clear();
+                } catch (\Exception $e) {
+                }
+                try {
+                    verify_authortoken();
+                } catch (\Exception $e) {
+                }
+                @unlink($progressFile);
+            }
+        );
+    }
+
+    /**
+     * 在还原专用连接上执行一条语句，并立即释放结果集
+     * 不释放会残留未消费的游标，导致下一条语句报 MySQL 2014
+     * @param \PDO   $link
+     * @param string $sql
+     */
+    private function restoreExec($link, $sql)
+    {
+        try {
+            $stmt = $link->query($sql);
+        } catch (\PDOException $e) {
+            // 兼容备份/升级脚本里删除不存在的索引、字段，与 ThinkPHP 的处理保持一致
+            if (stripos($sql, 'drop index') !== false || stripos($sql, 'drop column') !== false) {
+                return;
+            }
+            throw $e;
+        }
+        if ($stmt instanceof \PDOStatement) {
+            $stmt->closeCursor();
+            $stmt = null;
+        }
+    }
+
+    /**
+     * 创建还原专用 PDO 连接
+     * 独立连接 + 强制缓冲查询：既不占用后台主连接的游标，也不会留下未消费的结果集
+     * @return \PDO|null
+     */
+    private function restorePdoConnect()
+    {
+        $cfg = config('database');
+        if (empty($cfg['type']) || 'mysql' !== strtolower($cfg['type'])) {
+            return null;
+        }
+        if (!empty($cfg['dsn'])) { // 站点自定义了 dsn 时直接沿用
+            $dsn = $cfg['dsn'];
+        } elseif (!empty($cfg['socket'])) {
+            $dsn = 'mysql:unix_socket=' . $cfg['socket'] . ';dbname=' . $cfg['database'];
+            if (!empty($cfg['charset'])) {
+                $dsn .= ';charset=' . $cfg['charset'];
+            }
+        } else {
+            $port = !empty($cfg['hostport']) ? $cfg['hostport'] : 3306;
+            $dsn  = 'mysql:host=' . $cfg['hostname'] . ';port=' . $port . ';dbname=' . $cfg['database'];
+            if (!empty($cfg['charset'])) {
+                $dsn .= ';charset=' . $cfg['charset'];
+            }
+        }
+        $params = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
+        if (defined('Pdo\\Mysql::ATTR_USE_BUFFERED_QUERY')) {
+            $params[\Pdo\Mysql::ATTR_USE_BUFFERED_QUERY] = true;
+        } elseif (defined('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY')) {
+            $params[\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = true;
+        }
+        try {
+            return new \PDO($dsn, $cfg['username'], $cfg['password'], $params);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * 续传进度文件路径（按备份时间戳隔离）
+     * @param int $time
+     * @return string
+     */
+    private function restoreProgressFile($time)
+    {
+        return RUNTIME_PATH . 'backup_restore_' . intval($time) . '.progress';
+    }
+
+    /**
+     * 记录续传位置，只在事务提交点调用，确保续跑不会重复执行已提交的语句
+     * @param int         $time
+     * @param int         $part
+     * @param int         $offset
+     * @param string      $phase       import|cleanup
+     * @param string|null $sqldatapath 原始备份目录，供收尾阶段恢复配置
+     */
+    private function restoreProgressWrite($time, $part, $offset, $phase = 'import', $sqldatapath = null)
+    {
+        $data = array(
+            'part'   => intval($part),
+            'offset' => intval($offset),
+            'phase'  => $phase,
+            'time'   => time(),
+        );
+        if (!is_null($sqldatapath)) {
+            $data['sqldatapath'] = $sqldatapath;
+        }
+        @file_put_contents($this->restoreProgressFile($time), json_encode($data), LOCK_EX);
+    }
+
+    /**
+     * 读取续传位置
+     * @param int $time
+     * @return array
+     */
+    private function restoreProgressRead($time)
+    {
+        $file = $this->restoreProgressFile($time);
+        if (!is_file($file)) {
+            return array();
+        }
+        $data = json_decode((string)@file_get_contents($file), true);
+        if (empty($data) || !is_array($data)) {
+            return array();
+        }
+        $phase = isset($data['phase']) ? $data['phase'] : 'import';
+        if ('cleanup' !== $phase && (empty($data['part']) || !isset($data['offset']))) {
+            return array();
+        }
+        return array(
+            'part'        => isset($data['part']) ? intval($data['part']) : 0,
+            'offset'      => isset($data['offset']) ? intval($data['offset']) : 0,
+            'phase'       => $phase,
+            'sqldatapath' => isset($data['sqldatapath']) ? $data['sqldatapath'] : '',
+        );
+    }
+
+    /**
+     * 输出 JSON 并结束请求；忽略响应前的一切意外输出（warning/notice 等），保证前端能解析
+     * @param array $res
+     */
+    private function restoreOutput(array $res)
+    {
+        $GLOBALS['__backup_restore_responded'] = 1;
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        @header('Content-Type: application/json; charset=utf-8');
+        exit(json_encode($res, JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * 先返回结果，再执行耗时收尾：nginx+fpm 下用 fastcgi_finish_request 立即结束请求，
+     * 避免缓存清理时间过长触发网关超时，让前端误以为还原中断
+     * @param array    $res
+     * @param callable $callback
+     */
+    private function restoreResponseAndContinue(array $res, $callback = null)
+    {
+        $GLOBALS['__backup_restore_responded'] = 1;
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        $json = json_encode($res, JSON_UNESCAPED_UNICODE);
+        @header('Content-Type: application/json; charset=utf-8');
+        if (function_exists('fastcgi_finish_request')) {
+            echo $json;
+            @fastcgi_finish_request();
+        } else {
+            $gzip = filter_var(ini_get('zlib.output_compression'), FILTER_VALIDATE_BOOLEAN) || in_array('ob_gzhandler', ob_list_handlers(), true);
+            if (!$gzip) {
+                @header('Content-Length: ' . strlen($json));
+            }
+            echo $json;
+            @ob_flush();
+            flush();
+        }
+        if (is_callable($callback)) {
+            try {
+                call_user_func($callback);
+            } catch (\Exception $e) {
+            }
+        }
+        exit;
     }
 
     /**
@@ -668,11 +970,35 @@ class Tools extends Base {
                     continue;
                 }
                 $gz = preg_match('/\.sql\.gz$/i', $basename);
-                $list[intval($match[6])] = array(intval($match[6]), $filename, $gz, filesize($filename));
+                // gz 卷的读取偏移是解压前的字节位置，进度分母必须同为解压后大小，否则进度会瞬间冲到100%
+                $size = $gz ? $this->gzUncompressedSize($filename) : filesize($filename);
+                $list[intval($match[6])] = array(intval($match[6]), $filename, $gz, $size);
             }
         }
         ksort($list);
         return $list;
+    }
+
+    /**
+     * 读取 gz 文件解压后的大小（gzip 尾部 4 字节 ISIZE），失败时退回压缩文件大小
+     * @param string $file
+     * @return int
+     */
+    private function gzUncompressedSize($file)
+    {
+        $size = 0;
+        $fp = @fopen($file, 'rb');
+        if (false !== $fp && null !== $fp) {
+            if (0 === fseek($fp, -4, SEEK_END)) {
+                $data = fread($fp, 4);
+                if (4 === strlen($data)) {
+                    $unpack = unpack('V', $data);
+                    $size = intval($unpack[1]);
+                }
+            }
+            fclose($fp);
+        }
+        return $size > 0 ? $size : intval(filesize($file));
     }
 
     /**

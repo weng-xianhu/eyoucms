@@ -183,7 +183,7 @@ class PHPExcel_Calculation_DateTime
                 $retValue = (float) PHPExcel_Shared_Date::PHPToExcel(time());
                 break;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                $retValue = (integer) time();
+                $retValue = (int) time();
                 break;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 $retValue = new DateTime();
@@ -225,7 +225,7 @@ class PHPExcel_Calculation_DateTime
                 $retValue = (float) $excelDateTime;
                 break;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                $retValue = (integer) PHPExcel_Shared_Date::ExcelToPHP($excelDateTime);
+                $retValue = (int) PHPExcel_Shared_Date::ExcelToPHP($excelDateTime);
                 break;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 $retValue = PHPExcel_Shared_Date::ExcelToPHPObject($excelDateTime);
@@ -309,9 +309,9 @@ class PHPExcel_Calculation_DateTime
             (!is_numeric($day))) {
             return PHPExcel_Calculation_Functions::VALUE();
         }
-        $year    = (integer) $year;
-        $month    = (integer) $month;
-        $day    = (integer) $day;
+        $year    = (int) $year;
+        $month    = (int) $month;
+        $day    = (int) $day;
 
         $baseYear = PHPExcel_Shared_Date::getExcelCalendar();
         // Validate parameters
@@ -348,7 +348,7 @@ class PHPExcel_Calculation_DateTime
             case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                 return (float) $excelDateValue;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                return (integer) PHPExcel_Shared_Date::ExcelToPHP($excelDateValue);
+                return (int) PHPExcel_Shared_Date::ExcelToPHP($excelDateValue);
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 return PHPExcel_Shared_Date::ExcelToPHPObject($excelDateValue);
         }
@@ -401,9 +401,9 @@ class PHPExcel_Calculation_DateTime
         if ((!is_numeric($hour)) || (!is_numeric($minute)) || (!is_numeric($second))) {
             return PHPExcel_Calculation_Functions::VALUE();
         }
-        $hour = (integer) $hour;
-        $minute = (integer) $minute;
-        $second = (integer) $second;
+        $hour = (int) $hour;
+        $minute = (int) $minute;
+        $second = (int) $second;
 
         if ($second < 0) {
             $minute += floor($second / 60);
@@ -442,7 +442,7 @@ class PHPExcel_Calculation_DateTime
                 }
                 return (float) PHPExcel_Shared_Date::FormattedPHPToExcel($calendar, 1, $date, $hour, $minute, $second);
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                return (integer) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::FormattedPHPToExcel(1970, 1, 1, $hour, $minute, $second));    // -2147468400; //    -2147472000 + 3600
+                return (int) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::FormattedPHPToExcel(1970, 1, 1, $hour, $minute, $second));    // -2147468400; //    -2147472000 + 3600
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 $dayAdjust = 0;
                 if ($hour < 0) {
@@ -534,7 +534,7 @@ class PHPExcel_Calculation_DateTime
                 if ($testVal2 !== false) {
                     $testVal3 = strtok('- ');
                     if ($testVal3 === false) {
-                        $testVal3 = strftime('%Y');
+                        $testVal3 = date('Y');
                     }
                 } else {
                     return PHPExcel_Calculation_Functions::VALUE();
@@ -554,16 +554,16 @@ class PHPExcel_Calculation_DateTime
         if (($PHPDateArray !== false) && ($PHPDateArray['error_count'] == 0)) {
             // Execute function
             if ($PHPDateArray['year'] == '') {
-                $PHPDateArray['year'] = strftime('%Y');
+                $PHPDateArray['year'] = date('Y');
             }
             if ($PHPDateArray['year'] < 1900) {
                 return PHPExcel_Calculation_Functions::VALUE();
             }
             if ($PHPDateArray['month'] == '') {
-                $PHPDateArray['month'] = strftime('%m');
+                $PHPDateArray['month'] = date('m');
             }
             if ($PHPDateArray['day'] == '') {
-                $PHPDateArray['day'] = strftime('%d');
+                $PHPDateArray['day'] = date('d');
             }
             $excelDateValue = floor(
                 PHPExcel_Shared_Date::FormattedPHPToExcel(
@@ -580,7 +580,7 @@ class PHPExcel_Calculation_DateTime
                 case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                     return (float) $excelDateValue;
                 case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                    return (integer) PHPExcel_Shared_Date::ExcelToPHP($excelDateValue);
+                    return (int) PHPExcel_Shared_Date::ExcelToPHP($excelDateValue);
                 case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                     return new DateTime($PHPDateArray['year'].'-'.$PHPDateArray['month'].'-'.$PHPDateArray['day'].' 00:00:00');
             }
@@ -635,7 +635,7 @@ class PHPExcel_Calculation_DateTime
                 case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                     return (float) $excelDateValue;
                 case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                    return (integer) $phpDateValue = PHPExcel_Shared_Date::ExcelToPHP($excelDateValue+25569) - 3600;
+                    return (int) $phpDateValue = PHPExcel_Shared_Date::ExcelToPHP($excelDateValue+25569) - 3600;
                 case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                     return new DateTime('1900-01-01 '.$PHPDateArray['hour'].':'.$PHPDateArray['minute'].':'.$PHPDateArray['second']);
             }
@@ -1101,7 +1101,7 @@ class PHPExcel_Calculation_DateTime
             case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                 return (float) $endDate;
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                return (integer) PHPExcel_Shared_Date::ExcelToPHP($endDate);
+                return (int) PHPExcel_Shared_Date::ExcelToPHP($endDate);
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 return PHPExcel_Shared_Date::ExcelToPHPObject($endDate);
         }
@@ -1496,7 +1496,7 @@ class PHPExcel_Calculation_DateTime
             case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                 return (float) PHPExcel_Shared_Date::PHPToExcel($PHPDateObject);
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                return (integer) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::PHPToExcel($PHPDateObject));
+                return (int) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::PHPToExcel($PHPDateObject));
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 return $PHPDateObject;
         }
@@ -1545,7 +1545,7 @@ class PHPExcel_Calculation_DateTime
             case PHPExcel_Calculation_Functions::RETURNDATE_EXCEL:
                 return (float) PHPExcel_Shared_Date::PHPToExcel($PHPDateObject);
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_NUMERIC:
-                return (integer) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::PHPToExcel($PHPDateObject));
+                return (int) PHPExcel_Shared_Date::ExcelToPHP(PHPExcel_Shared_Date::PHPToExcel($PHPDateObject));
             case PHPExcel_Calculation_Functions::RETURNDATE_PHP_OBJECT:
                 return $PHPDateObject;
         }

@@ -74,7 +74,7 @@ class Users extends Base
             }
             
             // 记录日志
-            file_put_contents('./error_log.php', '用户 ' . $this->users_id . ' 登录检查：发现 ' . count($userExpiredTeams) . ' 个过期拼团需要处理退款' . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('用户 ' . $this->users_id . ' 登录检查：发现 ' . count($userExpiredTeams) . ' 个过期拼团需要处理退款', 'error');
             
             foreach ($userExpiredTeams as $team) {
                 // 更新团单状态为失败
@@ -88,12 +88,12 @@ class Users extends Base
                 $this->processGroupFailureRefund($team['id']);
                 
                 // 记录日志
-                file_put_contents('./error_log.php', '用户登录检查：拼团ID ' . $team['id'] . ' 已过期，已处理退款' . PHP_EOL, FILE_APPEND);
+                //\think\Log::write('用户登录检查：拼团ID ' . $team['id'] . ' 已过期，已处理退款', 'error');
             }
             
         } catch (\Exception $e) {
             // 记录异常但不影响正常业务
-            file_put_contents('./error_log.php', '用户登录检查拼团状态异常：' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('用户登录检查拼团状态异常：' . $e->getMessage(), 'error');
         }
     }
     
@@ -118,7 +118,7 @@ class Users extends Base
                 ])->select();
                 
                 if (empty($orders)) {
-                    file_put_contents('./error_log.php', '用户退款：拼团ID ' . $team_id . ' 未找到相关订单' . PHP_EOL, FILE_APPEND);
+                    //\think\Log::write('用户退款：拼团ID ' . $team_id . ' 未找到相关订单', 'error');
                     return false;
                 }
             }
@@ -187,7 +187,7 @@ class Users extends Base
                                 AddOrderAction($order['order_id'], $order['users_id'], 0, -1, 0, 0, '拼团失败自动退款', '拼团超时失败，系统自动退款到余额');
                             }
                             
-                            file_put_contents('./error_log.php', '用户退款：订单ID ' . $order['order_id'] . ' 退款成功，金额：' . $refundAmount . PHP_EOL, FILE_APPEND);
+                            //\think\Log::write('用户退款：订单ID ' . $order['order_id'] . ' 退款成功，金额：' . $refundAmount, 'error');
                         }
                         
                         // 恢复库存
@@ -207,7 +207,7 @@ class Users extends Base
                     } catch (\Exception $e) {
                         // 回滚事务
                         Db::rollback();
-                        file_put_contents('./error_log.php', '用户退款失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                        //\think\Log::write('用户退款失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'], 'error');
                     }
                 } elseif ($order['order_status'] == 0) {
                     // 未支付订单：直接取消并恢复库存
@@ -240,7 +240,7 @@ class Users extends Base
                     } catch (\Exception $e) {
                                             // 回滚事务
                     Db::rollback();
-                    file_put_contents('./error_log.php', '取消订单失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                    //\think\Log::write('取消订单失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'], 'error');
                     }
                 }
             }
@@ -257,7 +257,7 @@ class Users extends Base
             return true;
             
         } catch (\Exception $e) {
-            file_put_contents('./error_log.php', '用户退款处理异常：' . $e->getMessage() . '，拼团ID：' . $team_id . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('用户退款处理异常：' . $e->getMessage() . '，拼团ID：' . $team_id, 'error');
             return false;
         }
     }
@@ -271,14 +271,14 @@ class Users extends Base
             // 获取订单详情
             $orderDetail = Db::name('shop_order_details')->where('order_id', $order['order_id'])->find();
             if (empty($orderDetail)) {
-                file_put_contents('./error_log.php', '恢复库存失败：订单详情不存在，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                //\think\Log::write('恢复库存失败：订单详情不存在，订单ID：' . $order['order_id'], 'error');
                 return;
             }
             
             // 获取拼团商品信息
             $groupGoods = Db::name('weapp_groupbuy_goods')->where('aid', $orderDetail['aid'])->find();
             if (empty($groupGoods)) {
-                file_put_contents('./error_log.php', '恢复库存失败：拼团商品不存在，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+                //\think\Log::write('恢复库存失败：拼团商品不存在，订单ID：' . $order['order_id'], 'error');
                 return;
             }
             
@@ -291,15 +291,15 @@ class Users extends Base
             ];
             
             // 添加调试日志
-            file_put_contents('./error_log.php', '用户退款准备恢复库存，数据：' . json_encode($stockData) . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('用户退款准备恢复库存，数据：' . json_encode($stockData), 'error');
             
             // 直接更新库存，不使用模型方法
             $this->directUpdateStock($stockData);
             
-            file_put_contents('./error_log.php', '拼团订单退款，已恢复库存，订单ID：' . $order['order_id'] . '，商品ID：' . $groupGoods['goods_id'] . '，数量：' . $orderDetail['num'] . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('拼团订单退款，已恢复库存，订单ID：' . $order['order_id'] . '，商品ID：' . $groupGoods['goods_id'] . '，数量：' . $orderDetail['num'], 'error');
             
         } catch (\Exception $e) {
-            file_put_contents('./error_log.php', '恢复拼团商品库存失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'] . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('恢复拼团商品库存失败：' . $e->getMessage() . '，订单ID：' . $order['order_id'], 'error');
         }
     }
     
@@ -320,7 +320,7 @@ class Users extends Base
                 'update_time' => time()
             ]);
             
-            file_put_contents('./error_log.php', '系统商品库存更新结果：' . ($updateResult1 ? '成功' : '失败') . '，AID：' . $aid . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('系统商品库存更新结果：' . ($updateResult1 ? '成功' : '失败') . '，AID：' . $aid, 'error');
             
             // 2. 更新拼团商品库存（weapp_groupbuy_goods表）
             $updateResult2 = Db::name('weapp_groupbuy_goods')->where('goods_id', $goods_id)->update([
@@ -328,14 +328,14 @@ class Users extends Base
                 'update_time' => time()
             ]);
             
-            file_put_contents('./error_log.php', '拼团商品库存更新结果：' . ($updateResult2 ? '成功' : '失败') . '，商品ID：' . $goods_id . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('拼团商品库存更新结果：' . ($updateResult2 ? '成功' : '失败') . '，商品ID：' . $goods_id, 'error');
             
             // 3. 验证库存是否真的增加了
             $newStock = Db::name('weapp_groupbuy_goods')->where('goods_id', $goods_id)->value('goods_stock');
-            file_put_contents('./error_log.php', '拼团商品更新后库存：' . $newStock . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('拼团商品更新后库存：' . $newStock, 'error');
             
         } catch (\Exception $e) {
-            file_put_contents('./error_log.php', '直接更新库存失败：' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+            //\think\Log::write('直接更新库存失败：' . $e->getMessage(), 'error');
         }
     }
     
@@ -708,6 +708,8 @@ class Users extends Base
             // 默认会员ID
             $post['users_id'] = $this->users_id;
             $post['openid']   = Db::name('wx_users')->where('users_id', $this->users_id)->getField('openid');
+            // 支付方式以服务端判定的 curPayType 为准，防止客户端同时传 pay_type 造成支付分支混淆
+            $post['pay_type'] = !empty($post['curPayType']) ? intval($post['curPayType']) : 0;
             // 抖音支付
             if (9 === intval($post['curPayType'])) {
                 model('TikTok')->tikTokAppletsPayDealWith($post);
@@ -882,7 +884,7 @@ class Users extends Base
                     //如果是插件 需要判断每人领取张数/会员限制
                     if ('weapp_coupons' == $coupon_table){
                         if (!empty($coupon['use_limit_num'])){
-                            $limit_count = Db::name($coupon_use_table)->where('users_id',$this->users_id)->where('coupon_id',$coupon_id)->find();
+                            $limit_count = Db::name($coupon_use_table)->where('users_id',$this->users_id)->where('coupon_id',$coupon_id)->count();
                             if ($limit_count >= $coupon['use_limit_num']) $this->error('已达最大领取数量，不可领取！');
                         }
                         if (!empty($coupon['redeem_authority'])){
@@ -912,11 +914,18 @@ class Users extends Base
                         $insert['end_time']   = $insert['start_time'] + $coupon['valid_days'] * 86400;
                     }
                     if (!empty($insert)) {
+                        // 原子扣减库存：库存为 0 时 setDec 影响行数为 0，避免并发超发（MyISAM 下同样安全）
+                        $stockDec = Db::name($coupon_table)->where(['coupon_id' => $coupon_id, 'coupon_stock' => ['>', 0]])->setDec('coupon_stock');
+                        if (empty($stockDec)) {
+                            $this->error('优惠券库存不足！');
+                        }
                         $use_insert = Db::name($coupon_use_table)->insert($insert);
                         if (!empty($use_insert)) {
-                            //减库存
-                            Db::name($coupon_table)->where('coupon_id', $coupon_id)->setDec('coupon_stock');
                             $this->success('领取成功！');
+                        } else {
+                            // 领券记录插入失败时回补库存
+                            Db::name($coupon_table)->where('coupon_id', $coupon_id)->setInc('coupon_stock');
+                            $this->error('优惠券领取失败！');
                         }
                     }
                 }

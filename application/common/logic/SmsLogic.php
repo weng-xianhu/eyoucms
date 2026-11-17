@@ -171,7 +171,7 @@ class SmsLogic extends Model
             try {
                 $resp = $this->realSendSms($sender, $smsTemp['sms_sign'], $smsParam, $smsTemp['sms_tpl_code'],$nationCode, $msg);
             } catch (\Exception $e) {
-                $resp = ['status' => -1, 'msg' => $e->getMessage()];
+                $resp = ['status' => -1, 'msg' => $this->translateSmsError($e->getMessage())];
             }
             if (!empty($resp['status']) && $resp['status'] == 1) {
                 try{
@@ -239,6 +239,61 @@ class SmsLogic extends Model
            return $result = ['status' => -1, 'msg' => '接收手机号不正确['.$sender.']'];
         }
         
+    }
+
+    /**
+     * 将短信接口返回的英文/网络错误信息转换为易懂的中文提示（各平台通用）
+     * @param string $msg 原始错误信息
+     * @param string $platform 平台名称，用于提示语
+     * @return string 中文提示
+     */
+    private function translateSmsError($msg, $platform = '短信平台')
+    {
+        $msg = trim(strval($msg));
+        if ('' === $msg) {
+            return '短信发送失败，接口未返回错误信息，请检查短信平台配置是否正确';
+        }
+        // 已转换过的信息不再重复处理
+        if (false !== strpos($msg, '原始信息') || false !== strpos($msg, '错误码：')) {
+            return $msg;
+        }
+        $raw = preg_replace('/\s+/', ' ', trim(strip_tags($msg)));
+
+        // 按优先级排列的匹配规则：[正则, 中文提示]
+        $rules = [
+            ['/call to undefined function curl|curl_init|curl extension|未知函数调用.*curl/i',
+                'PHP 未开启 curl 扩展，无法请求' . $platform . '接口，请开启 curl 扩展或联系空间商'],
+            ['/could not resolve|getaddrinfo|name or service not known|no such host|resolving timed out/i',
+                '无法解析' . $platform . '接口域名，请检查服务器 DNS 设置及网络是否正常'],
+            ['/ssl|tls|certificate|handshake/i',
+                '请求' . $platform . '接口时 SSL 连接失败，请确认 PHP 已开启 openssl 扩展，且服务器 CA 证书及系统时间正确'],
+            ['/server unreachable|timed out|timeout|connection refused|failed to connect|couldn\'t connect|network is unreachable|connection reset|recv failure|empty reply/i',
+                '连接' . $platform . '接口失败或超时，请检查服务器外网访问及防火墙是否放行 443 端口，稍后重试'],
+            ['/proxy|407/i',
+                '服务器代理设置异常，导致无法访问' . $platform . '接口，请检查服务器网络配置'],
+            ['/http code|http status|http error|(?<!\d)50[0-4](?!\d)|bad gateway|service unavailable|gateway time-?out/i',
+                $platform . '接口暂时不可用，请稍后重试'],
+            ['/json|malformed|unexpected/i',
+                $platform . '接口返回数据异常，请稍后重试，如持续出现请检查服务器网络是否被劫持'],
+        ];
+        $tip = '';
+        foreach ($rules as $rule) {
+            if (preg_match($rule[0], $raw)) {
+                $tip = $rule[1];
+                break;
+            }
+        }
+        if ('' === $tip) {
+            // 原始信息已是中文，直接返回
+            if (preg_match('/[\x{4e00}-\x{9fa5}]/u', $raw)) {
+                return $msg;
+            }
+            $tip = '短信发送失败，请核对' . $platform . '的密钥、签名、模板配置是否正确';
+        }
+        if (function_exists('mb_strlen') && mb_strlen($raw, 'UTF-8') > 200) {
+            $raw = mb_substr($raw, 0, 200, 'UTF-8') . '...';
+        }
+        return $tip . '（原始信息：' . htmlspecialchars($raw, ENT_QUOTES, 'UTF-8') . '）';
     }
 
     private function realSendSms($mobile, $smsSign, $smsParam, $templateCode, $nationCode,$msg = '')
@@ -325,10 +380,12 @@ class SmsLogic extends Model
         }
         
         //短信发送成功返回True，失败返回false
-        if ($resp && $resp->Code == 'OK') {
+        if (!empty($resp) && isset($resp->Code) && $resp->Code == 'OK') {
             return array('status' => 1, 'msg' => $resp->Code);
         } else {
-            return array('status' => -1, 'msg' => $this->aliyunSmsErrorMsg($resp->Code, $resp->Message));
+            $respCode = isset($resp->Code) ? $resp->Code : '';
+            $respMsg  = isset($resp->Message) ? $resp->Message : '';
+            return array('status' => -1, 'msg' => $this->aliyunSmsErrorMsg($respCode, $respMsg));
         }
     }
 
@@ -357,17 +414,70 @@ class SmsLogic extends Model
             'isv.INVALID_PARAMETERS'           => '参数异常，请检查签名、模板和变量设置',
             'isp.RAM_PERMISSION_DENY'          => '该 AccessKey 没有短信发送权限，请在阿里云 RAM 中授权 AliyunDysmsFullAccess',
             'Forbidden.AccessKeyDisabled'      => 'AccessKey 已被禁用，请到阿里云控制台启用或更换密钥',
+            'MissingAccessKeyId'               => '未填写 AccessKey ID，请填写【平台appkey】',
+            'InvalidTimeStamp.Expired'         => '服务器系统时间不正确（与北京时间相差超过15分钟），请校准服务器时间后重试',
+            'Throttling'                       => '调用频率过高被阿里云限流，请稍后再试',
+            'Throttling.User'                  => '调用频率过高被阿里云限流，请稍后再试',
+            'isv.PRODUCT_UN_SUBSCRIPT'         => '阿里云账号未开通短信服务，请先到阿里云控制台开通',
+            'isv.PRODUCT_UNSUBSCRIBE'          => '阿里云账号未开通短信服务，请先到阿里云控制台开通',
+            'isv.MONTH_LIMIT_CONTROL'          => '当月发送量已达上限，请到阿里云控制台提升额度',
+            'isv.SMS_CONTENT_ILLEGAL'          => '短信内容包含禁止发送的内容，请修改模板内容或变量',
+            'isv.SMS_SIGN_ILLEGAL'             => '短信签名不合法或未审核通过，请检查短信模板中的签名设置',
+            'isv.INVALID_JSON_PARAM'           => '模板变量格式错误（非标准 JSON），请检查模板变量内容是否包含特殊字符',
+            'isv.PARAM_LENGTH_LIMIT'           => '模板变量内容超长（单个变量限 20 字），请精简变量内容',
+            'isv.PARAM_NOT_SUPPORT_URL'        => '模板变量中不允许包含网址，请修改变量内容',
+            'isv.BLACK_KEY_CONTROL_LIMIT'      => '模板变量中包含阿里云禁止的关键词，请修改变量内容',
+            'isv.DENY_IP_RANGE'                => '当前服务器 IP 不在阿里云允许的访问范围内，请到控制台检查 IP 白名单设置',
+            'isv.EXTEND_CODE_ERROR'            => '扩展码使用错误，请检查短信接口参数',
+            'isv.DOMESTIC_NUMBER_NOT_SUPPORTED'=> '当前接口不支持国内号码，请检查国际区号设置',
+            'isv.SMS_TEST_SIGN_TEMPLATE_LIMIT' => '测试签名/模板仅能搭配使用，请使用已审核通过的正式签名和模板',
+            'isv.SMS_TEST_NUMBER_LIMIT'        => '测试签名/模板只能向阿里云控制台绑定的测试手机号发送',
+            'isv.SMS_TEST_TEMPLATE_PARAMS_ILLEGAL' => '测试模板的变量值不合法，请使用数字验证码测试',
+            'isv.SYSTEM_ERROR'                 => '阿里云短信系统异常，请稍后重试',
+            'isp.SYSTEM_ERROR'                 => '阿里云短信系统异常，请稍后重试',
+            'SDK.ServerUnreachable'            => '服务器无法连接阿里云短信接口（dysmsapi.aliyuncs.com），请检查服务器外网访问、DNS 及防火墙是否放行 443 端口',
+            'SDK.InvalidRegionId'              => '阿里云短信接口地域配置错误，请联系技术人员检查 SDK',
+            'SDK.InvalidProfile'               => '阿里云 SDK 初始化失败，请检查【平台appkey】和【平台secretKey】是否填写',
         );
-        if (!empty($code) && isset($map[$code])) {
+        $code = trim(strval($code));
+        $message = trim(strval($message));
+        if ('' !== $code && isset($map[$code])) {
             return $map[$code] . '（错误码：' . $code . '）';
         }
-        if (empty($message) && !empty($code)) {
-            return '短信发送失败（错误码：' . $code . '）';
+        // 未收录的错误码：按错误码关键词分类提示
+        $codeRules = [
+            ['/AccessKey|Signature|InvalidSecurityToken|Forbidden/i', '密钥验证失败，请检查【平台appkey】和【平台secretKey】是否填写正确'],
+            ['/SIGN/i',                      '短信签名异常，请检查签名是否已审核通过且与模板中填写一致'],
+            ['/TEMPLATE/i',                  '短信模板异常，请检查模板Code是否正确且已审核通过'],
+            ['/MOBILE|NUMBER|PHONE/i',       '手机号码异常，请检查接收号码及国际区号'],
+            ['/LIMIT|Throttling/i',          '发送频率或发送量超限，请稍后再试'],
+            ['/AMOUNT|OUT_OF_SERVICE|ACCOUNT/i', '阿里云短信账户异常或余额不足，请登录阿里云控制台查看'],
+            ['/PARAM/i',                     '参数异常，请检查短信模板变量设置'],
+            ['/^SDK\./i',                    '调用阿里云短信 SDK 失败，请检查服务器网络与 PHP curl/openssl 扩展'],
+        ];
+        if ('' !== $code) {
+            foreach ($codeRules as $rule) {
+                if (preg_match($rule[0], $code)) {
+                    $tip = $rule[1] . '（错误码：' . $code;
+                    if ('' !== $message) {
+                        $tip .= '，原始信息：' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+                    }
+                    return $tip . '）';
+                }
+            }
+        }
+        if ('' === $message) {
+            return '' !== $code ? '短信发送失败（错误码：' . $code . '）' : '短信发送失败，阿里云未返回错误信息，请稍后重试';
         }
         if (strpos($message, 'Specified access key is not found') !== false) {
             return 'AccessKey ID 不存在，请检查【平台appkey】是否填写正确，或该密钥是否已被删除/禁用（错误码：InvalidAccessKeyId.NotFound）';
         }
-        return '短信发送失败：' . $message . (!empty($code) ? '（错误码：' . $code . '）' : '');
+        // 网络/环境类错误以及其他英文信息，走通用转换
+        $tip = $this->translateSmsError($message, '阿里云短信');
+        if ('' !== $code && false === strpos($tip, $code)) {
+            $tip .= '（错误码：' . $code . '）';
+        }
+        return $tip;
     }
 
     /**
@@ -406,36 +516,79 @@ class SmsLogic extends Model
         $resp = json_decode($result,TRUE);
 
         //短信发送成功返回True，失败返回false
-        if ($resp && $resp['errmsg'] == 'OK') {
+        if (is_array($resp) && isset($resp['errmsg']) && $resp['errmsg'] == 'OK') {
             return array('status' => 1, 'msg' => $resp['errmsg']);
         } else {
-            return array('status' => -1, 'msg' => $this->tencentSmsErrorMsg($resp['errmsg']));
+            $errmsg = is_array($resp) && isset($resp['errmsg']) ? $resp['errmsg'] : strval($result);
+            $errcode = is_array($resp) && isset($resp['result']) ? $resp['result'] : '';
+            return array('status' => -1, 'msg' => $this->tencentSmsErrorMsg($errmsg, $errcode));
         }
     }
 
     /**
      * 将腾讯云短信错误信息转换为易懂的中文提示
      * @param string $errmsg 腾讯云返回的原始错误信息
+     * @param string|int $errcode 腾讯云返回的 result 错误码
      * @return string 中文提示
      */
-    private function tencentSmsErrorMsg($errmsg)
+    private function tencentSmsErrorMsg($errmsg, $errcode = '')
     {
-        $errmsg = (string)$errmsg;
+        $errmsg = trim(strval($errmsg));
+        $errcode = trim(strval($errcode));
+        // 优先按腾讯云 result 错误码匹配
+        $codeMap = array(
+            '-2'   => '服务器无法连接腾讯云短信接口，请检查服务器外网访问、DNS、防火墙是否放行 443 端口，以及 PHP curl/openssl 扩展',
+            '-1'   => '腾讯云短信接口返回异常状态，请稍后重试',
+            '1001' => 'App Key 验证失败，请检查【平台appkey】是否填写正确',
+            '1002' => '短信内容包含敏感词，请修改模板内容或变量',
+            '1004' => '手机号码格式错误，请检查接收号码',
+            '1008' => '请求腾讯云接口超时，请稍后重试',
+            '1011' => '短信模板不存在或未审核通过，请检查模板ID',
+            '1014' => '短信内容与模板不匹配（变量个数/格式不一致），请检查模板内容与变量',
+            '1016' => '手机号码格式错误，请检查接收号码',
+            '1024' => '同一手机号 30 秒内发送次数超限，请稍后再试',
+            '1025' => '同一手机号当日发送次数超限，请明天再试或更换号码测试',
+            '1026' => '同一手机号短时间内发送相同内容次数超限，请稍后再试',
+            '1029' => '签名异常，请检查短信签名是否已审核通过且填写一致',
+            '1033' => '腾讯云短信套餐包余量不足或已过期，请充值后重试',
+        );
+        if ('' !== $errcode && isset($codeMap[$errcode])) {
+            return $codeMap[$errcode] . '（错误码：' . $errcode . ('' !== $errmsg ? '，原始信息：' . htmlspecialchars($errmsg, ENT_QUOTES, 'UTF-8') : '') . '）';
+        }
+        // 再按英文错误信息关键词匹配（注意顺序：具体的在前，泛的在后）
         $map = array(
-            'sdkappid'                 => 'SDK AppID 不正确，请检查【平台appid】是否填写正确',
-            'sig'                      => 'App Key 验证失败，请检查【平台appkey】是否填写正确',
-            'template'                 => '短信模板不存在、未审核通过或变量不匹配，请检查模板ID与模板内容',
+            'sdkappid'                 => 'SDK AppID 不正确或已停用，请检查【平台appid】是否填写正确',
+            'appid'                    => 'SDK AppID 不正确，请检查【平台appid】是否填写正确',
             'sign'                     => '短信签名不合法或未审核通过，请检查签名设置',
+            'sig'                      => 'App Key 验证失败，请检查【平台appkey】是否填写正确',
+            'sensitive'                => '短信内容包含敏感词，请修改模板内容或变量',
+            'template'                 => '短信模板不存在、未审核通过或变量不匹配，请检查模板ID与模板内容',
+            'nationcode'               => '国际区号不正确，请检查短信设置中的国际区号（国内为 86）',
             'tel format error'         => '手机号码格式错误，请检查接收号码',
+            'phone'                    => '手机号码异常，请检查接收号码及国际区号',
+            'mobile'                   => '手机号码异常，请检查接收号码及国际区号',
             'fee not enough'           => '腾讯云短信套餐包余量不足，请充值后重试',
-            'over frequency limit'     => '发送频率超限，请稍后再试',
+            'package'                  => '腾讯云短信套餐包余量不足或已过期，请充值后重试',
+            'balance'                  => '腾讯云账户余额不足，请充值后重试',
+            'frequency'                => '发送频率超限，请稍后再试',
+            'limit'                    => '发送次数或频率超限，请稍后再试',
+            'iplimit'                  => '当前服务器 IP 被腾讯云限制，请到腾讯云控制台检查 IP 白名单设置',
+            'ip limit'                 => '当前服务器 IP 被腾讯云限制，请到腾讯云控制台检查 IP 白名单设置',
+            'not exist'                => '相关配置不存在，请检查【平台appid】、模板ID和签名是否正确',
+            'not approved'             => '签名或模板尚未审核通过，请到腾讯云控制台查看审核状态',
             'timeout'                  => '请求腾讯云接口超时，请稍后重试',
+            'param'                    => '接口参数错误，请检查模板变量与模板内容是否匹配',
         );
         foreach ($map as $key => $val) {
-            if (stripos($errmsg, $key) !== false) {
-                return $val . '（原始信息：' . $errmsg . '）';
+            if ('' !== $errmsg && stripos($errmsg, $key) !== false) {
+                return $val . '（' . ('' !== $errcode ? '错误码：' . $errcode . '，' : '') . '原始信息：' . htmlspecialchars($errmsg, ENT_QUOTES, 'UTF-8') . '）';
             }
         }
-        return '短信发送失败：' . $errmsg;
+        // 网络/环境类错误以及其他英文信息，走通用转换
+        $tip = $this->translateSmsError($errmsg, '腾讯云短信');
+        if ('' !== $errcode && false === strpos($tip, '错误码：')) {
+            $tip .= '（错误码：' . $errcode . '）';
+        }
+        return $tip;
     }
 } 

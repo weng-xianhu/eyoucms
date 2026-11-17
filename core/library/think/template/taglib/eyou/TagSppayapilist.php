@@ -22,7 +22,8 @@ use think\Db;
  */
 load_trait('controller/Jump');
 class TagSppayapilist extends Base
-{ 
+{
+    public $usersTpl2xVersion; 
     use \traits\controller\Jump;
 
     /**
@@ -31,6 +32,7 @@ class TagSppayapilist extends Base
     public $users_id = 0;
     public $users    = [];
     public $usersTplVersion    = '';
+    public $shopPublicHandleModel;
     
     //初始化
     protected function _initialize()
@@ -50,9 +52,9 @@ class TagSppayapilist extends Base
      */
     public function getSppayapilist()
     {
-        // 接收数据读取解析
+        // 接收数据读取解析（严格解析 Cookie，防止数组注入查询条件）
         $Paystr = input('param.paystr/s');
-        $PayData = cookie($Paystr);
+        $PayData = eySafeOrderCookie(cookie($Paystr));
 
         if (!empty($PayData['moneyid']) && !empty($PayData['order_number'])) {
             // 充值信息
@@ -186,6 +188,9 @@ class TagSppayapilist extends Base
         $PayApiList = Db::name('pay_api_config')->where($where)->select();
 
         $isPaypal = 0;
+        $paypalMode = 'standard';
+        $paypalBusiness = '';
+        $paypalCurrency = 'USD';
         if (!empty($PayApiList)) {
             $tagStatic = new \think\template\taglib\eyou\TagStatic;
             foreach ($PayApiList as $key => $value) {
@@ -216,12 +221,16 @@ class TagSppayapilist extends Base
                     // Paypal支付
                     if ('Paypal' == $value['pay_mark']) {
                         $PayApiList[$key]['bgColor'] = '#013088';
+                        $payMode = !empty($PayInfo['pay_mode']) && is_string($PayInfo['pay_mode']) ? strtolower($PayInfo['pay_mode']) : 'standard';
                         if (!empty($PayInfo) && 0 == $PayInfo['is_open_pay']) {
-                            foreach ($PayInfo as $kk => $vv) {
-                                if ('business' == $kk && empty($vv)) {
+                            if ('rest' == $payMode) {
+                                // REST API 需要 Client ID + Secret
+                                if (empty($PayInfo['client_id']) || empty($PayInfo['secret'])) {
                                     unset($PayApiList[$key]);
-                                    break;
                                 }
+                            } else if (empty($PayInfo['business'])) {
+                                // 经典收款需要商户账号
+                                unset($PayApiList[$key]);
                             }
                         } else {
                             unset($PayApiList[$key]);
@@ -242,7 +251,10 @@ class TagSppayapilist extends Base
                         // Paypal支付
                         if ('Paypal' == $value['pay_mark']) {
                             $isPaypal = 1;
-                            $paypalBusiness = $PayInfo['business'];
+                            $paypalMode = !empty($PayInfo['pay_mode']) && is_string($PayInfo['pay_mode']) ? strtolower($PayInfo['pay_mode']) : 'standard';
+                            $paypalBusiness = isset($PayInfo['business']) ? $PayInfo['business'] : '';
+                            // 与 PaypalLogic 的币种配置保持一致，未配置/非法时兼容历史默认 USD
+                            $paypalCurrency = !empty($PayInfo['currency']) && preg_match('/^[A-Z]{3}$/', strtoupper($PayInfo['currency'])) ? strtoupper($PayInfo['currency']) : 'USD';
                         }
                         $PayApiList[$key]['pay_img'] = get_default_pic('/weapp/'.$value['pay_mark'].'/pay.png');
                     }
@@ -267,11 +279,20 @@ class TagSppayapilist extends Base
         $JsonData['UsersUpgradePay'] = url('user/PayApi/users_upgrade_pay', ['_ajax' => 1], true, false, 1, 1, 0);
         $JsonData['get_token_url']   = url('api/Ajax/get_token', ['name'=>'__token__'], true, false, 1, 1, 0);
         $JsonData['submitForm']      = '';
-        if (!empty($JsonData) && !empty($paypalBusiness)) {
+        // 仅经典收款生成 PayPal 表单，REST API 由服务端创建订单后跳转审批页
+        if (!empty($JsonData) && !empty($paypalBusiness) && 'standard' == $paypalMode) {
             $url = "https://www.paypal.com/cgi-bin/webscr";
-            $return = url('plugins/Paypal/paypalNotifyHandlePay', ['transaction_type' => 2, 'is_notify' => 2], true, true, 1, 1, 0);
-            $notify_url = url('plugins/Paypal/paypalNotifyHandlePay', ['transaction_type' => 2, 'is_notify' => 1], true, true, 1, 1, 0);
+            // 交易类型必须与当前订单一致，否则充值/视频/文章/下载订单的 IPN 会错查到商品订单表而无法结算
+            $transactionType = !empty($JsonData['transaction_type']) ? intval($JsonData['transaction_type']) : 2;
+            $return = url('plugins/Paypal/paypalNotifyHandlePay', ['transaction_type' => $transactionType, 'is_notify' => 2], true, true, 1, 1, 0);
+            $notify_url = url('plugins/Paypal/paypalNotifyHandlePay', ['transaction_type' => $transactionType, 'is_notify' => 1], true, true, 1, 1, 0);
             $cancel_return = request()->domain() . ROOT_DIR;
+            $url = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+            $paypalBusiness = htmlspecialchars($paypalBusiness, ENT_QUOTES, 'UTF-8');
+            $paypalCurrency = htmlspecialchars($paypalCurrency, ENT_QUOTES, 'UTF-8');
+            $return = htmlspecialchars($return, ENT_QUOTES, 'UTF-8');
+            $notify_url = htmlspecialchars($notify_url, ENT_QUOTES, 'UTF-8');
+            $cancel_return = htmlspecialchars($cancel_return, ENT_QUOTES, 'UTF-8');
             $JsonData['submitForm'] = <<<EOF
 <br/>
 <form id="eyou_paypalForm" style="text-align:center;" action="{$url}" method="post" target="_blank">
@@ -279,7 +300,7 @@ class TagSppayapilist extends Base
     <input type='hidden' name='business' value='{$paypalBusiness}'>
     <input type='hidden' name='item_name' value='' id='eyou_itemName'>
     <input type='hidden' name='amount' value='' id='eyou_amount'>
-    <input type='hidden' name='currency_code' value='USD'>
+    <input type='hidden' name='currency_code' value='{$paypalCurrency}'>
     <input type='hidden' name='return' value='{$return}'>
     <input type='hidden' name='invoice' value='' id='eyou_invoice'>
     <input type='hidden' name='charset' value='utf-8'>

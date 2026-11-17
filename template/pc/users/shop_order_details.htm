@@ -181,6 +181,28 @@
                                                 <th>核销码：</th>
                                                 <td>{$field.verifyData.verify_code}</td>
                                             </tr>
+                                            {eyou:if condition="!empty($field.verifyData.total_verify_times) && $field.verifyData.total_verify_times > 1"}
+                                            <tr>
+                                                <th>核销进度：</th>
+                                                <td>
+                                                    <span style="color: #ff7214; font-weight: bold;">{$field.verifyData.used_verify_times|default=0}</span>
+                                                    <span style="color: #999;">/</span>
+                                                    <span style="color: #333;">{$field.verifyData.total_verify_times}</span>
+                                                    <span style="color: #999;">次</span>
+                                                    {eyou:if condition="($field.verifyData.total_verify_times - $field.verifyData.used_verify_times) > 0"}
+                                                    <span style="color: #38b035; margin-left: 10px;">
+                                                        (剩余{$field.verifyData.total_verify_times - $field.verifyData.used_verify_times}次可用)
+                                                    </span>
+                                                    {/eyou:if}
+                                                </td>
+                                            </tr>
+                                            {/eyou:if}
+                                            {eyou:if condition="!empty($field.verifyData.verify_expire_time) && $field.verifyData.verify_expire_time > 0"}
+                                            <tr>
+                                                <th>有效期至：</th>
+                                                <td style="color: #ff7214;">{$field.verifyData.verify_expire_time|date='Y-m-d H:i',###}</td>
+                                            </tr>
+                                            {/eyou:if}
                                             <tr id="tr-qrcode">
                                                 <th></th>
                                                 <td><span id="qrcode" ></span></td>
@@ -306,6 +328,12 @@
                                                 <th>运费：</th>
                                                 <td><span class="num">{$field.shipping_fee}</span>元 </td>
                                             </tr>
+                                            {eyou:if condition="$field.coupon_price > 0"}
+                                            <tr>
+                                                <th>优惠券：</th>
+                                                <td><span class="num">-{$field.coupon_price}</span>元</td>
+                                            </tr>
+                                            {/eyou:if}
                                             <tr>
                                                 <th class="total">应付金额：</th>
                                                 <td class="total"><span class="num">{$field.order_amount}</span>{empty name="$field.points_shop_order"}元{/empty}</td>

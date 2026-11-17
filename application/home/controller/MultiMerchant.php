@@ -17,6 +17,8 @@ use think\Db;
 
 class MultiMerchant extends Base
 {
+    public $weapp_multi_merchant_db;
+
     public function _initialize() {
         parent::_initialize();
 

@@ -58,7 +58,6 @@ class HttpHelper
         if (curl_errno($ch)) {
             throw new ClientException("Server unreachable: Errno: " . curl_errno($ch) . " " . curl_error($ch), "SDK.ServerUnreachable");
         }
-        curl_close($ch);
         return $httpResponse;
     }
     public static function getPostHttpBody($postFildes)

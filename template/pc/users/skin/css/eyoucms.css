@@ -853,6 +853,113 @@ cursor: default !important;
     width: 18px;
     height: 18px;
 }
+.reg .form-register .fieldext-group-block{
+    display: block;
+}
+.reg .form-register .fieldext-title{
+    color: #333;
+    font-size: 14px;
+    line-height: 22px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.reg .form-register .fieldext-options{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    min-height: 28px;
+    align-items: center;
+    padding-bottom: 2px;
+}
+.reg .form-register .fieldext-options .checkbox-label,
+.reg .form-register .fieldext-options .radio-label{
+    margin-right: 0;
+    margin-bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    line-height: 24px;
+}
+.reg .form-register .fieldext-options .checkbox-label .check-mark,
+.reg .form-register .fieldext-options .radio-label .check-mark{
+    top: 50%;
+    transform: translateY(-50%);
+}
+.reg .form-register .fieldext-options .checkbox-label span:last-child,
+.reg .form-register .fieldext-options .radio-label span:last-child{
+    display: inline-block;
+    line-height: 24px;
+}
+.reg .form-register .fieldext-select{
+    cursor: pointer;
+}
+.reg .form-register .fieldext-select,
+.reg .form-register .images_upload_main .form-control,
+.reg .form-register .fieldext-group-block > .form-control{
+    height: 60px;
+    line-height: 60px;
+}
+.reg .form-register .images_upload_main .input-group,
+.reg .form-register .fieldext-group-block .input-group{
+    width: 100%;
+}
+.reg .form-register .images_upload_main [id^="upload_imgs_"]{
+    margin-top: 10px;
+    border: 1px dashed #e6eaf0 !important;
+    border-radius: 2px;
+    background: #fff;
+}
+.reg .form-register .images_upload_main .fieldext_upload{
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+.reg .form-register .images_upload_main .images_upload_item{
+    position: relative;
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+.reg .form-register .images_upload_main .images_upload_item img{
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.reg .form-register .images_upload_main .images_upload_item .delete{
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    border-top: 26px solid rgba(0,0,0,0.55);
+    border-left: 26px solid transparent;
+}
+.reg .form-register .images_upload_main .images_upload_item .delete::after{
+    position: relative;
+    content: "×";
+    font-size: 16px;
+    color: #fff;
+    top: -30px;
+    right: 12px;
+}
+.reg .form-register .fieldext-group-block .form-control::placeholder,
+.reg .form-register .fieldext-select,
+.reg .form-register .images_upload_main .form-control,
+.reg .form-register #upload_imgs_reg_field{
+    color: #9aa7b3;
+}
+.reg .form-register .fieldext-select option{
+    color: #333;
+}
+.reg .form-register .fieldext-group-block + .fieldext-group-block,
+.reg .form-register .fieldext-group + .fieldext-group,
+.reg .form-register .images_upload_main + .fieldext-group-block{
+    margin-top: 0;
+}
 
 body.centre {
     overflow-x: hidden;

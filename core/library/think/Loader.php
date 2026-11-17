@@ -68,6 +68,13 @@ class Loader
      */
     public static function autoload($class)
     {
+        if (0 === stripos($class, WEAPP_DIR_NAME . '\\')) {
+            $parts = explode('\\', $class);
+            if (isset($parts[1]) && function_exists('is_weapp_invalid') && is_weapp_invalid($parts[1])) {
+                return false;
+            }
+        }
+
         // 检测命名空间别名
         if (!empty(self::$namespaceAlias)) {
             $namespace = dirname($class);

@@ -33,11 +33,11 @@
           <tr>
             <td class="first">服务器环境</td>
             <td>apache2.0以上/nginx1.6以上/IIS</td>
-            <td><?php echo $_SERVER['SERVER_SOFTWARE']; ?></td>
+            <td><?php echo isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : ''; ?></td>
           </tr>
           <tr>
             <td class="first">PHP版本</td>
-            <td>7.0及7.0以上<br/>(支持php5、7、8系列)</td>
+            <td>7.4及7.4以上<br/>(支持php5、7、8系列)</td>
             <td><?php echo $phpvStr; ?></td>
           </tr>
           <tr>
@@ -135,11 +135,11 @@
       <div class="bottom tac"> 
         <div class="blank20"></div>
         <center>
-          <a href="<?php echo $_SERVER['PHP_SELF']; ?>?step=2" class="btn_b">重新检测</a>
+          <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=2" class="btn_b">重新检测</a>
           <?php if($err>0){?>
           <a id="next_submit" href="javascript:void(0)" onClick="javascript:layer.alert('安装环境检测未通过，请检查', {icon: 5, title: false})" class="btn_a" style="background: gray;">下一步</a> 
           <?php }else{?>
-          <a id="next_submit" href="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" class="btn_a">下一步</a> 
+          <a id="next_submit" href="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?step=3" class="btn_a">下一步</a> 
           <?php }?>
         </center>
       </div>

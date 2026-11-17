@@ -1508,6 +1508,159 @@ if (!function_exists('eyPreventShell')) {
     }
 }
 
+if (!function_exists('eySafeOrderCookie')) {
+    /**
+     * 安全解析 Cookie 中的订单数据
+     * Cookie 值以 think: 开头时会被 json_decode 成数组，若直接把数组拼进查询条件会造成注入；
+     * 这里统一做标量判断、数值强转与订单号白名单过滤。
+     * @param mixed $data 原始 Cookie 数据
+     * @return array
+     */
+    function eySafeOrderCookie($data = [])
+    {
+        $result = [
+            'moneyid'       => 0,
+            'order_id'      => 0,
+            'order_number'  => '',
+            'order_code'    => '',
+            'type'          => 0,
+            'aid'           => 0,
+            'product_num'   => 0,
+            'spec_value_id' => '',
+        ];
+        if (!is_array($data)) return $result;
+
+        foreach (['moneyid', 'order_id', 'type', 'aid', 'product_num'] as $field) {
+            $result[$field] = isset($data[$field]) && is_scalar($data[$field]) ? intval($data[$field]) : 0;
+        }
+        foreach (['order_number', 'order_code'] as $field) {
+            $val = isset($data[$field]) && is_scalar($data[$field]) ? trim((string)$data[$field]) : '';
+            // 订单号白名单：仅允许字母与数字
+            if ('' !== $val && !preg_match('/^[A-Za-z0-9]+$/', $val)) $val = '';
+            $result[$field] = $val;
+        }
+        $spec = isset($data['spec_value_id']) && is_scalar($data['spec_value_id']) ? trim((string)$data['spec_value_id']) : '';
+        if ('' !== $spec && !preg_match('/^[0-9_]+$/', $spec)) $spec = '';
+        $result['spec_value_id'] = $spec;
+
+        return $result;
+    }
+}
+
+if (!function_exists('get_safe_local_file_path')) {
+    /**
+     * 校验本地文件路径是否安全（防目录穿越、防协议包装器）
+     * 路径经 realpath 解析后必须落在白名单目录内，否则返回 false
+     * @param string $file_path 相对站点根目录的文件路径
+     * @param array  $allow_dirs 允许访问的绝对目录白名单，默认仅允许上传目录
+     * @return string|false 安全的相对路径，非法返回 false
+     */
+    function get_safe_local_file_path($file_path = '', $allow_dirs = array())
+    {
+        if (empty($file_path) || !is_string($file_path) || false !== strpos($file_path, "\0")) {
+            return false;
+        }
+
+        // 统一目录分隔符
+        $file_path = str_replace('\\', '/', trim($file_path));
+        if ('' === $file_path) {
+            return false;
+        }
+
+        // 拒绝协议包装器（phar://、file:// 等）与 UNC 路径
+        if (preg_match('#^[a-z][a-z0-9\.\+\-]*://#i', $file_path) || 0 === strpos($file_path, '//')) {
+            return false;
+        }
+
+        // 拒绝目录穿越
+        if (in_array('..', explode('/', $file_path), true)) {
+            return false;
+        }
+
+        // 白名单目录，默认只允许上传目录
+        if (empty($allow_dirs)) {
+            $allow_dirs = array(
+                ROOT_PATH . ltrim(UPLOAD_PATH, '/\\'),
+                ROOT_PATH . 'public/upload',
+            );
+        }
+        $real_allow_dirs = array();
+        foreach ($allow_dirs as $allow_dir) {
+            $real_allow_dir = realpath($allow_dir);
+            if (false !== $real_allow_dir) {
+                $real_allow_dir = str_replace('\\', '/', $real_allow_dir);
+                $real_allow_dirs[] = rtrim($real_allow_dir, '/') . '/';
+            }
+        }
+        if (empty($real_allow_dirs)) {
+            return false;
+        }
+
+        // realpath 解析后校验，兼容符号链接绕过
+        $real_path = realpath(ROOT_PATH . ltrim($file_path, '/'));
+        if (false === $real_path || !is_file($real_path) || !is_readable($real_path)) {
+            return false;
+        }
+        $real_path = str_replace('\\', '/', $real_path);
+
+        $is_win = defined('IS_WIN') && IS_WIN;
+        $compare_path = $is_win ? strtolower($real_path) : $real_path;
+        foreach ($real_allow_dirs as $real_allow_dir) {
+            $compare_dir = $is_win ? strtolower($real_allow_dir) : $real_allow_dir;
+            if (0 === strpos($compare_path, $compare_dir)) {
+                return ltrim($file_path, '/');
+            }
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('get_safe_local_upload_path')) {
+    /**
+     * 写入前校验附件/课件类字段值（白名单）
+     * 远程地址放行（下载入口另有 SSRF 校验）；本地路径必须位于上传目录内
+     * @param mixed $path 提交的路径
+     * @return string 合法返回原值，非法返回空字符串
+     */
+    function get_safe_local_upload_path($path = '')
+    {
+        if (!is_string($path)) {
+            return '';
+        }
+        $path = trim($path);
+        if ('' === $path || false !== strpos($path, "\0")) {
+            return '';
+        }
+
+        $check = str_replace('\\', '/', $path);
+        // 远程地址放行
+        if (preg_match('#^https?://#i', $check) || 0 === strpos($check, '//')) {
+            return $path;
+        }
+        // 拒绝其他协议包装器（phar://、php:// 等）
+        if (preg_match('#^[a-z][a-z0-9\.\+\-]*://#i', $check)) {
+            return '';
+        }
+        // 拒绝目录穿越
+        if (in_array('..', explode('/', $check), true)) {
+            return '';
+        }
+
+        // 允许可选的站点子目录前缀，其余必须位于上传目录内
+        $root_dir = defined('ROOT_DIR') ? ROOT_DIR : '';
+        if ('' !== $root_dir && '/' !== $root_dir && 0 === stripos($check, $root_dir . '/')) {
+            $check = substr($check, strlen($root_dir));
+        }
+        $check = preg_replace('#^(\./)+#', '', ltrim($check, '/'));
+        if (!preg_match('#^(uploads/|public/upload/)#i', $check)) {
+            return '';
+        }
+
+        return $path;
+    }
+}
+
 if (!function_exists('wxh_database_column')) {
     /**
      * 移除sql新增字段的末尾字符 AFTER 字段名;
@@ -1572,7 +1725,7 @@ if (!function_exists('wxh_source_filelist')) {
      */
     function wxh_source_filelist()
     {
-        $filepath = 'E:/wwwdede/update_eyoucms_com/other/repair/v1.8.2/';
+        $filepath = 'E:/wwwdede/update_eyoucms_com/other/repair/v1.8.3/';
         // 删除无效文件
         $invalid_list = [
             'application/weapp',
@@ -1620,7 +1773,7 @@ if (!function_exists('wxh_source_filelist')) {
         }
         foreach ($invalid_list as $key => $val) {
             if (is_dir($val)) {
-                wxh_delFile($val, true, ['.htaccess','.htaccess.bak']);
+                wxh_delFile($val, true, ['.htaccess','.htaccess.bak','web.config','web.config.bak']);
             } else {
                 @unlink($val);
             }
@@ -1676,6 +1829,7 @@ if (!function_exists('wxh_source_filelist')) {
             }
 
             $val = str_replace('.htaccess.bak', '.htaccess', $val);
+            $val = str_replace('web.config.bak', 'web.config', $val);
             // $str .= $val . PHP_EOL;
             $str .= $val . "|{$cthash}" . PHP_EOL;
         }
@@ -1784,7 +1938,7 @@ if (!function_exists('wxh_getDirFile')) {
                 wxh_getDirFile("$directory/$file", $dir_name_tmp, $arr_file, $total, $ignore_dirs);
             } else {
                 if($file != $self){
-                    $ignore_files = ['/.htaccess','/.htaccess.bak'];
+                    $ignore_files = ['/.htaccess','/.htaccess.bak','/web.config','/web.config.bak'];
                     if (!in_array($file, $ignore_dirs) && !in_array("$dir_name/$file", $ignore_files) /* && preg_match('/\.(php|htm|asp|jsp|bak|js|zip|rar|gz|png|gif|jpg|jpeg|ico|bmp|webp)$/i', $file)*/) {
                         $total +=1;
                         if ($dir_name) {
@@ -1800,5 +1954,43 @@ if (!function_exists('wxh_getDirFile')) {
         $mydir->close();
 
         return $arr_file;
+    }
+}
+
+if (!function_exists('adaptSql'))
+{
+    /**
+     * 适配SQL的存储引擎与字符集，兼容仅支持 InnoDB/MyISAM、utf8/utf8mb4 的环境
+     * @param string $sql
+     * @return string
+     */
+    function adaptSql($sql)
+    {
+        static $supportUtf8mb4 = null;
+
+        // 引擎统一转为 MyISAM（易优默认引擎）
+        $sql = preg_replace('/ENGINE\s*=\s*InnoDB/i', 'ENGINE=MyISAM', $sql);
+
+        if (is_null($supportUtf8mb4)) {
+            $supportUtf8mb4 = true;
+            try {
+                $charsets = \think\Db::query('SHOW CHARACTER SET');
+                $support = array();
+                foreach ($charsets as $v) {
+                    if (isset($v['Charset'])) {
+                        $support[] = strtolower($v['Charset']);
+                    }
+                }
+                $supportUtf8mb4 = in_array('utf8mb4', $support);
+            } catch (\Exception $e) {}
+        }
+
+        if (!$supportUtf8mb4) {
+            $sql = preg_replace('/CHARSET\s*=\s*utf8mb4/i', 'CHARSET=utf8', $sql);
+            $sql = preg_replace('/CHARACTER\s+SET\s+utf8mb4/i', '', $sql);
+            $sql = preg_replace('/COLLATE(\s*=\s*|\s+)utf8mb4_/i', 'COLLATE$1utf8_', $sql);
+        }
+
+        return $sql;
     }
 }

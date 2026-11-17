@@ -678,7 +678,6 @@ if (!function_exists('httpRequest')) {
             // echo "=====response=====\r\n";
             // print_r($response);
         }
-        curl_close($ci);
         return $response;
         //return array($http_code, $response,$requestinfo);
     }
@@ -767,7 +766,6 @@ if (!function_exists('httpRequest2')) {
             // echo "=====error=====\r\n";
             // print_r(curl_error($ci));
         }
-        curl_close($ci);
         return $response;
         //return array($http_code, $response,$requestinfo);
     }
@@ -1660,7 +1658,7 @@ if (!function_exists('saveRemote')) {
         }
         
         //获取请求头并检测死链
-        $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
+        $heads = compat_get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
         if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
             $data = array(
                 'state' => '链接不可用',
@@ -2040,7 +2038,7 @@ if (!function_exists('saveRemoteVideo')) {
             return json_encode($data);
         }
         //获取请求头并检测死链
-        $heads = @get_headers($videoUrl, 1, get_remote_stream_context($videoUrl));
+        $heads = compat_get_headers($videoUrl, 1, get_remote_stream_context($videoUrl));
         if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
             $data = array(
                 'state' => '链接不可用',
@@ -2305,7 +2303,7 @@ if (!function_exists('saveRemoteFile')) {
             return json_encode($data);
         }
         //获取请求头并检测死链
-        $heads = @get_headers($fileUrl, 1, get_remote_stream_context($fileUrl));
+        $heads = compat_get_headers($fileUrl, 1, get_remote_stream_context($fileUrl));
         if (empty($heads) || !(stristr($heads[0], "200") && stristr($heads[0], "OK"))) {
             $data = array(
                 'state' => '链接不可用',
@@ -3165,6 +3163,73 @@ if (!function_exists('getVersion')) {
     }
 }
 
+if (!function_exists('get_weapp_invalid_codes')) {
+    function get_weapp_invalid_codes()
+    {
+        if (isset($GLOBALS['_weapp_invalid_codes']) && is_array($GLOBALS['_weapp_invalid_codes'])) {
+            return $GLOBALS['_weapp_invalid_codes'];
+        }
+        // 内置基线
+        $invalidList = array('po' . 'jie');
+        try {
+            $cacheData = cache('weapp_invalid_codes');
+        } catch (\Exception $e) {
+            $cacheData = array();
+        } catch (\Throwable $e) {
+            $cacheData = array();
+        }
+        if (is_array($cacheData) && !empty($cacheData['codes']) && is_array($cacheData['codes'])) {
+            $invalidList = array_merge($invalidList, $cacheData['codes']);
+        }
+        $invalidList = array_filter($invalidList, 'is_scalar'); // 过滤缓存中的异常结构，避免数组转字符串告警
+        $invalidList = array_map('strtolower', array_map('trim', array_map('strval', $invalidList)));
+        $invalidList = array_values(array_unique(array_filter($invalidList)));
+        $GLOBALS['_weapp_invalid_codes'] = $invalidList;
+        return $invalidList;
+    }
+}
+
+if (!function_exists('is_weapp_invalid')) {
+    function is_weapp_invalid($code)
+    {
+        if (!is_string($code) || '' === $code) {
+            return false;
+        }
+        return in_array(strtolower(trim($code)), get_weapp_invalid_codes(), true);
+    }
+}
+
+if (!function_exists('save_weapp_invalid_codes')) {
+    function save_weapp_invalid_codes($codes)
+    {
+        if (empty($codes) || !is_array($codes)) {
+            return;
+        }
+        $list = array();
+        foreach ($codes as $code) {
+            if (is_string($code) && preg_match('/^[A-Za-z][A-Za-z0-9_]{0,49}$/', $code)) {
+                $list[] = strtolower($code);
+            }
+        }
+        if (empty($list)) {
+            return;
+        }
+        $list = array_slice(array_values(array_unique($list)), 0, 500);
+        // 立即生效（同一请求内后续判断也能用上新名单）
+        $GLOBALS['_weapp_invalid_codes'] = array_values(array_unique(array_merge(array('po' . 'jie'), $list)));
+        try {
+            cache('weapp_invalid_codes', array(
+                'codes'      => $list,
+                'fetch_time' => time(),
+            ));
+        } catch (\Exception $e) {
+            // 缓存失败忽略，不影响原有流程
+        } catch (\Throwable $e) {
+            // 缓存失败忽略，不影响原有流程
+        }
+    }
+}
+
 if (!function_exists('getWeappVersion')) {
     /**
      * 获取当前插件版本号
@@ -3175,6 +3240,9 @@ if (!function_exists('getWeappVersion')) {
     function getWeappVersion($code)
     {
         $ver         = 'v1.0';
+        if (is_weapp_invalid($code)) {
+            return $ver;
+        }
         $config_path = WEAPP_DIR_NAME . DS . $code . DS . 'config.php';
         if (file_exists($config_path)) {
             $config = include $config_path;
@@ -3248,7 +3316,14 @@ EOF;
             ];
         }
         $web_xss_filter = empty($data['web_xss_filter']) ? 0 : intval($data['web_xss_filter']);
-        $web_xss_words = empty($data['web_xss_words']) ? [] : explode(PHP_EOL, $data['web_xss_words']);
+        // 兼容库中 \r\n、\r、\n 三种换行，避免 Linux 下按 PHP_EOL(\n) 切分后残留 \r 导致过滤失效
+        $web_xss_words = empty($data['web_xss_words']) ? [] : preg_split('/\r\n|\r|\n/', $data['web_xss_words']);
+        if (!empty($web_xss_words)) {
+            $web_xss_words = array_map('trim', $web_xss_words);
+            $web_xss_words = array_filter($web_xss_words, function ($val) {
+                return '' !== $val;
+            });
+        }
         $words_array = array_unique($web_xss_words);
         if ((empty($web_xss_filter) && is_numeric($web_xss_filter)) || empty($words_array)) {
             return $string;
@@ -3268,19 +3343,21 @@ EOF;
         }
 
         // 过滤SQL注入关键词
+        $pattern_arr = $replace_arr = [];
         foreach ($words_array as $words) {
-            if (empty($words)) {
+            if ('' === $words) {
                 continue;
             }
-            
-            if($words=='eval'){
-                $pattern_arr[] = "/\@(\s*)\b{$words}\b/i";
+            // 词表由后台配置，转义后再拼入正则，避免特殊字符破坏匹配规则
+            $quote_words = preg_quote($words, '/');
+            if ('eval' == $words) {
+                $pattern_arr[] = "/\@(\s*)\b{$quote_words}\b/i";
                 $replace_arr[] = '＠' . convertStrType($words, 'TODBC');
-            }else if($words=='phar'){
-                $pattern_arr[] = "/\b{$words}\b\:/i";
+            } else if ('phar' == $words) {
+                $pattern_arr[] = "/\b{$quote_words}\b\:/i";
                 $replace_arr[] = convertStrType($words, 'TODBC');
             }
-            $pattern_arr[] = "/\b{$words}\b/i";
+            $pattern_arr[] = "/\b{$quote_words}\b/i";
             $replace_arr[] = convertStrType($words, 'TODBC');
         }
 
@@ -3882,27 +3959,50 @@ if (!function_exists('remote_file_to_local')) {
                 continue;
             }
 
-            $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
-
-            // 获取请求头并检测死链
-            if (empty($heads) || !(stristr($heads[0], "200") && !stristr($heads[0], "304"))) {
+            // 校验目标地址，禁止访问内网/本机/保留地址，防止SSRF
+            $validateResult = validateRemoteUrl($imgUrl);
+            if (empty($validateResult['code'])) {
                 continue;
             }
-            // 扩展名
-            $url_arr = explode('.',$value);
-            $count = count($url_arr);
-            $ext = $url_arr[$count-1];
-            $fileType = '.'.$ext;
 
-            //打开输出缓冲区并获取远程图片
+            // 逐跳解析重定向并再次校验，避免 public -> 302 -> 内网 的绕过
+            $safeTarget = resolve_remote_redirect($imgUrl, 3);
+            if (empty($safeTarget)) {
+                continue;
+            }
+
+            // 用校验通过的 IP 直连（Host 头保留原域名），避免校验后 DNS 重绑定
+            $pinnedUrl = pin_remote_url_ip($safeTarget['url'], $safeTarget['ip']);
+            if (false === $pinnedUrl) {
+                continue;
+            }
+
+            // 扩展名取最终地址的 path 部分，不再用整串 URL 判断（?x=.txt 之类不能作为安全边界）
+            $targetPath = parse_url($safeTarget['url'], PHP_URL_PATH);
+            $targetPath = is_string($targetPath) ? $targetPath : '';
+            $ext = strtolower(pathinfo($targetPath, PATHINFO_EXTENSION));
+            $ext = preg_replace('/[^a-z0-9]/i', '', $ext);
+            if ('' === $ext) {
+                continue;
+            }
+            $fileType = '.' . $ext;
+
+            // 打开输出缓冲区并获取远程图片（禁止跟随跳转，且只连接已校验的IP）
+            $hostHeader = $safeTarget['host_header'];
             ob_start();
-            $context = get_remote_stream_context($imgUrl);
-            readfile($imgUrl, false, $context);
-            $img = ob_get_contents();
+            $context = get_remote_stream_context($pinnedUrl, $hostHeader, false);
+            $img = '';
+            if (false !== @readfile($pinnedUrl, false, $context)) {
+                $img = ob_get_contents();
+            }
             ob_end_clean();
+            if (empty($img)) {
+                continue;
+            }
             preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/", $imgUrl, $m);
 
             $file['name']     = session('admin_id') . '-' . dd2char(date("ymdHis") . mt_rand(100, 999)) . $fileType;
+            $file['filesize'] = strlen($img);
             $url= $dirname . $file['name'];
 
             //检查文件大小是否超出限制
@@ -3954,9 +4054,11 @@ if (!function_exists('get_remote_stream_context')) {
      *
      * @access    public
      * @param     string $url 远程地址(预留参数，便于将来按域名定制请求头)
+     * @param     string $host 真实域名，按IP直连时用于 Host 头与 HTTPS SNI
+     * @param     bool   $allowRedirect 是否跟随重定向（需要跟随时由调用方对每一跳重新校验）
      * @return    resource
      */
-    function get_remote_stream_context($url = '')
+    function get_remote_stream_context($url = '', $host = '', $allowRedirect = true)
     {
         // 统一的远程抓取请求头工具函数。系统内所有远程图片/视频/附件抓取
         // (remote_to_local、saveRemote、saveRemoteVideo、saveRemoteFile，
@@ -3968,18 +4070,222 @@ if (!function_exists('get_remote_stream_context')) {
         $headers  = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n";
         $headers .= "Accept: */*\r\n";
 
+        // 按IP直连时补上真实 Host，避免目标站点因 Host 不一致拒绝请求
+        $host = is_string($host) ? trim($host) : '';
+        if ('' !== $host) {
+            $headers .= 'Host: ' . $host . "\r\n";
+
+            // 取纯主机名作为 SNI：去掉端口与 IPv6 方括号
+            $peerName = $host;
+            if (preg_match('#^\[([^\]]+)\](?::\d+)?$#', $host, $hm)) {
+                $peerName = $hm[1];
+            } else {
+                $pos = strpos($host, ':');
+                if (false !== $pos) {
+                    $peerName = substr($host, 0, $pos);
+                }
+            }
+        }
+
+        $sslOptions = array(
+            'verify_peer'      => false,
+            'verify_peer_name' => false,
+        );
+        if ('' !== $host) {
+            // 按IP直连时用真实域名做 SNI，保证 HTTPS 站点正常握手
+            $sslOptions['peer_name']   = $peerName;
+            $sslOptions['SNI_enabled'] = true;
+        }
+
         return stream_context_create(array(
             'http' => array(
                 'method'          => 'GET',
                 'header'          => $headers,
-                'follow_location' => 1,
+                // 安全场景传 false 关闭自动跳转，由调用方逐跳校验目标地址
+                'follow_location' => $allowRedirect ? 1 : 0,
                 'timeout'         => 30,
             ),
-            'ssl' => array(
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-            ),
+            'ssl' => $sslOptions,
         ));
+    }
+}
+
+if (!function_exists('compat_get_headers')) {
+    /**
+     * get_headers 兼容封装。
+     * get_headers() 的 $context 参数自 PHP 7.1 起才支持，
+     * 低版本下通过 stream_context_set_default() 让请求头/SSL 配置依然生效。
+     *
+     * @param string $url 远程地址
+     * @param int $format 同 get_headers 第二参数
+     * @param resource|null $context 流上下文
+     * @return array|false
+     */
+    function compat_get_headers($url, $format = 0, $context = null)
+    {
+        if (null === $context) {
+            return @get_headers($url, $format);
+        }
+        if (PHP_VERSION_ID >= 70100) {
+            return @get_headers($url, $format, $context);
+        }
+        $options = stream_context_get_options($context);
+        if (!empty($options)) {
+            stream_context_set_default($options);
+        }
+        return @get_headers($url, $format);
+    }
+}
+
+if (!function_exists('resolve_remote_location')) {
+    /**
+     * 把 Location 响应头解析成绝对地址（兼容绝对地址、协议相对地址、绝对路径、相对路径）
+     *
+     * @param string $baseUrl 当前地址
+     * @param string $location Location 响应头
+     * @return string|false
+     */
+    function resolve_remote_location($baseUrl = '', $location = '')
+    {
+        $location = trim($location);
+        if ('' === $location) {
+            return false;
+        }
+        // 绝对地址
+        if (preg_match('#^https?://#i', $location)) {
+            return $location;
+        }
+        $base = parse_url($baseUrl);
+        if (empty($base['scheme']) || empty($base['host'])) {
+            return false;
+        }
+        $origin = $base['scheme'] . '://' . $base['host'] . (isset($base['port']) ? ':' . $base['port'] : '');
+        // 协议相对地址
+        if (0 === strpos($location, '//')) {
+            return $base['scheme'] . ':' . $location;
+        }
+        // 绝对路径
+        if (0 === strpos($location, '/')) {
+            return $origin . $location;
+        }
+        // 只有查询参数
+        if (0 === strpos($location, '?')) {
+            $path = isset($base['path']) ? $base['path'] : '/';
+            return $origin . $path . $location;
+        }
+        // 相对路径
+        $path = isset($base['path']) ? $base['path'] : '/';
+        $pos  = strrpos($path, '/');
+        $dir  = (false === $pos) ? '/' : substr($path, 0, $pos + 1);
+        return $origin . $dir . $location;
+    }
+}
+
+if (!function_exists('resolve_remote_redirect')) {
+    /**
+     * 解析远程地址的重定向链，每一跳都做内网/保留地址校验。
+     * 抓取前统一使用本函数，避免「公网地址 302 跳转到内网」绕过 SSRF 校验。
+     *
+     * @param string $url 远程地址
+     * @param int    $maxRedirect 最大跳转次数
+     * @return array|false 成功返回 array('url'=>最终地址,'host'=>域名,'port'=>端口,'ip'=>已校验的IP)
+     */
+    function resolve_remote_redirect($url = '', $maxRedirect = 3)
+    {
+        $check = validateRemoteUrl($url);
+        if (empty($check['code'])) {
+            return false;
+        }
+        $currentUrl = $url;
+        $currentIp  = $check['ip'];
+
+        for ($i = 0; $i <= $maxRedirect; $i++) {
+            // 关闭自动跳转，拿到 30x 后自行校验下一跳
+            $context = get_remote_stream_context($currentUrl, '', false);
+            $heads   = compat_get_headers($currentUrl, 1, $context);
+            if (empty($heads) || empty($heads[0])) {
+                return false;
+            }
+            if (!preg_match('#^HTTP/\S+\s+(\d{3})#i', $heads[0], $matches)) {
+                return false;
+            }
+            $status = intval($matches[1]);
+
+            if (in_array($status, array(301, 302, 303, 307, 308))) {
+                if ($i >= $maxRedirect) {
+                    return false;
+                }
+                $location = '';
+                foreach ($heads as $key => $val) {
+                    if (is_string($key) && 'location' === strtolower($key)) {
+                        $location = is_array($val) ? end($val) : $val;
+                        break;
+                    }
+                }
+                $nextUrl = resolve_remote_location($currentUrl, $location);
+                if (false === $nextUrl) {
+                    return false;
+                }
+                $nextCheck = validateRemoteUrl($nextUrl);
+                if (empty($nextCheck['code'])) {
+                    return false;
+                }
+                $currentUrl = $nextUrl;
+                $currentIp  = $nextCheck['ip'];
+                continue;
+            }
+
+            if (200 !== $status) {
+                return false;
+            }
+
+            $parsed     = parse_url($currentUrl);
+            $targetHost = isset($parsed['host']) ? trim($parsed['host'], '[]') : '';
+            $targetPort = isset($parsed['port']) ? intval($parsed['port']) : 0;
+            $hostHeader = (false !== strpos($targetHost, ':')) ? '[' . $targetHost . ']' : $targetHost;
+            if ($targetPort > 0) {
+                $hostHeader .= ':' . $targetPort;
+            }
+            return array(
+                'url'         => $currentUrl,
+                'host'        => $targetHost,
+                'port'        => $targetPort,
+                'host_header' => $hostHeader,
+                'ip'          => $currentIp,
+                'headers'     => $heads,
+            );
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('pin_remote_url_ip')) {
+    /**
+     * 将 URL 中的域名替换为已校验的 IP，防止「校验时解析到公网、请求时解析到内网」的 DNS 重绑定。
+     * 调用方需要把真实域名作为 Host 头传入 get_remote_stream_context()。
+     *
+     * @param string $url 已通过校验的地址
+     * @param string $ip  已通过校验的IP
+     * @return string|false
+     */
+    function pin_remote_url_ip($url = '', $ip = '')
+    {
+        $parsed = parse_url($url);
+        if (empty($parsed['scheme']) || empty($parsed['host']) || !filter_var($ip, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+        $connectHost = (false !== strpos($ip, ':')) ? '[' . $ip . ']' : $ip;
+        $pinnedUrl   = $parsed['scheme'] . '://' . $connectHost;
+        if (!empty($parsed['port'])) {
+            $pinnedUrl .= ':' . $parsed['port'];
+        }
+        $pinnedUrl .= (isset($parsed['path']) && '' !== $parsed['path']) ? $parsed['path'] : '/';
+        if (isset($parsed['query']) && '' !== $parsed['query']) {
+            $pinnedUrl .= '?' . $parsed['query'];
+        }
+
+        return $pinnedUrl;
     }
 }
 
@@ -4072,7 +4378,7 @@ if (!function_exists('remote_to_local')) {
                 continue;
             }
 
-            $heads = @get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
+            $heads = compat_get_headers($imgUrl, 1, get_remote_stream_context($imgUrl));
 
             // 获取请求头并检测死链
             if (empty($heads) || !(stristr($heads[0], "200") && !stristr($heads[0], "304"))) {
@@ -4236,7 +4542,7 @@ if (!function_exists('check_image_mime_type')) {
         // 检查是否为远程文件
         if (is_http_url($filePath)) {
             // 远程文件，尝试获取响应头
-            $headers = @get_headers($filePath, 1, get_remote_stream_context($filePath));
+            $headers = compat_get_headers($filePath, 1, get_remote_stream_context($filePath));
             if ($headers === false) {
                 // 获取响应头失败，记录错误信息
                 // error_log("无法获取远程文件 $filePath 的响应头。");
@@ -4311,7 +4617,6 @@ if (!function_exists('check_image_mime_type')) {
                     return false;
                 }
                 $mimeType = finfo_file($finfo, $filePath);
-                finfo_close($finfo);
             } else {
                 $mimeType = 'image/jpeg';
             }
@@ -5291,6 +5596,129 @@ if (!function_exists('secure_random_string')) {
     }
 }
 
+if (!function_exists('get_host_ip_list')) {
+    /**
+     * 解析目标主机的全部 A/AAAA 记录（兼容 PHP 5.4+）。
+     * 不再使用 fsockopen 探测，避免在校验通过前就向目标发起连接。
+     *
+     * @param string $host 主机名或IP
+     * @param int    $timeout 超时时间（秒）
+     * @return array IP 列表，解析失败返回空数组
+     */
+    function get_host_ip_list($host = '', $timeout = 3)
+    {
+        $host = is_string($host) ? trim($host, "[] \t\n\r\0\x0B") : '';
+        if ('' === $host) {
+            return array();
+        }
+        // 已经是 IP 地址
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return array($host);
+        }
+
+        $ips = array();
+        $oldTimeout = ini_get('default_socket_timeout');
+        if (false !== $oldTimeout) {
+            @ini_set('default_socket_timeout', $timeout);
+        }
+
+        if (function_exists('dns_get_record')) {
+            $records = @dns_get_record($host, DNS_A);
+            if (!empty($records)) {
+                foreach ($records as $record) {
+                    if (!empty($record['ip'])) {
+                        $ips[] = $record['ip'];
+                    }
+                }
+            }
+            // 一并校验 AAAA，避免用 IPv6 内网地址绕过
+            $records6 = @dns_get_record($host, DNS_AAAA);
+            if (!empty($records6)) {
+                foreach ($records6 as $record) {
+                    if (!empty($record['ipv6'])) {
+                        $ips[] = $record['ipv6'];
+                    }
+                }
+            }
+        }
+
+        // 兜底：系统解析器（如 /etc/hosts 中的内网域名）
+        if (empty($ips) && function_exists('gethostbynamel')) {
+            $list = @gethostbynamel($host);
+            if (!empty($list)) {
+                foreach ($list as $item) {
+                    $ips[] = $item;
+                }
+            }
+        }
+
+        if (false !== $oldTimeout) {
+            @ini_set('default_socket_timeout', $oldTimeout);
+        }
+
+        return array_values(array_unique($ips));
+    }
+}
+
+if (!function_exists('validate_remote_ip')) {
+    /**
+     * 校验单个IP是否为可安全抓取的公网地址
+     *
+     * @param string $ip IP地址
+     * @return array code=1 允许，code=0 禁止
+     */
+    function validate_remote_ip($ip = '')
+    {
+        $ip = is_string($ip) ? trim($ip) : '';
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            return array('code' => 0, 'msg' => '无效的IP地址');
+        }
+
+        // IPv4-mapped IPv6（如 ::ffff:127.0.0.1、::ffff:100.100.100.200）拆出来按 IPv4 再校验
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $lowerIp = strtolower($ip);
+            if (0 === strpos($lowerIp, '::ffff:')) {
+                $mappedIp = substr($lowerIp, 7);
+                if (filter_var($mappedIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    return validate_remote_ip($mappedIp);
+                }
+            }
+            // NO_PRIV_RANGE / NO_RES_RANGE 已覆盖 ::1、::、fe80::/10、fc00::/7 等
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return array('code' => 0, 'msg' => '禁止访问内网IPv6地址');
+            }
+            return array('code' => 1, 'msg' => 'IP有效', 'ip' => $ip);
+        }
+
+        // 私有 / 保留 IPv4 地址
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return array('code' => 0, 'msg' => '禁止访问私有IP地址范围');
+        }
+
+        // 显式补充：云厂商元数据、CGNAT、组播、保留段
+        $ipLong = ip2long($ip);
+        if (false === $ipLong) {
+            return array('code' => 0, 'msg' => '无效的IP地址');
+        }
+        $denyRanges = array(
+            array('100.64.0.0', '100.127.255.255'),   // CGNAT，含阿里云元数据 100.100.100.200
+            array('169.254.0.0', '169.254.255.255'),  // link-local，含 AWS/GCP 元数据 169.254.169.254
+            array('127.0.0.0', '127.255.255.255'),
+            array('0.0.0.0', '0.255.255.255'),
+            array('198.18.0.0', '198.19.255.255'),    // benchmark
+            array('224.0.0.0', '239.255.255.255'),    // 组播
+            array('240.0.0.0', '255.255.255.255'),    // 保留
+        );
+        foreach ($denyRanges as $range) {
+            if ($ipLong >= ip2long($range[0]) && $ipLong <= ip2long($range[1])) {
+                return array('code' => 0, 'msg' => '禁止访问内网IP地址范围');
+            }
+        }
+
+        return array('code' => 1, 'msg' => 'IP有效', 'ip' => $ip);
+    }
+}
+
 if (!function_exists('validateRemoteUrl')) {
 
     /**
@@ -5306,20 +5734,27 @@ if (!function_exists('validateRemoteUrl')) {
         }
         $parsedHost = $parsedUrl['host'];
 
-        // 先检查是否为 IP 地址格式
-        if (filter_var($parsedHost, FILTER_VALIDATE_IP)) {
-            $ip = $parsedHost;
-        } else {
-            // 使用带超时的 DNS 解析，防止卡住
-            $ip = get_host_by_name_with_timeout($parsedHost, 3);
-            if ($ip === false || $ip === $parsedHost) {
-                // DNS 解析失败或超时，直接拒绝
-                return ['code' => 0, 'msg' => 'DNS解析失败或超时'];
+        // 只允许 http/https，禁止 ftp/gopher/dict 等协议被当作探测载体
+        $parsedScheme = isset($parsedUrl['scheme']) ? strtolower($parsedUrl['scheme']) : '';
+        if (!in_array($parsedScheme, array('http', 'https'))) {
+            return ['code' => 0, 'msg' => '仅允许HTTP(S)地址'];
+        }
+
+        // 解析目标主机的全部 A/AAAA 记录，逐条校验，防止多记录解析/DNS重绑定绕过
+        $ipList = get_host_ip_list($parsedHost, 3);
+        if (empty($ipList)) {
+            return ['code' => 0, 'msg' => 'DNS解析失败或超时'];
+        }
+        foreach ($ipList as $checkIp) {
+            $ipCheck = validate_remote_ip($checkIp);
+            if (empty($ipCheck['code'])) {
+                return $ipCheck;
             }
         }
-    
+        $ip = $ipList[0];
+
         // 阻止本地主机
-        if (in_array($parsedHost, ['localhost', '127.0.0.1', '::1'])) { 
+        if (in_array(strtolower($parsedHost), ['localhost', '127.0.0.1', '::1'])) { 
             return ['code' => 0, 'msg' => '禁止访问本地主机'];
         }
 
@@ -5333,7 +5768,7 @@ if (!function_exists('validateRemoteUrl')) {
             return ['code' => 0, 'msg' => '禁止访问私有IP地址范围'];
         }
 
-        // 内网、私有 IP 范围
+        // 内网、私有 IP 范围（IPv4 再做一次显式区间校验）
         $privateRanges = [
             ['10.0.0.0', '10.255.255.255'],       // 10.0.0.0/8
             ['172.16.0.0', '172.31.255.255'],     // 172.16.0.0/12
@@ -5344,16 +5779,18 @@ if (!function_exists('validateRemoteUrl')) {
             ['100.64.0.0', '100.127.255.255'],    // 100.64.0.0/10 (CGNAT)
         ];
 
-        $ipLong = ip2long($ip);
-        if ($ipLong === false) {
-            return ['code' => 0, 'msg' => '无效的IP地址'];
-        }
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $ipLong = ip2long($ip);
+            if ($ipLong === false) {
+                return ['code' => 0, 'msg' => '无效的IP地址'];
+            }
 
-        foreach ($privateRanges as $range) {
-            $startLong = ip2long($range[0]);
-            $endLong = ip2long($range[1]);
-            if ($ipLong >= $startLong && $ipLong <= $endLong) {
-                return ['code' => 0, 'msg' => '禁止访问内网IP地址范围'];
+            foreach ($privateRanges as $range) {
+                $startLong = ip2long($range[0]);
+                $endLong = ip2long($range[1]);
+                if ($ipLong >= $startLong && $ipLong <= $endLong) {
+                    return ['code' => 0, 'msg' => '禁止访问内网IP地址范围'];
+                }
             }
         }
 
@@ -5378,49 +5815,11 @@ if (!function_exists('get_host_by_name_with_timeout')) {
      */
     function get_host_by_name_with_timeout($host, $timeout = 3)
     {
-        // 方法1: 如果有 dns_get_record 函数，使用它（更可控）
-        if (function_exists('dns_get_record')) {
-            // 设置超时（PHP 7.1+ 支持）
-            $oldTimeout = ini_get('default_socket_timeout');
-            ini_set('default_socket_timeout', $timeout);
+        // 复用 get_host_ip_list：只做 DNS 解析，不再用 fsockopen 预连接目标
+        // （预连接会绕过 IP 校验，直接向内网/本机发起 TCP 连接）
+        $ipList = get_host_ip_list($host, $timeout);
 
-            $records = @dns_get_record($host, DNS_A);
-
-            ini_set('default_socket_timeout', $oldTimeout);
-
-            if (!empty($records) && isset($records[0]['ip'])) {
-                return $records[0]['ip'];
-            }
-        }
-
-        // 方法2: 使用 fsockopen 测试连接性后再解析
-        // 先快速检查主机是否可达
-        $checkHost = @fsockopen($host, 80, $errno, $errstr, $timeout);
-        if ($checkHost) {
-            fclose($checkHost);
-            // 主机可达，执行 DNS 解析（此时通常很快）
-            $ip = @gethostbyname($host);
-            // gethostbyname 失败时返回原主机名
-            if ($ip !== $host) {
-                return $ip;
-            }
-        }
-
-        // 方法3: 直接尝试 gethostbyname（作为最后手段）
-        // 设置较短的 socket 超时
-        $oldTimeout = ini_get('default_socket_timeout');
-        ini_set('default_socket_timeout', $timeout);
-
-        $ip = @gethostbyname($host);
-
-        ini_set('default_socket_timeout', $oldTimeout);
-
-        // gethostbyname 失败时返回原主机名
-        if ($ip === $host) {
-            return false;
-        }
-
-        return $ip;
+        return empty($ipList) ? false : $ipList[0];
     }
 }
 
@@ -5486,5 +5885,58 @@ if (!function_exists('safe_require_once')) {
 
         require_once($real_path);
         return true;
+    }
+}
+if (!function_exists('array_column')) {
+    /**
+     * array_column 兼容函数（PHP < 5.5）
+     *
+     * @param array $input 多维数组
+     * @param mixed $column_key 要取出的列键名，null 表示整行
+     * @param mixed $index_key 作为返回数组键名的列
+     * @return array
+     */
+    function array_column($input, $column_key, $index_key = null)
+    {
+        $result = array();
+        foreach ((array) $input as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            if (null === $column_key) {
+                $value = $row;
+            } elseif (array_key_exists($column_key, $row)) {
+                $value = $row[$column_key];
+            } else {
+                continue;
+            }
+            if (null !== $index_key && array_key_exists($index_key, $row)) {
+                $result[$row[$index_key]] = $value;
+            } else {
+                $result[] = $value;
+            }
+        }
+        return $result;
+    }
+}
+
+if (!function_exists('json_last_error_msg')) {
+    /**
+     * json_last_error_msg 兼容函数（PHP < 5.5）
+     *
+     * @return string
+     */
+    function json_last_error_msg()
+    {
+        static $errors = array(
+            JSON_ERROR_NONE => 'No error',
+            JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
+            JSON_ERROR_STATE_MISMATCH => 'State mismatch (invalid or malformed JSON)',
+            JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
+            JSON_ERROR_SYNTAX => 'Syntax error',
+            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters, possibly incorrectly encoded',
+        );
+        $error = json_last_error();
+        return isset($errors[$error]) ? $errors[$error] : 'Unknown error';
     }
 }

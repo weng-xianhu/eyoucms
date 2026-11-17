@@ -220,8 +220,8 @@ class AskLogic extends Model
         /*拼装html代码*/
         // 友好显示时间
         $data['add_time'] = friend_date($data['add_time']);
-        // 处理内容格式
-        $data['content']  = htmlspecialchars_decode($data['content']);
+        // 处理内容格式（问答专用白名单过滤后再输出，防止存储型 XSS）
+        $data['content']  = Ask::sanitizeHtml($data['content']);
         if (!empty($data['at_users_id'])) {
             $data['content'] = '回复 @'.$data['at_usersname'].': &nbsp; '.$data['content'];
         }
@@ -276,7 +276,7 @@ EOF;
         foreach ($data as $key => $value) {
             // 如果是需要审核的评论则返回空
             $review = '';
-            if (empty($value['is_review']) && isset($parent_id) && 0 == $parent_id) {
+            if (empty($value['is_review']) && 0 === $parent_id) {
                 // 创始人审核评论URL(前台)
                 $ReviewCommentUrl = $this->GetUrlData($value, 'ReviewCommentUrl');
                 $review = <<<EOF
@@ -289,7 +289,7 @@ EOF;
 
             // 是否允许删除
             $del_comment = '';
-            if ((isset($parent_id) && 0 == $parent_id) || ($users_id == $value['users_id'])) {
+            if (0 === $parent_id || ($users_id == $value['users_id'])) {
                 // 删除评论回答URL
                 $DelCommentUrl = $this->GetUrlData($value, 'DelCommentUrl');
                 $del_comment = <<<EOF

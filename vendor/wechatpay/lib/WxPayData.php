@@ -93,7 +93,6 @@ class WxPayDataBase
         //禁止引用外部xml实体（兼容 PHP 5.4 - 8.2）
         if (version_compare(PHP_VERSION, '8.0.0', '<')) {
             if (function_exists('libxml_disable_entity_loader')) {
-                @libxml_disable_entity_loader(true);
             }
         }
         // 使用 LIBXML_NONET 禁止网络访问，LIBXML_NOCDATA 处理 CDATA

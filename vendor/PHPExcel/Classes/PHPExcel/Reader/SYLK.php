@@ -263,7 +263,7 @@ class PHPExcel_Reader_SYLK extends PHPExcel_Reader_Abstract implements PHPExcel_
                         case 'S':
                             $styleSettings = substr($rowDatum, 1);
                             for ($i=0; $i<strlen($styleSettings); ++$i) {
-                                switch ($styleSettings{$i}) {
+                                switch ($styleSettings[$i]) {
                                     case 'I':
                                         $formatArray['font']['italic'] = true;
                                         break;
@@ -384,7 +384,7 @@ class PHPExcel_Reader_SYLK extends PHPExcel_Reader_Abstract implements PHPExcel_
                         case 'S':
                             $styleSettings = substr($rowDatum, 1);
                             for ($i=0; $i<strlen($styleSettings); ++$i) {
-                                switch ($styleSettings{$i}) {
+                                switch ($styleSettings[$i]) {
                                     case 'I':
                                         $styleData['font']['italic'] = true;
                                         break;

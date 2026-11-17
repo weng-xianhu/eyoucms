@@ -32,6 +32,8 @@ class FileProtect
             'uploads/',
             'vendor/',
             'template/',
+            'data/eyoumcp_quarantine/',
+            'data/eyoumcp_security/',
         ];
 
         $data_dirs = glob('data/*/', GLOB_ONLYDIR);

@@ -20,6 +20,7 @@ use app\admin\logic\ShopLogic;
 
 class ShopComment extends Base
 {
+    public $shop_order_comment_db;
     // 模型ID
     public $channeltype = 2;
     public $ShopLogic;

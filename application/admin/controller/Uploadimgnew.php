@@ -164,7 +164,8 @@ class Uploadimgnew extends Base
                 }
             }
             $assign_data['select_img'] = $select_img;
-            cookie('uploadimgnew_select_img', $select_img);
+            // 该 cookie 仅用于前端回显已选图片（非敏感数据），需允许 JS 读取
+            cookie('uploadimgnew_select_img', $select_img, ['httponly' => false]);
         }
         $assign_data['imglist'] = $imglist;
 

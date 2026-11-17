@@ -354,25 +354,28 @@ class Shop extends Model
         $SpecUpData = []; // 有规格
         $ArcUpData  = []; // 无规格
         foreach ($SpecValue as $key => $value) {
+            // 数量必须为正整数，防止负数数量反向增加库存/销量
+            $quantity = intval($value['quantity']);
+            if ($quantity < 1) continue;
             if (!empty($value['value_id'])) {
                 $SpecUpData[] = [
                     'value_id'   => $value['value_id'],
-                    'spec_stock' => Db::raw('spec_stock-'.($value['quantity'])),
-                    'spec_sales_num' => Db::raw('spec_sales_num+'.($value['quantity'])),
+                    'spec_stock' => Db::raw('spec_stock-'.($quantity)),
+                    'spec_sales_num' => Db::raw('spec_sales_num+'.($quantity)),
                 ];
                 
                 $ArcUpData[] = [
                     'aid'         => $value['aid'],
-                    'stock_count' => Db::raw('stock_count-' . ($value['quantity'])),
-                    'sales_num'   => Db::raw('sales_num+' . ($value['quantity'])),
-                    'sales_all'   => Db::raw('sales_all+' . ($value['quantity'])),
+                    'stock_count' => Db::raw('stock_count-' . ($quantity)),
+                    'sales_num'   => Db::raw('sales_num+' . ($quantity)),
+                    'sales_all'   => Db::raw('sales_all+' . ($quantity)),
                 ];
             }else{
                 $ArcUpData[] = [
                     'aid'         => $value['aid'],
-                    'stock_count' => Db::raw('stock_count-'.($value['quantity'])),
-                    'sales_num'   => Db::raw('sales_num+' . ($value['quantity'])),
-                    'sales_all'   => Db::raw('sales_all+' . ($value['quantity'])),
+                    'stock_count' => Db::raw('stock_count-'.($quantity)),
+                    'sales_num'   => Db::raw('sales_num+' . ($quantity)),
+                    'sales_all'   => Db::raw('sales_all+' . ($quantity)),
                 ];
             }
         }
@@ -424,17 +427,18 @@ class Shop extends Model
             }
             $value['users_price'] = sprintf("%.2f", $value['users_price']);
 
-            // 购物车商品存在规格并且库存不为空，则覆盖商品原来的库存
-            if (!empty($value['spec_stock'])) $value['stock_count'] = $value['spec_stock'];
+            // 购物车商品存在规格则使用规格库存（库存为 0 也要覆盖，防止规格超卖）
+            if (!empty($value['spec_value_id'])) $value['stock_count'] = $value['spec_stock'];
 
-            // 若库存为空则返回提示
-            if (empty($value['stock_count'])) return ['code'=>0, 'msg'=>"产品 《{$value['title']}》 库存不足！"];
+            // 购买数量必须为正整数，防止负数/零数量导致金额、库存异常
+            $value['product_num'] = intval($value['product_num']);
+            if ($value['product_num'] < 1) return ['code'=>0, 'msg'=>'非法提交，请正规合法提交订单，非法代码：402'];
 
-            // 非法提交，请正规合法提交订单-提交生成订单时检测判断
-            if (empty($value['product_num'])) return ['code'=>0, 'msg'=>'非法提交，请正规合法提交订单，非法代码：402'];
+            // 库存必须大于等于购买数量，防止超卖
+            if (intval($value['stock_count']) < $value['product_num']) return ['code'=>0, 'msg'=>"产品 《{$value['title']}》 库存不足！"];
 
             // 金额、数量计算
-            if ($value['users_price'] >= 0 && !empty($value['product_num'])) {
+            if ($value['users_price'] >= 0) {
                 // 合计金额
                 $TotalAmount += sprintf("%.2f", $value['users_price'] * $value['product_num']);
                 // 合计数量
@@ -454,6 +458,10 @@ class Shop extends Model
         $OrderData['order_status']      = 0; // 订单未付款
         $OrderData['add_time']          = $time;
         $OrderData['payment_method']    = !empty($post['payment_method']) ? intval($post['payment_method']) : 0; // 订单支付方式
+        // 后台关闭货到付款时，禁止提交货到付款订单
+        if (1 === $OrderData['payment_method'] && !empty($usersConfig['shop_open_offline'])) {
+            return ['code' => 0, 'msg' => '货到付款功能已关闭，请选择其他支付方式'];
+        }
         $OrderData['order_total_amount']= $TotalAmount;
         $OrderData['order_amount']      = $TotalAmount;
         $OrderData['order_total_num']   = $TotalNumber;

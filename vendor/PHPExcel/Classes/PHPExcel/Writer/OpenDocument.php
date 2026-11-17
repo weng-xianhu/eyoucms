@@ -46,7 +46,7 @@ class PHPExcel_Writer_OpenDocument extends PHPExcel_Writer_Abstract implements P
      *
      * @param PHPExcel $pPHPExcel
      */
-    public function __construct(PHPExcel $pPHPExcel = null)
+    public function __construct($pPHPExcel = null)
     {
         $this->setPHPExcel($pPHPExcel);
 
@@ -182,7 +182,7 @@ class PHPExcel_Writer_OpenDocument extends PHPExcel_Writer_Abstract implements P
      * @throws PHPExcel_Writer_Exception
      * @return PHPExcel_Writer_Excel2007
      */
-    public function setPHPExcel(PHPExcel $pPHPExcel = null)
+    public function setPHPExcel($pPHPExcel = null)
     {
         $this->spreadSheet = $pPHPExcel;
         return $this;

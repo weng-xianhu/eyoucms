@@ -43,7 +43,7 @@ class PHPExcel_Shared_File
      */
     public static function setUseUploadTempDirectory($useUploadTempDir = false)
     {
-        self::$useUploadTempDirectory = (boolean) $useUploadTempDir;
+        self::$useUploadTempDirectory = (bool) $useUploadTempDir;
     }
 
 

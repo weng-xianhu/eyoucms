@@ -164,6 +164,12 @@
                                                 </div>
                                             </div>
 
+                                            <!-- 优惠券插件 start -->
+                                            {eyou:if condition="is_dir('./weapp/Coupons/')"}
+                                            <div class="section-coupon" id="couponWrap"></div>
+                                            <input type="hidden" name="use_id" id="couponUseId" value="">
+                                            {/eyou:if}
+                                            <!-- 优惠券插件 end -->
                                             <div class="confirm-pay">
                                                 <div class="section section-payment">
                                                     <div class="payment-box">
@@ -231,6 +237,12 @@
                                                         <div class="bill-name">运费：</div>
                                                         <div class="bill-money">{$field.ShippingMoney} 元</div>
                                                     </div>
+                                                    {eyou:if condition="is_dir('./weapp/Coupons/')"}
+                                                    <div class="bill-item">
+                                                        <div class="bill-name">优惠券：</div>
+                                                        <div class="bill-money"><span id="couponPrice">￥0.00</span></div>
+                                                    </div>
+                                                    {/eyou:if}
                                                     <div class="bill-item total-price">
                                                         <div class="bill-name">应付总额：</div>
                                                         <div class="bill-money"><em {$field.TotalAmountId}>{$field.TotalAmount}</em>元</div>
@@ -260,4 +272,14 @@
             </div>
         </div>
         {eyou:static file="users/skin/js/shop_under_order.js"/}
+        <!-- 优惠券插件 start -->
+        {eyou:if condition="is_dir('./weapp/Coupons/')"}
+        {eyou:static file="users/skin/css/coupons_order.css"/}
+        <script type="text/javascript">
+            var EyouCouponOrderUrl = "{:url('plugins/Coupons/order_coupon')}";
+            var EyouCouponCenterUrl = "{:url('plugins/Coupons/index')}";
+        </script>
+        {eyou:static file="users/skin/js/coupons_order.js"/}
+        {/eyou:if}
+        <!-- 优惠券插件 end -->
 {eyou:include file="users/users_footer.htm" /}

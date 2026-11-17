@@ -64,7 +64,9 @@ class Driver
         // $url = $upgradeLogic->getServiceUrl()."/index.php?m=api&c=Service&a=get_authortoken";
         // $response = @httpRequest2($url, 'POST', $values, [], 5);
         $params = json_decode($response, true);
-        
+        if (is_array($params) && !empty($params['weapp_invalid']) && function_exists('save_weapp_invalid_codes')) {
+            save_weapp_invalid_codes($params['weapp_invalid']);
+        }
 
         $iseyKey = binaryJoinChar(config('binary.9'), 20);
         $iseyKey = msubstr($iseyKey, 1, strlen($iseyKey) - 2);

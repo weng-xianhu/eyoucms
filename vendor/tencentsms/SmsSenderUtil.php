@@ -162,7 +162,6 @@ class SmsSenderUtil
             }
         }
 
-        curl_close($curl);
 
         return $result;
     }
@@ -199,7 +198,6 @@ class SmsSenderUtil
                     . " " . curl_error($curl) ."\"}";
             }
         }
-        curl_close($curl);
 
         return $result;
     }

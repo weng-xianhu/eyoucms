@@ -177,7 +177,7 @@ HTML;
                 $datas['source']   = 4; // 来源，与场景ID对应：4=找回密码
                 $datas['email']    = $email;
                 $datas['users_id']    = $users_list['users_id'];
-                $datas['code']     = rand(1000,9999);
+                $datas['code']     = rand(100000,999999);
                 $datas['lang']     = $this->home_lang;
                 $datas['add_time'] = $time;
                 M('smtp_record')->add($datas);

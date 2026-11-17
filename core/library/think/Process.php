@@ -123,7 +123,7 @@ class Process
      * @throws \RuntimeException
      * @api
      */
-    public function __construct($commandline, $cwd = null, array $env = null, $input = null, $timeout = 60, array $options = [])
+    public function __construct($commandline, $cwd = null, $env = null, $input = null, $timeout = 60, array $options = [])
     {
         if (!function_exists('proc_open')) {
             throw new \RuntimeException('The Process class relies on proc_open, which is not available on your PHP installation.');
@@ -623,7 +623,7 @@ class Process
                     throw new \RuntimeException('Unable to kill the process');
                 }
             } else {
-                $pids = preg_split('/\s+/', `ps -o pid --no-heading --ppid {$this->getPid()}`);
+                $pids = preg_split('/\s+/', (string) shell_exec('ps -o pid --no-heading --ppid ' . (int) $this->getPid()));
                 foreach ($pids as $pid) {
                     if (is_numeric($pid)) {
                         posix_kill($pid, 9);
@@ -823,7 +823,7 @@ class Process
 
         $this->env = [];
         foreach ($env as $key => $value) {
-            $this->env[(binary) $key] = (binary) $value;
+            $this->env[(string) $key] = (string) $value;
         }
 
         return $this;
